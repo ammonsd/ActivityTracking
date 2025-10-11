@@ -44,8 +44,8 @@
             </encoder>
             <!-- Roll files based on time AND size -->
             <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                <!-- Archived files: ActivityTracking-2025-10-09.0.log, ActivityTracking-2025-10-09.1.log, etc. -->
-                <fileNamePattern>${LOG_PATH}/archived/ActivityTracking-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <!-- Archived files: ActivityTracking-2025-10-11-143045.0.log (timestamp: HHmmss) -->
+                <fileNamePattern>${LOG_PATH}/archived/ActivityTracking-%d{yyyy-MM-dd-HHmmss}.%i.log</fileNamePattern>
                 <!-- Max size per file before rolling (PRODUCTION: 10MB) -->
                 <maxFileSize>10MB</maxFileSize>
                 <!-- Keep 30 days of history -->
