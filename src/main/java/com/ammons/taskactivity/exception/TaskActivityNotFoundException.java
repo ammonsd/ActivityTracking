@@ -1,0 +1,22 @@
+package com.ammons.taskactivity.exception;
+
+/**
+ * Exception thrown when a TaskActivity is not found.
+ *
+ * @author Dean Ammons
+ * @version 1.0
+ */
+public class TaskActivityNotFoundException extends RuntimeException {
+
+    public TaskActivityNotFoundException(String message) {
+        super(message);
+    }
+
+    public TaskActivityNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public TaskActivityNotFoundException(Long id) {
+        super("Task activity not found with ID: " + id);
+    }
+}
