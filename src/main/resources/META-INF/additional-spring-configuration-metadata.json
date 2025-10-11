@@ -47,6 +47,30 @@
             "type": "java.lang.Boolean",
             "description": "Whether to allow credentials (cookies, authorization headers) in CORS requests.",
             "defaultValue": true
+        },
+        {
+            "name": "AWS_SECRET_NAME",
+            "type": "java.lang.String",
+            "description": "AWS Secrets Manager secret name for database credentials. Used when deploying to AWS ECS/Fargate.",
+            "defaultValue": "taskactivity/database/credentials"
+        },
+        {
+            "name": "AWS_REGION",
+            "type": "java.lang.String",
+            "description": "AWS region where the application and secrets are deployed.",
+            "defaultValue": "us-east-1"
+        },
+        {
+            "name": "admin.username",
+            "type": "java.lang.String",
+            "description": "Username for the admin user. Used in AWS deployment configuration.",
+            "defaultValue": "admin"
+        },
+        {
+            "name": "admin.password",
+            "type": "java.lang.String",
+            "description": "Password for the admin user. Should be overridden via environment variable in production.",
+            "defaultValue": "ChangeMe123!"
         }
     ]
 }

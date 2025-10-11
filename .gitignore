@@ -8,6 +8,7 @@ target/
 *.ps1
 Dockerfile.local
 .dockerignore
+*-local.*
 
 ### STS ###
 .apt_generated
