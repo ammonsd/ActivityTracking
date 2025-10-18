@@ -1,0 +1,198 @@
+services:
+    # Application service - STANDARD BUILD (connects to host PostgreSQL)
+    # Uses multi-stage Dockerfile (slower ~120s, but self-contained)
+    # Usage: docker-compose --profile host-db build && docker-compose --profile host-db up -d
+    app:
+        profiles: ["host-db"]
+        build: .
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            - DB_USERNAME=${DB_USERNAME}
+            - DB_PASSWORD=${DB_PASSWORD}
+            # Default to host database connection
+            - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://host.docker.internal:5432/AmmoP1DB}
+            # Log file path for file logging
+            - LOG_PATH=/var/log/app
+            # Control file logging (default: true)
+            - ENABLE_FILE_LOGGING=${ENABLE_FILE_LOGGING:-true}
+            # Timezone configuration (set to match host timezone)
+            - TZ=${TZ:-America/New_York}
+        volumes:
+            # Mount host logs directory to container /var/log/app for log files
+            # For WSL2: Uses /mnt/c/Logs, for Windows Docker Desktop: use C:\Logs
+            - /mnt/c/Logs:/var/log/app
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            - app-network
+        restart: always
+
+    # Application service - FAST LOCAL BUILD (connects to host PostgreSQL)
+    # Uses Dockerfile.local with pre-built JAR (faster ~10s, requires Maven build first)
+    # Usage: mvnw.cmd clean package -DskipTests && docker-compose --profile local-fast build && docker-compose --profile local-fast up -d
+    app-local-fast:
+        profiles: ["local-fast"]
+        build:
+            context: .
+            dockerfile: Dockerfile.local
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            - DB_USERNAME=${DB_USERNAME}
+            - DB_PASSWORD=${DB_PASSWORD}
+            # Default to host database connection
+            - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://host.docker.internal:5432/AmmoP1DB}
+            # Log file path for file logging
+            - LOG_PATH=/var/log/app
+            # Control file logging (default: true)
+            - ENABLE_FILE_LOGGING=${ENABLE_FILE_LOGGING:-true}
+            # Timezone configuration (set to match host timezone)
+            - TZ=${TZ:-America/New_York}
+        volumes:
+            # Mount host logs directory to container /var/log/app for log files
+            # For WSL2: Uses /mnt/c/Logs, for Windows Docker Desktop: use C:\Logs
+            - /mnt/c/Logs:/var/log/app
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            - app-network
+        restart: no
+
+    # PostgreSQL database container (only for full containerized setup)
+    postgres:
+        profiles: ["containerized-db"]
+        image: postgres:15
+        environment:
+            - POSTGRES_DB=AmmoP1DB
+            - POSTGRES_USER=${DB_USERNAME}
+            - POSTGRES_PASSWORD=${DB_PASSWORD}
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            # Uncomment to initialize database with schema.sql on first run:
+            # - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d AmmoP1DB"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        networks:
+            - app-network
+
+    # Application service for containerized database setup
+    app-with-postgres:
+        profiles: ["containerized-db"]
+        build: .
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            - DB_USERNAME=${DB_USERNAME}
+            - DB_PASSWORD=${DB_PASSWORD}
+            # Override to use containerized database
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/AmmoP1DB
+            # Log file path for file logging
+            - LOG_PATH=/var/log/app
+            # Control file logging (default: true)
+            - ENABLE_FILE_LOGGING=${ENABLE_FILE_LOGGING:-true}
+            # Timezone configuration (set to match host timezone)
+            - TZ=${TZ:-America/New_York}
+        volumes:
+            # Mount host logs directory to container /var/log/app for log files
+            # For WSL2: Uses /mnt/c/Logs, for Windows Docker Desktop: use C:\Logs
+            - /mnt/c/Logs:/var/log/app
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        networks:
+            - app-network
+
+    # Production services with Docker secrets support
+    app-production:
+        profiles: ["production"]
+        build: .
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_PROFILES_ACTIVE=production
+            # Use Docker secrets for production
+            - DB_USERNAME_FILE=/run/secrets/db_username
+            - DB_PASSWORD_FILE=/run/secrets/db_password
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-production:5432/AmmoP1DB
+            # Control file logging (default: true)
+            - ENABLE_FILE_LOGGING=${ENABLE_FILE_LOGGING:-true}
+            # Timezone configuration (set to match host timezone)
+            - TZ=${TZ:-America/New_York}
+        secrets:
+            - db_username
+            - db_password
+        depends_on:
+            postgres-production:
+                condition: service_healthy
+        networks:
+            - app-network
+        restart: unless-stopped
+        # Health check handled by Kubernetes in production
+        # For development, monitor logs for "Started TaskactivityApplication"
+        deploy:
+            resources:
+                limits:
+                    memory: 1G
+                    cpus: '0.5'
+                reservations:
+                    memory: 512M
+                    cpus: '0.25'
+
+    postgres-production:
+        profiles: ["production"]
+        image: postgres:15
+        environment:
+            - POSTGRES_DB=AmmoP1DB
+            # Use Docker secrets for production database
+            - POSTGRES_USER_FILE=/run/secrets/db_username
+            - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+        secrets:
+            - db_username
+            - db_password
+        volumes:
+            - postgres_production_data:/var/lib/postgresql/data
+        networks:
+            - app-network
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        deploy:
+            resources:
+                limits:
+                    memory: 1G
+                    cpus: '0.5'
+                reservations:
+                    memory: 512M
+                    cpus: '0.25'
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    postgres_data:
+    postgres_production_data:
+
+# Docker secrets for production (external secrets recommended)
+secrets:
+    db_username:
+        external: true
+        name: taskactivity_db_username
+    db_password:
+        external: true
+        name: taskactivity_db_password

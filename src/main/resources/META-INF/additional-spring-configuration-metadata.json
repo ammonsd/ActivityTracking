@@ -1,0 +1,52 @@
+{
+    "properties": [
+        {
+            "name": "app.task-activity.list.sort.date-direction",
+            "type": "java.lang.String",
+            "description": "Sort direction for task date column in the task activity list. Valid values: 'ASC' (ascending) or 'DESC' (descending). Default: 'DESC' (newest first).",
+            "defaultValue": "DESC"
+        },
+        {
+            "name": "app.task-activity.list.sort.client-direction",
+            "type": "java.lang.String",
+            "description": "Sort direction for client column in the task activity list. Valid values: 'ASC' (ascending) or 'DESC' (descending). Default: 'ASC' (alphabetical).",
+            "defaultValue": "ASC"
+        },
+        {
+            "name": "app.task-activity.list.sort.project-direction",
+            "type": "java.lang.String",
+            "description": "Sort direction for project column in the task activity list. Valid values: 'ASC' (ascending) or 'DESC' (descending). Default: 'ASC' (alphabetical).",
+            "defaultValue": "ASC"
+        },
+        {
+            "name": "app.admin.initial-password",
+            "type": "java.lang.String",
+            "description": "Initial password for the admin user created during application startup. This is only used when the admin user doesn't already exist in the database.",
+            "defaultValue": "admin123"
+        },
+        {
+            "name": "cors.allowed-origins",
+            "type": "java.lang.String",
+            "description": "Comma-separated list of allowed origins for CORS requests. Use '*' to allow all origins (not recommended for production).",
+            "defaultValue": "https://yourdomain.com"
+        },
+        {
+            "name": "cors.allowed-methods",
+            "type": "java.lang.String",
+            "description": "Comma-separated list of allowed HTTP methods for CORS requests.",
+            "defaultValue": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+            "name": "cors.allowed-headers",
+            "type": "java.lang.String",
+            "description": "Comma-separated list of allowed headers for CORS requests. Use '*' to allow all headers.",
+            "defaultValue": "*"
+        },
+        {
+            "name": "cors.allow-credentials",
+            "type": "java.lang.Boolean",
+            "description": "Whether to allow credentials (cookies, authorization headers) in CORS requests.",
+            "defaultValue": true
+        }
+    ]
+}
