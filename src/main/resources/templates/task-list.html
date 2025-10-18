@@ -37,7 +37,7 @@
                 white-space: nowrap;
             }
             .task-hours {
-                text-align: right;
+                text-align: right !important;
                 font-weight: bold;
             }
             .task-details {
@@ -133,6 +133,19 @@
                 width: 100% !important;
                 table-layout: fixed !important;
             }
+            /* Hours column alignment */
+            table th.hours-header,
+            table td.task-hours {
+                text-align: right !important;
+                padding-right: 10px !important;
+            }
+            /* Username column alignment */
+            table th.username-header,
+            table td.username-column {
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
+            /* Actions column styling */
             table th:last-child,
             table td.actions-column {
                 width: 140px !important;
@@ -380,9 +393,9 @@
                             <th>Client</th>
                             <th>Project</th>
                             <th>Phase</th>
-                            <th>Hours</th>
+                            <th class="hours-header">Hours</th>
                             <th>Details</th>
-                            <th th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Username</th>
+                            <th class="username-header" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Username</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -404,7 +417,7 @@
                                 th:text="${task.details}"
                                 th:title="${task.details}"
                             ></td>
-                            <td th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:text="${task.username}"></td>
+                            <td class="username-column" th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:text="${task.username}"></td>
                             <td class="actions-column" style="white-space: nowrap; text-align: right; padding: 0;">
                                 <!-- All authenticated users see Edit and Clone buttons -->
                                 <a
