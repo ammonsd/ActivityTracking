@@ -133,15 +133,23 @@
                 width: 100% !important;
                 table-layout: fixed !important;
             }
+            /* Fixed column widths to prevent Phase expansion when Username is hidden */
+            table th:nth-child(1), table td:nth-child(1) { width: 110px !important; } /* Date */
+            table th:nth-child(2), table td:nth-child(2) { width: 180px !important; } /* Client */
+            table th:nth-child(3), table td:nth-child(3) { width: 180px !important; } /* Project */
+            table th:nth-child(4), table td:nth-child(4) { width: 160px !important; } /* Phase */
+            table th:nth-child(5), table td:nth-child(5) { width: 80px !important; } /* Hours */
+            /* Details column gets remaining space */
             /* Hours column alignment */
             table th.hours-header,
             table td.task-hours {
                 text-align: right !important;
                 padding-right: 10px !important;
             }
-            /* Username column alignment */
+            /* Username column - fixed width and alignment */
             table th.username-header,
             table td.username-column {
+                width: 120px !important;
                 text-align: left !important;
                 padding-left: 10px !important;
             }
