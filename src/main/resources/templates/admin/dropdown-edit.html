@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Dropdown Value</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+    <link rel="manifest" th:href="@{/site.webmanifest}" />
+    
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+    <script>
+        // Maintain URL display as /task-activity
+        document.addEventListener('DOMContentLoaded', function() {
+            if (globalThis.location.pathname !== '/task-activity') {
+                globalThis.history.replaceState(null, null, '/task-activity');
+            }
+        });
+    </script>
+    
+        <style>
+            /* Page-specific styles */
+            .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+        .category-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .category-info strong {
+            color: #495057;
+        }
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+        }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Edit Dropdown Value</h1>
+            <a th:href="@{/admin/dropdowns}" class="btn btn-secondary">Dropdown Management</a>
+        </div>
+
+        <div class="form-container">
+            <div class="category-info">
+                <strong>Category:</strong> <span th:text="${dropdownValue.category}"></span>
+            </div>
+
+            <form th:action="@{'/admin/dropdowns/update/' + ${dropdownValue.id}}" method="post">
+
+                <div class="form-group">
+                    <label for="value">Value *</label>
+                    <input type="text"
+                           id="value"
+                           name="value"
+                           th:value="${dropdownValue.itemValue}"
+                           required
+                           maxlength="255"
+                           placeholder="Enter dropdown value">
+                </div>
+
+                <div class="form-group">
+                    <label for="displayOrder">Display Order *</label>
+                    <input type="number"
+                           id="displayOrder"
+                           name="displayOrder"
+                           th:value="${dropdownValue.displayOrder}"
+                           required
+                           min="0"
+                           placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox"
+                               id="isActive"
+                               name="isActive"
+                               th:checked="${dropdownValue.isActive}"
+                               value="true">
+                        <label for="isActive">Active</label>
+                    </div>
+                    <small style="color: #6c757d;">Inactive values will not appear in dropdown lists</small>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-success">Update Value</button>
+                    <a th:href="@{${dropdownValue.category == 'CLIENT' ? '/admin/dropdowns/clients' : 
+                                    (dropdownValue.category == 'PROJECT' ? '/admin/dropdowns/projects' : 
+                                    (dropdownValue.category == 'PHASE' ? '/admin/dropdowns/phases' : '/admin/dropdowns'))}}" 
+                       class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

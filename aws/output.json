@@ -1,0 +1,1 @@
+{"statusCode": 200, "body": "{\"message\": \"Export task created successfully\", \"taskId\": \"a253e1d9-54a8-4f50-8f00-ab982619c99f\", \"destination\": \"s3://taskactivity-logs-archive/cloudwatch-exports/2025-10-25\"}"}
