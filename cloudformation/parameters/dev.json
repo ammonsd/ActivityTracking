@@ -1,0 +1,50 @@
+[
+    {
+        "ParameterKey": "Environment",
+        "ParameterValue": "dev"
+    },
+    {
+        "ParameterKey": "VpcCIDR",
+        "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "DBInstanceClass",
+        "ParameterValue": "db.t3.micro"
+    },
+    {
+        "ParameterKey": "DBAllocatedStorage",
+        "ParameterValue": "20"
+    },
+    {
+        "ParameterKey": "DBName",
+        "ParameterValue": "AmmoP1DB"
+    },
+    {
+        "ParameterKey": "DBUsername",
+        "ParameterValue": "postgres"
+    },
+    {
+        "ParameterKey": "DBPassword",
+        "ParameterValue": "CHANGE_ME_DEV_PASSWORD"
+    },
+    {
+        "ParameterKey": "AdminPassword",
+        "ParameterValue": "CHANGE_ME_ADMIN_PASSWORD"
+    },
+    {
+        "ParameterKey": "TaskCPU",
+        "ParameterValue": "256"
+    },
+    {
+        "ParameterKey": "TaskMemory",
+        "ParameterValue": "512"
+    },
+    {
+        "ParameterKey": "DesiredCount",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "ContainerPort",
+        "ParameterValue": "8080"
+    }
+]

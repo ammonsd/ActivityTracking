@@ -1,0 +1,216 @@
+# Kubernetes Deployment Configuration for Task Activity Management System
+# This file demonstrates how to deploy the application with proper secrets management
+
+# 1. Database credentials secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: taskactivity-db-credentials
+    namespace: taskactivity
+type: Opaque
+data:
+    # Replace these with base64-encoded values of your actual credentials
+    # To encode: echo -n 'your_username' | base64
+    username: cG9zdGdyZXM= # postgres (base64 encoded)
+    password: eW91cl9zZWN1cmVfcGFzc3dvcmQ= # your_secure_password (base64 encoded)
+
+# 2. Application configuration (non-sensitive)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: taskactivity-config
+    namespace: taskactivity
+data:
+    SPRING_PROFILES_ACTIVE: "docker"
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/AmmoP1DB"
+    JAVA_OPTS: "-Xmx512m -Xms256m"
+
+# 3. PostgreSQL database deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: postgres
+    namespace: taskactivity
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: postgres
+    template:
+        metadata:
+            labels:
+                app: postgres
+        spec:
+            automountServiceAccountToken: false
+            containers:
+                - name: postgres
+                  image: postgres:15.8
+                  ports:
+                      - containerPort: 5432
+                  volumeMounts:
+                      - name: postgres-storage
+                        mountPath: /var/lib/postgresql/data
+                  resources:
+                      requests:
+                          memory: "512Mi"
+                          cpu: "250m"
+                          ephemeral-storage: "1Gi"
+                      limits:
+                          memory: "1Gi"
+                          cpu: "500m"
+                          ephemeral-storage: "2Gi"
+            volumes:
+                - name: postgres-storage
+                  persistentVolumeClaim:
+                      claimName: postgres-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: postgres-service
+    namespace: taskactivity
+spec:
+    selector:
+        app: postgres
+    ports:
+        - port: 5432
+          targetPort: 5432
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: postgres-pvc
+    namespace: taskactivity
+spec:
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 5Gi
+
+# 4. Task Activity application deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: taskactivity-app
+    namespace: taskactivity
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: taskactivity-app
+    template:
+        metadata:
+            labels:
+                app: taskactivity-app
+        spec:
+            serviceAccountName: taskactivity-service-account
+            automountServiceAccountToken: false
+            containers:
+                - name: taskactivity
+                  image: taskactivity:v1.0.0
+                  ports:
+                      - containerPort: 8080
+                  env:
+                      # Non-sensitive configuration from ConfigMap
+                      - name: SPRING_PROFILES_ACTIVE
+                        valueFrom:
+                            configMapKeyRef:
+                                name: taskactivity-config
+                                key: SPRING_PROFILES_ACTIVE
+                      - name: SPRING_DATASOURCE_URL
+                        valueFrom:
+                            configMapKeyRef:
+                                name: taskactivity-config
+                                key: SPRING_DATASOURCE_URL
+                      - name: JAVA_OPTS
+                        valueFrom:
+                            configMapKeyRef:
+                                name: taskactivity-config
+                                key: JAVA_OPTS
+                      # Sensitive configuration from Secret
+                      - name: DB_USERNAME
+                        valueFrom:
+                            secretKeyRef:
+                                name: taskactivity-db-credentials
+                                key: username
+                      - name: DB_PASSWORD
+                        valueFrom:
+                            secretKeyRef:
+                                name: taskactivity-db-credentials
+                                key: password
+                  livenessProbe:
+                      httpGet:
+                          path: /actuator/health
+                          port: 8080
+                      initialDelaySeconds: 60
+                      periodSeconds: 30
+                  readinessProbe:
+                      httpGet:
+                          path: /actuator/health
+                          port: 8080
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                  resources:
+                      requests:
+                          memory: "512Mi"
+                          cpu: "250m"
+                          ephemeral-storage: "500Mi"
+                      limits:
+                          memory: "1Gi"
+                          cpu: "500m"
+                          ephemeral-storage: "1Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: taskactivity-service
+    namespace: taskactivity
+spec:
+    selector:
+        app: taskactivity-app
+    ports:
+        - port: 8080
+          targetPort: 8080
+    type: ClusterIP
+
+# 5. Ingress for external access (optional)
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: taskactivity-ingress
+    namespace: taskactivity
+    annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+        cert-manager.io/cluster-issuer: "letsencrypt-prod" # If using cert-manager
+spec:
+    tls:
+        - hosts:
+              - taskactivity.yourdomain.com
+          secretName: taskactivity-tls
+    rules:
+        - host: taskactivity.yourdomain.com
+          http:
+              paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                        service:
+                            name: taskactivity-service
+                            port:
+                                number: 8080
+
+# 6. Namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: taskactivity

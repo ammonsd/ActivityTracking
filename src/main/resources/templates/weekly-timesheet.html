@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Weekly Timesheet</title>
+         
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+        
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        <link rel="stylesheet" th:href="@{/css/timesheet.css}" />
+        <script>
+            // Maintain URL display as /task-activity for weekly timesheet
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.location.pathname === '/task-activity/weekly-timesheet') {
+                    // Keep current query parameters when changing display URL
+                    const currentSearch = window.location.search;
+                    window.history.replaceState(null, null, '/task-activity' + currentSearch);
+                }
+            });
+        </script>
+        <style>
+            /* Page-specific styles only */
+            /* Wider layout for timesheet */
+            .container {
+                max-width: 95% !important;
+            }
+            .nav-content {
+                max-width: 95% !important;
+            }
+            .day-header {
+                background-color: #e9ecef !important;
+                font-weight: bold;
+                color: #495057;
+                border-top: 2px solid #007bff;
+            }
+            .day-total {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                text-align: right;
+                color: #007bff;
+            }
+            .week-total-row {
+                background-color: #007bff;
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .week-total-row td {
+                padding: 15px 12px;
+                border-bottom: none;
+            }
+            .week-total-row td:nth-child(2) {
+                text-align: right;
+            }
+            .task-hours {
+                text-align: right;
+                font-weight: bold;
+                min-width: 80px;
+            }
+            .task-client {
+                font-weight: 600;
+                color: #007bff;
+            }
+            .task-project {
+                color: #6c757d;
+                font-style: italic;
+            }
+            .task-phase {
+                color: #28a745;
+                font-size: 0.9em;
+            }
+            .task-details {
+                color: #495057;
+                max-width: 400px;
+                word-wrap: break-word;
+            }
+            .no-tasks-day {
+                text-align: center;
+                color: #6c757d;
+                font-style: italic;
+                padding: 20px;
+            }
+            .empty-week {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+                font-style: italic;
+            }
+            .week-nav-btn {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                text-decoration: none;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 32px;
+                transition: background-color 0.3s;
+            }
+            .week-nav-btn:hover {
+                background-color: #0056b3;
+            }
+            .week-nav-btn:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+            }
+            @media (max-width: 768px) {
+                .header {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                .date-selector {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                .week-navigation {
+                    justify-content: center;
+                }
+                .timesheet-table th,
+                .timesheet-table td {
+                    padding: 6px 4px;
+                    font-size: 12px;
+                }
+                .task-details {
+                    max-width: 200px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                    </form>
+                    <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                        <script>
+                            document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h1>Weekly Timesheet</h1>
+                    <div class="week-info" th:if="${weeklyData}">
+                        Week of
+                        <span
+                            th:text="${#temporals.format(weeklyData.weekStartDate, 'MMM dd')}"
+                        ></span>
+                        -
+                        <span
+                            th:text="${#temporals.format(weeklyData.weekEndDate, 'MMM dd, yyyy')}"
+                        ></span>
+                    </div>
+                </div>
+                <div>
+                    <a
+                        th:href="@{/task-activity/list}"
+                        class="btn btn-secondary"
+                        >Task Activity List</a
+                    >
+                    <a th:href="@{/task-activity/add}" 
+                       class="btn btn-primary"
+                        >Add Task</a
+                    >
+                </div>
+            </div>
+
+            <!-- Date Selector -->
+            <div class="date-selector">
+                <label for="weekStartDate">Week Starting Monday:</label>
+                <input
+                    type="date"
+                    id="weekStartDate"
+                    name="weekStartDate"
+                    th:value="${weeklyData != null ? weeklyData.weekStartDate : ''}"
+                />
+                <div class="week-navigation">
+                    <button type="button" class="week-nav-btn" id="prevWeek" title="Previous Week">‹</button>
+                    <button type="button" class="week-nav-btn" id="nextWeek" title="Next Week">›</button>
+                    <button type="button" class="btn btn-secondary" id="currentWeek">Current Week</button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div
+                th:if="${errorMessage}"
+                class="error-message"
+                th:text="${errorMessage}"
+            ></div>
+
+            <!-- Weekly Timesheet Table -->
+            <div th:if="${weeklyData}">
+                <table class="timesheet-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 300px">Client</th>
+                            <th style="width: 250px">Project</th>
+                            <th style="width: 130px">Phase</th>
+                            <th style="width: 80px">Hours</th>
+                            <th>Task</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop through all days (Monday-Sunday) -->
+                        <th:block th:each="dailyData : ${weeklyData.allDays}">
+                            <!-- Only show days that have tasks -->
+                            <th:block th:if="${dailyData.hasTasks()}">
+                                <!-- Day Header -->
+                                <tr class="day-header">
+                                    <td colspan="5">
+                                        <span
+                                            th:text="${dailyData.dayName}"
+                                        ></span>
+                                        <span
+                                            th:text="${#temporals.format(dailyData.date, 'MM/dd/yyyy')}"
+                                        ></span>
+                                    </td>
+                                </tr>
+
+                                <!-- Tasks for this day -->
+                                <tr th:each="task : ${dailyData.tasks}">
+                                    <td
+                                        class="task-client"
+                                        th:text="${task.client}"
+                                    ></td>
+                                    <td
+                                        class="task-project"
+                                        th:text="${task.project}"
+                                    ></td>
+                                    <td
+                                        class="task-phase"
+                                        th:text="${task.phase}"
+                                    ></td>
+                                    <td
+                                        class="task-hours"
+                                        th:text="${#numbers.formatDecimal(task.hours, 1, 2)}"
+                                    ></td>
+                                    <td
+                                        class="task-details"
+                                        th:text="${task.details}"
+                                    ></td>
+                                </tr>
+
+                                <!-- Day Total -->
+                                <tr class="day-total">
+                                    <td colspan="3"></td>
+                                    <td
+                                        th:text="${#numbers.formatDecimal(dailyData.dayTotal, 1, 2)}"
+                                    ></td>
+                                    <td></td>
+                                </tr>
+                            </th:block>
+                        </th:block>
+
+                        <!-- Week Total -->
+                        <tr
+                            class="week-total-row"
+                            th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                        >
+                            <td colspan="3"><strong>Total Hours</strong></td>
+                            <td>
+                                <strong
+                                    th:text="${#numbers.formatDecimal(weeklyData.weekTotal, 1, 2)}"
+                                ></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty week message -->
+                <div
+                    class="empty-week"
+                    th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                >
+                    No tasks recorded for this week.
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/date-utils.js"></script>
+        <script>
+            // Initialize date picker with current or URL date
+            function initializeDatePicker() {
+                const dateInput = document.getElementById('weekStartDate');
+                const monday = DateUtils.getCurrentOrUrlMonday('date');
+                dateInput.value = DateUtils.formatDateForInput(monday);
+            }
+
+            // Set up event listeners
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeDatePicker();
+
+                const dateInput = document.getElementById('weekStartDate');
+                const prevWeekBtn = document.getElementById('prevWeek');
+                const nextWeekBtn = document.getElementById('nextWeek');
+                const currentWeekBtn = document.getElementById('currentWeek');
+
+                // Handle date input change
+                dateInput.addEventListener('change', function() {
+                    if (!this.value) return; // Don't proceed if no value
+
+                    const selectedDate = DateUtils.parseDate(this.value);
+                    const monday = DateUtils.getMondayOfWeek(selectedDate);
+                    const mondayStr = DateUtils.formatDateForInput(monday);
+
+                    // Update input to show the calculated Monday if different
+                    if (this.value !== mondayStr) {
+                        this.value = mondayStr;
+                    }
+
+                    // Update the URL to reload with new date
+                    DateUtils.updateUrl(mondayStr, '/task-activity/weekly-timesheet');
+                });
+
+                // Handle previous week button
+                prevWeekBtn.addEventListener('click', function() {
+                    const currentDate = DateUtils.parseDate(dateInput.value);
+                    const prevWeek = DateUtils.addDays(currentDate, -7);
+                    const prevWeekStr = DateUtils.formatDateForInput(prevWeek);
+                    DateUtils.updateUrl(prevWeekStr, '/task-activity/weekly-timesheet');
+                });
+
+                // Handle next week button
+                nextWeekBtn.addEventListener('click', function() {
+                    const currentDate = DateUtils.parseDate(dateInput.value);
+                    const nextWeek = DateUtils.addDays(currentDate, 7);
+                    const nextWeekStr = DateUtils.formatDateForInput(nextWeek);
+                    DateUtils.updateUrl(nextWeekStr, '/task-activity/weekly-timesheet');
+                });
+
+                // Handle current week button
+                currentWeekBtn.addEventListener('click', function() {
+                    DateUtils.updateUrl(null, '/task-activity/weekly-timesheet'); // Remove date parameter to show current week
+                });
+            });
+        </script>
+    </body>
+</html>

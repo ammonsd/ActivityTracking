@@ -1,0 +1,470 @@
+T<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Activity List</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+        
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        <script>
+            // Maintain URL display as /task-activity
+            document.addEventListener('DOMContentLoaded', function() {
+                if (globalThis.location.pathname !== '/task-activity') {
+                    globalThis.history.replaceState(null, null, '/task-activity');
+                }
+            });
+        </script>
+        <style>
+            /* Page-specific styles */
+            .container {
+                max-width: 1400px;
+            }
+            .nav-content {
+                max-width: 1400px;
+            }
+            .task-row {
+                cursor: pointer;
+            }
+            .task-date {
+                white-space: nowrap;
+            }
+            .task-hours {
+                text-align: right !important;
+                font-weight: bold;
+            }
+            .task-details {
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .actions-column {
+                white-space: nowrap !important;
+                text-align: right !important;
+                padding-right: 2px !important;
+            }
+            .actions-column .btn {
+                margin: 0 !important;
+            }
+            .actions-column .btn:first-child {
+                margin-right: 1px !important;
+            }
+            .no-tasks {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+                font-style: italic;
+            }
+            .summary {
+                padding: 15px 20px;
+                background-color: #e9ecef;
+                border-top: 1px solid #dee2e6;
+                font-weight: bold;
+                text-align: right;
+            }
+            .pagination {
+                padding: 15px 20px;
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+            }
+            .pagination-info {
+                font-weight: bold;
+                margin: 0 20px;
+            }
+            .pagination-btn {
+                padding: 8px 12px;
+                border: 1px solid #dee2e6;
+                background-color: white;
+                color: #007bff;
+                text-decoration: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s;
+            }
+            .pagination-btn:hover:not(.disabled) {
+                background-color: #007bff;
+                color: white;
+            }
+            .pagination-btn.disabled {
+                color: #6c757d;
+                cursor: not-allowed;
+                background-color: #f8f9fa;
+            }
+            @media (max-width: 768px) {
+                .filter-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .filter-group {
+                    min-width: auto;
+                }
+                .header {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                th,
+                td {
+                    padding: 8px 4px;
+                    font-size: 12px;
+                }
+                .task-details {
+                    max-width: 150px;
+                }
+                .actions-column {
+                    padding-right: 2px !important;
+                }
+            }
+            /* Force actions column styling - must be after media query */
+            table {
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            /* Left-align all table headers */
+            table th {
+                text-align: left !important;
+            }
+            /* Fixed column widths to prevent Phase expansion when Username is hidden */
+            table th:nth-child(1), table td:nth-child(1) { width: 110px !important; } /* Date */
+            table th:nth-child(2), table td:nth-child(2) { width: 180px !important; } /* Client */
+            table th:nth-child(3), table td:nth-child(3) { width: 180px !important; } /* Project */
+            table th:nth-child(4), table td:nth-child(4) { width: 160px !important; } /* Phase */
+            table th:nth-child(5), table td:nth-child(5) { width: 80px !important; } /* Hours */
+            /* Details column gets remaining space */
+            /* Hours column alignment - header left, data right */
+            table th.hours-header {
+                text-align: left !important;
+            }
+            table td.task-hours {
+                text-align: right !important;
+                padding-right: 10px !important;
+            }
+            /* Username column - fixed width and alignment */
+            table th.username-header,
+            table td.username-column {
+                width: 120px !important;
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
+            /* Actions column styling */
+            table th:last-child,
+            table td.actions-column {
+                width: 140px !important;
+                white-space: nowrap !important;
+                text-align: right !important;
+                padding-right: 0 !important;
+                padding-left: 0 !important;
+            }
+            table td.actions-column a.btn {
+                margin: 0 !important;
+                display: inline-block !important;
+            }
+            table td.actions-column a.btn:first-child {
+                margin-right: 1px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <div style="display: inline-flex; align-items: center; gap: 15px;">
+                        <form th:action="@{/logout}" method="post" style="margin: 0;">
+                            <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                        </form>
+                        <span class="current-date" style="font-size: 14px; white-space: nowrap;">
+                            <script>
+                                document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                            </script>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="header">
+                <h1>Task Activity List</h1>
+                <div>
+                    <!-- Weekly Timesheet - USER, GUEST, and ADMIN -->
+                    <a
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'')')}"
+                        th:href="@{/task-activity/weekly-timesheet}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        >📊 Weekly Timesheet</a
+                    >
+                    <!-- Update Password - Visible for USER and GUEST (disabled for GUEST) -->
+                    <a
+                        th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'')) and !hasRole(''ADMIN'')')}"
+                        th:href="@{/change-password}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        title="Change Password"
+                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
+                        >🔒 Update Password</a
+                    >
+                    <!-- Manage Users - Visible for all, but disabled for non-admins -->
+                    <a
+                        th:href="@{/task-activity/manage-users}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        title="Manage Users"
+                        th:classappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
+                        >👥 Manage Users</a
+                    >
+                    <!-- Manage Dropdowns - Visible for all, but disabled for non-admins -->
+                    <a
+                        th:href="@{/admin/dropdowns}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        title="Manage Dropdowns"
+                        th:classappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
+                        >🔧 Manage Dropdowns</a
+                    >
+                    <!-- Add New Task - All authenticated users -->
+                    <a 
+                        th:href="@{/task-activity/add}" 
+                        class="btn btn-primary"
+                        >➕ Add New Task</a
+                    >
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div
+                th:if="${successMessage}"
+                class="success-message"
+                th:text="${successMessage}"
+            ></div>
+            <div
+                th:if="${errorMessage}"
+                class="error-message"
+                th:text="${errorMessage}"
+            ></div>
+
+            <!-- Filters -->
+            <div class="filters" style="padding-left: 15px; padding-right: 15px;">
+                <form th:action="@{/task-activity/list}" method="get">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="client">Client</label>
+                            <select id="client" name="client">
+                                <option value="">All Clients</option>
+                                <option
+                                    th:each="client : ${clients}"
+                                    th:value="${client}"
+                                    th:text="${client}"
+                                    th:selected="${client == selectedClient}"
+                                ></option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="project">Project</label>
+                            <select id="project" name="project">
+                                <option value="">All Projects</option>
+                                <option
+                                    th:each="project : ${projects}"
+                                    th:value="${project}"
+                                    th:text="${project}"
+                                    th:selected="${project == selectedProject}"
+                                ></option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="phase">Phase</label>
+                            <select id="phase" name="phase">
+                                <option value="">All Phases</option>
+                                <option
+                                    th:each="phase : ${phases}"
+                                    th:value="${phase}"
+                                    th:text="${phase}"
+                                    th:selected="${phase == selectedPhase}"
+                                ></option>
+                            </select>
+                        </div>
+
+                        <!-- Username Filter - Admin only -->
+                        <div class="filter-group" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <label for="username">User</label>
+                            <select id="username" name="username">
+                                <option value="">All Users</option>
+                                <option
+                                    th:each="user : ${users}"
+                                    th:value="${user.username}"
+                                    th:text="${user.lastname} + ', ' + ${user.firstname} + ' (' + ${user.username} + ')'"
+                                    th:selected="${user.username == selectedUsername}"
+                                ></option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="startDate">Start Date</label>
+                            <input
+                                type="date"
+                                id="startDate"
+                                name="startDate"
+                                th:value="${startDate}"
+                            />
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="endDate">End Date</label>
+                            <input
+                                type="date"
+                                id="endDate"
+                                name="endDate"
+                                th:value="${endDate}"
+                            />
+                        </div>
+
+                        <div style="margin-left: auto; display: flex; align-items: flex-end;">
+                            <div style="display: flex; gap: 10px">
+                                <button type="submit" class="btn btn-info">
+                                    Filter
+                                </button>
+                                <a
+                                    th:href="@{/task-activity/list}"
+                                    class="btn btn-secondary"
+                                    >Clear</a
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div th:if="${totalPages > 1}" class="pagination">
+                <!-- First page -->
+                <a
+                    th:href="@{/task-activity/list(page=0, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'"
+                    th:attr="onclick=${currentPage == 0} ? 'return false;' : null"
+                >
+                    &laquo;&laquo;
+                </a>
+
+                <!-- Previous page -->
+                <a
+                    th:href="@{/task-activity/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:class="${!hasPrevious} ? 'pagination-btn disabled' : 'pagination-btn'"
+                    th:attr="onclick=${!hasPrevious} ? 'return false;' : null"
+                >
+                    &laquo;
+                </a>
+
+                <!-- Entry range info -->
+                <span class="pagination-info">
+                    <span th:text="${startEntry}">1</span> to
+                    <span th:text="${endEntry}">20</span> of
+                    <span th:text="${totalElements}">7957</span>
+                </span>
+
+                <!-- Next page -->
+                <a
+                    th:href="@{/task-activity/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:class="${!hasNext} ? 'pagination-btn disabled' : 'pagination-btn'"
+                    th:attr="onclick=${!hasNext} ? 'return false;' : null"
+                >
+                    &raquo;
+                </a>
+
+                <!-- Last page -->
+                <a
+                    th:href="@{/task-activity/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:class="${currentPage == totalPages - 1} ? 'pagination-btn disabled' : 'pagination-btn'"
+                    th:attr="onclick=${currentPage == totalPages - 1} ? 'return false;' : null"
+                >
+                    &raquo;&raquo;
+                </a>
+            </div>
+
+            <!-- Task Table -->
+            <div class="table-container">
+                <table th:if="${not #lists.isEmpty(tasks)}">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Client</th>
+                            <th>Project</th>
+                            <th>Phase</th>
+                            <th class="hours-header">Hours</th>
+                            <th>Details</th>
+                            <th class="username-header" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Username</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="task : ${tasks}" class="task-row">
+                            <td
+                                class="task-date"
+                                th:text="${#temporals.format(task.taskDate, 'MMM dd, yyyy')}"
+                            ></td>
+                            <td th:text="${task.client}"></td>
+                            <td th:text="${task.project}"></td>
+                            <td th:text="${task.phase}"></td>
+                            <td
+                                class="task-hours"
+                                th:text="${#numbers.formatDecimal(task.hours, 1, 2)}"
+                            ></td>
+                            <td
+                                class="task-details"
+                                th:text="${task.details}"
+                                th:title="${task.details}"
+                            ></td>
+                            <td class="username-column" th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:text="${task.username}"></td>
+                            <td class="actions-column" style="white-space: nowrap; text-align: right; padding: 0;">
+                                <!-- All authenticated users see Edit and Clone buttons -->
+                                <a
+                                    th:href="@{'/task-activity/detail/' + ${task.id}}"
+                                    class="btn btn-info"
+                                    style="margin: 0; margin-right: 1px; display: inline-block;"
+                                    >Edit</a>
+                                <a
+                                    th:href="@{'/task-activity/clone/' + ${task.id}}"
+                                    class="btn btn-info"
+                                    style="margin: 0; display: inline-block;"
+                                    title="Clone this task"
+                                    >Clone</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div th:if="${#lists.isEmpty(tasks)}" class="no-tasks">
+                    <p>No tasks found matching the current filters.</p>
+                    <a 
+                        th:href="@{/task-activity/add}" 
+                        class="btn btn-primary"
+                        >Add Your First Task</a
+                    >
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

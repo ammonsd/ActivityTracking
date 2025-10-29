@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Access Denied - Task Activity Tracker</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+        
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        
+        <style>
+            /* Page-specific styles */
+            .error-header {
+                background-color: #dc3545;
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            .error-header h1 {
+                margin: 0;
+                font-size: 2.5rem;
+                font-weight: 300;
+            }
+            .error-header .error-code {
+                font-size: 1.2rem;
+                opacity: 0.9;
+                margin-top: 10px;
+            }
+            .error-content {
+                padding: 40px;
+                text-align: center;
+            }
+            .requested-url {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 15px;
+                margin: 20px 0;
+                font-family: monospace;
+                font-size: 0.9rem;
+                color: #495057;
+                word-break: break-all;
+            }
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-top: 30px;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+            .btn-secondary:hover {
+                background-color: #545b62;
+                transform: translateY(-2px);
+            }
+            .btn-success:hover {
+                background-color: #1e7e34;
+                transform: translateY(-2px);
+            }
+            .icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+                opacity: 0.6;
+            }
+            .help-section {
+                background-color: #f8f9fa;
+                border-left: 4px solid #007bff;
+                padding: 20px;
+                margin: 30px 0;
+                text-align: left;
+            }
+            .help-section h3 {
+                margin: 0 0 10px 0;
+                color: #007bff;
+                font-size: 1.1rem;
+            }
+            .help-section p {
+                margin: 0;
+                color: #666;
+                line-height: 1.5;
+            }
+            @media (max-width: 768px) {
+                .action-buttons {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .error-header h1 {
+                    font-size: 2rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                        <script>
+                            document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="error-header">
+                <div class="icon">🔒</div>
+                <h1>Access Denied</h1>
+                <div class="error-code">Error 403 - Forbidden</div>
+            </div>
+
+            <div class="error-content">
+                <div
+                    class="error-message"
+                    th:text="${session.accessDeniedMessage}"
+                >
+                    Sorry, you don't have permission to access this page. Please
+                    contact your administrator if you believe this is an error.
+                </div>
+
+                <div th:if="${session.requestedUrl}" class="requested-url">
+                    <strong>Requested URL:</strong>
+                    <span th:text="${session.requestedUrl}"></span>
+                </div>
+
+                <div class="help-section">
+                    <h3>What can you do?</h3>
+                    <p>
+                        • Return to the main application area where you have
+                        access<br />
+                        • Contact your system administrator to request
+                        additional permissions<br />
+                        • Log out and log in with a different account that has
+                        the required permissions
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="/task-activity" class="btn btn-primary">
+                        🏠 Go to Home
+                    </a>
+                    <a href="/task-activity/list" class="btn btn-success">
+                        📋 Task List
+                    </a>
+                    <a
+                        href="javascript:history.back()"
+                        class="btn btn-secondary"
+                    >
+                        ← Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Clear the session attributes after displaying them
+            setTimeout(function () {
+                fetch("/clear-access-denied-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                }).catch(function (error) {
+                    console.log("Session cleanup request failed:", error);
+                });
+            }, 1000);
+        </script>
+    </body>
+</html>

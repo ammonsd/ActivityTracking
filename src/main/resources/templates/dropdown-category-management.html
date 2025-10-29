@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${categoryDisplayName + ' Management'}">Category Management</title>
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+    <script>
+        // Maintain URL display as /task-activity
+        document.addEventListener('DOMContentLoaded', function() {
+            if (globalThis.location.pathname !== '/task-activity') {
+                globalThis.history.replaceState(null, null, '/task-activity');
+            }
+        });
+    </script>
+    
+        <style>
+            /* Page-specific styles */
+            .btn-primary:hover {
+            background-color: #218838;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        .add-section {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group .spacer {
+            height: 1.2em; /* Match label height */
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-inactive {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .summary {
+            padding: 15px 20px;
+            background-color: #e9ecef;
+            border-top: 1px solid #dee2e6;
+            font-weight: bold;
+            text-align: right;
+        }
+        @media (max-width: 768px) {
+            th, td {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+        }
+        </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>Task Activity Tracker</h1>
+            <div class="user-info">
+                <span class="welcome-text">
+                    <span th:text="${userDisplayName}">Username</span>
+                </span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                </form>
+                <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                    <script>
+                        document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                    </script>
+                </span>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h1 th:text="${categoryDisplayName + ' Management'}">Category Management</h1>
+            <div>
+                <a th:href="@{/admin/dropdowns}" class="btn btn-info" style="margin-right: 10px;">Dropdown Management</a>
+                <a th:href="@{/task-activity/list}" class="btn btn-secondary">Task Activity List</a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+
+        <!-- Add New Value Section -->
+        <div class="add-section">
+            <h3 th:text="'Add New ' + ${categoryDisplayName}">Add New Value</h3>
+            <form th:action="@{/task-activity/add-dropdown}" method="post">
+                <input type="hidden" name="category" th:value="${category}">
+                <div class="add-form">
+                    <div class="form-group">
+                        <label for="value" th:text="'New ' + ${categoryDisplayName} + ' Name'">New Value Name</label>
+                        <input type="text" id="value" name="value" required maxlength="255"
+                               th:placeholder="'Enter ' + ${categoryDisplayName} + ' name'">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="spacer"></div>
+                        <button type="submit" class="btn btn-primary" th:text="'Add ' + ${categoryDisplayName}">Add Value</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Values Table -->
+        <div class="table-container">
+            <table th:if="${not #lists.isEmpty(dropdownValues)}">
+                <thead>
+                    <tr>
+                        <th th:text="${categoryDisplayName} + ' Name'">Value Name</th>
+                        <th>Display Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="value : ${dropdownValues}">
+                        <td th:text="${value.itemValue}"></td>
+                        <td th:text="${value.displayOrder}"></td>
+                        <td>
+                            <span th:if="${value.isActive}" class="status-active">Active</span>
+                            <span th:unless="${value.isActive}" class="status-inactive">Inactive</span>
+                        </td>
+                        <td>
+                            <form th:action="@{'/task-activity/toggle-dropdown/' + ${value.id}}" method="post" style="display: inline; margin-right: 5px;">
+                                <button type="submit" th:class="${value.isActive} ? 'btn btn-warning' : 'btn btn-info'"
+                                        th:text="${value.isActive} ? 'Deactivate' : 'Activate'"></button>
+                            </form>
+                            <form th:action="@{'/task-activity/delete-dropdown/' + ${value.id}}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Are you sure you want to delete this item?')">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${#lists.isEmpty(dropdownValues)}" class="no-data">
+                <p th:text="'No ' + ${categoryDisplayName} + ' found.'">No values found.</p>
+                <p th:text="'Use the form above to add your first ' + ${categoryDisplayName} + '.'">Use the form above to add your first value.</p>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div th:if="${not #lists.isEmpty(dropdownValues)}" class="summary">
+            <span th:text="'Total ' + ${categoryDisplayName} + ': ' + ${#lists.size(dropdownValues)}">Total Values: 0</span> |
+            <span th:text="'Active: ' + ${#lists.size(dropdownValues.?[isActive == true])}">Active: 0</span>
+        </div>
+    </div>
+</body>
+</html>

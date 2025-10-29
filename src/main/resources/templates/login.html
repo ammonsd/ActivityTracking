@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - Task Activity Tracker</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+        
+        <link rel="stylesheet" th:href="@{/css/login.css}" />
+        <style>
+            /* Page-specific styles only */
+            .demo-credentials {
+                margin-top: 1.5rem;
+                padding: 1rem;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                border: 1px solid #e9ecef;
+            }
+
+            .demo-credentials h4 {
+                margin: 0 0 0.5rem 0;
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+
+            .demo-credentials p {
+                margin: 0.25rem 0;
+                font-size: 0.8rem;
+                color: #6c757d;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="login-form">
+                <h2>Task Activity Tracker</h2>
+                <h3
+                    style="
+                        text-align: center;
+                        color: #666;
+                        margin-bottom: 1.5rem;
+                    "
+                >
+                    Login
+                </h3>
+
+                <!-- Error messages -->
+                <div th:if="${param.disabled}" class="error-message">
+                    User Account Disabled. Contact support for help.
+                </div>
+                <div th:if="${param.error}" class="error-message">
+                    Invalid username or password. Please try again.
+                </div>
+
+                <!-- Logout success message -->
+                <div th:if="${param.logout}" class="success-message">
+                    You have been logged out successfully.
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            required
+                            autofocus
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="btn-login">Login</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

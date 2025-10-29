@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 
+        PRODUCTION LOGBACK CONFIGURATION
+        
+        This is the default/production configuration.
+        
+        For local development with different settings, set SPRING_PROFILES_ACTIVE=local
+        which will load logback-spring-local.xml instead (overrides log file size to 3MB)
+    -->
+    
+    <!-- Profile-specific configuration for local development -->
+    <springProfile name="local">
+        <include resource="logback-spring-local.xml"/>
+    </springProfile>
+    
+    <!-- Default/Production configuration -->
+    <springProfile name="!local">
+        <!-- Include Spring Boot's default configuration -->
+        <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+        
+        <!-- Define log file path based on environment -->
+        <!-- Windows/Local: C:/Logs, Docker: /var/log/app -->
+        <property name="LOG_PATH" value="${LOG_PATH:-C:/Logs}"/>
+        
+        <!-- Enable/disable file logging via environment variable -->
+        <!-- Set ENABLE_FILE_LOGGING=false to disable file logging -->
+        <property name="ENABLE_FILE_LOGGING" value="${ENABLE_FILE_LOGGING:-true}"/>
+        
+        <!-- Console appender -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        
+        <!-- File appender with size-based rolling -->
+        <!-- Appends to current log file until size limit, then rolls to archive -->
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <!-- Current active log file (always appends to this file) -->
+            <file>${LOG_PATH}/ActivityTracking.log</file>
+            <!-- Append to existing file instead of truncating -->
+            <append>true</append>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+            <!-- Roll files based on time AND size -->
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <!-- Archived files: ActivityTracking-2025-10-11.0.log, ActivityTracking-2025-10-11.1.log, etc. -->
+                <!-- %i is the index for multiple rollovers on the same day -->
+                <fileNamePattern>${LOG_PATH}/archived/ActivityTracking-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <!-- Max size per file before rolling (PRODUCTION: 10MB) -->
+                <maxFileSize>10MB</maxFileSize>
+                <!-- Keep 30 days of history -->
+                <maxHistory>30</maxHistory>
+                <!-- Total size cap for all log files -->
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+        
+        <!-- Root logger configuration -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <!-- File logging can be disabled by setting ENABLE_FILE_LOGGING=false -->
+            <if condition='property("ENABLE_FILE_LOGGING").equals("true")'>
+                <then>
+                    <appender-ref ref="FILE" />
+                </then>
+            </if>
+        </root>
+    </springProfile>
+</configuration>

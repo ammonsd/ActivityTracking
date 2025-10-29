@@ -1,0 +1,3 @@
+# YAML validation configuration for CloudFormation templates
+# CloudFormation intrinsic functions (like !Ref, !Sub, !If) resolve types at runtime
+# These are valid CloudFormation but may show type warnings in VS Code

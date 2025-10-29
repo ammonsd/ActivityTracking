@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+    name: taskactivity-service-account
+    namespace: taskactivity
+automountServiceAccountToken: false
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    namespace: taskactivity
+    name: taskactivity-role
+rules:
+    # Minimal permissions - only what's needed for the application
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+    name: taskactivity-rolebinding
+    namespace: taskactivity
+subjects:
+    - kind: ServiceAccount
+      name: taskactivity-service-account
+      namespace: taskactivity
+roleRef:
+    kind: Role
+    name: taskactivity-role
+    apiGroup: rbac.authorization.k8s.io

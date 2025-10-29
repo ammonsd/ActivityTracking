@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Add New User</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+        
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        
+        <style>
+            /* Page-specific styles */
+            .container {
+                max-width: 1000px;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+            .btn-secondary:hover {
+                background-color: #545b62;
+            }
+            input:focus,
+            select:focus {
+                border-color: #007bff;
+                outline: none;
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            }
+            .error {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            .submit-btn {
+                background-color: #007bff;
+                color: white;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-right: 10px;
+            }
+            .submit-btn:hover {
+                background-color: #0056b3;
+            }
+            .form-row .form-group {
+                flex: 1;
+                align-items: flex-start;
+            }
+            .form-row {
+                align-items: flex-start;
+            }
+            .password-help {
+                font-size: 12px;
+                color: #6c757d;
+                margin-top: 5px;
+            }
+            .form-row .form-group label {
+                min-height: 24px;
+            }
+            .password-wrapper {
+                position: relative;
+            }
+            .toggle-password {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #6c757d;
+                font-size: 18px;
+                padding: 5px;
+                line-height: 1;
+            }
+            .toggle-password:hover {
+                color: #007bff;
+            }
+            .show-passwords-container {
+                margin-top: 10px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .show-passwords-container input[type="checkbox"] {
+                width: auto;
+                cursor: pointer;
+            }
+            .show-passwords-container label {
+                margin: 0;
+                font-weight: normal;
+                cursor: pointer;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                        <script>
+                            document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>➕ Add New User</h1>
+                <div>
+                    <a
+                        th:href="@{/task-activity/manage-users}"
+                        class="btn btn-secondary"
+                        >User Management</a
+                    >
+                </div>
+            </div>
+
+            <div class="form-container">
+                <form
+                    th:action="@{/task-activity/manage-users/add}"
+                    th:object="${userCreateDto}"
+                    method="post"
+                >
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="username"
+                            >Username <span class="required">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="username"
+                            th:field="*{username}"
+                            placeholder="Enter username (3-50 characters)"
+                            required
+                        />
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('username')}"
+                            th:errors="*{username}"
+                        ></div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- First Name -->
+                        <div class="form-group">
+                            <label for="firstname">First Name</label>
+                            <input
+                                type="text"
+                                id="firstname"
+                                th:field="*{firstname}"
+                                placeholder="Enter first name (optional)"
+                                maxlength="50"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('firstname')}"
+                                th:errors="*{firstname}"
+                            ></div>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="form-group">
+                            <label for="lastname"
+                                >Last Name <span class="required">*</span></label
+                            >
+                            <input
+                                type="text"
+                                id="lastname"
+                                th:field="*{lastname}"
+                                placeholder="Enter last name"
+                                required
+                                maxlength="50"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('lastname')}"
+                                th:errors="*{lastname}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Company -->
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <input
+                            type="text"
+                            id="company"
+                            th:field="*{company}"
+                            placeholder="Enter company name (optional)"
+                            maxlength="100"
+                        />
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('company')}"
+                            th:errors="*{company}"
+                        ></div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Password -->
+                        <div class="form-group">
+                            <label for="password"
+                                >Password <span class="required">*</span></label
+                            >
+                            <div class="password-wrapper">
+                                <input
+                                    type="password"
+                                    id="password"
+                                    th:field="*{password}"
+                                    placeholder="Enter password"
+                                    required
+                                    minlength="10"
+                                />
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    onclick="togglePasswordVisibility('password', this)"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    👁️
+                                </button>
+                            </div>
+                            <div class="password-help">
+                                Password must be:
+                                <ul style="margin: 5px 0; padding-left: 20px;">
+                                    <li>At least 10 characters long</li>
+                                    <li>Include at least 1 uppercase letter</li>
+                                    <li>Include at least 1 digit</li>
+                                    <li>Include at least 1 special character (+&%$#@!~)</li>
+                                </ul>
+                            </div>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('password')}"
+                                th:errors="*{password}"
+                            ></div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group">
+                            <label for="confirmPassword"
+                                >Confirm Password
+                                <span class="required">*</span></label
+                            >
+                            <div class="password-wrapper">
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    th:field="*{confirmPassword}"
+                                    placeholder="Confirm password"
+                                    required
+                                    minlength="10"
+                                />
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    onclick="togglePasswordVisibility('confirmPassword', this)"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    👁️
+                                </button>
+                            </div>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('confirmPassword')}"
+                                th:errors="*{confirmPassword}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Show Passwords Checkbox -->
+                    <div class="show-passwords-container">
+                        <input
+                            type="checkbox"
+                            id="showPasswords"
+                            onclick="toggleAllPasswords()"
+                            onkeypress="if(event.key === 'Enter' || event.key === ' ') { this.click(); }"
+                        />
+                        <label for="showPasswords">Show passwords</label>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="form-group">
+                        <label for="role"
+                            >Role <span class="required">*</span></label
+                        >
+                        <select id="role" th:field="*{role}" required>
+                            <option value="">-- Select Role --</option>
+                            <option
+                                th:each="role : ${roles}"
+                                th:value="${role}"
+                                th:text="${role.name()}"
+                            ></option>
+                        </select>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('role')}"
+                            th:errors="*{role}"
+                        ></div>
+                    </div>
+
+                    <!-- Force Password Update -->
+                    <div class="form-group">
+                        <label for="forcePasswordUpdate">
+                            <input type="checkbox" id="forcePasswordUpdate" th:field="*{forcePasswordUpdate}" />
+                            Force Password Update on Next Login
+                        </label>
+                        <div class="help-text">
+                            Check this to require the user to change their password on their next login
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px">
+                        <button type="submit" class="submit-btn">
+                            Create User
+                        </button>
+                        <a
+                            th:href="@{/task-activity/manage-users}"
+                            class="btn btn-secondary"
+                            >Cancel</a
+                        >
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script src="/js/password-toggle.js"></script>
+        <script>
+            // Initialize password toggles
+            document.addEventListener('DOMContentLoaded', function() {
+                const checkbox = document.getElementById("showPasswords");
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        toggleAllPasswords("showPasswords", ["password", "confirmPassword"]);
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

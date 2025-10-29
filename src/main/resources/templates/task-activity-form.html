@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Activity Entry</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+    <link rel="manifest" th:href="@{/site.webmanifest}" />
+    
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+    <script>
+        // Maintain URL display as /task-activity
+        document.addEventListener('DOMContentLoaded', function() {
+            if (globalThis.location.pathname !== '/task-activity') {
+                globalThis.history.replaceState(null, null, '/task-activity');
+            }
+        });
+    </script>
+    
+        <style>
+            /* Page-specific styles */
+            .btn-info:hover {
+            background-color: #138496;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        .error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        /* Hide spinner buttons on number input for hours */
+        input[type="number"]#hours::-webkit-inner-spin-button,
+        input[type="number"]#hours::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"]#hours {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>Task Activity Tracker</h1>
+            <div class="user-info">
+                <span class="welcome-text">
+                    <span th:text="${userDisplayName}">Username</span>
+                </span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                </form>
+                <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                    <script>
+                        document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                    </script>
+                </span>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h1>Task Activity Entry</h1>
+            <div>
+                <a 
+                    th:href="@{/task-activity/weekly-timesheet}" 
+                    class="btn btn-info" 
+                    style="margin-right: 10px;">📊 Weekly Timesheet</a>
+                <a th:href="@{/task-activity/list}" class="btn btn-secondary">Task Activity List</a>
+            </div>
+        </div>
+        
+        <div class="form-container">
+            <!-- Success Message -->
+            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+            
+            <!-- Error Message -->
+            <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+            
+            <form th:action="@{/task-activity/submit}" th:object="${taskActivityDto}" method="post">
+                
+                <!-- Task Date -->
+                <div class="form-row">
+                    <div class="form-group" style="max-width: 250px;">
+                        <label for="taskDate">Task Date <span class="required">*</span></label>
+                        <input type="date" 
+                               id="taskDate" 
+                               th:field="*{taskDate}" 
+                               required />
+                        <div class="error" th:if="${#fields.hasErrors('taskDate')}" th:errors="*{taskDate}"></div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <!-- Client -->
+                    <div class="form-group">
+                        <label for="client">Client <span class="required">*</span></label>
+                        <select id="client" 
+                                th:field="*{client}" 
+                                required>
+                            <option value="">-- Select Client --</option>
+                            <option th:each="client : ${clients}" 
+                                    th:value="${client}" 
+                                    th:text="${client}"></option>
+                        </select>
+                        <div class="error" th:if="${#fields.hasErrors('client')}" th:errors="*{client}"></div>
+                    </div>
+                    
+                    <!-- Project -->
+                    <div class="form-group">
+                        <label for="project">Project <span class="required">*</span></label>
+                        <select id="project" 
+                                th:field="*{project}" 
+                                required>
+                            <option value="">-- Select Project --</option>
+                            <option th:each="project : ${projects}" 
+                                    th:value="${project}" 
+                                    th:text="${project}"></option>
+                        </select>
+                        <div class="error" th:if="${#fields.hasErrors('project')}" th:errors="*{project}"></div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <!-- Phase -->
+                    <div class="form-group">
+                        <label for="phase">Phase <span class="required">*</span></label>
+                        <select id="phase" 
+                                th:field="*{phase}" 
+                                required>
+                            <option value="">-- Select Phase --</option>
+                            <option th:each="phase : ${phases}" 
+                                    th:value="${phase}" 
+                                    th:text="${phase}"></option>
+                        </select>
+                        <div class="error" th:if="${#fields.hasErrors('phase')}" th:errors="*{phase}"></div>
+                    </div>
+                    
+                    <!-- Hours -->
+                    <div class="form-group">
+                        <label for="hours">Hours <span class="required">*</span></label>
+                        <input type="number" 
+                               id="hours" 
+                               th:field="*{hours}" 
+                               step="0.01" 
+                               min="0.01" 
+                               max="24.00" 
+                               placeholder="0.00"
+                               required />
+                        <div class="error" th:if="${#fields.hasErrors('hours')}" th:errors="*{hours}"></div>
+                    </div>
+                </div>
+                
+                <!-- Details -->
+                <div class="form-group">
+                    <label for="details">Details</label>
+                    <textarea id="details" 
+                              th:field="*{details}" 
+                              rows="4" 
+                              maxlength="255"
+                              placeholder="Enter task details (optional)..."></textarea>
+                    <div class="error" th:if="${#fields.hasErrors('details')}" th:errors="*{details}"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Submit Task Activity</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
