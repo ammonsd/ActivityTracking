@@ -37,7 +37,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private static final Logger log =
             LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
     private static final String FORCE_PASSWORD_UPDATE_URL = "/change-password?forced=true";
-    private static final String DEFAULT_SUCCESS_URL = "/task-activity/list";
+    private static final String DEFAULT_SUCCESS_URL = "/app";
 
     private final UserRepository userRepository;
     private final UserDetailsServiceImpl userDetailsService;

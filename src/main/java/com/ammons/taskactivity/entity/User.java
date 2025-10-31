@@ -1,5 +1,7 @@
 package com.ammons.taskactivity.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -30,6 +32,7 @@ public class User {
     private String company;
 
     @Column(name = "userpassword", nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)

@@ -41,11 +41,11 @@ fi
 echo ""
 
 # Step 2: Rebuild Docker image
-echo "Step 2: Rebuilding Docker image (this may take 2-3 minutes)..."
+echo "Step 2: Rebuilding Docker image (this may take 10-15 minutes with Angular build)..."
 echo "Note: Docker will use cached layers when possible for speed."
 echo "      To force complete rebuild, use: ./scripts/rebuild-and-start.sh --no-cache <profile>"
 echo ""
-export DOCKER_BUILDKIT=0
+export DOCKER_BUILDKIT=1
 
 # Check for --no-cache flag
 if [ "$CACHE_OPTION" == "--no-cache" ]; then

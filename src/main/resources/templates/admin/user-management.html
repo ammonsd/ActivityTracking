@@ -91,7 +91,12 @@
             .actions {
                 display: flex;
                 gap: 5px;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+            .actions form {
+                margin: 0;
+                display: inline-flex;
             }
             @media (max-width: 768px) {
                 .actions {
@@ -350,7 +355,6 @@
                                         th:if="${user.username != username && !userHasTasks[user.username]}"
                                         th:action="@{/task-activity/manage-users/delete/{id}(id=${user.id})}"
                                         method="post"
-                                        style="display: inline"
                                         th:id="'deleteForm-' + ${user.id}"
                                     >
                                         <button

@@ -6,7 +6,12 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.PathResourceResolver;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import java.io.IOException;
 
 /**
  * ServerConfig - Configuration for the server.
@@ -73,6 +78,29 @@ public class ServerConfig implements WebMvcConfigurer {
                 // Cache preflight response for 3600 seconds (1 hour)
                 // Reduces preflight OPTIONS requests for better performance
                 .maxAge(3600);
+    }
+
+    /**
+     * Configure resource handlers for static content including Angular SPA. Routes /app/** to serve
+     * Angular app with fallback to index.html for client-side routing.
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/app/**")
+                .addResourceLocations("classpath:/static/app/browser/").resourceChain(true)
+                .addResolver(new PathResourceResolver() {
+                    @Override
+                    protected Resource getResource(String resourcePath, Resource location)
+                            throws IOException {
+                        Resource requestedResource = location.createRelative(resourcePath);
+                        // If resource exists, return it (JS, CSS, etc.)
+                        if (requestedResource.exists() && requestedResource.isReadable()) {
+                            return requestedResource;
+                        }
+                        // Otherwise, return index.html for Angular routing
+                        return new ClassPathResource("/static/app/browser/index.html");
+                    }
+                });
     }
 
     @Bean

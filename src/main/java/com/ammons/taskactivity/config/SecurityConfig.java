@@ -45,17 +45,20 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final ForcePasswordUpdateFilter forcePasswordUpdateFilter;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                     CustomAccessDeniedHandler customAccessDeniedHandler,
                     CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
             CustomAuthenticationFailureHandler customAuthenticationFailureHandler,
+            CustomLogoutSuccessHandler customLogoutSuccessHandler,
                     ForcePasswordUpdateFilter forcePasswordUpdateFilter) {
         this.userDetailsService = userDetailsService;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.forcePasswordUpdateFilter = forcePasswordUpdateFilter;
     }
 
@@ -63,17 +66,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui/**",
-                                        "/swagger-ui.html")
+                        "/swagger-ui.html", API_PATTERN) // Disable CSRF for API
+                                                         // endpoints
         ).cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         // Public resources
                         .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**",
                                                         "/images/**", "/favicon.ico")
                                         .permitAll()
+                        // Angular SPA static resources (only the static files, not the app routes)
+                        .requestMatchers("/app/browser/**").permitAll()
                                         .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                         "/access-denied",
                                                         "/clear-access-denied-session")
-                                        .permitAll() // Health checks
+                        .permitAll()
+                        // Health checks
                         .requestMatchers("/api/health/**", "/actuator/health").permitAll()
 
                                         // Swagger/OpenAPI endpoints - public access for
@@ -81,9 +88,7 @@ public class SecurityConfig {
                                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                                         "/v3/api-docs/**", "/swagger-resources/**",
                                                         "/webjars/**")
-                                        .permitAll()
-
-                        // API endpoints - require authentication
+                        .permitAll() // API endpoints - require authentication
                                         .requestMatchers(HttpMethod.GET, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
                                         .requestMatchers(HttpMethod.POST, API_PATTERN)
@@ -112,22 +117,41 @@ public class SecurityConfig {
                                                         "/task-activity/delete/**")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
 
+                        // Angular dashboard - requires authentication
+                        .requestMatchers("/app", "/app/**").authenticated()
+
                         // All other requests require authentication
                         .anyRequest().authenticated())
+                .httpBasic(basic -> {
+                }) // Enable HTTP Basic Auth for API calls
                 .formLogin(form -> form.loginPage(LOGIN_URL)
-                        .defaultSuccessUrl("/task-activity/list", true)
+                        .defaultSuccessUrl("/app", true)
                                         .successHandler(customAuthenticationSuccessHandler)
                         .failureHandler(customAuthenticationFailureHandler)
                         .usernameParameter("username")
                         .passwordParameter("password").permitAll())
                 .logout(logout -> logout.logoutUrl(LOGOUT_URL)
-                        .logoutSuccessUrl(LOGIN_URL + "?logout=true").invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID").clearAuthentication(true).permitAll())
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
+                        .invalidateHttpSession(true).deleteCookies("JSESSIONID", "XSRF-TOKEN")
+                        .clearAuthentication(true)
+                        .logoutRequestMatcher(
+                                new org.springframework.security.web.util.matcher.OrRequestMatcher(
+                                        new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
+                                                LOGOUT_URL, "POST"),
+                                        new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
+                                                LOGOUT_URL, "GET")))
+                        .permitAll())
                         .exceptionHandling(exceptions -> exceptions
                                         .accessDeniedHandler(customAccessDeniedHandler))
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                .maximumSessions(1).maxSessionsPreventsLogin(false))
+                                .maximumSessions(5).maxSessionsPreventsLogin(false)) // Allow
+                                                                                     // multiple
+                                                                                     // concurrent
+                                                                                     // sessions
+                                                                                     // for
+                                                                                     // dual UI
+                                                                                     // support
                         .userDetailsService(userDetailsService)
                         .addFilterAfter(forcePasswordUpdateFilter,
                                         UsernamePasswordAuthenticationFilter.class);

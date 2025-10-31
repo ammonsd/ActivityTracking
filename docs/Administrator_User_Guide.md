@@ -4,6 +4,23 @@
 
 This guide is for administrators of the Task Activity Management System. As an administrator, you have access to additional features for managing users, viewing all tasks, and configuring system settings.
 
+## Accessing the Application
+
+The Task Activity Management System provides two user interface options:
+
+### Thymeleaf UI (Traditional Web Interface)
+- **URL**: http://localhost:8080
+- **Description**: Server-rendered HTML interface with full functionality
+- **Login**: Use your username and password
+
+### Angular UI (Modern Single Page Application)
+- **URL**: http://localhost:4200
+- **Description**: Modern Angular-based interface with Material Design
+- **Login**: Use the same username and password as the Thymeleaf UI
+- **Features**: Responsive design, Material UI components, enhanced user experience
+
+Both interfaces connect to the same backend and share the same data and authentication.
+
 ## Administrator Features
 
 ### Managing Users

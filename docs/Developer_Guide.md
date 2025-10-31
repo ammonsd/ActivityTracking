@@ -29,6 +29,9 @@ The Task Activity Management System is a Spring Boot web application designed to
 
 ### Frontend
 
+The application provides two user interface options:
+
+#### Thymeleaf (Server-Side Rendered UI)
 - **Thymeleaf**: Server-side templating engine
 - **HTML5/CSS3**: Modern web standards
 - **CSS Architecture**: Modular external stylesheets
@@ -40,6 +43,21 @@ The Task Activity Management System is a Spring Boot web application designed to
   - Modular utility libraries (modal-utils, password-toggle, date-utils, form-utils)
   - Browser-cached static resources for improved performance
   - Reusable components across templates
+- **Access**: http://localhost:8080
+
+#### Angular (Modern SPA)
+- **Angular 19**: Latest version with standalone components architecture
+- **TypeScript 5.6+**: Type-safe development
+- **Angular Material**: Material Design component library
+- **RxJS**: Reactive programming with Observables
+- **HTTP Client**: RESTful API integration with interceptors
+- **Authentication**: HTTP Basic Auth with session storage
+- **Routing**: Angular Router with auth guards
+- **Access**: http://localhost:4200
+- **Location**: `frontend/` directory
+- **Development Server**: `npm start` (runs on port 4200)
+
+Both UIs connect to the same Spring Boot backend REST API and share authentication.
 
 ### Database
 

@@ -202,6 +202,14 @@ T<!DOCTYPE html>
             <div class="header">
                 <h1>Task Activity List</h1>
                 <div>
+                    <!-- Angular Dashboard - Visible for all -->
+                    <a
+                        th:href="@{/app}"
+                        class="btn btn-success"
+                        style="margin-right: 10px"
+                        title="Angular Admin Dashboard"
+                        >📊 Dashboard</a
+                    >
                     <!-- Weekly Timesheet - USER, GUEST, and ADMIN -->
                     <a
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'')')}"

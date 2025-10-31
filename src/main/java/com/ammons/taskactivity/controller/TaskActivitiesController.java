@@ -41,7 +41,7 @@ public class TaskActivitiesController {
     /**
      * Create a new task activity
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<TaskActivity>> createTaskActivity(
             @Valid @RequestBody TaskActivityDto taskActivityDto,
@@ -58,16 +58,29 @@ public class TaskActivitiesController {
     }
 
     /**
-     * Get all task activities
+     * Get all task activities - ADMIN users: see all tasks - GUEST/USER: see only their own tasks
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getAllTaskActivities(
             Authentication authentication) {
 
-        logger.info("User {} requesting all task activities", authentication.getName());
+            String username = authentication.getName();
+            logger.info("User {} requesting all task activities", username);
 
-        List<TaskActivity> taskActivities = taskActivityService.getAllTaskActivities();
+        // Check if user has ADMIN role
+        boolean isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        List<TaskActivity> taskActivities;
+
+        if (isAdmin) {
+                // Admin sees all tasks
+                taskActivities = taskActivityService.getAllTaskActivities();
+        } else {
+                // GUEST and USER see only their own tasks
+                taskActivities = taskActivityService.getTaskActivitiesByUsername(username);
+        }
 
         ApiResponse<List<TaskActivity>> response =
                 ApiResponse.success("Task activities retrieved successfully", taskActivities)
@@ -79,7 +92,7 @@ public class TaskActivitiesController {
     /**
      * Get task activity by ID
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskActivity>> getTaskActivityById(@PathVariable Long id) {
 
@@ -99,7 +112,7 @@ public class TaskActivitiesController {
     /**
      * Update task activity
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskActivity>> updateTaskActivity(@PathVariable Long id,
             @Valid @RequestBody TaskActivityDto taskActivityDto) {
@@ -133,7 +146,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by date
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping("/by-date")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -151,7 +164,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by date range
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping("/by-date-range")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -171,7 +184,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by client
      */
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping("/by-client")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByClient(
             @RequestParam String client) {

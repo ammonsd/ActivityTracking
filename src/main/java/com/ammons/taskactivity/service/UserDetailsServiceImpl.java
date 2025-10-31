@@ -34,6 +34,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        log.debug("Loading user: {}, password hash starts with: {}", username,
+                user.getPassword() != null
+                        ? user.getPassword().substring(0, Math.min(20, user.getPassword().length()))
+                        : "NULL");
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername()).password(user.getPassword())
                 .authorities("ROLE_" + user.getRole().name()).accountExpired(false)

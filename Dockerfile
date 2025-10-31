@@ -8,8 +8,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code and build
+# Copy source code AND frontend directory for Angular build
 COPY src /app/src
+COPY frontend /app/frontend
 RUN mvn clean package -DskipTests -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)

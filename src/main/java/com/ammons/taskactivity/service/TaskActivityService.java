@@ -44,6 +44,11 @@ public class TaskActivityService {
     }
 
     @Transactional(readOnly = true)
+    public List<TaskActivity> getTaskActivitiesByUsername(String username) {
+        return taskActivityRepository.findByUsername(username);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<TaskActivity> getTaskActivityById(Long id) {
         return taskActivityRepository.findById(id);
     }
