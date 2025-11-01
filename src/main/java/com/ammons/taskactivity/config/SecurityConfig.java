@@ -122,10 +122,26 @@ public class SecurityConfig {
 
                         // All other requests require authentication
                         .anyRequest().authenticated())
-                .httpBasic(basic -> {
-                }) // Enable HTTP Basic Auth for API calls
+                .httpBasic(basic -> basic
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // Only use Basic Auth for API endpoints, not Swagger
+                            String requestUri = request.getRequestURI();
+                            if (requestUri.startsWith("/swagger-ui")
+                                    || requestUri.startsWith("/v3/api-docs")
+                                    || requestUri.startsWith("/swagger-resources")
+                                    || requestUri.startsWith("/webjars")) {
+                                // For Swagger, redirect to login instead of showing Basic Auth
+                                // prompt
+                                response.sendRedirect(LOGIN_URL);
+                            } else {
+                                // For API calls, use Basic Auth
+                                response.setHeader("WWW-Authenticate", "Basic realm=\"API\"");
+                                response.sendError(401, "Unauthorized");
+                            }
+                        })) // Enable HTTP Basic Auth for API calls
                 .formLogin(form -> form.loginPage(LOGIN_URL)
-                        .defaultSuccessUrl("/app", true)
+                        .defaultSuccessUrl("/app", false) // false allows saved request to take
+                                                          // precedence
                                         .successHandler(customAuthenticationSuccessHandler)
                         .failureHandler(customAuthenticationFailureHandler)
                         .usernameParameter("username")

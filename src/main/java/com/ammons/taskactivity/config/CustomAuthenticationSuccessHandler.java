@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -95,9 +97,36 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 }
             }
 
-            // Normal login flow
+            // Normal login flow - check for saved request
             log.debug("User '{}' proceeding with normal login flow", username);
-            getRedirectStrategy().sendRedirect(request, response, DEFAULT_SUCCESS_URL);
+
+            // Get saved request (original URL before login redirect)
+            HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+            SavedRequest savedRequest = requestCache.getRequest(request, response);
+
+            String targetUrl;
+            if (savedRequest != null) {
+                String savedUrl = savedRequest.getRedirectUrl();
+                log.info("Found saved request URL: {}", savedUrl);
+
+                // Map root path to Thymeleaf task list
+                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")) {
+                    targetUrl = "/task-activity/list";
+                    log.info("Root path requested, redirecting to Thymeleaf UI: {}", targetUrl);
+                } else {
+                    targetUrl = savedUrl;
+                    log.info("Redirecting to saved URL: {}", targetUrl);
+                }
+
+                // Clear the saved request
+                requestCache.removeRequest(request, response);
+            } else {
+                // No saved request, default to Angular dashboard
+                targetUrl = DEFAULT_SUCCESS_URL;
+                log.debug("No saved request found, using default URL: {}", targetUrl);
+            }
+
+            getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
         } catch (Exception e) {
             log.error("Error during authentication success handling for user '{}'", username, e);
