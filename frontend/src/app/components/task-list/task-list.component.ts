@@ -295,6 +295,10 @@ import { TaskActivity } from '../../models/task-activity.model';
         background-color: #f5f5f5;
       }
 
+      td.mat-mdc-cell {
+        white-space: nowrap;
+      }
+
       mat-icon {
         font-size: 20px;
       }
