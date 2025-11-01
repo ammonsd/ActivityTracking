@@ -272,7 +272,7 @@ export class UserListComponent implements OnInit {
 
   editUser(user: User): void {
     console.log('Edit user:', user);
-    alert(`Edit functionality not yet implemented for user: ${user.username}`);
+    alert(`Edit functionality not yet implemented`);
     // TODO: Implement edit dialog/form
   }
 

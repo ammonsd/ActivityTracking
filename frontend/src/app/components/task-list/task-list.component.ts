@@ -429,7 +429,7 @@ export class TaskListComponent implements OnInit {
 
   editTask(task: TaskActivity): void {
     console.log('Edit task:', task);
-    alert(`Edit functionality not yet implemented for task ID: ${task.id}`);
+    alert(`Edit functionality not yet implemented`);
     // TODO: Implement edit dialog/form
   }
 

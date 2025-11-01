@@ -443,9 +443,7 @@ export class DropdownManagementComponent implements OnInit {
 
   editDropdown(item: DropdownValue, category: string): void {
     console.log('Edit dropdown:', item, category);
-    alert(
-      `Edit functionality not yet implemented for ${category}: ${item.itemValue}`
-    );
+    alert(`Edit functionality not yet implemented`);
     // TODO: Implement edit dialog/form
   }
 
