@@ -115,6 +115,68 @@
                 background-color: #6c757d;
                 cursor: not-allowed;
             }
+            /* CSV Modal Styles */
+            .csv-modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+            .csv-modal-content {
+                background-color: white;
+                margin: 5% auto;
+                padding: 20px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 800px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .csv-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007bff;
+            }
+            .csv-modal-header h2 {
+                margin: 0;
+                color: #007bff;
+            }
+            .csv-close {
+                color: #aaa;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 0;
+                line-height: 1;
+            }
+            .csv-close:hover,
+            .csv-close:focus {
+                color: #000;
+            }
+            .csv-textarea {
+                width: 100%;
+                min-height: 300px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                resize: vertical;
+            }
+            .csv-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
             @media (max-width: 768px) {
                 .header {
                     flex-direction: column;
@@ -179,6 +241,13 @@
                         th:href="@{/task-activity/list}"
                         class="btn btn-secondary"
                         >Task Activity List</a
+                    >
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="exportCsvBtn"
+                        title="Export to CSV"
+                        >📋 Export CSV</button
                     >
                     <a th:href="@{/task-activity/add}" 
                        class="btn btn-primary"
@@ -300,6 +369,23 @@
             </div>
         </div>
 
+        <!-- CSV Export Modal -->
+        <div id="csvModal" class="csv-modal">
+            <div class="csv-modal-content">
+                <div class="csv-modal-header">
+                    <h2>Export Weekly Timesheet to CSV</h2>
+                    <button class="csv-close" id="csvCloseBtn">&times;</button>
+                </div>
+                <p>Copy the CSV data below:</p>
+                <textarea id="csvOutput" class="csv-textarea" readonly></textarea>
+                <div class="csv-actions">
+                    <button class="btn btn-primary" id="copyCsvBtn">📋 Copy to Clipboard</button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">💾 Download CSV</button>
+                    <button class="btn btn-secondary" id="closeCsvBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
         <script src="/js/date-utils.js"></script>
         <script>
             // Initialize date picker with current or URL date
@@ -355,6 +441,154 @@
                 currentWeekBtn.addEventListener('click', function() {
                     DateUtils.updateUrl(null, '/task-activity/weekly-timesheet'); // Remove date parameter to show current week
                 });
+            });
+
+            // CSV Export Functionality
+            function generateCSV() {
+                const csvRows = [];
+                
+                // Add header row
+                csvRows.push('Date,Day,Client,Project,Phase,Hours,Task Details,Username');
+                
+                // Get all task rows from the table
+                const table = document.querySelector('.timesheet-table');
+                if (!table) {
+                    return 'No data available to export';
+                }
+                
+                let currentDate = '';
+                let currentDay = '';
+                
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    // Check if it's a day header
+                    if (row.classList.contains('day-header')) {
+                        const headerText = row.textContent.trim();
+                        const parts = headerText.split(' ');
+                        if (parts.length >= 2) {
+                            currentDay = parts[0];
+                            currentDate = parts[1];
+                        }
+                    } 
+                    // Skip day totals and week totals
+                    else if (row.classList.contains('day-total') || row.classList.contains('week-total-row')) {
+                        return;
+                    }
+                    // Process task rows
+                    else {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 5) {
+                            const client = cells[0].textContent.trim();
+                            const project = cells[1].textContent.trim();
+                            const phase = cells[2].textContent.trim();
+                            const hours = cells[3].textContent.trim();
+                            const details = cells[4].textContent.trim();
+                            
+                            // Get username from the page (from welcome text)
+                            const usernameElement = document.querySelector('.welcome-text span');
+                            const username = usernameElement ? usernameElement.textContent.trim() : '';
+                            
+                            // Escape fields that might contain commas or quotes
+                            const escapeCsvField = (field) => {
+                                if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+                                    return '"' + field.replace(/"/g, '""') + '"';
+                                }
+                                return field;
+                            };
+                            
+                            csvRows.push([
+                                escapeCsvField(currentDate),
+                                escapeCsvField(currentDay),
+                                escapeCsvField(client),
+                                escapeCsvField(project),
+                                escapeCsvField(phase),
+                                hours,
+                                escapeCsvField(details),
+                                escapeCsvField(username)
+                            ].join(','));
+                        }
+                    }
+                });
+                
+                return csvRows.join('\n');
+            }
+
+            // CSV Modal functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('csvModal');
+                const exportBtn = document.getElementById('exportCsvBtn');
+                const closeBtn = document.getElementById('csvCloseBtn');
+                const closeCsvBtn = document.getElementById('closeCsvBtn');
+                const copyCsvBtn = document.getElementById('copyCsvBtn');
+                const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+                const csvOutput = document.getElementById('csvOutput');
+
+                // Open modal and generate CSV
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', function() {
+                        const csv = generateCSV();
+                        csvOutput.value = csv;
+                        modal.style.display = 'block';
+                    });
+                }
+
+                // Close modal handlers
+                const closeModal = () => {
+                    modal.style.display = 'none';
+                };
+
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                if (closeCsvBtn) closeCsvBtn.addEventListener('click', closeModal);
+
+                // Close when clicking outside modal
+                window.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                // Copy to clipboard
+                if (copyCsvBtn) {
+                    copyCsvBtn.addEventListener('click', function() {
+                        csvOutput.select();
+                        navigator.clipboard.writeText(csvOutput.value).then(() => {
+                            const originalText = copyCsvBtn.textContent;
+                            copyCsvBtn.textContent = '✓ Copied!';
+                            copyCsvBtn.style.backgroundColor = '#28a745';
+                            setTimeout(() => {
+                                copyCsvBtn.textContent = originalText;
+                                copyCsvBtn.style.backgroundColor = '';
+                            }, 2000);
+                        }).catch(err => {
+                            alert('Failed to copy to clipboard. Please select and copy manually.');
+                        });
+                    });
+                }
+
+                // Download CSV
+                if (downloadCsvBtn) {
+                    downloadCsvBtn.addEventListener('click', function() {
+                        const csv = csvOutput.value;
+                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                        const link = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Generate filename with date range
+                        const weekInfo = document.querySelector('.week-info');
+                        let filename = 'weekly-timesheet.csv';
+                        if (weekInfo) {
+                            const dateText = weekInfo.textContent.replace(/[^a-zA-Z0-9-]/g, '_');
+                            filename = 'timesheet_' + dateText + '.csv';
+                        }
+                        
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', filename);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
             });
         </script>
     </body>
