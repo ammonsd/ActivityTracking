@@ -187,7 +187,7 @@ import { TaskActivity } from '../../models/task-activity.model';
 
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef>Actions</th>
-              <td mat-cell *matCellDef="let task">
+              <td mat-cell *matCellDef="let task" class="actions-cell">
                 <button
                   mat-icon-button
                   color="primary"
@@ -295,7 +295,7 @@ import { TaskActivity } from '../../models/task-activity.model';
         background-color: #f5f5f5;
       }
 
-      td.mat-mdc-cell {
+      .actions-cell {
         white-space: nowrap;
       }
 
