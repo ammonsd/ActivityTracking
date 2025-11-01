@@ -4,12 +4,15 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 
 ## Features
 
-- 📝 Record daily task activities with client, project, phase, hours, and details
-- 📊 Weekly timesheet view (Monday-Sunday) with daily and weekly totals
-- 🔍 Filter and search tasks by client, project, phase, and date range
-- ⚙️ Manage dropdown values for clients, projects, and phases
-- 🔒 Data validation prevents deletion of referenced dropdown values
-- 📖 Interactive API documentation with Swagger/OpenAPI
+## Features
+
+- ✅ Daily task recording with client/project/phase tracking
+- 📊 Weekly timesheet view (Monday-Sunday format)
+- 📥 Export filtered tasks and weekly timesheets to CSV format
+- 🔍 Filter and search capabilities
+- 🎯 Dynamic dropdown management for clients, projects, and phases
+- ✔️ Data validation and error handling
+- � Comprehensive API documentation (Swagger/OpenAPI)
 
 ## Tech Stack
 

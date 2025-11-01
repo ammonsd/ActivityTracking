@@ -372,4 +372,64 @@ public class UserManagementController {
             });
         }
     }
+
+    /**
+     * Export all users as CSV
+     */
+    @GetMapping("/export-csv")
+    @ResponseBody
+    public String exportUsersToCsv(@RequestParam(required = false) String username,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) String company) {
+
+        List<User> users;
+
+        // Apply filters if provided
+        if ((username != null && !username.trim().isEmpty()) || role != null
+                || (company != null && !company.trim().isEmpty())) {
+            users = userService.filterUsers(username, role, company);
+        } else {
+            users = userService.getAllUsers();
+        }
+
+        // Sort by username
+        users.sort((u1, u2) -> u1.getUsername().compareToIgnoreCase(u2.getUsername()));
+
+        return generateUserCsv(users);
+    }
+
+    private String generateUserCsv(List<User> users) {
+        StringBuilder csv = new StringBuilder();
+
+        // Header
+        csv.append("Username,First Name,Last Name,Company,Role,Enabled,Force Password Update\n");
+
+        // Data rows
+        for (User user : users) {
+            csv.append(escapeCsvField(user.getUsername())).append(",");
+            csv.append(escapeCsvField(user.getFirstname() != null ? user.getFirstname() : ""))
+                    .append(",");
+            csv.append(escapeCsvField(user.getLastname() != null ? user.getLastname() : ""))
+                    .append(",");
+            csv.append(escapeCsvField(user.getCompany() != null ? user.getCompany() : ""))
+                    .append(",");
+            csv.append(user.getRole()).append(",");
+            csv.append(user.isEnabled()).append(",");
+            csv.append(user.isForcePasswordUpdate());
+            csv.append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    private String escapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+        if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
+    }
 }
+

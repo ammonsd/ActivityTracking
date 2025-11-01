@@ -667,4 +667,148 @@ public class TaskActivityWebController {
             return "error";
         }
     }
+
+    @GetMapping("/list/export-csv")
+    @ResponseBody
+    public String exportTaskListToCsv(@RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Authentication authentication) {
+
+        // Check if user is admin - admins see all tasks, regular users see only their own
+        boolean isUserAdmin = isAdmin(authentication);
+        String currentUsername = isUserAdmin ? null : getUsername(authentication);
+
+        // Determine which username to filter by
+        String filterUsername =
+                (isUserAdmin && username != null && !username.trim().isEmpty()) ? username
+                        : currentUsername;
+
+        // Fetch ALL tasks based on filters (no pagination)
+        List<TaskActivity> allTasks = fetchAllFilteredTasks(client, project, startDate, endDate,
+                isUserAdmin, filterUsername);
+
+        // Apply phase filter in-memory if needed
+        List<TaskActivity> filteredTasks = filterByPhase(allTasks, phase);
+
+        // Generate CSV
+        return generateCsvFromTasks(filteredTasks, isUserAdmin);
+    }
+
+    private List<TaskActivity> fetchAllFilteredTasks(String client, String project,
+            LocalDate startDate, LocalDate endDate, boolean isUserAdmin, String username) {
+        if (isUserAdmin && (username == null || username.trim().isEmpty())) {
+            // Admin with no username filter - fetch all tasks
+            return fetchAllTasksNoPagination(client, project, startDate, endDate);
+        } else {
+            // Admin with username filter OR regular user - fetch filtered tasks
+            return fetchUserTasksNoPagination(username, client, project, startDate, endDate);
+        }
+    }
+
+    private List<TaskActivity> fetchAllTasksNoPagination(String client, String project,
+            LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null) {
+            return taskActivityService.getTaskActivitiesInDateRange(startDate, endDate);
+        } else if (startDate != null) {
+            return taskActivityService.getTaskActivitiesByDate(startDate);
+        } else if (client != null && !client.trim().isEmpty()) {
+            return taskActivityService.getTaskActivitiesByClient(client);
+        } else if (project != null && !project.trim().isEmpty()) {
+            return taskActivityService.getTaskActivitiesByProject(project);
+        } else {
+            return taskActivityService.getAllTaskActivities();
+        }
+    }
+
+    private List<TaskActivity> fetchUserTasksNoPagination(String username, String client,
+            String project, LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null) {
+            return taskActivityService.getTaskActivitiesInDateRangeForUser(username, startDate,
+                    endDate);
+        } else if (client != null && !client.trim().isEmpty()) {
+            // Filter by client - get all user tasks then filter
+            return taskActivityService.getTaskActivitiesByUsername(username).stream()
+                    .filter(task -> task.getClient().equalsIgnoreCase(client)).toList();
+        } else if (project != null && !project.trim().isEmpty()) {
+            // Filter by project - get all user tasks then filter
+            return taskActivityService.getTaskActivitiesByUsername(username).stream()
+                    .filter(task -> task.getProject().equalsIgnoreCase(project)).toList();
+        } else if (startDate != null) {
+            // Filter by single date - get all user tasks then filter
+            return taskActivityService.getTaskActivitiesByUsername(username).stream()
+                    .filter(task -> task.getTaskDate().equals(startDate)).toList();
+        } else {
+            return taskActivityService.getTaskActivitiesByUsername(username);
+        }
+    }
+
+    private String generateCsvFromTasks(List<TaskActivity> tasks, boolean includeUsername) {
+        StringBuilder csv = new StringBuilder();
+
+        // Add header row
+        if (includeUsername) {
+            csv.append("Date,Client,Project,Phase,Hours,Details,Username\n");
+        } else {
+            csv.append("Date,Client,Project,Phase,Hours,Details\n");
+        }
+
+        // Sort tasks by date (newest first), then by client, then by project
+        List<TaskActivity> sortedTasks = tasks.stream().sorted((t1, t2) -> {
+            int dateCompare = t2.getTaskDate().compareTo(t1.getTaskDate());
+            if (dateCompare != 0)
+                return dateCompare;
+
+            int clientCompare = t1.getClient().compareToIgnoreCase(t2.getClient());
+            if (clientCompare != 0)
+                return clientCompare;
+
+            return t1.getProject().compareToIgnoreCase(t2.getProject());
+        }).toList();
+
+        // Add data rows
+        for (TaskActivity task : sortedTasks) {
+            csv.append(formatCsvField(task.getTaskDate().toString())).append(",");
+            csv.append(escapeCsvField(task.getClient())).append(",");
+            csv.append(escapeCsvField(task.getProject())).append(",");
+            csv.append(escapeCsvField(task.getPhase())).append(",");
+            csv.append(task.getHours()).append(",");
+            csv.append(escapeCsvField(task.getDetails() != null ? task.getDetails() : ""));
+
+            if (includeUsername) {
+                csv.append(",").append(escapeCsvField(task.getUsername()));
+            }
+
+            csv.append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    private String formatCsvField(String dateStr) {
+        // Convert ISO date format (yyyy-MM-dd) to MM/dd/yyyy
+        try {
+            LocalDate date = LocalDate.parse(dateStr);
+            return String.format("%02d/%02d/%04d", date.getMonthValue(), date.getDayOfMonth(),
+                    date.getYear());
+        } catch (Exception e) {
+            return dateStr;
+        }
+    }
+
+    private String escapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
+    }
 }

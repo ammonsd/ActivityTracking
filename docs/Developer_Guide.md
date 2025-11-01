@@ -1840,6 +1840,51 @@ GET /task-activity/weekly-timesheet
 
 **Response:** Renders `weekly-timesheet.html` with tasks grouped by day
 
+#### Task List CSV Export Endpoint
+
+```http
+GET /task-activity/list/export-csv
+```
+
+**Query Parameters:**
+
+- `client` (optional): Filter by client name
+- `project` (optional): Filter by project name
+- `phase` (optional): Filter by phase name
+- `username` (optional, admin only): Filter by specific username
+- `startDate` (optional): Filter by start date (ISO date format)
+- `endDate` (optional): Filter by end date (ISO date format)
+
+**Access Control:**
+
+- Regular users: Automatically filtered to export only their own tasks
+- Administrators: Can export all tasks or filter by specific username
+
+**Response:** Returns CSV formatted string with all filtered tasks (bypasses pagination)
+
+**CSV Format:**
+
+```csv
+Date,Client,Project,Phase,Hours,Details
+10/01/2025,Client A,Project X,Development,8.0,"Task details here"
+```
+
+**Additional Column for Administrators:**
+
+When accessed by admin users, includes `Username` column before `Details`:
+
+```csv
+Date,Client,Project,Phase,Hours,Username,Details
+```
+
+**Implementation Notes:**
+
+- Uses `TaskActivityWebController.exportTaskListToCsv()` method
+- Fetches ALL filtered tasks, not just the current page (bypasses 20-item pagination limit)
+- Automatically enforces role-based access control
+- Properly escapes CSV fields containing commas, quotes, or newlines
+- Used by the Task List page's CSV export modal for copy/download functionality
+
 #### Task Detail Endpoint
 
 ```http

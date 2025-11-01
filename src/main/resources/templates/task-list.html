@@ -103,6 +103,67 @@ T<!DOCTYPE html>
                 cursor: not-allowed;
                 background-color: #f8f9fa;
             }
+            .csv-modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+            .csv-modal-content {
+                background-color: white;
+                margin: 5% auto;
+                padding: 20px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 800px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .csv-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007bff;
+            }
+            .csv-modal-header h2 {
+                margin: 0;
+                color: #007bff;
+            }
+            .csv-close {
+                color: #aaa;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 0;
+                line-height: 1;
+            }
+            .csv-close:hover,
+            .csv-close:focus {
+                color: #000;
+            }
+            .csv-textarea {
+                width: 100%;
+                min-height: 300px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                resize: vertical;
+            }
+            .csv-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
             @media (max-width: 768px) {
                 .filter-row {
                     flex-direction: column;
@@ -209,6 +270,15 @@ T<!DOCTYPE html>
                         style="margin-right: 10px"
                         title="Angular Admin Dashboard"
                         >📊 Dashboard</a
+                    >
+                    <!-- Export CSV Button -->
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="exportCsvBtn"
+                        title="Export to CSV"
+                        style="margin-right: 10px"
+                        >📋 Export CSV</button
                     >
                     <!-- Weekly Timesheet - USER, GUEST, and ADMIN -->
                     <a
@@ -476,5 +546,153 @@ T<!DOCTYPE html>
                 </div>
             </div>
         </div>
+
+        <!-- CSV Export Modal -->
+        <div id="csvModal" class="csv-modal">
+            <div class="csv-modal-content">
+                <div class="csv-modal-header">
+                    <h2>Export Task Activity List to CSV</h2>
+                    <button class="csv-close" id="csvCloseBtn">&times;</button>
+                </div>
+                <p>Copy the CSV data below (filtered entries only):</p>
+                <textarea id="csvOutput" class="csv-textarea" readonly></textarea>
+                <div class="csv-actions">
+                    <button class="btn btn-primary" id="copyCsvBtn">📋 Copy to Clipboard</button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">💾 Download CSV</button>
+                    <button class="btn btn-secondary" id="closeCsvBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // CSV Export Functionality
+            function generateCSV() {
+                // Get current filter parameters from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Build query string for export endpoint
+                const exportParams = new URLSearchParams();
+                if (urlParams.get('client')) exportParams.set('client', urlParams.get('client'));
+                if (urlParams.get('project')) exportParams.set('project', urlParams.get('project'));
+                if (urlParams.get('phase')) exportParams.set('phase', urlParams.get('phase'));
+                if (urlParams.get('username')) exportParams.set('username', urlParams.get('username'));
+                if (urlParams.get('startDate')) exportParams.set('startDate', urlParams.get('startDate'));
+                if (urlParams.get('endDate')) exportParams.set('endDate', urlParams.get('endDate'));
+                
+                // Fetch CSV data from server (all filtered entries)
+                const exportUrl = '/task-activity/list/export-csv?' + exportParams.toString();
+                
+                return fetch(exportUrl)
+                    .then(response => response.text())
+                    .catch(error => {
+                        console.error('Error fetching CSV data:', error);
+                        return 'Error generating CSV data';
+                    });
+            }
+
+            // CSV Modal functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('csvModal');
+                const exportBtn = document.getElementById('exportCsvBtn');
+                const closeBtn = document.getElementById('csvCloseBtn');
+                const closeCsvBtn = document.getElementById('closeCsvBtn');
+                const copyCsvBtn = document.getElementById('copyCsvBtn');
+                const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+                const csvOutput = document.getElementById('csvOutput');
+
+                // Open modal and generate CSV
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', function() {
+                        // Show loading message
+                        csvOutput.value = 'Loading data...';
+                        modal.style.display = 'block';
+                        
+                        // Fetch CSV data asynchronously
+                        generateCSV().then(csv => {
+                            csvOutput.value = csv;
+                        });
+                    });
+                }
+
+                // Close modal handlers
+                const closeModal = () => {
+                    modal.style.display = 'none';
+                };
+
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                if (closeCsvBtn) closeCsvBtn.addEventListener('click', closeModal);
+
+                // Close when clicking outside modal
+                window.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                // Copy to clipboard
+                if (copyCsvBtn) {
+                    copyCsvBtn.addEventListener('click', function() {
+                        csvOutput.select();
+                        navigator.clipboard.writeText(csvOutput.value).then(() => {
+                            const originalText = copyCsvBtn.textContent;
+                            copyCsvBtn.textContent = '✓ Copied!';
+                            copyCsvBtn.style.backgroundColor = '#28a745';
+                            setTimeout(() => {
+                                copyCsvBtn.textContent = originalText;
+                                copyCsvBtn.style.backgroundColor = '';
+                            }, 2000);
+                        }).catch(err => {
+                            alert('Failed to copy to clipboard. Please select and copy manually.');
+                        });
+                    });
+                }
+
+                // Download CSV
+                if (downloadCsvBtn) {
+                    downloadCsvBtn.addEventListener('click', function() {
+                        const csv = csvOutput.value;
+                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                        const link = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Generate filename with filter info
+                        let filename = 'TaskActivity';
+                        
+                        // Add filter info to filename if applicable
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const client = urlParams.get('client');
+                        const project = urlParams.get('project');
+                        const phase = urlParams.get('phase');
+                        const startDate = urlParams.get('startDate');
+                        const endDate = urlParams.get('endDate');
+                        
+                        if (client) filename += '_' + client.replace(/[^a-zA-Z0-9]/g, '_');
+                        if (project) filename += '_' + project.replace(/[^a-zA-Z0-9]/g, '_');
+                        if (phase) filename += '_' + phase.replace(/[^a-zA-Z0-9]/g, '_');
+                        if (startDate && endDate) {
+                            filename += '_' + startDate.replace(/\//g, '-') + '_to_' + endDate.replace(/\//g, '-');
+                        } else if (startDate) {
+                            filename += '_from_' + startDate.replace(/\//g, '-');
+                        } else if (endDate) {
+                            filename += '_to_' + endDate.replace(/\//g, '-');
+                        }
+                        
+                        // Add timestamp
+                        const now = new Date();
+                        const timestamp = now.getFullYear() + 
+                            String(now.getMonth() + 1).padStart(2, '0') + 
+                            String(now.getDate()).padStart(2, '0');
+                        filename += '_' + timestamp + '.csv';
+                        
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', filename);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
+            });
+        </script>
     </body>
 </html>

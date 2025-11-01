@@ -276,4 +276,68 @@ public class DropdownAdminController {
             model.addAttribute("userDisplayName", displayName);
         });
     }
+
+    /**
+     * Export all dropdown values as CSV
+     */
+    @GetMapping("/export-csv")
+    @ResponseBody
+    public String exportDropdownValuesToCsv(@RequestParam(required = false) String category) {
+
+        List<DropdownValue> dropdownValues;
+
+        // Apply category filter if provided
+        if (category != null && !category.trim().isEmpty()) {
+            dropdownValues = dropdownValueService.getAllValuesByCategory(category);
+        } else {
+            // Get all dropdowns from all categories
+            dropdownValues = dropdownValueService.getAllValuesByCategory("CLIENT");
+            dropdownValues.addAll(dropdownValueService.getAllValuesByCategory("PROJECT"));
+            dropdownValues.addAll(dropdownValueService.getAllValuesByCategory("PHASE"));
+        }
+
+        // Sort by category, then display order, then item value
+        dropdownValues.sort((d1, d2) -> {
+            int categoryCompare = d1.getCategory().compareToIgnoreCase(d2.getCategory());
+            if (categoryCompare != 0)
+                return categoryCompare;
+
+            int orderCompare = Integer.compare(d1.getDisplayOrder(), d2.getDisplayOrder());
+            if (orderCompare != 0)
+                return orderCompare;
+
+            return d1.getItemValue().compareToIgnoreCase(d2.getItemValue());
+        });
+
+        return generateDropdownCsv(dropdownValues);
+    }
+
+    private String generateDropdownCsv(List<DropdownValue> dropdownValues) {
+        StringBuilder csv = new StringBuilder();
+
+        // Header
+        csv.append("Category,Item Value,Display Order,Active\n");
+
+        // Data rows
+        for (DropdownValue dv : dropdownValues) {
+            csv.append(escapeCsvField(dv.getCategory())).append(",");
+            csv.append(escapeCsvField(dv.getItemValue())).append(",");
+            csv.append(dv.getDisplayOrder()).append(",");
+            csv.append(dv.getIsActive());
+            csv.append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    private String escapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+        if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
+    }
 }
+
