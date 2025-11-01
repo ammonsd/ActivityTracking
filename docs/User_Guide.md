@@ -122,6 +122,37 @@ The timesheet displays:
 2. **Next Week**: Click **"Next Week ►"** button
 3. **Specific Week**: Use the date picker to jump to any week
 
+### Exporting Timesheet Data
+
+You can export your weekly timesheet data to CSV format for easy sharing or importing into other applications.
+
+**To Export Your Timesheet:**
+
+1. **Navigate to Week**: Display the week you want to export
+2. **Click Export Button**: Click **"📋 Export CSV"** in the header
+3. **Choose Action**:
+   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **💾 Download CSV**: Downloads a file named `Timesheet_Week_of_MM-DD-YYYY_to_MM-DD-YYYY.csv`
+   - **Close**: Close the export window
+
+**CSV Format:**
+
+The exported data includes:
+- Date (MM/DD/YYYY)
+- Client name
+- Project name
+- Phase
+- Hours worked
+- Task details
+- Username
+
+**Example CSV Output:**
+```
+Date,Client,Project,Phase,Hours,Task Details,Username
+10/28/2025,Acme Corp,Website Redesign,Development,8.00,Fixed login bug,jsmith
+10/29/2025,Acme Corp,Website Redesign,Testing,6.50,QA testing,jsmith
+```
+
 ## Changing Your Password
 
 Your new password must meet these requirements:
