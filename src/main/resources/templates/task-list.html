@@ -230,26 +230,28 @@ T<!DOCTYPE html>
                         th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                         >🔒 Update Password</a
                     >
-                    <!-- Manage Users - Visible for all, but disabled for non-admins -->
+                    <!-- Manage Users - Hidden for USER, disabled for GUEST, active for ADMIN -->
                     <a
+                        th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
                         th:href="@{/task-activity/manage-users}"
                         class="btn btn-info"
                         style="margin-right: 10px"
                         title="Manage Users"
-                        th:classappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
+                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                         >👥 Manage Users</a
                     >
-                    <!-- Manage Dropdowns - Visible for all, but disabled for non-admins -->
+                    <!-- Manage Dropdowns - Hidden for USER, disabled for GUEST, active for ADMIN -->
                     <a
+                        th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
                         th:href="@{/admin/dropdowns}"
                         class="btn btn-info"
                         style="margin-right: 10px"
                         title="Manage Dropdowns"
-                        th:classappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('!hasRole(''ADMIN'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('!hasRole(''ADMIN'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
+                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                         >🔧 Manage Dropdowns</a
                     >
                     <!-- Add New Task - All authenticated users -->
