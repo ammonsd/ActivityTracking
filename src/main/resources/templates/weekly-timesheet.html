@@ -448,7 +448,7 @@
                 const csvRows = [];
                 
                 // Add header row
-                csvRows.push('Date,Day,Client,Project,Phase,Hours,Task Details,Username');
+                csvRows.push('Date,Client,Project,Phase,Hours,Task Details,Username');
                 
                 // Get all task rows from the table
                 const table = document.querySelector('.timesheet-table');
@@ -457,17 +457,16 @@
                 }
                 
                 let currentDate = '';
-                let currentDay = '';
                 
                 const rows = table.querySelectorAll('tbody tr');
                 rows.forEach(row => {
                     // Check if it's a day header
                     if (row.classList.contains('day-header')) {
-                        const headerText = row.textContent.trim();
-                        const parts = headerText.split(' ');
-                        if (parts.length >= 2) {
-                            currentDay = parts[0];
-                            currentDate = parts[1];
+                        const headerText = row.textContent.trim().replace(/\s+/g, ' ');
+                        // Extract just the date (MM/DD/YYYY format)
+                        const dateMatch = headerText.match(/(\d{2}\/\d{2}\/\d{4})/);
+                        if (dateMatch) {
+                            currentDate = dateMatch[1];
                         }
                     } 
                     // Skip day totals and week totals
@@ -482,7 +481,7 @@
                             const project = cells[1].textContent.trim();
                             const phase = cells[2].textContent.trim();
                             const hours = cells[3].textContent.trim();
-                            const details = cells[4].textContent.trim();
+                            const details = cells[4].textContent.trim().replace(/\s+/g, ' ');
                             
                             // Get username from the page (from welcome text)
                             const usernameElement = document.querySelector('.welcome-text span');
@@ -497,8 +496,7 @@
                             };
                             
                             csvRows.push([
-                                escapeCsvField(currentDate),
-                                escapeCsvField(currentDay),
+                                currentDate,
                                 escapeCsvField(client),
                                 escapeCsvField(project),
                                 escapeCsvField(phase),
@@ -573,12 +571,46 @@
                         const link = document.createElement('a');
                         const url = URL.createObjectURL(blob);
                         
-                        // Generate filename with date range
-                        const weekInfo = document.querySelector('.week-info');
-                        let filename = 'weekly-timesheet.csv';
-                        if (weekInfo) {
-                            const dateText = weekInfo.textContent.replace(/[^a-zA-Z0-9-]/g, '_');
-                            filename = 'timesheet_' + dateText + '.csv';
+                        // Generate filename with date range in MM/DD/YYYY format
+                        let filename = 'Timesheet.csv';
+                        
+                        // Get start and end dates from the weeklyData
+                        const weekStartElement = document.querySelector('.week-info span:first-of-type');
+                        const weekEndElement = document.querySelector('.week-info span:last-of-type');
+                        
+                        if (weekStartElement && weekEndElement) {
+                            // Parse the dates - they're in format like "Oct 27" and "Nov 02, 2025"
+                            const startText = weekStartElement.textContent.trim();
+                            const endText = weekEndElement.textContent.trim();
+                            
+                            // Get the year from end date
+                            const yearMatch = endText.match(/\d{4}/);
+                            const year = yearMatch ? yearMatch[0] : new Date().getFullYear();
+                            
+                            // Convert month names to numbers
+                            const monthMap = {
+                                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                            };
+                            
+                            // Parse start date (e.g., "Oct 27")
+                            const startParts = startText.match(/(\w+)\s+(\d+)/);
+                            if (startParts) {
+                                const startMonth = monthMap[startParts[1]];
+                                const startDay = startParts[2].padStart(2, '0');
+                                const startDate = startMonth + '/' + startDay + '/' + year;
+                                
+                                // Parse end date (e.g., "Nov 02, 2025")
+                                const endParts = endText.match(/(\w+)\s+(\d+)/);
+                                if (endParts) {
+                                    const endMonth = monthMap[endParts[1]];
+                                    const endDay = endParts[2].padStart(2, '0');
+                                    const endDate = endMonth + '/' + endDay + '/' + year;
+                                    
+                                    filename = 'Timesheet_Week_of_' + startDate.replace(/\//g, '-') + '_to_' + endDate.replace(/\//g, '-') + '.csv';
+                                }
+                            }
                         }
                         
                         link.setAttribute('href', url);
