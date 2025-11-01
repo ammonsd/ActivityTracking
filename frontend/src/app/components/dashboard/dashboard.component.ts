@@ -26,9 +26,6 @@ import { AuthService } from '../../services/auth.service';
             <mat-icon>assignment</mat-icon>
             <mat-card-title>Task Activities</mat-card-title>
           </mat-card-header>
-          <mat-card-content>
-            <p>View, create, and manage task activities</p>
-          </mat-card-content>
         </mat-card>
 
         <mat-card
@@ -41,9 +38,6 @@ import { AuthService } from '../../services/auth.service';
             <mat-icon>people</mat-icon>
             <mat-card-title>User Management</mat-card-title>
           </mat-card-header>
-          <mat-card-content>
-            <p>Manage users and permissions</p>
-          </mat-card-content>
         </mat-card>
 
         <mat-card
@@ -56,19 +50,13 @@ import { AuthService } from '../../services/auth.service';
             <mat-icon>list</mat-icon>
             <mat-card-title>Dropdown Management</mat-card-title>
           </mat-card-header>
-          <mat-card-content>
-            <p>Manage clients, projects, and phases</p>
-          </mat-card-content>
         </mat-card>
 
         <mat-card class="dashboard-card" routerLink="/reports">
           <mat-card-header>
             <mat-icon>analytics</mat-icon>
-            <mat-card-title>Reports</mat-card-title>
+            <mat-card-title>Reports (Coming Soon)</mat-card-title>
           </mat-card-header>
-          <mat-card-content>
-            <p>View analytics and reports (Coming Soon)</p>
-          </mat-card-content>
         </mat-card>
       </div>
 
