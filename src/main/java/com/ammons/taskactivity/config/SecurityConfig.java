@@ -123,22 +123,37 @@ public class SecurityConfig {
                         // All other requests require authentication
                         .anyRequest().authenticated())
                 .httpBasic(basic -> basic
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            // Only use Basic Auth for API endpoints, not Swagger
-                            String requestUri = request.getRequestURI();
-                            if (requestUri.startsWith("/swagger-ui")
-                                    || requestUri.startsWith("/v3/api-docs")
-                                    || requestUri.startsWith("/swagger-resources")
-                                    || requestUri.startsWith("/webjars")) {
-                                // For Swagger, redirect to login instead of showing Basic Auth
-                                // prompt
-                                response.sendRedirect(LOGIN_URL);
-                            } else {
-                                // For API calls, use Basic Auth
-                                response.setHeader("WWW-Authenticate", "Basic realm=\"API\"");
-                                response.sendError(401, "Unauthorized");
-                            }
-                        })) // Enable HTTP Basic Auth for API calls
+                                        .authenticationEntryPoint(
+                                                        (request, response, authException) -> {
+                                                                String requestUri = request
+                                                                                .getRequestURI();
+                                                                // Don't send WWW-Authenticate
+                                                                // header for Swagger endpoints
+                                                                // This prevents the browser auth
+                                                                // popup
+                                                                if (requestUri.startsWith(
+                                                                                "/swagger-ui")
+                                                                                || requestUri.startsWith(
+                                                                                                "/v3/api-docs")
+                                                                                || requestUri.startsWith(
+                                                                                                "/swagger-resources")
+                                                                                || requestUri.startsWith(
+                                                                                                "/webjars")) {
+                                                                        // No WWW-Authenticate
+                                                                        // header - prevents browser
+                                                                        // popup
+                                                                        response.sendError(401,
+                                                                                        "Unauthorized");
+                                                                } else {
+                                                                        // For API calls, use Basic
+                                                                        // Auth
+                                                                        response.setHeader(
+                                                                                        "WWW-Authenticate",
+                                                                                        "Basic realm=\"API\"");
+                                                                        response.sendError(401,
+                                                                                        "Unauthorized");
+                                                                }
+                                                        })) // Enable HTTP Basic Auth for API calls
                 .formLogin(form -> form.loginPage(LOGIN_URL)
                         .defaultSuccessUrl("/app", false) // false allows saved request to take
                                                           // precedence
