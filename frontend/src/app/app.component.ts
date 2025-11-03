@@ -49,6 +49,14 @@ export class AppComponent {
     console.log('AppComponent - Initial username:', this.currentUser);
     console.log('AppComponent - Initial role:', this.currentRole);
 
+    // Subscribe to user changes
+    this.authService.currentUser$.subscribe({
+      next: (username: string) => {
+        console.log('AppComponent - Username updated:', username);
+        this.currentUser = username;
+      },
+    });
+
     // Subscribe to role changes
     this.authService.userRole$.subscribe({
       next: (role: string) => {
