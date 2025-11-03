@@ -11,9 +11,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 import { TaskActivityService } from '../../services/task-activity.service';
 import { AuthService } from '../../services/auth.service';
 import { TaskActivity } from '../../models/task-activity.model';
+import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -327,7 +329,8 @@ export class TaskListComponent implements OnInit {
 
   constructor(
     private readonly taskService: TaskActivityService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -432,9 +435,27 @@ export class TaskListComponent implements OnInit {
   }
 
   editTask(task: TaskActivity): void {
-    console.log('Edit task:', task);
-    alert(`Edit functionality not yet implemented`);
-    // TODO: Implement edit dialog/form
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      data: { task: { ...task } }, // Pass a copy
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.taskService.updateTask(result.id, result).subscribe({
+          next: (response) => {
+            console.log('Task updated successfully:', response);
+            this.loadTasks(); // Reload the list
+          },
+          error: (err) => {
+            console.error('Error updating task:', err);
+            alert(
+              'Failed to update task. You may not have permission or the task no longer exists.'
+            );
+          },
+        });
+      }
+    });
   }
 
   deleteTask(task: TaskActivity): void {

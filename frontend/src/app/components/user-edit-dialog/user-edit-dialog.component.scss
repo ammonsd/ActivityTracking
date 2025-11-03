@@ -1,0 +1,17 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-dialog-content {
+  min-width: 500px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}

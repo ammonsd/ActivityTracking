@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>Edit User: {{ data.user.username }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="userForm">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>First Name</mat-label>
+      <input matInput formControlName="firstname" required />
+      <mat-error *ngIf="userForm.get('firstname')?.hasError('required')">
+        First name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Last Name</mat-label>
+      <input matInput formControlName="lastname" required />
+      <mat-error *ngIf="userForm.get('lastname')?.hasError('required')">
+        Last name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Company</mat-label>
+      <input matInput formControlName="company" required />
+      <mat-error *ngIf="userForm.get('company')?.hasError('required')">
+        Company is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role" required>
+        <mat-option *ngFor="let role of roles" [value]="role">
+          {{ role }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="userForm.get('role')?.hasError('required')">
+        Role is required
+      </mat-error>
+    </mat-form-field>
+
+    <div class="checkbox-group">
+      <mat-checkbox formControlName="enabled">Account Enabled</mat-checkbox>
+      <mat-checkbox formControlName="forcePasswordUpdate"
+        >Force Password Update</mat-checkbox
+      >
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="!userForm.valid"
+  >
+    Save
+  </button>
+</mat-dialog-actions>

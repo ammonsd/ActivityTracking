@@ -5,9 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/task-activity.model';
+import { UserEditDialogComponent } from '../user-edit-dialog/user-edit-dialog.component';
 
 @Component({
   selector: 'app-user-list',
@@ -242,7 +244,8 @@ export class UserListComponent implements OnInit {
 
   constructor(
     private readonly userService: UserService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -271,9 +274,25 @@ export class UserListComponent implements OnInit {
   }
 
   editUser(user: User): void {
-    console.log('Edit user:', user);
-    alert(`Edit functionality not yet implemented`);
-    // TODO: Implement edit dialog/form
+    const dialogRef = this.dialog.open(UserEditDialogComponent, {
+      width: '500px',
+      data: { user: { ...user } },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.userService.updateUser(result.id, result).subscribe({
+          next: (response) => {
+            console.log('User updated successfully:', response);
+            this.loadUsers();
+          },
+          error: (err) => {
+            console.error('Error updating user:', err);
+            alert('Failed to update user. You may not have admin permission.');
+          },
+        });
+      }
+    });
   }
 
   deleteUser(user: User): void {

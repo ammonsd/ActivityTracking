@@ -1,0 +1,99 @@
+<h2 mat-dialog-title>Edit Task Activity</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="taskForm">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date</mat-label>
+      <input
+        matInput
+        [matDatepicker]="picker"
+        formControlName="taskDate"
+        required
+      />
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="taskForm.get('taskDate')?.hasError('required')">
+        Date is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Client</mat-label>
+      <mat-select formControlName="client" required>
+        <mat-option *ngFor="let client of clients" [value]="client.itemValue">
+          {{ client.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="taskForm.get('client')?.hasError('required')">
+        Client is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Project</mat-label>
+      <mat-select formControlName="project" required>
+        <mat-option
+          *ngFor="let project of projects"
+          [value]="project.itemValue"
+        >
+          {{ project.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="taskForm.get('project')?.hasError('required')">
+        Project is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Phase</mat-label>
+      <mat-select formControlName="phase" required>
+        <mat-option *ngFor="let phase of phases" [value]="phase.itemValue">
+          {{ phase.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="taskForm.get('phase')?.hasError('required')">
+        Phase is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Hours</mat-label>
+      <input
+        matInput
+        type="number"
+        step="0.25"
+        formControlName="hours"
+        required
+      />
+      <mat-error *ngIf="taskForm.get('hours')?.hasError('required')">
+        Hours is required
+      </mat-error>
+      <mat-error *ngIf="taskForm.get('hours')?.hasError('min')">
+        Minimum 0.25 hours
+      </mat-error>
+      <mat-error *ngIf="taskForm.get('hours')?.hasError('max')">
+        Maximum 24 hours
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Details</mat-label>
+      <textarea matInput formControlName="details" rows="3" required></textarea>
+      <mat-error *ngIf="taskForm.get('details')?.hasError('required')">
+        Details are required
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="!taskForm.valid"
+  >
+    Save
+  </button>
+</mat-dialog-actions>

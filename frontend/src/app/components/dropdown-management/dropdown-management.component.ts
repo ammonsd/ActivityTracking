@@ -6,9 +6,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { DropdownService } from '../../services/dropdown.service';
 import { AuthService } from '../../services/auth.service';
 import { DropdownValue } from '../../models/task-activity.model';
+import { DropdownEditDialogComponent } from '../dropdown-edit-dialog/dropdown-edit-dialog.component';
 
 @Component({
   selector: 'app-dropdown-management',
@@ -389,7 +391,8 @@ export class DropdownManagementComponent implements OnInit {
 
   constructor(
     private readonly dropdownService: DropdownService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -442,9 +445,34 @@ export class DropdownManagementComponent implements OnInit {
   }
 
   editDropdown(item: DropdownValue, category: string): void {
-    console.log('Edit dropdown:', item, category);
-    alert(`Edit functionality not yet implemented`);
-    // TODO: Implement edit dialog/form
+    const dialogRef = this.dialog.open(DropdownEditDialogComponent, {
+      width: '400px',
+      data: { item: { ...item }, category },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.dropdownService.updateDropdownValue(result.id, result).subscribe({
+          next: () => {
+            console.log('Dropdown updated successfully');
+            // Reload appropriate category
+            if (category === 'CLIENT') {
+              this.loadClients();
+            } else if (category === 'PROJECT') {
+              this.loadProjects();
+            } else if (category === 'PHASE') {
+              this.loadPhases();
+            }
+          },
+          error: (err) => {
+            console.error('Error updating dropdown:', err);
+            alert(
+              'Failed to update dropdown value. You may not have admin permission.'
+            );
+          },
+        });
+      }
+    });
   }
 
   deleteDropdown(item: DropdownValue, category: string): void {
