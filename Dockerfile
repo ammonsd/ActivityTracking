@@ -15,7 +15,8 @@ COPY frontend /app/frontend
 # Debug: Show what files are in frontend/dist before Maven runs
 RUN ls -la /app/frontend/dist/app/browser/main-*.js || echo "No main-*.js files found"
 
-RUN mvn clean package -DskipTests -Dskip.frontend.build=true -B
+# Use 'package' without 'clean' to preserve copied frontend/dist files
+RUN mvn package -DskipTests -Dskip.frontend.build=true -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
 FROM eclipse-temurin:21-jre-jammy
