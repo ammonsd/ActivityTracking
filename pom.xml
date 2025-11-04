@@ -175,6 +175,10 @@
 									<directory>frontend/.angular</directory>
 									<followSymlinks>false</followSymlinks>
 								</fileset>
+								<fileset>
+									<directory>target/classes/static/app</directory>
+									<followSymlinks>false</followSymlinks>
+								</fileset>
 							</filesets>
 						</configuration>
 					</execution>
