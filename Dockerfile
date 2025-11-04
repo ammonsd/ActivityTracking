@@ -11,7 +11,7 @@ RUN mvn dependency:go-offline -B
 # Copy source code AND frontend directory for Angular build
 COPY src /app/src
 COPY frontend /app/frontend
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -Dskip.frontend.build=true -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
 FROM eclipse-temurin:21-jre-jammy

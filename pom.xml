@@ -30,6 +30,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<skip.frontend.build>false</skip.frontend.build>
 	</properties>
 	<dependencies>
         <!-- Spring Boot Starter Web -->
@@ -193,6 +194,7 @@
 				<configuration>
 					<workingDirectory>frontend</workingDirectory>
 					<installDirectory>target</installDirectory>
+					<skip>${skip.frontend.build}</skip>
 				</configuration>
 				<executions>
 					<!-- Install Node.js and npm -->
