@@ -1,6 +1,5 @@
 --------------------------------
 -- Schema Creation and Table Setup
--- ⚠️ WARNING: THIS FILE CONTAINS DROP TABLE STATEMENTS ⚠️
 --
 -- This script is ONLY for initial database setup or complete rebuild.
 -- DO NOT run this on a database with existing data!
