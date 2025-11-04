@@ -20,9 +20,9 @@ target/maven-status
 target/generated-test-sources
 target/surefire-reports
 
-# Frontend build outputs (will be built fresh in Docker)
-# Temporarily commented out to allow copying pre-built frontend
-# frontend/dist
+# Frontend build outputs
+# NOTE: frontend/dist is intentionally NOT excluded because we build Angular locally
+# and Docker needs to copy the pre-built files to avoid npm install issues in Docker
 frontend/node_modules
 frontend/.angular
 
