@@ -65,6 +65,37 @@
                 -moz-appearance: textfield;
                 appearance: textfield;
             }
+            /* Hour stepper buttons */
+            .input-with-buttons {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .input-with-buttons input {
+                flex: 1;
+            }
+            .stepper-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .stepper-btn {
+                width: 30px;
+                height: 22px;
+                padding: 0;
+                border: 1px solid #ddd;
+                background-color: #f8f9fa;
+                cursor: pointer;
+                font-size: 10px;
+                line-height: 1;
+                border-radius: 3px;
+            }
+            .stepper-btn:hover {
+                background-color: #e2e6ea;
+            }
+            .stepper-btn:active {
+                background-color: #dae0e5;
+            }
             .btn-primary:hover {
                 background-color: #0056b3;
             }
@@ -256,16 +287,22 @@
                             <label for="hours"
                                 >Hours <span class="required">*</span></label
                             >
-                            <input
-                                type="number"
-                                id="hours"
-                                th:field="*{hours}"
-                                step="0.01"
-                                min="0.01"
-                                max="24.00"
-                                placeholder="0.00"
-                                required
-                            />
+                            <div class="input-with-buttons">
+                                <input
+                                    type="number"
+                                    id="hours"
+                                    th:field="*{hours}"
+                                    step="0.25"
+                                    min="0.25"
+                                    max="24.00"
+                                    placeholder="0.00"
+                                    required
+                                />
+                                <div class="stepper-buttons">
+                                    <button type="button" class="stepper-btn" onclick="incrementHours()" title="Add 15 minutes (0.25 hours)">▲</button>
+                                    <button type="button" class="stepper-btn" onclick="decrementHours()" title="Subtract 15 minutes (0.25 hours)">▼</button>
+                                </div>
+                            </div>
                             <div
                                 class="error"
                                 th:if="${#fields.hasErrors('hours')}"
@@ -358,6 +395,21 @@
             document.addEventListener("DOMContentLoaded", function () {
                 FormUtils.initAutoGrowTextarea("details");
             });
+            
+            // Hour increment/decrement functions
+            function incrementHours() {
+                const hoursInput = document.getElementById('hours');
+                const currentValue = parseFloat(hoursInput.value) || 0;
+                const newValue = Math.min(currentValue + 0.25, 24);
+                hoursInput.value = newValue.toFixed(2);
+            }
+            
+            function decrementHours() {
+                const hoursInput = document.getElementById('hours');
+                const currentValue = parseFloat(hoursInput.value) || 0;
+                const newValue = Math.max(currentValue - 0.25, 0.25);
+                hoursInput.value = newValue.toFixed(2);
+            }
         </script>
     </body>
 </html>
