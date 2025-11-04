@@ -21,7 +21,8 @@ target/generated-test-sources
 target/surefire-reports
 
 # Frontend build outputs (will be built fresh in Docker)
-frontend/dist
+# Temporarily commented out to allow copying pre-built frontend
+# frontend/dist
 frontend/node_modules
 frontend/.angular
 
