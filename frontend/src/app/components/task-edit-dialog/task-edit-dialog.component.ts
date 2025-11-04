@@ -17,6 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
 import { TaskActivity, DropdownValue } from '../../models/task-activity.model';
 import { DropdownService } from '../../services/dropdown.service';
 
@@ -32,6 +33,7 @@ import { DropdownService } from '../../services/dropdown.service';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatIconModule,
   ],
   templateUrl: './task-edit-dialog.component.html',
   styleUrl: './task-edit-dialog.component.scss',
@@ -53,9 +55,13 @@ export class TaskEditDialogComponent implements OnInit {
     let taskDate = null;
     if (data.task.taskDate) {
       const parts = data.task.taskDate.split('-');
-      taskDate = new Date(Number.parseInt(parts[0]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]));
+      taskDate = new Date(
+        Number.parseInt(parts[0]),
+        Number.parseInt(parts[1]) - 1,
+        Number.parseInt(parts[2])
+      );
     }
-    
+
     this.taskForm = this.fb.group({
       taskDate: [taskDate, Validators.required],
       client: [data.task.client, Validators.required],
@@ -95,10 +101,11 @@ export class TaskEditDialogComponent implements OnInit {
       // Convert Date object to YYYY-MM-DD string format for the API
       const formValue = this.taskForm.value;
       const taskDate = formValue.taskDate;
-      const formattedDate = taskDate instanceof Date 
-        ? taskDate.toISOString().split('T')[0] 
-        : taskDate;
-      
+      const formattedDate =
+        taskDate instanceof Date
+          ? taskDate.toISOString().split('T')[0]
+          : taskDate;
+
       const updatedTask: TaskActivity = {
         ...this.data.task,
         ...formValue,
@@ -110,5 +117,17 @@ export class TaskEditDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  incrementHours(): void {
+    const currentValue = this.taskForm.get('hours')?.value ?? 0;
+    const newValue = Math.min(currentValue + 0.25, 24);
+    this.taskForm.patchValue({ hours: newValue });
+  }
+
+  decrementHours(): void {
+    const currentValue = this.taskForm.get('hours')?.value ?? 0;
+    const newValue = Math.max(currentValue - 0.25, 0.25);
+    this.taskForm.patchValue({ hours: newValue });
   }
 }

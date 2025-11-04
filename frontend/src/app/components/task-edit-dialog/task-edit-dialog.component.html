@@ -66,6 +66,26 @@
         formControlName="hours"
         required
       />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="incrementHours()"
+        [disabled]="!taskForm.valid || (taskForm.get('hours')?.value ?? 0) >= 24"
+        title="Add 15 minutes (0.25 hours)"
+      >
+        <mat-icon>arrow_drop_up</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="decrementHours()"
+        [disabled]="(taskForm.get('hours')?.value ?? 0) <= 0.25"
+        title="Subtract 15 minutes (0.25 hours)"
+      >
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
       <mat-error *ngIf="taskForm.get('hours')?.hasError('required')">
         Hours is required
       </mat-error>
