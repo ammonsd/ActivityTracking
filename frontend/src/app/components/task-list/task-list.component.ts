@@ -101,6 +101,7 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
                 [matDatepicker]="startPicker"
                 [(ngModel)]="startDate"
                 (dateChange)="applyFilters()"
+                (click)="startPicker.open()"
                 placeholder="MM/DD/YYYY"
               />
               <mat-datepicker-toggle
@@ -117,6 +118,7 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
                 [matDatepicker]="endPicker"
                 [(ngModel)]="endDate"
                 (dateChange)="applyFilters()"
+                (click)="endPicker.open()"
                 placeholder="MM/DD/YYYY"
               />
               <mat-datepicker-toggle
