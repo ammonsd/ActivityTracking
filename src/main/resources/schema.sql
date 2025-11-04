@@ -96,3 +96,32 @@ BEGIN
         ON UPDATE CASCADE;
     END IF;
 END $$;
+
+--------------------------------
+-- Create indexes on task_activity table for improved query performance
+-- These indexes benefit current filtering/sorting and future reporting features
+--------------------------------
+
+-- Index on task_date (most frequently filtered/sorted column - Dashboard, Reports)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_task_date ON public.taskactivity(taskdate);
+
+-- Index on username (for user-specific queries - GUEST users, user reports)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_username ON public.taskactivity(username);
+
+-- Index on client (for client filtering in dropdowns and reports)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_client ON public.taskactivity(client);
+
+-- Index on project (for project filtering in dropdowns and reports)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_project ON public.taskactivity(project);
+
+-- Index on phase (for phase filtering in dropdowns and reports)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_phase ON public.taskactivity(phase);
+
+-- Composite index for common filter combination (date + user)
+-- Optimizes queries like "show me my tasks this week"
+CREATE INDEX IF NOT EXISTS idx_taskactivity_date_user ON public.taskactivity(taskdate, username);
+
+-- Composite index for common grouping (client + project)
+-- Optimizes queries that group by client and project
+CREATE INDEX IF NOT EXISTS idx_taskactivity_client_project ON public.taskactivity(client, project);
+
