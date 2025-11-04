@@ -1,0 +1,63 @@
+# Ignore files that don't need to be in Docker build context
+# This speeds up the build by reducing context transfer time
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.iml
+*.swp
+*.swo
+
+# Build outputs (target is needed for multi-stage builds)
+# But we can ignore test outputs
+target/test-classes
+target/maven-status
+target/generated-test-sources
+target/surefire-reports
+
+# Frontend build outputs (will be built fresh in Docker)
+frontend/dist
+frontend/node_modules
+frontend/.angular
+
+# Documentation
+*.md
+docs/
+AWS_DEPLOYMENT_ANALYSIS.md
+DEVELOPER_GUIDE.md
+PRODUCTION_OPERATIONS_RUNBOOK.md
+README.md
+SECURITY.md
+USER_GUIDE.md
+
+# Docker files (don't need these in the image)
+docker-compose.yml
+Dockerfile.local
+.dockerignore
+.env
+
+# Logs
+*.log
+logs/
+
+# Scripts (not needed in image)
+scripts/
+# Exception: we need the entrypoint script
+!scripts/docker-entrypoint.sh
+
+# Kubernetes
+k8s/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
