@@ -166,6 +166,7 @@
 							<goal>clean</goal>
 						</goals>
 						<configuration>
+							<skip>${skip.frontend.build}</skip>
 							<excludeDefaultDirectories>true</excludeDefaultDirectories>
 							<filesets>
 								<fileset>
