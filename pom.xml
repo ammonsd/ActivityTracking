@@ -152,6 +152,35 @@
 				</configuration>
 			</plugin>
 			
+			<!-- Clean Plugin - Delete old Angular builds before new build -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.3.2</version>
+				<executions>
+					<execution>
+						<id>clean-frontend-dist</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+						<configuration>
+							<excludeDefaultDirectories>true</excludeDefaultDirectories>
+							<filesets>
+								<fileset>
+									<directory>frontend/dist</directory>
+									<followSymlinks>false</followSymlinks>
+								</fileset>
+								<fileset>
+									<directory>frontend/.angular</directory>
+									<followSymlinks>false</followSymlinks>
+								</fileset>
+							</filesets>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
 			<!-- Frontend Maven Plugin - Build Angular during Maven build -->
 			<plugin>
 				<groupId>com.github.eirslett</groupId>
