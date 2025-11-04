@@ -37,6 +37,10 @@ if [ "$DOCKER_PROFILE" == "containerized-db" ]; then
     docker rmi activitytracking-postgres 2>/dev/null || true
 else
     docker compose --profile $DOCKER_PROFILE down
+    
+    # Remove old image for host-db profile to ensure fresh build
+    echo "Removing old Docker image for clean rebuild..."
+    docker rmi taskactivity:latest 2>/dev/null || true
 fi
 echo ""
 
