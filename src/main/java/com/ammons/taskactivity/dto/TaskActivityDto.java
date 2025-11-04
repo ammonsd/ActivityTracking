@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
  * @author Dean Ammons
  * @version 1.0
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskActivityDto {
 
     @NotNull(message = "Task date is required")

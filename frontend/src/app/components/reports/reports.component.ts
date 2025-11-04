@@ -16,19 +16,44 @@ import { MatIconModule } from '@angular/material/icon';
         </mat-card-header>
         <mat-card-content>
           <p>
-            The Reports section is currently under development. Future reports
-            will include:
+            The Analytics & Reports section is currently under development.
+            Future reports will include:
           </p>
           <ul>
-            <li>Hours by Client (pie chart)</li>
-            <li>Hours by Project (bar chart)</li>
-            <li>Hours by Phase (breakdown)</li>
-            <li>Daily/Weekly/Monthly Summary</li>
-            <li>Time Trends (line chart)</li>
-            <li>User Activity Reports</li>
-            <li>Project Status Dashboard</li>
+            <li>
+              <strong>Time Distribution by Client</strong> - Pie chart showing
+              percentage of time per client
+            </li>
+            <li>
+              <strong>Time Distribution by Project</strong> - Bar chart with
+              hours by project and phase breakdown
+            </li>
+            <li>
+              <strong>Daily Time Tracking</strong> - Line chart showing daily
+              hours worked with trends
+            </li>
+            <li>
+              <strong>Phase Distribution</strong> - Donut chart of time spent in
+              different project phases
+            </li>
+            <li>
+              <strong>Weekly Summary</strong> - Weekly breakdown with
+              client/project details and trends
+            </li>
+            <li>
+              <strong>Top Activities</strong> - Most time-consuming tasks with
+              progress indicators
+            </li>
+            <li>
+              <strong>Monthly Comparison</strong> - Compare hours across
+              multiple months by client
+            </li>
+            <li>
+              <strong>Personal Dashboard</strong> - KPI cards with key metrics
+              (month/week hours, top clients, averages)
+            </li>
           </ul>
-          <p>Check back soon for these analytics features!</p>
+          <p>Check back soon for these developer productivity analytics!</p>
         </mat-card-content>
       </mat-card>
     </div>

@@ -442,6 +442,7 @@ export class TaskListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        console.log('Submitting task update:', result);
         this.taskService.updateTask(result.id, result).subscribe({
           next: (response) => {
             console.log('Task updated successfully:', response);
@@ -449,9 +450,21 @@ export class TaskListComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error updating task:', err);
-            alert(
-              'Failed to update task. You may not have permission or the task no longer exists.'
-            );
+            console.error('Error status:', err.status);
+            console.error('Error message:', err.error);
+
+            let errorMessage = 'Failed to update task. ';
+            if (err.status === 403) {
+              errorMessage += 'You do not have permission to update this task.';
+            } else if (err.status === 404) {
+              errorMessage += 'The task no longer exists.';
+            } else if (err.error?.message) {
+              errorMessage += err.error.message;
+            } else {
+              errorMessage += 'Please try again.';
+            }
+
+            alert(errorMessage);
           },
         });
       }

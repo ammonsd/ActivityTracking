@@ -112,10 +112,35 @@ public class TaskActivitiesController {
     /**
      * Update task activity
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskActivity>> updateTaskActivity(@PathVariable Long id,
-            @Valid @RequestBody TaskActivityDto taskActivityDto) {
+                    @Valid @RequestBody TaskActivityDto taskActivityDto,
+                    Authentication authentication) {
+
+            // Security check: verify task belongs to logged-in user before updating (unless admin)
+            boolean isUserAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+            if (!isUserAdmin) {
+                    String username = authentication.getName();
+                    Optional<TaskActivity> existingTask =
+                                    taskActivityService.getTaskActivityById(id);
+
+                    if (existingTask.isEmpty()) {
+                            ApiResponse<TaskActivity> response = ApiResponse
+                                            .error("Task activity not found with ID: " + id);
+                            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                    }
+
+                    if (!existingTask.get().getUsername().equals(username)) {
+                            logger.warn("User {} attempted to update task {} owned by {}", username,
+                                            id, existingTask.get().getUsername());
+                            ApiResponse<TaskActivity> response = ApiResponse.error(
+                                            "Access denied: You can only update your own tasks");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+            }
 
         TaskActivity updatedTaskActivity =
                 taskActivityService.updateTaskActivity(id, taskActivityDto);

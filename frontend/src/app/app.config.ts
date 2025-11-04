@@ -6,6 +6,7 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
@@ -19,5 +20,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptorsFromDi()
     ),
     provideAnimations(),
+    provideNativeDateAdapter(),
   ],
 };

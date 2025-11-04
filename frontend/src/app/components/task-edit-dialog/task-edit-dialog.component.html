@@ -9,6 +9,7 @@
         [matDatepicker]="picker"
         formControlName="taskDate"
         required
+        (click)="picker.open()"
       />
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>

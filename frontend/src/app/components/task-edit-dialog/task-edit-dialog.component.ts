@@ -48,8 +48,16 @@ export class TaskEditDialogComponent implements OnInit {
     private readonly dropdownService: DropdownService,
     @Inject(MAT_DIALOG_DATA) public data: { task: TaskActivity }
   ) {
+    // Convert string date to Date object for the datepicker
+    // Parse as local date to avoid timezone offset issues
+    let taskDate = null;
+    if (data.task.taskDate) {
+      const parts = data.task.taskDate.split('-');
+      taskDate = new Date(Number.parseInt(parts[0]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]));
+    }
+    
     this.taskForm = this.fb.group({
-      taskDate: [data.task.taskDate, Validators.required],
+      taskDate: [taskDate, Validators.required],
       client: [data.task.client, Validators.required],
       project: [data.task.project, Validators.required],
       phase: [data.task.phase, Validators.required],
@@ -84,9 +92,17 @@ export class TaskEditDialogComponent implements OnInit {
 
   onSubmit(): void {
     if (this.taskForm.valid) {
+      // Convert Date object to YYYY-MM-DD string format for the API
+      const formValue = this.taskForm.value;
+      const taskDate = formValue.taskDate;
+      const formattedDate = taskDate instanceof Date 
+        ? taskDate.toISOString().split('T')[0] 
+        : taskDate;
+      
       const updatedTask: TaskActivity = {
         ...this.data.task,
-        ...this.taskForm.value,
+        ...formValue,
+        taskDate: formattedDate,
       };
       this.dialogRef.close(updatedTask);
     }

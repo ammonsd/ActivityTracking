@@ -281,14 +281,30 @@ export class UserListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        console.log('Submitting user update:', result);
         this.userService.updateUser(result.id, result).subscribe({
           next: (response) => {
+            // UserRestController returns plain User object, not ApiResponse wrapper
             console.log('User updated successfully:', response);
             this.loadUsers();
           },
           error: (err) => {
             console.error('Error updating user:', err);
-            alert('Failed to update user. You may not have admin permission.');
+            console.error('Error status:', err.status);
+            console.error('Error message:', err.error);
+
+            let errorMessage = 'Failed to update user. ';
+            if (err.status === 403) {
+              errorMessage += 'You do not have admin permission.';
+            } else if (err.status === 404) {
+              errorMessage += 'The user no longer exists.';
+            } else if (err.error?.message) {
+              errorMessage += err.error.message;
+            } else {
+              errorMessage += 'Please try again.';
+            }
+
+            alert(errorMessage);
           },
         });
       }
