@@ -11,6 +11,10 @@ RUN mvn dependency:go-offline -B
 # Copy source code AND frontend directory for Angular build
 COPY src /app/src
 COPY frontend /app/frontend
+
+# CRITICAL: Delete any pre-existing Angular build artifacts to ensure clean build
+RUN rm -rf /app/frontend/dist /app/frontend/.angular /app/frontend/node_modules/.cache
+
 RUN mvn clean package -DskipTests -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
