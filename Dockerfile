@@ -11,6 +11,10 @@ RUN mvn dependency:go-offline -B
 # Copy source code AND frontend directory for Angular build
 COPY src /app/src
 COPY frontend /app/frontend
+
+# Debug: Show what files are in frontend/dist before Maven runs
+RUN ls -la /app/frontend/dist/app/browser/main-*.js || echo "No main-*.js files found"
+
 RUN mvn clean package -DskipTests -Dskip.frontend.build=true -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
