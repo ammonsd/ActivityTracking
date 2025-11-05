@@ -439,6 +439,7 @@ export class TaskListComponent implements OnInit {
   editTask(task: TaskActivity): void {
     const dialogRef = this.dialog.open(TaskEditDialogComponent, {
       width: '600px',
+      maxHeight: '90vh',
       data: { task: { ...task } }, // Pass a copy
     });
 

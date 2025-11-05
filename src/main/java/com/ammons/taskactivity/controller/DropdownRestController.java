@@ -18,7 +18,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/dropdowns")
-@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
 public class DropdownRestController {
 
     private static final Logger logger = LoggerFactory.getLogger(DropdownRestController.class);
