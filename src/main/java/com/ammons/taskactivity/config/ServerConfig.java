@@ -87,7 +87,7 @@ public class ServerConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/app/**")
-                .addResourceLocations("classpath:/static/app/browser/").resourceChain(true)
+                .addResourceLocations("classpath:/static/app/").resourceChain(true)
                 .addResolver(new PathResourceResolver() {
                     @Override
                     protected Resource getResource(String resourcePath, Resource location)
