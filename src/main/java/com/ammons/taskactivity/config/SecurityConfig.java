@@ -118,7 +118,8 @@ public class SecurityConfig {
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
 
                         // Angular dashboard - requires authentication
-                        .requestMatchers("/app", "/app/**").authenticated()
+                                        // .requestMatchers("/app", "/app/**").authenticated()
+                                        .requestMatchers("/app", "/app/").authenticated()
 
                         // All other requests require authentication
                         .anyRequest().authenticated())
