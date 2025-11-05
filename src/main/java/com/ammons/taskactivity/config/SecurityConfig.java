@@ -72,11 +72,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public resources
                         .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**",
-                                                        "/images/**", "/favicon.ico")
-                                        .permitAll()
-                                        // Angular SPA static resources (JS, CSS, fonts, etc.)
-                                        .requestMatchers("/app/*.js", "/app/*.css", "/app/*.woff2",
-                                                        "/app/*.ico")
+                                                        "/images/**", "/favicon.ico", "/app/*.js",
+                                                        "/app/*.css", "/app/*.woff2", "/app/*.ico",
+                                                        "/app/*.json")
                                         .permitAll()
                                         .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                         "/access-denied",
