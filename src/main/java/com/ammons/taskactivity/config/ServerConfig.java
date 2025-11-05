@@ -98,7 +98,7 @@ public class ServerConfig implements WebMvcConfigurer {
                             return requestedResource;
                         }
                         // Otherwise, return index.html for Angular routing
-                        return new ClassPathResource("/static/app/browser/index.html");
+                        return new ClassPathResource("/static/app/index.html");
                     }
                 });
     }
