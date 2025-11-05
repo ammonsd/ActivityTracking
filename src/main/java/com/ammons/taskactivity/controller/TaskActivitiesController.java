@@ -154,7 +154,7 @@ public class TaskActivitiesController {
     /**
      * Delete task activity
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteTaskActivity(@PathVariable Long id,
             Authentication authentication) {

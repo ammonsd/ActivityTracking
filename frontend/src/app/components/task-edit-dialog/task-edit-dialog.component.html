@@ -99,10 +99,7 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Details</mat-label>
-      <textarea matInput formControlName="details" rows="3" required></textarea>
-      <mat-error *ngIf="taskForm.get('details')?.hasError('required')">
-        Details are required
-      </mat-error>
+      <textarea matInput formControlName="details" rows="3"></textarea>
     </mat-form-field>
   </form>
 </mat-dialog-content>

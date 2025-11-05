@@ -129,7 +129,8 @@ public class SecurityConfig {
                                                                 String requestUri = request
                                                                                 .getRequestURI();
                                                                 // Don't send WWW-Authenticate
-                                                                // header for Swagger endpoints
+                                                                // header for Swagger endpoints or
+                                                                // Angular app
                                                                 // This prevents the browser auth
                                                                 // popup
                                                                 if (requestUri.startsWith(
@@ -139,7 +140,9 @@ public class SecurityConfig {
                                                                                 || requestUri.startsWith(
                                                                                                 "/swagger-resources")
                                                                                 || requestUri.startsWith(
-                                                                                                "/webjars")) {
+                                                                                                "/webjars")
+                                                                                || requestUri.startsWith(
+                                                                                                "/app")) {
                                                                         // No WWW-Authenticate
                                                                         // header - prevents browser
                                                                         // popup
