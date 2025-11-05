@@ -250,7 +250,7 @@
 							<outputDirectory>${project.build.outputDirectory}/static/app</outputDirectory>
 							<resources>
 								<resource>
-									<directory>frontend/dist/app</directory>
+									<directory>frontend/dist/app/browser</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>
