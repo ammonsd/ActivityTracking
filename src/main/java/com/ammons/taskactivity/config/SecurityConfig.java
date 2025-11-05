@@ -74,8 +74,10 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**",
                                                         "/images/**", "/favicon.ico")
                                         .permitAll()
-                        // Angular SPA static resources (only the static files, not the app routes)
-                        .requestMatchers("/app/browser/**").permitAll()
+                                        // Angular SPA static resources (JS, CSS, fonts, etc.)
+                                        .requestMatchers("/app/*.js", "/app/*.css", "/app/*.woff2",
+                                                        "/app/*.ico")
+                                        .permitAll()
                                         .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                         "/access-denied",
                                                         "/clear-access-denied-session")
