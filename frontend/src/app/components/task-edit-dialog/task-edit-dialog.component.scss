@@ -5,6 +5,6 @@
 
 mat-dialog-content {
   min-width: 500px;
-  max-height: 600px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
