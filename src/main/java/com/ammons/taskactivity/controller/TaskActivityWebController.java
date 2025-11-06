@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -122,8 +123,6 @@ public class TaskActivityWebController {
 
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
-                model.addAttribute(SUCCESS_MESSAGE_ATTR,
-                        "Task cloned successfully");
                 addDropdownOptions(model);
                 return TASK_ACTIVITY_FORM_VIEW;
             } else {
@@ -166,9 +165,20 @@ public class TaskActivityWebController {
             addDropdownOptions(model);
             return TASK_ACTIVITY_FORM_VIEW;
 
+        } catch (DataIntegrityViolationException e) {
+            // Handle duplicate task entry
+            logger.warn("Duplicate task entry attempt by user {}: {}", username, e.getMessage());
+            model.addAttribute(ERROR_MESSAGE_ATTR,
+                    "A task with the same date, client, project, phase, and details already exists.");
+            model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
+            addDropdownOptions(model);
+            return TASK_ACTIVITY_FORM_VIEW;
+
         } catch (Exception e) {
+            logger.error("Error saving task activity for user {}: {}", username, e.getMessage());
             model.addAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to save task activity: " + e.getMessage());
+            model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             addDropdownOptions(model);
             return TASK_ACTIVITY_FORM_VIEW;
         }
