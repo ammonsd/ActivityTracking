@@ -13,6 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -58,33 +62,46 @@ public class TaskActivitiesController {
     }
 
     /**
-     * Get all task activities - ADMIN users: see all tasks - GUEST/USER: see only their own tasks
+     * Get all task activities with pagination - ADMIN users: see all tasks - GUEST/USER: see only
+     * their own tasks
      */
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getAllTaskActivities(
+                    @RequestParam(defaultValue = "0") int page,
+                    @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
 
             String username = authentication.getName();
-            logger.info("User {} requesting all task activities", username);
+        logger.info("User {} requesting task activities (page={}, size={})", username, page, size);
 
         // Check if user has ADMIN role
         boolean isAdmin = authentication.getAuthorities().stream()
                         .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
-        List<TaskActivity> taskActivities;
+        // Create pageable with sorting (newest first)
+        Pageable pageable = PageRequest.of(page, size,
+                        Sort.by(Sort.Direction.DESC, "taskDate")
+                                        .and(Sort.by(Sort.Direction.ASC, "client"))
+                                        .and(Sort.by(Sort.Direction.ASC, "project")));
+
+        Page<TaskActivity> taskPage;
 
         if (isAdmin) {
                 // Admin sees all tasks
-                taskActivities = taskActivityService.getAllTaskActivities();
+            taskPage = taskActivityService.getAllTaskActivities(pageable);
         } else {
                 // GUEST and USER see only their own tasks
-                taskActivities = taskActivityService.getTaskActivitiesByUsername(username);
+            taskPage = taskActivityService.getAllTaskActivitiesForUser(username, pageable);
         }
 
         ApiResponse<List<TaskActivity>> response =
-                ApiResponse.success("Task activities retrieved successfully", taskActivities)
-                        .withCount(taskActivities.size());
+                        ApiResponse.success("Task activities retrieved successfully",
+                                        taskPage.getContent())
+                                        .withCount(taskPage.getNumberOfElements())
+                                        .withPagination(taskPage.getNumber(),
+                                                        taskPage.getTotalPages(),
+                                                        taskPage.getTotalElements());
 
         return ResponseEntity.ok(response);
     }

@@ -33,4 +33,7 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
   count?: number;
+  totalPages?: number;
+  currentPage?: number;
+  totalElements?: number;
 }

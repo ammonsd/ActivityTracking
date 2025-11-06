@@ -19,6 +19,9 @@ public class ApiResponse<T> {
     private T data;
     private Integer count;
     private Double totalHours;
+    private Integer totalPages;
+    private Integer currentPage;
+    private Long totalElements;
     private LocalDateTime timestamp;
 
     /**
@@ -81,6 +84,14 @@ public class ApiResponse<T> {
         return this;
     }
 
+    public ApiResponse<T> withPagination(Integer currentPage, Integer totalPages,
+            Long totalElements) {
+        this.currentPage = currentPage;
+        this.totalPages = totalPages;
+        this.totalElements = totalElements;
+        return this;
+    }
+
     // Getters
     public boolean isSuccess() {
         return success;
@@ -100,6 +111,18 @@ public class ApiResponse<T> {
 
     public Double getTotalHours() {
         return totalHours;
+    }
+
+    public Integer getTotalPages() {
+        return totalPages;
+    }
+
+    public Integer getCurrentPage() {
+        return currentPage;
+    }
+
+    public Long getTotalElements() {
+        return totalElements;
     }
 
     public LocalDateTime getTimestamp() {
@@ -125,6 +148,18 @@ public class ApiResponse<T> {
 
     public void setTotalHours(Double totalHours) {
         this.totalHours = totalHours;
+    }
+
+    public void setTotalPages(Integer totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public void setCurrentPage(Integer currentPage) {
+        this.currentPage = currentPage;
+    }
+
+    public void setTotalElements(Long totalElements) {
+        this.totalElements = totalElements;
     }
 
     public void setTimestamp(LocalDateTime timestamp) {

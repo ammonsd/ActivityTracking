@@ -138,6 +138,47 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
             </button>
           </div>
 
+          <!-- Pagination Controls -->
+          <div *ngIf="totalPages > 1 && !loading" class="pagination">
+            <button
+              mat-icon-button
+              [disabled]="currentPage === 0"
+              (click)="goToPage(0)"
+              title="First Page"
+            >
+              <mat-icon>first_page</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              [disabled]="currentPage === 0"
+              (click)="goToPage(currentPage - 1)"
+              title="Previous Page"
+            >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+
+            <span class="pagination-info">
+              {{ startEntry }} to {{ endEntry }} of {{ totalElements }}
+            </span>
+
+            <button
+              mat-icon-button
+              [disabled]="currentPage === totalPages - 1"
+              (click)="goToPage(currentPage + 1)"
+              title="Next Page"
+            >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              [disabled]="currentPage === totalPages - 1"
+              (click)="goToPage(totalPages - 1)"
+              title="Last Page"
+            >
+              <mat-icon>last_page</mat-icon>
+            </button>
+          </div>
+
           <div *ngIf="loading" class="loading-spinner">
             <mat-spinner></mat-spinner>
           </div>
@@ -306,6 +347,22 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
       mat-icon {
         font-size: 20px;
       }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 0;
+        margin-bottom: 10px;
+      }
+
+      .pagination-info {
+        margin: 0 12px;
+        font-size: 14px;
+        color: #333;
+        font-weight: bold;
+      }
     `,
   ],
 })
@@ -319,6 +376,12 @@ export class TaskListComponent implements OnInit {
   currentRole = '';
   currentDate = new Date();
 
+  // Pagination properties
+  currentPage = 0;
+  pageSize = 20;
+  totalElements = 0;
+  totalPages = 0;
+
   // Filter properties
   selectedClient = '';
   selectedProject = '';
@@ -328,6 +391,15 @@ export class TaskListComponent implements OnInit {
   uniqueClients: string[] = [];
   uniqueProjects: string[] = [];
   uniquePhases: string[] = [];
+
+  // Computed properties for pagination display
+  get startEntry(): number {
+    return this.totalElements === 0 ? 0 : this.currentPage * this.pageSize + 1;
+  }
+
+  get endEntry(): number {
+    return Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
+  }
 
   constructor(
     private readonly taskService: TaskActivityService,
@@ -371,28 +443,33 @@ export class TaskListComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.taskService.getAllTasks().subscribe({
+    this.taskService.getAllTasks(this.currentPage, this.pageSize).subscribe({
       next: (response) => {
         // Handle ApiResponse wrapper - data is in response.data
         this.tasks = response.data || [];
 
-        // Sort by date descending (newest first)
-        this.tasks.sort((a, b) => {
-          const dateA = new Date(a.taskDate).getTime();
-          const dateB = new Date(b.taskDate).getTime();
-          return dateB - dateA;
-        });
+        // Extract pagination metadata
+        this.totalElements = response.totalElements || 0;
+        this.totalPages = response.totalPages || 0;
+        this.currentPage = response.currentPage || 0;
 
-        // Extract unique values for filters
+        // Extract unique values for filters from current page
+        const currentClients = [...new Set(this.tasks.map((t) => t.client))];
+        const currentProjects = [...new Set(this.tasks.map((t) => t.project))];
+        const currentPhases = [...new Set(this.tasks.map((t) => t.phase))];
+
+        // Merge with existing unique values
         this.uniqueClients = [
-          ...new Set(this.tasks.map((t) => t.client)),
-        ].sort();
+          ...new Set([...this.uniqueClients, ...currentClients]),
+        ].sort((a, b) => a.localeCompare(b));
         this.uniqueProjects = [
-          ...new Set(this.tasks.map((t) => t.project)),
-        ].sort();
-        this.uniquePhases = [...new Set(this.tasks.map((t) => t.phase))].sort();
+          ...new Set([...this.uniqueProjects, ...currentProjects]),
+        ].sort((a, b) => a.localeCompare(b));
+        this.uniquePhases = [
+          ...new Set([...this.uniquePhases, ...currentPhases]),
+        ].sort((a, b) => a.localeCompare(b));
 
-        // Apply filters
+        // Apply client-side filters to the current page
         this.applyFilters();
 
         this.loading = false;
@@ -407,7 +484,16 @@ export class TaskListComponent implements OnInit {
     });
   }
 
+  // Pagination methods
+  goToPage(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadTasks();
+    }
+  }
+
   applyFilters(): void {
+    // Apply client-side filters to current page data
     this.filteredTasks = this.tasks.filter((task) => {
       const clientMatch =
         !this.selectedClient || task.client === this.selectedClient;
