@@ -131,10 +131,7 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
 
           <div class="table-actions">
             <button mat-raised-button color="accent" (click)="clearFilters()">
-              <mat-icon>clear</mat-icon> Clear
-            </button>
-            <button mat-raised-button color="primary" (click)="loadTasks()">
-              <mat-icon>refresh</mat-icon> Refresh
+              <mat-icon>clear</mat-icon> Clear Filters
             </button>
           </div>
 
@@ -443,45 +440,81 @@ export class TaskListComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.taskService.getAllTasks(this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
-        // Handle ApiResponse wrapper - data is in response.data
-        this.tasks = response.data || [];
+    // Format dates for API (without timezone conversion)
+    const formatDate = (date: Date | null): string | undefined => {
+      if (!date) return undefined;
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
 
-        // Extract pagination metadata
-        this.totalElements = response.totalElements || 0;
-        this.totalPages = response.totalPages || 0;
-        this.currentPage = response.currentPage || 0;
+    const startDateStr = formatDate(this.startDate);
+    const endDateStr = formatDate(this.endDate);
 
-        // Extract unique values for filters from current page
-        const currentClients = [...new Set(this.tasks.map((t) => t.client))];
-        const currentProjects = [...new Set(this.tasks.map((t) => t.project))];
-        const currentPhases = [...new Set(this.tasks.map((t) => t.phase))];
+    // Only pass filter values if they're not empty strings
+    const clientFilter = this.selectedClient ? this.selectedClient : undefined;
+    const projectFilter = this.selectedProject
+      ? this.selectedProject
+      : undefined;
+    const phaseFilter = this.selectedPhase ? this.selectedPhase : undefined;
 
-        // Merge with existing unique values
-        this.uniqueClients = [
-          ...new Set([...this.uniqueClients, ...currentClients]),
-        ].sort((a, b) => a.localeCompare(b));
-        this.uniqueProjects = [
-          ...new Set([...this.uniqueProjects, ...currentProjects]),
-        ].sort((a, b) => a.localeCompare(b));
-        this.uniquePhases = [
-          ...new Set([...this.uniquePhases, ...currentPhases]),
-        ].sort((a, b) => a.localeCompare(b));
+    this.taskService
+      .getAllTasks(
+        this.currentPage,
+        this.pageSize,
+        clientFilter,
+        projectFilter,
+        phaseFilter,
+        startDateStr,
+        endDateStr
+      )
+      .subscribe({
+        next: (response) => {
+          // Handle ApiResponse wrapper - data is in response.data
+          this.tasks = response.data || [];
+          this.filteredTasks = this.tasks;
 
-        // Apply client-side filters to the current page
-        this.applyFilters();
+          // Extract pagination metadata
+          this.totalElements = response.totalElements || 0;
+          this.totalPages = response.totalPages || 0;
+          this.currentPage = response.currentPage || 0;
 
-        this.loading = false;
-        console.log('Loaded tasks:', this.tasks);
-      },
-      error: (err) => {
-        console.error('Error loading tasks:', err);
-        this.error =
-          'Failed to load tasks. Make sure the Spring Boot backend is running.';
-        this.loading = false;
-      },
-    });
+          // Extract unique values for filters from current page
+          const currentClients = [...new Set(this.tasks.map((t) => t.client))];
+          const currentProjects = [
+            ...new Set(this.tasks.map((t) => t.project)),
+          ];
+          const currentPhases = [...new Set(this.tasks.map((t) => t.phase))];
+
+          // Merge with existing unique values
+          this.uniqueClients = [
+            ...new Set([...this.uniqueClients, ...currentClients]),
+          ].sort((a, b) => a.localeCompare(b));
+          this.uniqueProjects = [
+            ...new Set([...this.uniqueProjects, ...currentProjects]),
+          ].sort((a, b) => a.localeCompare(b));
+          this.uniquePhases = [
+            ...new Set([...this.uniquePhases, ...currentPhases]),
+          ].sort((a, b) => a.localeCompare(b));
+
+          this.loading = false;
+          console.log('Loaded tasks:', this.tasks);
+        },
+        error: (err) => {
+          console.error('Error loading tasks:', err);
+          // Try to extract error message from backend
+          if (err.error?.message) {
+            this.error = err.error.message;
+          } else if (err.message) {
+            this.error = err.message;
+          } else {
+            this.error =
+              'Failed to load tasks. Make sure the Spring Boot backend is running.';
+          }
+          this.loading = false;
+        },
+      });
   }
 
   // Pagination methods
@@ -493,24 +526,9 @@ export class TaskListComponent implements OnInit {
   }
 
   applyFilters(): void {
-    // Apply client-side filters to current page data
-    this.filteredTasks = this.tasks.filter((task) => {
-      const clientMatch =
-        !this.selectedClient || task.client === this.selectedClient;
-      const projectMatch =
-        !this.selectedProject || task.project === this.selectedProject;
-      const phaseMatch =
-        !this.selectedPhase || task.phase === this.selectedPhase;
-
-      // Date filtering
-      const taskDate = new Date(task.taskDate);
-      const startMatch = !this.startDate || taskDate >= this.startDate;
-      const endMatch = !this.endDate || taskDate <= this.endDate;
-
-      return (
-        clientMatch && projectMatch && phaseMatch && startMatch && endMatch
-      );
-    });
+    // Reset to first page when filters change and reload from server
+    this.currentPage = 0;
+    this.loadTasks();
   }
 
   clearFilters(): void {

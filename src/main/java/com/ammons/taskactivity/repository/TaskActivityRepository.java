@@ -92,4 +92,18 @@ public interface TaskActivityRepository extends JpaRepository<TaskActivity, Long
     @Query("SELECT taskActivity FROM TaskActivity taskActivity WHERE taskActivity.taskDate BETWEEN :startDate AND :endDate")
     public Page<TaskActivity> findTaskActivitiesInDateRange(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate, Pageable pageable);
+
+    // Flexible filter query supporting all filter combinations
+    @Query(value = "SELECT * FROM taskactivity ta WHERE "
+                    + "(CAST(:username AS text) IS NULL OR ta.username = :username) AND "
+                    + "(CAST(:client AS text) IS NULL OR ta.client = :client) AND "
+                    + "(CAST(:project AS text) IS NULL OR ta.project = :project) AND "
+                    + "(CAST(:phase AS text) IS NULL OR ta.phase = :phase) AND "
+                    + "(CAST(:startDate AS date) IS NULL OR ta.taskdate >= CAST(:startDate AS date)) AND "
+                    + "(CAST(:endDate AS date) IS NULL OR ta.taskdate <= CAST(:endDate AS date))",
+                    nativeQuery = true)
+    public Page<TaskActivity> findByFilters(@Param("username") String username,
+                    @Param("client") String client, @Param("project") String project,
+                    @Param("phase") String phase, @Param("startDate") LocalDate startDate,
+                    @Param("endDate") LocalDate endDate, Pageable pageable);
 }

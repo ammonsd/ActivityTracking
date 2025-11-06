@@ -70,10 +70,16 @@ public class TaskActivitiesController {
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getAllTaskActivities(
                     @RequestParam(defaultValue = "0") int page,
                     @RequestParam(defaultValue = "20") int size,
+                    @RequestParam(required = false) String client,
+                    @RequestParam(required = false) String project,
+                    @RequestParam(required = false) String phase,
+                    @RequestParam(required = false) String startDate,
+                    @RequestParam(required = false) String endDate,
             Authentication authentication) {
 
             String username = authentication.getName();
-        logger.info("User {} requesting task activities (page={}, size={})", username, page, size);
+            logger.info("User {} requesting task activities (page={}, size={}, filters: client={}, project={}, phase={}, startDate={}, endDate={})",
+                            username, page, size, client, project, phase, startDate, endDate);
 
         // Check if user has ADMIN role
         boolean isAdmin = authentication.getAuthorities().stream()
@@ -85,14 +91,35 @@ public class TaskActivitiesController {
                                         .and(Sort.by(Sort.Direction.ASC, "client"))
                                         .and(Sort.by(Sort.Direction.ASC, "project")));
 
+        // Parse dates if provided
+        LocalDate start = null;
+        LocalDate end = null;
+        try {
+                start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate)
+                                : null;
+                end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
+        } catch (Exception e) {
+                logger.error("Error parsing dates: startDate={}, endDate={}", startDate, endDate,
+                                e);
+                ApiResponse<List<TaskActivity>> errorResponse = ApiResponse
+                                .error("Invalid date format. Please use YYYY-MM-DD format.");
+                return ResponseEntity.badRequest().body(errorResponse);
+        }
+
         Page<TaskActivity> taskPage;
 
-        if (isAdmin) {
-                // Admin sees all tasks
-            taskPage = taskActivityService.getAllTaskActivities(pageable);
-        } else {
-                // GUEST and USER see only their own tasks
-            taskPage = taskActivityService.getAllTaskActivitiesForUser(username, pageable);
+        try {
+                // Use filtering query with username restriction for non-admin users
+                String filterUsername = isAdmin ? null : username;
+                logger.info("Executing filter query with: username={}, client={}, project={}, phase={}, start={}, end={}",
+                                filterUsername, client, project, phase, start, end);
+                taskPage = taskActivityService.getTaskActivitiesByFilters(filterUsername, client,
+                                project, phase, start, end, pageable);
+        } catch (Exception e) {
+                logger.error("Error executing filter query", e);
+                ApiResponse<List<TaskActivity>> errorResponse =
+                                ApiResponse.error("Error filtering tasks: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
 
         ApiResponse<List<TaskActivity>> response =

@@ -182,6 +182,17 @@ public class TaskActivityService {
     }
 
     /**
+     * Get task activities with flexible filters and pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<TaskActivity> getTaskActivitiesByFilters(String username, String client,
+            String project, String phase, LocalDate startDate, LocalDate endDate,
+            Pageable pageable) {
+        return taskActivityRepository.findByFilters(username, client, project, phase, startDate,
+                endDate, pageable);
+    }
+
+    /**
      * Check if a user has any task activities
      * 
      * @param username the username to check

@@ -14,11 +14,23 @@ export class TaskActivityService {
 
   getAllTasks(
     page: number = 0,
-    size: number = 20
+    size: number = 20,
+    client?: string,
+    project?: string,
+    phase?: string,
+    startDate?: string,
+    endDate?: string
   ): Observable<ApiResponse<TaskActivity[]>> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+
+    if (client) params = params.set('client', client);
+    if (project) params = params.set('project', project);
+    if (phase) params = params.set('phase', phase);
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+
     return this.http.get<ApiResponse<TaskActivity[]>>(this.apiUrl, { params });
   }
 
