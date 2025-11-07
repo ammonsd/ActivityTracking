@@ -64,13 +64,11 @@ export class AppComponent {
         this.currentRole = role;
       },
     });
-  }
-
-  logout(): void {
+  }  logout(): void {
     // Clear Angular auth state first
     this.authService.logout();
 
     // Navigate to logout endpoint (now accepts GET)
-    window.location.href = '/logout';
+    globalThis.location.href = '/logout';
   }
 }

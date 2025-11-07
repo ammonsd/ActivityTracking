@@ -4,10 +4,7 @@
   <form [formGroup]="userForm">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>First Name</mat-label>
-      <input matInput formControlName="firstname" required />
-      <mat-error *ngIf="userForm.get('firstname')?.hasError('required')">
-        First name is required
-      </mat-error>
+      <input matInput formControlName="firstname" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">

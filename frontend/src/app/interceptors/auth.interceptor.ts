@@ -1,11 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-
   // For Spring Security session-based auth, we need to:
   // 1. Send credentials (cookies) - includes JSESSIONID
   // 2. Add CSRF token from cookie to header for non-GET requests
@@ -37,8 +33,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         console.log('Session expired or unauthorized - redirecting to login');
 
-        // Clear Angular auth state
-        authService.logout();
+        // Clear sessionStorage directly (avoid circular dependency with AuthService)
+        sessionStorage.removeItem('auth');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('userRole');
 
         // Redirect to login page with session timeout message
         globalThis.location.href = '/login?timeout=true';

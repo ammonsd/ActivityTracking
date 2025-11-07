@@ -35,7 +35,7 @@ import { User } from '../../models/task-activity.model';
 })
 export class UserEditDialogComponent {
   userForm: FormGroup;
-  roles = ['USER', 'ADMIN'];
+  roles = ['GUEST', 'USER', 'ADMIN'];
 
   constructor(
     private readonly fb: FormBuilder,
@@ -43,7 +43,7 @@ export class UserEditDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: { user: User }
   ) {
     this.userForm = this.fb.group({
-      firstname: [data.user.firstname, Validators.required],
+      firstname: [data.user.firstname],
       lastname: [data.user.lastname, Validators.required],
       company: [data.user.company, Validators.required],
       role: [data.user.role, Validators.required],

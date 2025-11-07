@@ -159,7 +159,7 @@ import { AuthService } from '../../services/auth.service';
 export class DashboardComponent implements OnInit {
   currentRole = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   ngOnInit(): void {
     console.log('Dashboard component initialized');

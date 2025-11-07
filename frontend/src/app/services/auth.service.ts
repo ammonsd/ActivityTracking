@@ -56,9 +56,7 @@ export class AuthService {
         },
       });
     }
-  }
-
-  login(username: string, password: string): Observable<any> {
+  }  login(username: string, password: string): Observable<any> {
     // Create Basic Auth header
     const credentials = btoa(`${username}:${password}`);
     const headers = new HttpHeaders({
@@ -83,6 +81,8 @@ export class AuthService {
               if (response.data?.role) {
                 this.userRole = response.data.role;
                 sessionStorage.setItem('userRole', response.data.role);
+                this.userRoleSubject.next(response.data.role);
+                this.currentUserSubject.next(response.data.username);
               }
             },
           });
@@ -98,6 +98,8 @@ export class AuthService {
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('userRole');
     this.isAuthenticatedSubject.next(false);
+    this.currentUserSubject.next('');
+    this.userRoleSubject.next('');
   }
 
   getAuthHeader(): HttpHeaders {
