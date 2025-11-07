@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.config;
 
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -177,7 +178,47 @@ public class SecurityConfig {
                                                 LOGOUT_URL, "GET")))
                         .permitAll())
                         .exceptionHandling(exceptions -> exceptions
-                                        .accessDeniedHandler(customAccessDeniedHandler))
+                                        .accessDeniedHandler(customAccessDeniedHandler)
+                                        .authenticationEntryPoint(
+                                                        (request, response, authException) -> {
+                                                                // Handle session timeout
+                                                                String requestUri = request
+                                                                                .getRequestURI();
+
+                                                                // Check if user had a session that
+                                                                // expired
+                                                                // (vs never having a session)
+                                                                boolean hadSession = request
+                                                                                .getRequestedSessionId() != null
+                                                                                && !request.isRequestedSessionIdValid();
+
+                                                                // For API calls, return 401
+                                                                // (Angular interceptor will handle)
+                                                                if (requestUri.startsWith(
+                                                                                "/api/")) {
+                                                                        response.setStatus(
+                                                                                        HttpServletResponse.SC_UNAUTHORIZED);
+                                                                        response.setContentType(
+                                                                                        "application/json");
+                                                                        response.getWriter().write(
+                                                                                        "{\"error\":\"Session Expired\",\"message\":\"Your session has expired. Please log in again.\"}");
+                                                                } else if (!requestUri.equals(
+                                                                                LOGIN_URL)) {
+                                                                        // For web requests (except
+                                                                        // login page)
+                                                                        // Only add timeout
+                                                                        // parameter if session
+                                                                        // actually expired
+                                                                        String redirectUrl = request
+                                                                                        .getContextPath()
+                                                                                        + LOGIN_URL;
+                                                                        if (hadSession) {
+                                                                                redirectUrl += "?timeout=true";
+                                                                        }
+                                                                        response.sendRedirect(
+                                                                                        redirectUrl);
+                                                                }
+                                                        }))
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                 .maximumSessions(5).maxSessionsPreventsLogin(false)) // Allow
