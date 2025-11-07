@@ -2186,6 +2186,66 @@ While GUEST users can access certain URLs (like `/task-activity/add`), the UI an
 - Managing users or dropdown values
 - Cloning tasks (Clone button hidden in UI)
 
+### Session Timeout Handling
+
+**Configuration**: The application uses a 30-minute session timeout configured in `application.properties`:
+
+```properties
+server.servlet.session.timeout=30m
+```
+
+**Custom Authentication Entry Point**: When a session expires, the application provides a user-friendly redirect to the login page with an informative message instead of showing a browser popup or 404 error.
+
+**Location**: `src/main/java/com/ammons/taskactivity/config/SecurityConfig.java`
+
+```java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            // ... authorization rules
+        )
+        .exceptionHandling(ex -> ex
+            .authenticationEntryPoint((request, response, authException) -> {
+                // Check if this is a session timeout (had session but expired)
+                if (request.getRequestedSessionId() != null && 
+                    !request.isRequestedSessionIdValid()) {
+                    // Session timeout - redirect to login with timeout message
+                    response.sendRedirect("/login?timeout=true");
+                } else {
+                    // First visit or never had session - normal login redirect
+                    response.sendRedirect("/login");
+                }
+            })
+        )
+        .formLogin(form -> form
+            .loginPage("/login")
+            .defaultSuccessUrl("/task-activity")
+        )
+        .sessionManagement(session -> session
+            .sessionFixation().migrateSession()
+            .maximumSessions(1)
+            .maxSessionsPreventsLogin(false)
+        );
+    return http.build();
+}
+```
+
+**Login Template**: `src/main/resources/templates/login.html` displays the timeout message:
+
+```html
+<div th:if="${param.timeout}" class="alert alert-warning">
+    ⚠️ Your session has expired. Please log in again.
+</div>
+```
+
+**Benefits:**
+
+- **User-friendly**: Clear message explaining why they need to log in again
+- **No browser popup**: Avoids confusing browser authentication dialogs
+- **No 404 errors**: Graceful handling instead of error pages
+- **Consistent UX**: Same login page with contextual messaging
+
 ### Password Validation
 
 **Custom Annotation**: `@ValidPassword`
@@ -2983,6 +3043,259 @@ INFO  - Loaded DB_PASSWORD from file: /run/secrets/db_password
 2. **Update deployment configuration** to use secrets
 3. **Remove environment variables** from deployment files
 4. **Verify application** can access secrets
+
+## Angular Frontend Development
+
+The application includes a modern Angular 19 frontend as an alternative to the Thymeleaf server-side rendered UI. This section covers Angular-specific implementation details.
+
+### Angular Architecture
+
+**Location**: `frontend/` directory
+
+**Key Technologies:**
+- **Angular 19**: Standalone components architecture (no NgModules)
+- **TypeScript 5.6+**: Type-safe development
+- **Angular Material**: Material Design component library
+- **RxJS**: Reactive programming with Observables
+- **Angular Router**: Client-side routing with guards
+
+**Access:**
+- Development: `http://localhost:4200` (Angular dev server)
+- Production: `http://localhost:8080/app/*` (served by Spring Boot)
+
+### Authentication and Session Management
+
+The Angular frontend uses HTTP Basic Authentication with session-based storage and implements session timeout handling.
+
+#### Authentication Service
+
+**Location**: `frontend/src/app/services/auth.service.ts`
+
+**Key Features:**
+- Stores credentials in sessionStorage
+- Provides reactive user state with RxJS Observables
+- Fetches user details from `/api/users/me` on app initialization
+- Emits username and role changes to subscribers
+
+**Important**: The AuthService constructor makes the `/api/users/me` call automatically when the path starts with `/app` to load user details:
+
+```typescript
+constructor(private http: HttpClient) {
+  // Auto-load user details when accessing app routes
+  if (globalThis.location.pathname.startsWith('/app')) {
+    this.http.get<any>(`${environment.apiUrl}/users/me`).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.currentUserSubject.next(response.data.username);
+          this.userRoleSubject.next(response.data.role);
+        }
+      },
+      error: (error) => console.error('Failed to load user details', error)
+    });
+  }
+}
+```
+
+#### HTTP Interceptor
+
+**Location**: `frontend/src/app/interceptors/auth.interceptor.ts`
+
+**Purpose**: Handles session management, CSRF tokens, and session timeout redirects.
+
+**Key Features:**
+
+1. **Credentials**: Includes cookies (JSESSIONID) with every request using `withCredentials: true`
+
+2. **CSRF Protection**: Adds `X-XSRF-TOKEN` header for state-changing requests (POST, PUT, DELETE, PATCH)
+
+3. **Session Timeout Handling**: Intercepts 401 errors and redirects to login page with timeout message
+
+```typescript
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  // Clone request with credentials
+  let authReq = req.clone({ withCredentials: true });
+
+  // Add CSRF token for non-GET requests
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    const csrfToken = getCsrfTokenFromCookie();
+    if (csrfToken) {
+      authReq = authReq.clone({
+        setHeaders: { 'X-XSRF-TOKEN': csrfToken }
+      });
+    }
+  }
+
+  // Handle 401 errors (session timeout)
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        // Clear session storage
+        sessionStorage.removeItem('auth');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('userRole');
+        
+        // Redirect to login with timeout message
+        globalThis.location.href = '/login?timeout=true';
+        return throwError(() => new Error('Session expired'));
+      }
+      return throwError(() => error);
+    })
+  );
+};
+```
+
+**Important**: The interceptor does NOT inject AuthService to avoid circular dependency issues:
+- HttpClient uses authInterceptor
+- AuthService injects HttpClient
+- If authInterceptor injected AuthService → circular dependency → NG0200 error
+
+**Solution**: Interceptor directly clears sessionStorage instead of calling `authService.logout()`.
+
+### User Management Components
+
+#### User Edit Dialog
+
+**Location**: `frontend/src/app/components/user-edit-dialog/`
+
+**Purpose**: Modal dialog for editing user details (Admin only).
+
+**Form Fields:**
+- **First Name** (optional) - No validation required
+- **Last Name** (required) - Validators.required
+- **Company** (required) - Validators.required  
+- **Role** (required) - Dropdown with options: GUEST, USER, ADMIN
+- **Account Enabled** (checkbox)
+- **Force Password Update** (checkbox)
+
+**Implementation Note**: First Name field was changed from required to optional. Both the TypeScript form validator and HTML `required` attribute were removed:
+
+```typescript
+this.userForm = this.fb.group({
+  firstname: [data.user.firstname],  // No Validators.required
+  lastname: [data.user.lastname, Validators.required],
+  company: [data.user.company, Validators.required],
+  role: [data.user.role, Validators.required],
+  enabled: [data.user.enabled],
+  forcePasswordUpdate: [data.user.forcePasswordUpdate],
+});
+```
+
+```html
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>First Name</mat-label>
+  <input matInput formControlName="firstname" />  <!-- No required attribute -->
+</mat-form-field>
+```
+
+**Styling Fix**: To prevent label clipping, the dialog content uses proper padding and the first form field has top margin:
+
+```scss
+mat-dialog-content {
+  min-width: 500px;
+  padding: 20px 24px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+  
+  &:first-of-type {
+    margin-top: 8px;  // Prevents "First Name" label from being cut off
+  }
+}
+```
+
+### Build Integration
+
+The Angular frontend is automatically built during Maven build using the `frontend-maven-plugin`.
+
+**Maven Configuration** (`pom.xml`):
+
+```xml
+<plugin>
+    <groupId>com.github.eirslett</groupId>
+    <artifactId>frontend-maven-plugin</artifactId>
+    <version>1.15.1</version>
+    <configuration>
+        <workingDirectory>frontend</workingDirectory>
+    </configuration>
+    <executions>
+        <execution>
+            <id>npm run build</id>
+            <goals>
+                <goal>npm</goal>
+            </goals>
+            <configuration>
+                <arguments>run build:prod</arguments>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**Build Process:**
+
+```bash
+# Maven automatically runs npm build
+./mvnw clean package
+
+# Or with Spring Boot run
+./mvnw spring-boot:run
+```
+
+**Output**: Compiled Angular files are copied to `src/main/resources/static/app/` and served by Spring Boot.
+
+### Development Workflow
+
+**Option 1: Angular Dev Server** (fastest iteration)
+```bash
+cd frontend
+npm start
+# Access at http://localhost:4200
+```
+
+**Option 2: Integrated with Spring Boot** (production-like)
+```bash
+# From project root
+./mvnw spring-boot:run
+# Maven builds Angular automatically
+# Access at http://localhost:8080/app/dashboard
+```
+
+### Common Issues and Solutions
+
+#### NG0200 Circular Dependency Error
+
+**Symptom**: Console shows "Error message: NG0200: t" and no HTTP requests are made.
+
+**Cause**: Circular dependency between HttpClient and authInterceptor through AuthService:
+- HttpClient → uses authInterceptor
+- authInterceptor → injects AuthService  
+- AuthService → injects HttpClient
+
+**Solution**: Remove AuthService injection from interceptor. Clear sessionStorage directly instead of calling `authService.logout()`.
+
+#### Username/Role Not Loading
+
+**Symptom**: Username doesn't display in header, role-based buttons don't appear.
+
+**Cause**: `/api/users/me` call not being made, usually due to circular dependency blocking HTTP calls.
+
+**Solution**: 
+1. Verify no circular dependencies exist (check console for NG0200)
+2. Ensure AuthService constructor makes the `/api/users/me` call
+3. Check Network tab to verify XHR request is made
+
+#### Build Files Not Updating
+
+**Symptom**: Code changes don't appear after `mvnw spring-boot:run`.
+
+**Cause**: Maven's frontend-maven-plugin runs npm build during Maven lifecycle.
+
+**Solution**: Maven automatically builds Angular. Just restart Spring Boot:
+```bash
+./mvnw spring-boot:run  # Builds Angular and starts server
+```
 
 ## Production Automation Scripts
 
