@@ -133,6 +133,31 @@ For security, your session will expire after **30 minutes** of inactivity.
 - You'll see a message: "⚠️ Your session has expired. Please log in again."
 - Simply log in again to continue working
 
+### Password Expiration Warnings
+
+**Automatic Expiration**: All passwords expire automatically **90 days** after they are set or changed.
+
+**7-Day Warning**: Starting 7 days before your password expires, you'll see a warning banner at the top of every page:
+
+```
+⚠️ Your password will expire in X day(s). Please change it soon.
+```
+
+**What to Do:**
+
+1. Click the **"🔒 Update Password"** button in the header
+2. Follow the password change process (see "Changing Your Password" section below)
+3. Your new password will be valid for another 90 days
+
+**Expired Password:**
+
+If you don't change your password before it expires:
+
+1. You'll be redirected to the password change screen immediately after login
+2. You must change your password before accessing the system
+3. The message will say: "Your password has expired. Please change it to continue."
+4. After changing, you'll gain full access again
+
 **Tips:**
 - Save your work regularly
 - The system will show a clear message when your session expires
@@ -275,5 +300,8 @@ If your administrator has enabled "Force Password Update" for your account:
 
 1. You'll be redirected to the password change screen immediately after login
 2. You cannot access other features until you change your password
-3. Follow the same steps as above (no current password needed)
-4. After changing, you'll gain full access to the system
+3. The message will say: "Your administrator has required you to change your password"
+4. Follow the same steps as above (no current password needed)
+5. After changing, you'll gain full access to the system
+
+**Note**: This is different from password expiration. Force Password Update is manually set by administrators (typically for new accounts), while password expiration happens automatically after 90 days.

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     userrole VARCHAR(20) NOT NULL DEFAULT 'USER',
     enabled BOOLEAN NOT NULL DEFAULT true,
     forcepasswordupdate BOOLEAN NOT NULL DEFAULT true,
+    expiration_date DATE NULL,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL
 );

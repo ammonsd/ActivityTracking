@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -246,6 +248,10 @@ public class UserService {
 
         user.setPassword(encodedPassword);
 
+        // Set expiration date to 90 days from now
+        user.setExpirationDate(LocalDate.now(ZoneOffset.UTC).plusDays(90));
+        logger.debug("Set password expiration date to 90 days from now for user: {}", username);
+
         // Clear force password update flag if requested
         if (clearForceUpdate) {
             user.setForcePasswordUpdate(false);
@@ -290,5 +296,84 @@ public class UserService {
         logger.debug("Password verification for user '{}': {}", username,
                 matches ? "successful" : "failed");
         return matches;
+    }
+
+    /**
+     * Check if a user's password has expired.
+     * 
+     * @param username the username to check
+     * @return true if password is expired, false otherwise
+     */
+    public boolean isPasswordExpired(String username) {
+        if (!StringUtils.hasText(username)) {
+            return false;
+        }
+
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return false;
+        }
+
+        if (user.getExpirationDate() == null) {
+            // No expiration date set - consider as not expired
+            return false;
+        }
+
+        boolean expired = LocalDate.now(ZoneOffset.UTC).isAfter(user.getExpirationDate());
+        logger.debug("Password expiration check for user '{}': {}", username,
+                expired ? "expired" : "valid");
+        return expired;
+    }
+
+    /**
+     * Check if a user's password is expiring soon (within 7 days).
+     * 
+     * @param username the username to check
+     * @return true if password expires within 7 days, false otherwise
+     */
+    public boolean isPasswordExpiringSoon(String username) {
+        if (!StringUtils.hasText(username)) {
+            return false;
+        }
+
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null || user.getExpirationDate() == null) {
+            return false;
+        }
+
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
+        LocalDate sevenDaysFromNow = now.plusDays(7);
+
+        // Check if expiration date is between now and 7 days from now
+        boolean expiringSoon = user.getExpirationDate().isAfter(now)
+                && user.getExpirationDate().isBefore(sevenDaysFromNow);
+
+        logger.debug("Password expiring soon check for user '{}': {}", username,
+                expiringSoon ? "yes" : "no");
+        return expiringSoon;
+    }
+
+    /**
+     * Get days until password expiration for a user.
+     * 
+     * @param username the username to check
+     * @return number of days until expiration, or null if no expiration date set
+     */
+    public Long getDaysUntilExpiration(String username) {
+        if (!StringUtils.hasText(username)) {
+            return null;
+        }
+
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null || user.getExpirationDate() == null) {
+            return null;
+        }
+
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
+        if (now.isAfter(user.getExpirationDate())) {
+            return 0L; // Already expired
+        }
+
+        return java.time.temporal.ChronoUnit.DAYS.between(now, user.getExpirationDate());
     }
 }

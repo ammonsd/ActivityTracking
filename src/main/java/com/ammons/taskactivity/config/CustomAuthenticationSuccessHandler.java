@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
@@ -39,15 +40,19 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private static final Logger log =
             LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
     private static final String FORCE_PASSWORD_UPDATE_URL = "/change-password?forced=true";
+    private static final String PASSWORD_EXPIRED_URL = "/change-password?expired=true";
     private static final String DEFAULT_SUCCESS_URL = "/app";
 
     private final UserRepository userRepository;
     private final UserDetailsServiceImpl userDetailsService;
+    private final com.ammons.taskactivity.service.UserService userService;
 
     public CustomAuthenticationSuccessHandler(UserRepository userRepository,
-            UserDetailsServiceImpl userDetailsService) {
+            UserDetailsServiceImpl userDetailsService,
+            @Lazy com.ammons.taskactivity.service.UserService userService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
+        this.userService = userService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
         setAlwaysUseDefaultTargetUrl(false);
@@ -87,7 +92,15 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
 
-                // Check if user needs to update password
+                // Check if password has expired
+                if (userService.isPasswordExpired(username)) {
+                    log.info("User '{}' has an expired password", username);
+                    request.getSession().setAttribute("passwordExpired", true);
+                    getRedirectStrategy().sendRedirect(request, response, PASSWORD_EXPIRED_URL);
+                    return;
+                }
+
+                // Check if user needs to update password (admin forced)
                 if (user.isForcePasswordUpdate()) {
                     log.info("User '{}' requires forced password update", username);
                     request.getSession().setAttribute("requiresPasswordUpdate", true);

@@ -1,8 +1,8 @@
 package com.ammons.taskactivity.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
@@ -44,6 +44,9 @@ public class User {
 
     @Column(name = "forcepasswordupdate", nullable = false)
     private boolean forcePasswordUpdate = true;
+
+    @Column(name = "expiration_date")
+    private LocalDate expirationDate;
 
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -150,6 +153,14 @@ public class User {
 
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public LocalDate getExpirationDate() {
+        return expirationDate;
+    }
+
+    public void setExpirationDate(LocalDate expirationDate) {
+        this.expirationDate = expirationDate;
     }
 
     @Override

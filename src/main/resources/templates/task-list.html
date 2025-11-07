@@ -243,10 +243,14 @@ T<!DOCTYPE html>
             <div class="nav-content">
                 <h1>Task Activity Tracker</h1>
                 <div class="user-info">
-                    <span class="welcome-text">
-                        <span th:text="${userDisplayName}">Username</span>
-                    </span>
                     <div style="display: inline-flex; align-items: center; gap: 15px;">
+                        <div th:if="${passwordExpiringWarning}" 
+                             style="background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 4px; font-size: 13px; border: 1px solid #ffc107;">
+                            <span th:text="${passwordExpiringWarning}"></span>
+                        </div>
+                        <span class="welcome-text">
+                            <span th:text="${userDisplayName}">Username</span>
+                        </span>
                         <form th:action="@{/logout}" method="post" style="margin: 0;">
                             <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
                         </form>

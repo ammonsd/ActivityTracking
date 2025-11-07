@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.dto.ApiResponse;
+import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.UserService;
 import org.slf4j.Logger;
@@ -36,11 +37,30 @@ public class UserRestController {
      */
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<User>> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<ApiResponse<CurrentUserDto>> getCurrentUser(
+            Authentication authentication) {
         String username = authentication.getName();
         logger.debug("REST API: Getting current user: {}", username);
         return userService.getUserByUsername(username)
-                .map(user -> ResponseEntity.ok(ApiResponse.success("Current user", user)))
+                .map(user -> {
+                    CurrentUserDto dto = new CurrentUserDto(user.getId(), user.getUsername(),
+                            user.getFirstname(), user.getLastname(), user.getCompany(),
+                            user.getRole(), user.isEnabled());
+
+                    // Add password expiration warning if applicable
+                    if (userService.isPasswordExpiringSoon(username)) {
+                        Long daysUntilExpiration = userService.getDaysUntilExpiration(username);
+                        dto.setDaysUntilExpiration(daysUntilExpiration);
+                        if (daysUntilExpiration != null) {
+                            dto.setPasswordExpiringWarning(
+                                    "⚠️ Your password will expire in " + daysUntilExpiration
+                                            + " day" + (daysUntilExpiration == 1 ? "" : "s")
+                                            + ". Please change it soon.");
+                        }
+                    }
+
+                    return ResponseEntity.ok(ApiResponse.success("Current user", dto));
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 

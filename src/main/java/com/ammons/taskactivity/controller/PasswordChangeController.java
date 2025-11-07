@@ -38,7 +38,8 @@ public class PasswordChangeController {
      */
     @GetMapping("/change-password")
     public String showPasswordChangeForm(
-            @RequestParam(value = "forced", required = false) String forced, Model model,
+            @RequestParam(value = "forced", required = false) String forced,
+            @RequestParam(value = "expired", required = false) String expired, Model model,
             Authentication authentication, HttpSession session) {
 
         if (authentication == null) {
@@ -48,9 +49,11 @@ public class PasswordChangeController {
         String username = authentication.getName();
         logger.info("User '{}' accessing password change form", username);
 
-        // Check if this is a forced password update
+        // Check if this is a forced password update or expired password
         boolean isForced = "true".equals(forced)
                 || Boolean.TRUE.equals(session.getAttribute("requiresPasswordUpdate"));
+        boolean isExpired = "true".equals(expired)
+                || Boolean.TRUE.equals(session.getAttribute("passwordExpired"));
 
         // Create DTO and set the username
         PasswordChangeDto passwordChangeDto = new PasswordChangeDto();
@@ -58,7 +61,8 @@ public class PasswordChangeController {
 
         model.addAttribute(PASSWORD_CHANGE_DTO, passwordChangeDto);
         addUserDisplayInfo(model, authentication);
-        model.addAttribute(IS_FORCED, isForced);
+        model.addAttribute(IS_FORCED, isForced || isExpired);
+        model.addAttribute("isExpired", isExpired);
 
         return CHANGE_PASSWORD_VIEW;
     }
@@ -100,8 +104,9 @@ public class PasswordChangeController {
             userService.changePassword(username, passwordChangeDto.getNewPassword(), true);
             logger.info("Password successfully changed for user '{}'", username);
 
-            // Remove the forced password update flag
+            // Remove the forced password update and expired password flags
             session.removeAttribute("requiresPasswordUpdate");
+            session.removeAttribute("passwordExpired");
 
             // Add success message
             redirectAttributes.addFlashAttribute("successMessage",

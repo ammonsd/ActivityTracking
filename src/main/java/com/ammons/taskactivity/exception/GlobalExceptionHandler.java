@@ -1,5 +1,6 @@
 package com.ammons.taskactivity.exception;
 
+import com.ammons.taskactivity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,9 +8,12 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -31,6 +35,32 @@ public class GlobalExceptionHandler {
     private static final String ERROR_CODE_ATTR = "errorCode";
     private static final String ERROR_TITLE_ATTR = "errorTitle";
     private static final String REDIRECT_TASK_LIST = "redirect:/task-activity/list";
+
+    private final UserService userService;
+
+    public GlobalExceptionHandler(UserService userService) {
+        this.userService = userService;
+    }
+
+    /**
+     * Add password expiration warning to all views
+     */
+    @ModelAttribute("passwordExpiringWarning")
+    public String addPasswordExpirationWarning() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+            String username = authentication.getName();
+            if (userService.isPasswordExpiringSoon(username)) {
+                Long daysUntilExpiration = userService.getDaysUntilExpiration(username);
+                if (daysUntilExpiration != null) {
+                    return "⚠️ Your password will expire in " + daysUntilExpiration + " day"
+                            + (daysUntilExpiration == 1 ? "" : "s") + ". Please change it soon.";
+                }
+            }
+        }
+        return null;
+    }
 
     /**
      * Handle TaskActivityNotFoundException - returns 404 error page

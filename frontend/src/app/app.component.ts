@@ -37,6 +37,7 @@ export class AppComponent {
   currentUser = '';
   currentRole = '';
   currentDate = new Date();
+  passwordExpiringWarning = '';
 
   constructor(
     private readonly authService: AuthService,
@@ -64,7 +65,16 @@ export class AppComponent {
         this.currentRole = role;
       },
     });
-  }  logout(): void {
+
+    // Subscribe to password expiring warning
+    this.authService.passwordExpiringWarning$.subscribe({
+      next: (warning: string) => {
+        console.log('AppComponent - Password warning:', warning);
+        this.passwordExpiringWarning = warning;
+      },
+    });
+  }
+  logout(): void {
     // Clear Angular auth state first
     this.authService.logout();
 

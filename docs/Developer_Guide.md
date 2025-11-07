@@ -669,6 +669,69 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
 
 - `PasswordValidator.java` - Bean validation for DTOs
 
+### Password Expiration Configuration
+
+**Overview**: The application implements automatic password expiration with a 90-day policy and 7-day advance warnings.
+
+**Key Components:**
+
+1. **Database**: `expiration_date` column (DATE type) in `users` table
+2. **Entity**: `LocalDate expirationDate` field in `User.java`
+3. **Service Logic**: `UserService.java` contains expiration checking methods:
+   - `isPasswordExpired(String username)` - Returns true if password has expired
+   - `isPasswordExpiringSoon(String username)` - Returns true if password expires within 7 days
+   - `getDaysUntilExpiration(String username)` - Returns days remaining until expiration
+   - `changePassword()` - Automatically sets expiration to 90 days from password change
+
+**Authentication Flow:**
+
+```java
+// CustomAuthenticationSuccessHandler.java
+@Lazy UserService userService; // @Lazy breaks circular dependency
+
+public void onAuthenticationSuccess(...) {
+    // Check expiration BEFORE force update check
+    if (userService.isPasswordExpired(username)) {
+        request.getSession().setAttribute("passwordExpired", true);
+        response.sendRedirect("/password/change?expired=true");
+        return;
+    }
+    
+    if (user.isForcePasswordUpdate()) {
+        request.getSession().setAttribute("requiresPasswordUpdate", true);
+        response.sendRedirect("/password/change?forced=true");
+        return;
+    }
+    // ... normal login flow
+}
+```
+
+**UI Warning Display:**
+
+- **Spring Boot**: `GlobalExceptionHandler.java` injects `passwordExpiringWarning` model attribute into all views
+- **Angular**: `AuthService` exposes `passwordExpiringWarning$` observable, `AppComponent` subscribes and displays warning in toolbar
+- **Warning Threshold**: 7 days before expiration
+- **Warning Message**: "⚠️ Your password will expire in X day(s). Please change it soon."
+
+**Important Technical Notes:**
+
+- **Type Consistency**: Use `LocalDate` (not `LocalDateTime`) to match DATE column
+- **Circular Dependency**: `@Lazy` annotation required on UserService injection in CustomAuthenticationSuccessHandler
+- **Priority**: Expired password check occurs before force update check
+- **Null Handling**: NULL expiration_date = password never expires (backward compatibility)
+
+**Configuration:**
+
+Currently hardcoded (90-day expiration, 7-day warning). Future enhancement could make these configurable:
+
+```properties
+# Future configuration options
+app.security.password.expiration-days=90
+app.security.password.warning-days=7
+```
+
+**Related Documentation**: See `docs/Password_Expiration_Implementation_Guide.md` for complete implementation details.
+
 ### Task List Sort Configuration
 
 **Primary Location**: `src/main/java/com/ammons/taskactivity/config/TaskListSortConfig.java`

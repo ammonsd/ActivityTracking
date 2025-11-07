@@ -5,6 +5,9 @@
   <span class="app-title">{{ title }}</span>
   <span class="spacer"></span>
   <div class="user-info">
+    <div *ngIf="passwordExpiringWarning" class="password-warning">
+      {{ passwordExpiringWarning }}
+    </div>
     <span class="current-user">{{ currentUser }}</span>
     <span class="current-date">{{ currentDate | date : "M/d/yy" }}</span>
   </div>

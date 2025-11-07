@@ -17,6 +17,12 @@ export class AuthService {
   private readonly userRoleSubject = new BehaviorSubject<string>('');
   public readonly userRole$ = this.userRoleSubject.asObservable();
 
+  private readonly passwordExpiringWarningSubject = new BehaviorSubject<string>(
+    ''
+  );
+  public readonly passwordExpiringWarning$ =
+    this.passwordExpiringWarningSubject.asObservable();
+
   // Store credentials (in production, use JWT tokens instead)
   private credentials: string | null = null;
   private username: string | null = null;
@@ -46,6 +52,13 @@ export class AuthService {
             // Emit to observables
             this.currentUserSubject.next(response.data.username);
             this.userRoleSubject.next(response.data.role);
+
+            // Handle password expiring warning
+            if (response.data.passwordExpiringWarning) {
+              this.passwordExpiringWarningSubject.next(
+                response.data.passwordExpiringWarning
+              );
+            }
           }
         },
         error: () => {
@@ -56,7 +69,8 @@ export class AuthService {
         },
       });
     }
-  }  login(username: string, password: string): Observable<any> {
+  }
+  login(username: string, password: string): Observable<any> {
     // Create Basic Auth header
     const credentials = btoa(`${username}:${password}`);
     const headers = new HttpHeaders({
@@ -83,6 +97,13 @@ export class AuthService {
                 sessionStorage.setItem('userRole', response.data.role);
                 this.userRoleSubject.next(response.data.role);
                 this.currentUserSubject.next(response.data.username);
+
+                // Handle password expiring warning
+                if (response.data.passwordExpiringWarning) {
+                  this.passwordExpiringWarningSubject.next(
+                    response.data.passwordExpiringWarning
+                  );
+                }
               }
             },
           });
@@ -100,6 +121,7 @@ export class AuthService {
     this.isAuthenticatedSubject.next(false);
     this.currentUserSubject.next('');
     this.userRoleSubject.next('');
+    this.passwordExpiringWarningSubject.next('');
   }
 
   getAuthHeader(): HttpHeaders {
