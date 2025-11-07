@@ -67,6 +67,37 @@ Date,Client,Project,Phase,Hours,Details
 
 ## Getting Started
 
+### User Roles and Permissions
+
+The system has three user roles with different levels of access:
+
+**GUEST (Read-Only Access)**
+- ✅ View task list
+- ✅ View task details
+- ❌ Cannot create, edit, or delete tasks
+- ❌ Cannot access weekly timesheet
+- ❌ Cannot change password
+- ❌ No access to user management or dropdown settings
+
+**USER (Standard Access)**
+- ✅ View, create, edit, and delete your own tasks
+- ✅ Access weekly timesheet
+- ✅ Clone tasks
+- ✅ Change your own password
+- ✅ Export your tasks to CSV
+- ❌ Cannot view other users' tasks
+- ❌ No access to user management or dropdown settings
+
+**ADMIN (Full Access)**
+- ✅ All USER permissions
+- ✅ View and manage all users' tasks
+- ✅ Filter tasks by any username
+- ✅ Create, edit, and delete user accounts
+- ✅ Manage dropdown values (clients, projects, phases)
+- ✅ Change other users' passwords
+
+**Note:** Contact your administrator if you need different access permissions.
+
 ### Accessing the Application
 
 Open your web browser and navigate to:
@@ -92,6 +123,20 @@ Some new accounts are set up to require a password change on first login:
 2. Enter your new password twice (see password requirements below)
 3. Click "Update Password & Continue"
 4. You'll be logged in and can start using the system
+
+### Session Timeout
+
+For security, your session will expire after **30 minutes** of inactivity.
+
+**What Happens:**
+- After 30 minutes without activity, your session expires
+- You'll see a message: "⚠️ Your session has expired. Please log in again."
+- Simply log in again to continue working
+
+**Tips:**
+- Save your work regularly
+- The system will show a clear message when your session expires
+- All your data is saved automatically when you create or edit tasks
 
 ## Managing Your Tasks
 

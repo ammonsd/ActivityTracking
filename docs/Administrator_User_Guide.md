@@ -23,6 +23,31 @@ Both interfaces connect to the same backend and share the same data and authenti
 
 ## Administrator Features
 
+### User Roles Overview
+
+The system supports three user roles with different permission levels:
+
+**GUEST (Read-Only Access)**
+- Can view task list and task details in read-only mode
+- Cannot create, edit, or delete tasks
+- No access to weekly timesheet, user management, or dropdown settings
+- Cannot change password
+- Useful for stakeholders who need visibility without editing capabilities
+
+**USER (Standard Access)**
+- Can view, create, edit, and delete their own tasks
+- Access to weekly timesheet and task cloning
+- Can change their own password
+- Cannot view other users' tasks or access admin features
+- Standard role for team members doing time tracking
+
+**ADMIN (Full Access)**
+- All USER permissions plus administrative capabilities
+- Can view and manage all users' tasks
+- Can create, edit, and delete user accounts
+- Can manage dropdown values (clients, projects, phases)
+- Can change passwords for any user
+
 ### Managing Users
 
 Administrators can create, edit, and delete user accounts:
@@ -31,7 +56,7 @@ Administrators can create, edit, and delete user accounts:
 2. **View All Users**: See a list of all system users with their full names, company, role, and last login time
 3. **Filter Users**: Use the filter section to find specific users:
     - **Username**: Filter by username (partial match)
-    - **Role**: Filter by user role (ADMIN, USER, VIEWER)
+    - **Role**: Filter by user role (ADMIN, USER, GUEST)
     - **Company**: Filter by company name (partial match)
     - Click **"Search"** to apply filters or **"Reset filters"** to clear
 4. **Add New User**: Click **"Add User"** button
@@ -40,7 +65,7 @@ Administrators can create, edit, and delete user accounts:
     - Enter last name (required)
     - Enter company (optional, maximum 100 characters)
     - Set initial password
-    - Assign role (USER or ADMIN)
+    - Assign role (GUEST, USER, or ADMIN)
     - Enable/disable account
     - Optionally force password change on first login
 5. **Edit Users**: Modify first name, last name, company, role, or account status
