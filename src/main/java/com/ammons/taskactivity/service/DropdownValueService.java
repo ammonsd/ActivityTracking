@@ -53,6 +53,23 @@ public class DropdownValueService {
     }
 
     /**
+     * Return all dropdown values across all categories
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAllDropdownValues() {
+        return dropdownValueRepository.findAll();
+    }
+
+    /**
+     * Return all distinct categories from database
+     */
+    @Transactional(readOnly = true)
+    public List<String> getAllCategories() {
+        return dropdownValueRepository.findAll().stream().map(DropdownValue::getCategory).distinct()
+                .sorted().toList();
+    }
+
+    /**
      * Add new dropdown value
      */
     public DropdownValue createDropdownValue(String category, String value) {

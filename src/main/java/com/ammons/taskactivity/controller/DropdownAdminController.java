@@ -25,6 +25,8 @@ public class DropdownAdminController {
     private static final String SUCCESS_MESSAGE_ATTR = "successMessage";
     private static final String ERROR_MESSAGE_ATTR = "errorMessage";
     private static final String REDIRECT_ADMIN_DROPDOWNS = "redirect:/admin/dropdowns";
+    private static final String REDIRECT_ADMIN_DROPDOWNS_CATEGORY =
+            "redirect:/admin/dropdowns?category=";
 
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
@@ -36,12 +38,36 @@ public class DropdownAdminController {
     }
 
     /**
-     * Display Dropdown Management Page
+     * Display Dropdown Management Page with optional category filtering
      */
     @GetMapping
-    public String showDropdownManagement(Model model, Authentication authentication) {
-        // No need to fetch data since the combined screen only shows navigation and add form
-        model.addAttribute("newDropdownValue", new DropdownValue()); // For form binding
+    public String showDropdownManagement(
+            @RequestParam(required = false) String category, Model model,
+            Authentication authentication) {
+
+        List<DropdownValue> dropdownValues;
+        List<String> allCategories;
+
+        // Get all distinct categories from database
+        allCategories = dropdownValueService.getAllCategories();
+
+        // If category filter is provided, fetch values for that category only
+        // Otherwise, fetch all dropdown values
+        if (category != null && !category.trim().isEmpty()) {
+            String validCategory = category.toUpperCase();
+            dropdownValues = dropdownValueService.getAllValuesByCategory(validCategory);
+            model.addAttribute("selectedCategory", validCategory);
+        } else {
+            // Get all dropdown values across all categories
+            dropdownValues = dropdownValueService.getAllDropdownValues();
+            model.addAttribute("selectedCategory", "");
+        }
+
+        // Add model attributes
+        model.addAttribute("dropdownValues", dropdownValues);
+        model.addAttribute("categories", allCategories);
+        model.addAttribute("newDropdownValue", new DropdownValue());
+
         addUserDisplayInfo(model, authentication);
 
         return "admin/dropdown-management";
@@ -61,6 +87,9 @@ public class DropdownAdminController {
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
                     + value
                     + "' to " + category.toLowerCase() + " dropdown.");
+
+            // Redirect back to the same category
+            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + category.toUpperCase();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to add dropdown value: " + e.getMessage());
@@ -102,8 +131,8 @@ public class DropdownAdminController {
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Successfully updated dropdown value.");
 
-            // Redirect to appropriate category-specific page
-            return getRedirectUrlForCategory(updated.getCategory());
+            // Redirect back to the category page
+            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to update dropdown value: " + e.getMessage());
@@ -124,8 +153,8 @@ public class DropdownAdminController {
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Successfully " + status + " dropdown value: " + updated.getItemValue());
 
-            // Redirect to appropriate category-specific page
-            return getRedirectUrlForCategory(updated.getCategory());
+            // Redirect back to the category page
+            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to toggle dropdown value: " + e.getMessage());
@@ -149,8 +178,8 @@ public class DropdownAdminController {
                 redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                         "Successfully deleted dropdown value: " + deletedValue);
 
-                // Redirect to appropriate category-specific page
-                return getRedirectUrlForCategory(category);
+                // Redirect back to the category page
+                return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + category;
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -161,106 +190,27 @@ public class DropdownAdminController {
     }
 
     /**
-     * Helper method to determine redirect URL based on category
-     */
-    private String getRedirectUrlForCategory(String category) {
-        if (category == null)
-            return REDIRECT_ADMIN_DROPDOWNS;
-
-        switch (category) {
-            case DropdownValueService.CATEGORY_CLIENT:
-                return "redirect:/admin/dropdowns/clients";
-            case DropdownValueService.CATEGORY_PROJECT:
-                return "redirect:/admin/dropdowns/projects";
-            case DropdownValueService.CATEGORY_PHASE:
-                return "redirect:/admin/dropdowns/phases";
-            default:
-                return REDIRECT_ADMIN_DROPDOWNS;
-        }
-    }
-
-    /**
-     * Display Client Management Page
+     * Backwards compatible redirect - Client Management Page
      */
     @GetMapping("/clients")
-    public String showClientManagement(Model model, Authentication authentication) {
-        List<DropdownValue> clients =
-                dropdownValueService.getAllValuesByCategory(DropdownValueService.CATEGORY_CLIENT);
-        model.addAttribute("clients", clients);
-        addUserDisplayInfo(model, authentication);
-        return "admin/client-management";
+    public String redirectToClientManagement() {
+        return "redirect:/admin/dropdowns?category=CLIENT";
     }
 
     /**
-     * Add new client
-     */
-    @PostMapping("/clients/add")
-    public String addClient(@RequestParam String value, RedirectAttributes redirectAttributes) {
-        try {
-            dropdownValueService.createDropdownValue(DropdownValueService.CATEGORY_CLIENT, value);
-            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
-                    "Successfully added client '" + value + "'.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                    "Failed to add client: " + e.getMessage());
-        }
-        return "redirect:/admin/dropdowns/clients";
-    }
-
-    /**
-     * Display Project Management Page
+     * Backwards compatible redirect - Project Management Page
      */
     @GetMapping("/projects")
-    public String showProjectManagement(Model model, Authentication authentication) {
-        List<DropdownValue> projects =
-                dropdownValueService.getAllValuesByCategory(DropdownValueService.CATEGORY_PROJECT);
-        model.addAttribute("projects", projects);
-        addUserDisplayInfo(model, authentication);
-        return "admin/project-management";
+    public String redirectToProjectManagement() {
+        return "redirect:/admin/dropdowns?category=PROJECT";
     }
 
     /**
-     * Add new project
-     */
-    @PostMapping("/projects/add")
-    public String addProject(@RequestParam String value, RedirectAttributes redirectAttributes) {
-        try {
-            dropdownValueService.createDropdownValue(DropdownValueService.CATEGORY_PROJECT, value);
-            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
-                    "Successfully added project '" + value + "'.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                    "Failed to add project: " + e.getMessage());
-        }
-        return "redirect:/admin/dropdowns/projects";
-    }
-
-    /**
-     * Display Phase Management Page
+     * Backwards compatible redirect - Phase Management Page
      */
     @GetMapping("/phases")
-    public String showPhaseManagement(Model model, Authentication authentication) {
-        List<DropdownValue> phases =
-                dropdownValueService.getAllValuesByCategory(DropdownValueService.CATEGORY_PHASE);
-        model.addAttribute("phases", phases);
-        addUserDisplayInfo(model, authentication);
-        return "admin/phase-management";
-    }
-
-    /**
-     * Add new phase
-     */
-    @PostMapping("/phases/add")
-    public String addPhase(@RequestParam String value, RedirectAttributes redirectAttributes) {
-        try {
-            dropdownValueService.createDropdownValue(DropdownValueService.CATEGORY_PHASE, value);
-            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
-                    "Successfully added phase '" + value + "'.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                    "Failed to add phase: " + e.getMessage());
-        }
-        return "redirect:/admin/dropdowns/phases";
+    public String redirectToPhaseManagement() {
+        return "redirect:/admin/dropdowns?category=PHASE";
     }
 
     /**

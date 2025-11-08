@@ -10,6 +10,7 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/task-activity.model';
 import { UserEditDialogComponent } from '../user-edit-dialog/user-edit-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-user-list',
@@ -317,17 +318,29 @@ export class UserListComponent implements OnInit {
       return;
     }
 
-    if (confirm(`Are you sure you want to delete user: ${user.username}?`)) {
-      this.userService.deleteUser(user.id!).subscribe({
-        next: () => {
-          console.log('User deleted successfully');
-          this.loadUsers(); // Reload the list
-        },
-        error: (err) => {
-          console.error('Error deleting user:', err);
-          alert('Failed to delete user. You may not have permission.');
-        },
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Confirm Delete',
+        message: `Are you sure you want to delete user: ${user.username}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.userService.deleteUser(user.id!).subscribe({
+          next: () => {
+            console.log('User deleted successfully');
+            this.loadUsers(); // Reload the list
+          },
+          error: (err) => {
+            console.error('Error deleting user:', err);
+            alert('Failed to delete user. You may not have permission.');
+          },
+        });
+      }
+    });
   }
 }

@@ -114,28 +114,57 @@ As an administrator, you have the ability to view and manage tasks for all users
 
 ### Managing Dropdowns
 
-1. **Access Dropdown Management**: Click **"🔧 Manage Dropdowns"**
+Dropdown management has been consolidated into a single, dynamic interface that supports multiple categories from one screen.
 
-2. **Select Category**:
+1. **Access Dropdown Management**: Click **"🔧 Manage Dropdowns"** from the navigation header
 
-    - **Clients**: Manage client list
-    - **Projects**: Manage project names
-    - **Phases**: Manage work phases
+2. **Select Category**: Use the dropdown filter to choose which category to manage:
+    - **All Categories**: View all dropdown values across all categories
+    - **CLIENT**: Manage client list
+    - **PROJECT**: Manage project names
+    - **PHASE**: Manage work phases
+    - **Note**: New categories added to the database automatically appear in this list
 
-3. **Add New Values**:
+3. **Filter-First Workflow**:
+    - The form is disabled until you select a category (except "All Categories")
+    - This prevents accidentally adding values to the wrong category
+    - Select a specific category to enable the "Add" form
 
-    - Enter new value name
+4. **Add New Values**:
+    - Select a category from the filter dropdown
+    - Enter new value name in the "Item Value" field
     - Click "Add" button
-    - Value appears in dropdown immediately
+    - Value appears in the table immediately
+    - **Note**: Display order is automatically assigned based on existing values
 
-4. **Edit Values**:
+5. **Edit Values**:
+    - Click the "Edit" (pencil icon) button next to any value
+    - Opens a modal dialog with the current details
+    - Update the item value, display order, or active status
+    - Click "Update" to save changes
+    - Changes are reflected immediately in the table
 
-    - Click "Edit" next to the value
-    - Update the name
-    - Click "Update"
+6. **Delete Values**:
+    - Click the "Delete" (trash icon) button next to any value
+    - A styled confirmation modal appears (no more ugly browser dialogs!)
+    - Confirm deletion by clicking "Delete" in the modal
+    - Click "Cancel" to abort
+    - **Note**: Cannot delete values that are in use by existing tasks
 
-5. **Delete Values**:
+7. **Category Display**:
+    - When viewing "All Categories", a "Category" column shows which category each value belongs to
+    - When filtering by a specific category, the category column is hidden since all values belong to the same category
+    - Active/inactive status is displayed with color-coded badges
 
-    - Click "Delete" next to the value
-    - Confirm deletion
-    - Can't delete values that are in use by existing tasks
+8. **Active/Inactive Toggle**:
+    - Values can be marked as active or inactive via the Edit dialog
+    - Inactive values don't appear in dropdown lists when creating/editing tasks
+    - Use this instead of deleting values that are still referenced by existing tasks
+
+**Benefits of Consolidated Dropdown Management:**
+- ✅ Single interface for all dropdown categories
+- ✅ Automatically supports new categories added to the database
+- ✅ No code changes required when adding new dropdown categories
+- ✅ Filter-first design prevents errors
+- ✅ Professional styled confirmation modals
+- ✅ Consistent user experience across Spring Boot and Angular interfaces
