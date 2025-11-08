@@ -336,7 +336,7 @@ public class UserManagementController {
 
         try {
             userService.changePassword(passwordChangeDto.getUsername(),
-                    passwordChangeDto.getNewPassword());
+                    passwordChangeDto.getNewPassword(), true);
             logger.info("Admin {} successfully changed password for user: {}",
                     authentication.getName(), passwordChangeDto.getUsername());
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
