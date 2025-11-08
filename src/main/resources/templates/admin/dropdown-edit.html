@@ -134,9 +134,7 @@
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-success">Update Value</button>
-                    <a th:href="@{${dropdownValue.category == 'CLIENT' ? '/admin/dropdowns/clients' : 
-                                    (dropdownValue.category == 'PROJECT' ? '/admin/dropdowns/projects' : 
-                                    (dropdownValue.category == 'PHASE' ? '/admin/dropdowns/phases' : '/admin/dropdowns'))}}" 
+                    <a th:href="@{/admin/dropdowns(category=${dropdownValue.category})}" 
                        class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
