@@ -1863,6 +1863,211 @@ GET /api/health
 }
 ```
 
+### Dropdown Management API
+
+The Dropdown Management API provides consolidated endpoints for managing dropdown values across multiple categories (CLIENT, PROJECT, PHASE, etc.). This API supports the Angular frontend and follows a dynamic, extensible design that automatically adapts to new categories added to the database.
+
+#### Get All Categories
+
+```http
+GET /api/dropdowns/categories
+```
+
+**Description:** Returns a list of all distinct categories from the dropdown values table.
+
+**Access Control:** Requires authentication (USER, ADMIN, or GUEST role)
+
+**Response:**
+
+```json
+[
+    "CLIENT",
+    "PHASE",
+    "PROJECT"
+]
+```
+
+**Use Case:** Populates the category filter dropdown in the Angular Dashboard
+
+#### Get All Dropdown Values
+
+```http
+GET /api/dropdowns/all
+```
+
+**Description:** Returns all dropdown values across all categories, including their category, item value, display order, and active status.
+
+**Access Control:** Requires authentication (USER, ADMIN, or GUEST role)
+
+**Response:**
+
+```json
+[
+    {
+        "id": 1,
+        "category": "PHASE",
+        "itemValue": "Development",
+        "displayOrder": 1,
+        "isActive": true
+    },
+    {
+        "id": 2,
+        "category": "CLIENT",
+        "itemValue": "Acme Corp",
+        "displayOrder": 1,
+        "isActive": true
+    }
+]
+```
+
+**Use Case:** Displays all dropdown values when "All Categories" is selected in the filter
+
+#### Get Values by Category
+
+```http
+GET /api/dropdowns/category/{category}
+```
+
+**Parameters:**
+
+- `category` (path): Category name (e.g., "CLIENT", "PROJECT", "PHASE")
+
+**Description:** Returns all dropdown values for a specific category.
+
+**Access Control:** Requires authentication (USER, ADMIN, or GUEST role)
+
+**Response:**
+
+```json
+[
+    {
+        "id": 1,
+        "category": "CLIENT",
+        "itemValue": "Acme Corp",
+        "displayOrder": 1,
+        "isActive": true
+    },
+    {
+        "id": 2,
+        "category": "CLIENT",
+        "itemValue": "TechStart Inc",
+        "displayOrder": 2,
+        "isActive": true
+    }
+]
+```
+
+**Use Case:** Filters dropdown values when a specific category is selected
+
+#### Legacy Category Endpoint
+
+```http
+GET /api/dropdowns/{category}
+```
+
+**Note:** This endpoint is maintained for backwards compatibility and functions identically to `/api/dropdowns/category/{category}`.
+
+#### Get Specific Category Shortcuts
+
+```http
+GET /api/dropdowns/clients
+GET /api/dropdowns/projects
+GET /api/dropdowns/phases
+```
+
+**Description:** Convenience endpoints that return values for specific categories.
+
+**Access Control:** Requires authentication (USER, ADMIN, or GUEST role)
+
+**Note:** These are shortcuts to the generic category endpoint and are used by the task creation/editing forms.
+
+#### Create Dropdown Value
+
+```http
+POST /api/dropdowns
+Content-Type: application/json
+
+{
+  "category": "CLIENT",
+  "itemValue": "New Client Name"
+}
+```
+
+**Description:** Creates a new dropdown value. Display order is automatically assigned.
+
+**Access Control:** Requires ADMIN role
+
+**Response:**
+
+```json
+{
+    "id": 10,
+    "category": "CLIENT",
+    "itemValue": "New Client Name",
+    "displayOrder": 5,
+    "isActive": true
+}
+```
+
+#### Update Dropdown Value
+
+```http
+PUT /api/dropdowns/{id}
+Content-Type: application/json
+
+{
+  "category": "CLIENT",
+  "itemValue": "Updated Client Name",
+  "displayOrder": 3,
+  "isActive": true
+}
+```
+
+**Parameters:**
+
+- `id` (path): Dropdown value ID
+
+**Description:** Updates an existing dropdown value. All fields are updatable.
+
+**Access Control:** Requires ADMIN role
+
+**Response:**
+
+```json
+{
+    "id": 10,
+    "category": "CLIENT",
+    "itemValue": "Updated Client Name",
+    "displayOrder": 3,
+    "isActive": true
+}
+```
+
+#### Delete Dropdown Value
+
+```http
+DELETE /api/dropdowns/{id}
+```
+
+**Parameters:**
+
+- `id` (path): Dropdown value ID
+
+**Description:** Deletes a dropdown value. Cannot delete values that are referenced by existing tasks.
+
+**Access Control:** Requires ADMIN role
+
+**Response:** 204 No Content (success) or 400 Bad Request (if value is in use)
+
+**Implementation Notes:**
+
+- **Dynamic Categories**: The API automatically supports any new categories added to the database without code changes
+- **Filter-First Design**: The Angular UI enforces category selection before allowing value creation to prevent errors
+- **Consolidated Management**: Single set of endpoints handles all dropdown categories, eliminating duplicate code
+- **Active/Inactive Support**: Values can be marked inactive instead of deleted to maintain referential integrity
+- **Automatic Ordering**: Display order is automatically assigned when creating new values
+- **Validation**: Backend validates category names and prevents duplicate values within the same category
+
 ### Web Controller Endpoints
 
 The application provides web-based endpoints for user interaction through Thymeleaf templates.

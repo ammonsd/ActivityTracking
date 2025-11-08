@@ -27,9 +27,6 @@ public class DropdownAdminController {
     private static final String REDIRECT_ADMIN_DROPDOWNS = "redirect:/admin/dropdowns";
     private static final String REDIRECT_ADMIN_DROPDOWNS_CATEGORY =
             "redirect:/admin/dropdowns?category=";
-    private static final List<String> VALID_CATEGORIES =
-            List.of(DropdownValueService.CATEGORY_CLIENT, DropdownValueService.CATEGORY_PROJECT,
-                    DropdownValueService.CATEGORY_PHASE);
 
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
@@ -41,52 +38,39 @@ public class DropdownAdminController {
     }
 
     /**
-     * Display Dropdown Management Page with category filtering
+     * Display Dropdown Management Page with optional category filtering
      */
     @GetMapping
     public String showDropdownManagement(
-            @RequestParam(required = false, defaultValue = "CLIENT") String category, Model model,
+            @RequestParam(required = false) String category, Model model,
             Authentication authentication) {
 
-        // Validate category (fallback to CLIENT if invalid)
-        String validCategory = category.toUpperCase();
-        if (!VALID_CATEGORIES.contains(validCategory)) {
-            validCategory = DropdownValueService.CATEGORY_CLIENT;
-        }
+        List<DropdownValue> dropdownValues;
+        List<String> allCategories;
 
-        // Fetch dropdown values for the selected category
-        List<DropdownValue> dropdownValues =
-                dropdownValueService.getAllValuesByCategory(validCategory);
+        // Get all distinct categories from database
+        allCategories = dropdownValueService.getAllCategories();
+
+        // If category filter is provided, fetch values for that category only
+        // Otherwise, fetch all dropdown values
+        if (category != null && !category.trim().isEmpty()) {
+            String validCategory = category.toUpperCase();
+            dropdownValues = dropdownValueService.getAllValuesByCategory(validCategory);
+            model.addAttribute("selectedCategory", validCategory);
+        } else {
+            // Get all dropdown values across all categories
+            dropdownValues = dropdownValueService.getAllDropdownValues();
+            model.addAttribute("selectedCategory", "");
+        }
 
         // Add model attributes
         model.addAttribute("dropdownValues", dropdownValues);
-        model.addAttribute("selectedCategory", validCategory);
-        model.addAttribute("categories", VALID_CATEGORIES);
+        model.addAttribute("categories", allCategories);
         model.addAttribute("newDropdownValue", new DropdownValue());
-
-        // Get friendly display name for category
-        String categoryDisplayName = getCategoryDisplayName(validCategory);
-        model.addAttribute("categoryDisplayName", categoryDisplayName);
 
         addUserDisplayInfo(model, authentication);
 
         return "admin/dropdown-management";
-    }
-
-    /**
-     * Get friendly display name for category
-     */
-    private String getCategoryDisplayName(String category) {
-        switch (category) {
-            case DropdownValueService.CATEGORY_CLIENT:
-                return "Clients";
-            case DropdownValueService.CATEGORY_PROJECT:
-                return "Projects";
-            case DropdownValueService.CATEGORY_PHASE:
-                return "Phases";
-            default:
-                return category;
-        }
     }
 
     /**

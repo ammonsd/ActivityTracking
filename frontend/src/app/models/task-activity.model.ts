@@ -22,6 +22,7 @@ export interface User {
 
 export interface DropdownValue {
   id?: number;
+  category: string;
   categoryName: string;
   itemValue: string;
   displayOrder: number;

@@ -30,7 +30,37 @@ public class DropdownRestController {
     }
 
     /**
+     * Get all categories
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        logger.debug("REST API: Getting all categories");
+        List<String> categories = dropdownValueService.getAllCategories();
+        return ResponseEntity.ok(categories);
+    }
+
+    /**
+     * Get all dropdown values across all categories
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<DropdownValue>> getAllDropdownValues() {
+        logger.debug("REST API: Getting all dropdown values");
+        List<DropdownValue> values = dropdownValueService.getAllDropdownValues();
+        return ResponseEntity.ok(values);
+    }
+
+    /**
      * Get all dropdown values for a specific category
+     */
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<DropdownValue>> getValuesByCategory(@PathVariable String category) {
+        logger.debug("REST API: Getting dropdown values for category: {}", category);
+        List<DropdownValue> values = dropdownValueService.getAllValuesByCategory(category);
+        return ResponseEntity.ok(values);
+    }
+
+    /**
+     * Get all dropdown values for a specific category (legacy endpoint)
      */
     @GetMapping("/{category}")
     public ResponseEntity<List<DropdownValue>> getDropdownsByCategory(

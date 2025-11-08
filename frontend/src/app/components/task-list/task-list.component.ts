@@ -16,6 +16,7 @@ import { TaskActivityService } from '../../services/task-activity.service';
 import { AuthService } from '../../services/auth.service';
 import { TaskActivity } from '../../models/task-activity.model';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -579,21 +580,29 @@ export class TaskListComponent implements OnInit {
   }
 
   deleteTask(task: TaskActivity): void {
-    if (
-      confirm(
-        `Are you sure you want to delete this task from ${task.taskDate}?`
-      )
-    ) {
-      this.taskService.deleteTask(task.id!).subscribe({
-        next: () => {
-          console.log('Task deleted successfully');
-          this.loadTasks(); // Reload the list
-        },
-        error: (err) => {
-          console.error('Error deleting task:', err);
-          alert('Failed to delete task. You may not have permission.');
-        },
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Confirm Delete',
+        message: `Are you sure you want to delete this task from ${task.taskDate}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.taskService.deleteTask(task.id!).subscribe({
+          next: () => {
+            console.log('Task deleted successfully');
+            this.loadTasks(); // Reload the list
+          },
+          error: (err) => {
+            console.error('Error deleting task:', err);
+            alert('Failed to delete task. You may not have permission.');
+          },
+        });
+      }
+    });
   }
 }
