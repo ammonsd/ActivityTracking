@@ -31,8 +31,14 @@ The system supports three user roles with different permission levels:
 - Can view task list and task details in read-only mode
 - Cannot create, edit, or delete tasks
 - No access to weekly timesheet, user management, or dropdown settings
-- Cannot change password
+- **Cannot change password** (password changes must be done by an administrator)
+- **Password expiration warnings are suppressed** (GUEST users won't see expiration warnings)
+- **Cannot log in if password has expired** (must contact administrator for password reset)
 - Useful for stakeholders who need visibility without editing capabilities
+
+**Important for GUEST Users:**
+- When a GUEST user's password expires, they will be blocked from logging in with the message: "Password has expired. Contact system administrator."
+- Administrators must reset GUEST passwords and update the expiration date when needed
 
 **USER (Standard Access)**
 - Can view, create, edit, and delete their own tasks

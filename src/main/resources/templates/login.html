@@ -54,7 +54,10 @@
                 <div th:if="${param.disabled}" class="error-message">
                     User Account Disabled. Contact support for help.
                 </div>
-                <div th:if="${param.error}" class="error-message">
+                <div th:if="${param.guest_expired}" class="error-message">
+                    Password has expired. Contact system administrator.
+                </div>
+                <div th:if="${param.error != null and param.guest_expired == null}" class="error-message">
                     Invalid username or password. Please try again.
                 </div>
 

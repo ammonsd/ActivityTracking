@@ -73,6 +73,15 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String username = request.getParameter("username");
         log.debug("Authentication failed for user: {}", username);
 
+        // Check for GUEST user with expired password
+        if (exception instanceof GuestPasswordExpiredException) {
+            log.info("Authentication failed: GUEST user '{}' has expired password", username);
+            String redirectUrl = LOGIN_URL + "?guest_expired";
+            log.info("Redirecting to: {}", redirectUrl);
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+            return;
+        }
+
         // Check if the failure is due to a disabled account
         if (exception instanceof DisabledException) {
             log.info("Authentication failed for disabled user: {}", username);

@@ -49,6 +49,13 @@ public class PasswordChangeController {
         String username = authentication.getName();
         logger.info("User '{}' accessing password change form", username);
 
+        // Block GUEST users from accessing password change
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+            logger.warn("GUEST user '{}' attempted to access password change page", username);
+            return "redirect:/task-activity/list?error=guest_restricted";
+        }
+
         // Check if this is a forced password update or expired password
         boolean isForced = "true".equals(forced)
                 || Boolean.TRUE.equals(session.getAttribute("requiresPasswordUpdate"));
@@ -81,6 +88,13 @@ public class PasswordChangeController {
 
         String username = authentication.getName();
         logger.info("User '{}' attempting to change password", username);
+
+        // Block GUEST users from changing password
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+            logger.warn("GUEST user '{}' attempted to change password", username);
+            return "redirect:/task-activity/list?error=guest_restricted";
+        }
 
         // Check for validation errors
         if (bindingResult.hasErrors()) {

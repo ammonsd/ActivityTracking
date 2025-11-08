@@ -143,6 +143,8 @@ For security, your session will expire after **30 minutes** of inactivity.
 ⚠️ Your password will expire in X day(s). Please change it soon.
 ```
 
+**Note**: GUEST users will not see password expiration warnings since they cannot change their own passwords.
+
 **What to Do:**
 
 1. Click the **"🔒 Update Password"** button in the header
@@ -151,12 +153,19 @@ For security, your session will expire after **30 minutes** of inactivity.
 
 **Expired Password:**
 
-If you don't change your password before it expires:
+**For USER and ADMIN roles:**
 
 1. You'll be redirected to the password change screen immediately after login
 2. You must change your password before accessing the system
 3. The message will say: "Your password has expired. Please change it to continue."
 4. After changing, you'll gain full access again
+
+**For GUEST role:**
+
+1. GUEST users cannot change their own passwords
+2. If a GUEST password expires, they will be blocked from logging in
+3. The login page will display: "Password has expired. Contact system administrator."
+4. An administrator must reset the GUEST user's password
 
 **Tips:**
 - Save your work regularly

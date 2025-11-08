@@ -671,7 +671,7 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
 
 ### Password Expiration Configuration
 
-**Overview**: The application implements automatic password expiration with a 90-day policy and 7-day advance warnings.
+**Overview**: The application implements automatic password expiration with a 90-day policy and 7-day advance warnings. Special handling is provided for GUEST users who cannot change their own passwords.
 
 **Key Components:**
 
@@ -686,37 +686,65 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
 **Authentication Flow:**
 
 ```java
-// CustomAuthenticationSuccessHandler.java
-@Lazy UserService userService; // @Lazy breaks circular dependency
+// CustomAuthenticationProvider.java - Blocks GUEST users with expired passwords
+public Authentication authenticate(Authentication authentication) {
+    String username = authentication.getName();
+    Authentication result = super.authenticate(authentication);
+    
+    Optional<User> userOptional = userRepository.findByUsername(username);
+    if (userOptional.isPresent()) {
+        User user = userOptional.get();
+        // GUEST users with expired passwords cannot authenticate
+        if (user.getRole() == Role.GUEST && isPasswordExpired(user)) {
+            throw new GuestPasswordExpiredException(
+                "Password has expired. Contact system administrator.");
+        }
+    }
+    return result;
+}
 
+// CustomAuthenticationSuccessHandler.java - Handles regular users
 public void onAuthenticationSuccess(...) {
-    // Check expiration BEFORE force update check
+    // GUEST users with expired passwords are blocked at authentication level
+    // This only handles USER and ADMIN roles
     if (userService.isPasswordExpired(username)) {
         request.getSession().setAttribute("passwordExpired", true);
-        response.sendRedirect("/password/change?expired=true");
+        response.sendRedirect("/change-password?expired=true");
         return;
     }
     
     if (user.isForcePasswordUpdate()) {
         request.getSession().setAttribute("requiresPasswordUpdate", true);
-        response.sendRedirect("/password/change?forced=true");
+        response.sendRedirect("/change-password?forced=true");
         return;
     }
     // ... normal login flow
 }
 ```
 
+**GUEST Role Special Handling:**
+
+Since GUEST users cannot change passwords, expired password scenarios are handled differently:
+
+1. **Authentication Blocked**: `CustomAuthenticationProvider` rejects authentication before session creation
+2. **Custom Exception**: `GuestPasswordExpiredException` thrown for GUEST expired passwords
+3. **Error Message**: Login page displays "Password has expired. Contact system administrator."
+4. **No Warning Display**: Password expiration warnings are suppressed for GUEST users (they appear only for USER/ADMIN)
+5. **Password Change Blocked**: `PasswordChangeController` blocks GUEST role from accessing password change pages
+
 **UI Warning Display:**
 
-- **Spring Boot**: `GlobalExceptionHandler.java` injects `passwordExpiringWarning` model attribute into all views
-- **Angular**: `AuthService` exposes `passwordExpiringWarning$` observable, `AppComponent` subscribes and displays warning in toolbar
+- **Spring Boot**: `GlobalExceptionHandler.java` injects `passwordExpiringWarning` model attribute (suppressed for GUEST)
+- **Angular**: `AuthService` exposes `passwordExpiringWarning$` observable (suppressed for GUEST), `AppComponent` subscribes and displays warning in toolbar
 - **Warning Threshold**: 7 days before expiration
 - **Warning Message**: "⚠️ Your password will expire in X day(s). Please change it soon."
 
 **Important Technical Notes:**
 
 - **Type Consistency**: Use `LocalDate` (not `LocalDateTime`) to match DATE column
-- **Circular Dependency**: `@Lazy` annotation required on UserService injection in CustomAuthenticationSuccessHandler
+- **GUEST Restrictions**: GUEST users with expired passwords are blocked at authentication provider level, not success handler
+- **No Circular Dependency**: CustomAuthenticationProvider created as @Bean in SecurityConfig, uses UserRepository directly
+- **Single Authentication Provider**: Only CustomAuthenticationProvider is registered (removed userDetailsService from SecurityConfig to prevent fallback providers)
 - **Priority**: Expired password check occurs before force update check
 - **Null Handling**: NULL expiration_date = password never expires (backward compatibility)
 
@@ -2248,6 +2276,17 @@ While GUEST users can access certain URLs (like `/task-activity/add`), the UI an
 - Accessing weekly timesheet
 - Managing users or dropdown values
 - Cloning tasks (Clone button hidden in UI)
+- **Changing passwords** (PasswordChangeController blocks GUEST role from accessing password change pages)
+- **Logging in with expired passwords** (CustomAuthenticationProvider blocks authentication for GUEST users with expired passwords)
+
+**GUEST Password Expiration Handling:**
+
+Since GUEST users cannot change their own passwords, expired password scenarios require administrator intervention:
+
+1. **Authentication Blocked**: GUEST users with expired passwords cannot log in
+2. **Error Message**: Login page displays "Password has expired. Contact system administrator."
+3. **No Warnings**: Password expiration warnings are suppressed for GUEST users
+4. **Administrator Action Required**: An ADMIN must reset the GUEST user's password and update the expiration date
 
 ### Session Timeout Handling
 

@@ -20,6 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.ammons.taskactivity.repository.UserRepository;
+
 import java.util.List;
 
 /**
@@ -48,23 +50,34 @@ public class SecurityConfig {
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final ForcePasswordUpdateFilter forcePasswordUpdateFilter;
+    private final UserRepository userRepository;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                     CustomAccessDeniedHandler customAccessDeniedHandler,
                     CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
             CustomAuthenticationFailureHandler customAuthenticationFailureHandler,
             CustomLogoutSuccessHandler customLogoutSuccessHandler,
-                    ForcePasswordUpdateFilter forcePasswordUpdateFilter) {
+                    ForcePasswordUpdateFilter forcePasswordUpdateFilter,
+                    UserRepository userRepository) {
         this.userDetailsService = userDetailsService;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
         this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.forcePasswordUpdateFilter = forcePasswordUpdateFilter;
+        this.userRepository = userRepository;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public CustomAuthenticationProvider customAuthenticationProvider(
+                    PasswordEncoder passwordEncoder) {
+            return new CustomAuthenticationProvider(userDetailsService, passwordEncoder,
+                            userRepository);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                    CustomAuthenticationProvider customAuthenticationProvider) throws Exception {
         http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                         "/swagger-ui.html", API_PATTERN) // Disable CSRF for API
@@ -228,7 +241,7 @@ public class SecurityConfig {
                                                                                      // for
                                                                                      // dual UI
                                                                                      // support
-                        .userDetailsService(userDetailsService)
+                        .authenticationProvider(customAuthenticationProvider)
                         .addFilterAfter(forcePasswordUpdateFilter,
                                         UsernamePasswordAuthenticationFilter.class);
 

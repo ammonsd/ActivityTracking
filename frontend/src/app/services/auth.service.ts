@@ -55,9 +55,12 @@ export class AuthService {
 
             // Handle password expiring warning
             if (response.data.passwordExpiringWarning) {
-              this.passwordExpiringWarningSubject.next(
-                response.data.passwordExpiringWarning
-              );
+              // Don't show warning for GUEST users (they can't change passwords)
+              if (response.data.role !== 'GUEST') {
+                this.passwordExpiringWarningSubject.next(
+                  response.data.passwordExpiringWarning
+                );
+              }
             }
           }
         },
@@ -100,9 +103,12 @@ export class AuthService {
 
                 // Handle password expiring warning
                 if (response.data.passwordExpiringWarning) {
-                  this.passwordExpiringWarningSubject.next(
-                    response.data.passwordExpiringWarning
-                  );
+                  // Don't show warning for GUEST users (they can't change passwords)
+                  if (response.data.role !== 'GUEST') {
+                    this.passwordExpiringWarningSubject.next(
+                      response.data.passwordExpiringWarning
+                    );
+                  }
                 }
               }
             },

@@ -95,6 +95,10 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 // Check if password has expired
                 if (userService.isPasswordExpired(username)) {
                     log.info("User '{}' has an expired password", username);
+
+                    // Note: GUEST users with expired passwords are already blocked at
+                    // authentication time by CustomAuthenticationProvider
+
                     request.getSession().setAttribute("passwordExpired", true);
                     getRedirectStrategy().sendRedirect(request, response, PASSWORD_EXPIRED_URL);
                     return;
