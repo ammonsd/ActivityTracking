@@ -56,7 +56,7 @@ public class DataInitializer {
 
             User admin = new User();
             admin.setUsername(ADMIN_USERNAME);
-            admin.setFirstname("");
+            admin.setFirstname("System");
             admin.setLastname("Administrator");
             admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(Role.ADMIN);
