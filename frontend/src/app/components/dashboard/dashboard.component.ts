@@ -80,6 +80,9 @@ import { AuthService } from '../../services/auth.service';
               <li>RESTful API integration</li>
               <li>Responsive design</li>
               <li>TypeScript type safety</li>
+              <li>Reactive state management with RxJS</li>
+              <li>Session-based authentication</li>
+              <li>Password expiration warnings</li>
             </ul>
           </mat-card-content>
         </mat-card>
