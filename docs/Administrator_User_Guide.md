@@ -125,12 +125,19 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **PHASE**: Manage work phases
     - **Note**: New categories added to the database automatically appear in this list
 
-3. **Filter-First Workflow**:
+3. **Filter by Subcategory** (Optional):
+    - After selecting a category, use the subcategory dropdown to further narrow results
+    - Shows only subcategories that exist within the selected category
+    - Select "All Subcategories" to view all values for the selected category
+    - When you change categories, the subcategory filter automatically resets
+    - **Tip**: Use this to quickly find specific groups of values when managing large dropdown lists
+
+4. **Filter-First Workflow**:
     - The form is disabled until you select a category (except "All Categories")
     - This prevents accidentally adding values to the wrong category
     - Select a specific category to enable the "Add" form
 
-4. **Add New Values**:
+5. **Add New Values**:
     - Select a category from the filter dropdown
     - Enter a subcategory (e.g., 'TASK' for PHASE entries, 'GENERAL' for CLIENT/PROJECT)
     - Enter new value name in the "Item Value" field
@@ -139,27 +146,27 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **Note**: Display order is automatically assigned based on existing values
     - **Subcategory Purpose**: Allows for finer-grained categorization within main categories (e.g., different types of phases like 'TASK', 'MEETING', 'ADMIN')
 
-5. **Edit Values**:
+6. **Edit Values**:
     - Click the "Edit" (pencil icon) button next to any value
     - Opens a modal dialog with the current details
     - Update the category, subcategory, item value, display order, or active status
     - Click "Update" to save changes
     - Changes are reflected immediately in the table
 
-6. **Delete Values**:
+7. **Delete Values**:
     - Click the "Delete" (trash icon) button next to any value
     - A styled confirmation modal appears (no more ugly browser dialogs!)
     - Confirm deletion by clicking "Delete" in the modal
     - Click "Cancel" to abort
     - **Note**: Cannot delete values that are in use by existing tasks
 
-7. **Category Display**:
+8. **Category Display**:
     - When viewing "All Categories", both "Category" and "Subcategory" columns show the full classification
     - When filtering by a specific category, the category column is hidden since all values belong to the same category
     - Active/inactive status is displayed with color-coded badges
     - Values are sorted by category → displayOrder → itemValue for consistent display
 
-8. **Active/Inactive Toggle**:
+9. **Active/Inactive Toggle**:
     - Values can be marked as active or inactive via the Edit dialog
     - Inactive values don't appear in dropdown lists when creating/editing tasks
     - Use this instead of deleting values that are still referenced by existing tasks
@@ -169,5 +176,7 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 - ✅ Automatically supports new categories added to the database
 - ✅ No code changes required when adding new dropdown categories
 - ✅ Filter-first design prevents errors
+- ✅ Subcategory filtering for easier management of large value lists
+- ✅ Cascading filters (subcategory auto-resets when category changes)
 - ✅ Professional styled confirmation modals
 - ✅ Consistent user experience across Spring Boot and Angular interfaces

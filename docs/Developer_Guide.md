@@ -2069,6 +2069,7 @@ DELETE /api/dropdowns/{id}
 
 - **Dynamic Categories**: The API automatically supports any new categories added to the database without code changes
 - **Subcategory Support**: New subcategory field allows for finer-grained categorization within categories
+- **Cascading Filters**: Admin UI (both Thymeleaf and Angular) provides category and subcategory filters with auto-reset behavior
 - **Filter-First Design**: The Angular UI enforces category selection before allowing value creation to prevent errors
 - **Consolidated Management**: Single set of endpoints handles all dropdown categories, eliminating duplicate code
 - **Active/Inactive Support**: Values can be marked inactive instead of deleted to maintain referential integrity
