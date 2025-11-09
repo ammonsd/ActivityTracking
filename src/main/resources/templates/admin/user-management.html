@@ -295,7 +295,6 @@
                 <table th:if="${!#lists.isEmpty(users)}" class="users-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Username</th>
                             <th>Company</th>
                             <th>Role</th>
@@ -307,7 +306,6 @@
                     </thead>
                     <tbody>
                         <tr th:each="user : ${users}">
-                            <td th:text="${user.id}">1</td>
                             <td th:text="${user.username}">admin</td>
                             <td th:text="${user.company ?: '-'}">Company Name</td>
                             <td>

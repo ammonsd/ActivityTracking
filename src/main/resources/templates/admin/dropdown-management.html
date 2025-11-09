@@ -273,7 +273,6 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Category</th>
                                 <th>Value</th>
                                 <th>Display Order</th>
@@ -283,7 +282,6 @@
                         </thead>
                         <tbody>
                             <tr th:each="value : ${dropdownValues}">
-                                <td th:text="${value.id}">1</td>
                                 <td th:text="${value.category}">CLIENT</td>
                                 <td th:text="${value.itemValue}">Sample Value</td>
                                 <td th:text="${value.displayOrder}">1</td>
