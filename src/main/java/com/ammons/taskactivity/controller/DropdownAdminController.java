@@ -69,8 +69,9 @@ public class DropdownAdminController {
         allSubcategories = dropdownValues.stream().map(DropdownValue::getSubcategory).distinct()
                 .sorted().toList();
 
-        // Apply subcategory filter if provided
-        if (subcategory != null && !subcategory.trim().isEmpty()) {
+        // Apply subcategory filter if provided AND it exists in the current subcategories
+        if (subcategory != null && !subcategory.trim().isEmpty()
+                && allSubcategories.contains(subcategory)) {
             final String filterSubcategory = subcategory;
             dropdownValues = dropdownValues.stream()
                     .filter(dv -> filterSubcategory.equals(dv.getSubcategory())).toList();

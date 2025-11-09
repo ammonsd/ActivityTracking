@@ -327,7 +327,7 @@
                 </div>
                 
                 <div th:if="${#lists.isEmpty(dropdownValues)}" class="no-data">
-                    <p th:text="${selectedCategory != '' ? 'No ' + ${#strings.toLowerCase(selectedCategory)} + ' values found.' : 'No dropdown values found.'}">No values found.</p>
+                    <p th:text="${selectedCategory != '' ? 'No ' + #strings.toLowerCase(selectedCategory) + ' values found.' : 'No dropdown values found.'}">No values found.</p>
                 </div>
                 
                 <div th:if="${not #lists.isEmpty(dropdownValues)}" class="summary">
