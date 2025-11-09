@@ -324,7 +324,7 @@ class UserManagementControllerTest {
         @DisplayName("Should change user password successfully")
         void shouldChangeUserPasswordSuccessfully() throws Exception {
             when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
-            doNothing().when(userService).changePassword("testuser", "NewPass123!");
+            doNothing().when(userService).changePassword("testuser", "NewPass123!", true);
 
             mockMvc.perform(post("/task-activity/manage-users/change-password/1").with(csrf())
                     .param("username", "testuser").param("newPassword", "NewPass123!")
@@ -334,7 +334,7 @@ class UserManagementControllerTest {
                     .andExpect(flash().attribute("successMessage",
                             containsString("Password changed successfully")));
 
-            verify(userService, times(1)).changePassword("testuser", "NewPass123!");
+            verify(userService, times(1)).changePassword("testuser", "NewPass123!", true);
         }
 
         @Test

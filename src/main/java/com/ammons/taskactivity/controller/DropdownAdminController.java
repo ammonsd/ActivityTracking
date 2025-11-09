@@ -42,11 +42,13 @@ public class DropdownAdminController {
      */
     @GetMapping
     public String showDropdownManagement(
-            @RequestParam(required = false) String category, Model model,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String subcategory, Model model,
             Authentication authentication) {
 
         List<DropdownValue> dropdownValues;
         List<String> allCategories;
+        List<String> allSubcategories;
 
         // Get all distinct categories from database
         allCategories = dropdownValueService.getAllCategories();
@@ -63,9 +65,24 @@ public class DropdownAdminController {
             model.addAttribute("selectedCategory", "");
         }
 
+        // Extract unique subcategories from the current dropdown values
+        allSubcategories = dropdownValues.stream().map(DropdownValue::getSubcategory).distinct()
+                .sorted().toList();
+
+        // Apply subcategory filter if provided
+        if (subcategory != null && !subcategory.trim().isEmpty()) {
+            final String filterSubcategory = subcategory;
+            dropdownValues = dropdownValues.stream()
+                    .filter(dv -> filterSubcategory.equals(dv.getSubcategory())).toList();
+            model.addAttribute("selectedSubcategory", subcategory);
+        } else {
+            model.addAttribute("selectedSubcategory", "");
+        }
+
         // Add model attributes
         model.addAttribute("dropdownValues", dropdownValues);
         model.addAttribute("categories", allCategories);
+        model.addAttribute("subcategories", allSubcategories);
         model.addAttribute("newDropdownValue", new DropdownValue());
 
         addUserDisplayInfo(model, authentication);

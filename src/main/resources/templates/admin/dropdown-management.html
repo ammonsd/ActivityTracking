@@ -234,6 +234,16 @@
                                 th:text="${cat}"
                                 th:selected="${selectedCategory == cat}">Category</option>
                     </select>
+                    
+                    <label for="subcategoryFilter" style="font-weight: bold; color: #555;">Filter by Subcategory:</label>
+                    <select id="subcategoryFilter" name="subcategory" onchange="this.form.submit()" 
+                            style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-width: 200px;">
+                        <option value="" th:selected="${#strings.isEmpty(selectedSubcategory)}">All Subcategories</option>
+                        <option th:each="sub : ${subcategories}" 
+                                th:value="${sub}" 
+                                th:text="${sub}"
+                                th:selected="${selectedSubcategory == sub}">Subcategory</option>
+                    </select>
                 </form>
             </div>
 

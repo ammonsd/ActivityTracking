@@ -65,6 +65,19 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                 </mat-select>
               </mat-form-field>
 
+              <mat-form-field appearance="outline">
+                <mat-label>Filter by Subcategory</mat-label>
+                <mat-select
+                  [(ngModel)]="selectedSubcategory"
+                  (selectionChange)="onSubcategoryChange()"
+                >
+                  <mat-option value="">All Subcategories</mat-option>
+                  <mat-option *ngFor="let sub of subcategories" [value]="sub">
+                    {{ sub }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
               <button
                 mat-raised-button
                 color="primary"
@@ -81,7 +94,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 
             <table
               mat-table
-              [dataSource]="dropdownValues"
+              [dataSource]="filteredDropdownValues"
               *ngIf="!loading"
               class="dropdown-table"
             >
@@ -156,7 +169,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
             </table>
 
             <div
-              *ngIf="!loading && dropdownValues.length === 0"
+              *ngIf="!loading && filteredDropdownValues.length === 0"
               class="no-data"
             >
               <p>
@@ -242,8 +255,11 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 })
 export class DropdownManagementComponent implements OnInit {
   categories: string[] = [];
+  subcategories: string[] = [];
   dropdownValues: DropdownValue[] = [];
+  filteredDropdownValues: DropdownValue[] = [];
   selectedCategory = '';
+  selectedSubcategory = '';
   loading = false;
   currentRole = '';
 
@@ -301,6 +317,8 @@ export class DropdownManagementComponent implements OnInit {
           }
           return a.itemValue.localeCompare(b.itemValue);
         });
+        this.updateSubcategories();
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -310,8 +328,35 @@ export class DropdownManagementComponent implements OnInit {
     });
   }
 
+  updateSubcategories(): void {
+    // Extract unique subcategories from current data
+    const uniqueSubcategories = new Set<string>();
+    for (const item of this.dropdownValues) {
+      if (item.subcategory) {
+        uniqueSubcategories.add(item.subcategory);
+      }
+    }
+    this.subcategories = Array.from(uniqueSubcategories).sort((a, b) =>
+      a.localeCompare(b)
+    );
+  }
+
+  applyFilters(): void {
+    this.filteredDropdownValues = this.dropdownValues.filter((item) => {
+      const matchesSubcategory =
+        !this.selectedSubcategory ||
+        item.subcategory === this.selectedSubcategory;
+      return matchesSubcategory;
+    });
+  }
+
   onCategoryChange(): void {
+    this.selectedSubcategory = ''; // Reset subcategory filter when category changes
     this.loadDropdownValues();
+  }
+
+  onSubcategoryChange(): void {
+    this.applyFilters();
   }
 
   editDropdown(item: DropdownValue): void {
