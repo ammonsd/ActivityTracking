@@ -579,7 +579,7 @@ public class TaskActivityWebController {
     public String addDropdownValue(@RequestParam String category, @RequestParam String value,
             RedirectAttributes redirectAttributes) {
         try {
-            dropdownValueService.createDropdownValue(category, value);
+            dropdownValueService.createDropdownValue(category, "TASK", value);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
                     + value
                     + "' to " + category.toLowerCase() + " dropdown.");

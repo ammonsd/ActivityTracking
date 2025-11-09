@@ -90,6 +90,11 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                 <td mat-cell *matCellDef="let item">{{ item.category }}</td>
               </ng-container>
 
+              <ng-container matColumnDef="subcategory">
+                <th mat-header-cell *matHeaderCellDef>Subcategory</th>
+                <td mat-cell *matCellDef="let item">{{ item.subcategory }}</td>
+              </ng-container>
+
               <ng-container matColumnDef="itemValue">
                 <th mat-header-cell *matHeaderCellDef>Value</th>
                 <td mat-cell *matCellDef="let item">{{ item.itemValue }}</td>
@@ -244,6 +249,7 @@ export class DropdownManagementComponent implements OnInit {
 
   displayedColumnsFiltered: string[] = [
     'category',
+    'subcategory',
     'itemValue',
     'displayOrder',
     'isActive',
@@ -282,7 +288,19 @@ export class DropdownManagementComponent implements OnInit {
 
     request.subscribe({
       next: (data) => {
-        this.dropdownValues = data;
+        // Sort by category, subcategory, displayOrder, then itemValue
+        this.dropdownValues = [...data].sort((a, b) => {
+          if (a.category !== b.category) {
+            return a.category.localeCompare(b.category);
+          }
+          if (a.subcategory !== b.subcategory) {
+            return a.subcategory.localeCompare(b.subcategory);
+          }
+          if (a.displayOrder !== b.displayOrder) {
+            return a.displayOrder - b.displayOrder;
+          }
+          return a.itemValue.localeCompare(b.itemValue);
+        });
         this.loading = false;
       },
       error: (err) => {

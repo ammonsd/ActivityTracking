@@ -132,15 +132,17 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 
 4. **Add New Values**:
     - Select a category from the filter dropdown
+    - Enter a subcategory (e.g., 'TASK' for PHASE entries, 'GENERAL' for CLIENT/PROJECT)
     - Enter new value name in the "Item Value" field
     - Click "Add" button
     - Value appears in the table immediately
     - **Note**: Display order is automatically assigned based on existing values
+    - **Subcategory Purpose**: Allows for finer-grained categorization within main categories (e.g., different types of phases like 'TASK', 'MEETING', 'ADMIN')
 
 5. **Edit Values**:
     - Click the "Edit" (pencil icon) button next to any value
     - Opens a modal dialog with the current details
-    - Update the item value, display order, or active status
+    - Update the category, subcategory, item value, display order, or active status
     - Click "Update" to save changes
     - Changes are reflected immediately in the table
 
@@ -152,9 +154,10 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **Note**: Cannot delete values that are in use by existing tasks
 
 7. **Category Display**:
-    - When viewing "All Categories", a "Category" column shows which category each value belongs to
+    - When viewing "All Categories", both "Category" and "Subcategory" columns show the full classification
     - When filtering by a specific category, the category column is hidden since all values belong to the same category
     - Active/inactive status is displayed with color-coded badges
+    - Values are sorted by category → displayOrder → itemValue for consistent display
 
 8. **Active/Inactive Toggle**:
     - Values can be marked as active or inactive via the Edit dialog

@@ -53,11 +53,11 @@ public class DropdownValueService {
     }
 
     /**
-     * Return all dropdown values across all categories
+     * Return all dropdown values across all categories, sorted for display
      */
     @Transactional(readOnly = true)
     public List<DropdownValue> getAllDropdownValues() {
-        return dropdownValueRepository.findAll();
+        return dropdownValueRepository.findAllByOrderByCategoryAscDisplayOrderAscItemValueAsc();
     }
 
     /**
@@ -70,14 +70,15 @@ public class DropdownValueService {
     }
 
     /**
-     * Add new dropdown value
+     * Add new dropdown value with subcategory
      */
-    public DropdownValue createDropdownValue(String category, String value) {
-        // Check for duplicate values within a category
-        if (dropdownValueRepository.existsByCategoryAndItemValueIgnoreCase(category.toUpperCase(),
-                value)) {
+    public DropdownValue createDropdownValue(String category, String subcategory, String value) {
+        // Check for duplicate values within a category and subcategory
+        if (dropdownValueRepository.existsByCategoryAndSubcategoryAndItemValueIgnoreCase(
+                category.toUpperCase(), subcategory.toUpperCase(), value)) {
             throw new RuntimeException(
-                    "Value '" + value + "' already exists for category " + category);
+                    "Value '" + value + "' already exists for category " + category
+                            + " and subcategory " + subcategory);
         }
 
         Integer maxOrder =
@@ -86,11 +87,23 @@ public class DropdownValueService {
         // Create and configure new entity
         DropdownValue dropdownValue = new DropdownValue();
         dropdownValue.setCategory(category.toUpperCase()); // Format category name
+        dropdownValue.setSubcategory(subcategory.toUpperCase()); // Format subcategory name
         dropdownValue.setItemValue(value);
         dropdownValue.setDisplayOrder(maxOrder + 1);
         dropdownValue.setIsActive(true);
 
         return dropdownValueRepository.save(dropdownValue);
+    }
+
+    /**
+     * Create dropdown value for backward compatibility - defaults subcategory to "TASK"
+     * 
+     * @deprecated Use createDropdownValue(String category, String subcategory, String value)
+     *             instead
+     */
+    @Deprecated(since = "2.0", forRemoval = true)
+    public DropdownValue createDropdownValue(String category, String value) {
+        return createDropdownValue(category, "TASK", value);
     }
 
     /**
@@ -102,11 +115,13 @@ public class DropdownValueService {
         if (existing.isPresent()) {
             DropdownValue dropdownValue = existing.get();
 
-            // Check for duplicate values within a category
+            // Check for duplicate values within a category and subcategory
             if (!dropdownValue.getItemValue().equalsIgnoreCase(value) && dropdownValueRepository
-                    .existsByCategoryAndItemValueIgnoreCase(dropdownValue.getCategory(), value)) {
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(
+                            dropdownValue.getCategory(), dropdownValue.getSubcategory(), value)) {
                 throw new RuntimeException("Value '" + value + "' already exists for category "
-                        + dropdownValue.getCategory());
+                        + dropdownValue.getCategory() + " and subcategory "
+                        + dropdownValue.getSubcategory());
             }
 
             dropdownValue.setItemValue(value);
