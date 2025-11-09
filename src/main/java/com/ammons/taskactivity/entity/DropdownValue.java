@@ -24,6 +24,11 @@ public class DropdownValue {
     @Column(name = "category", nullable = false, length = 50)
     private String category; // CLIENT, PROJECT, or PHASE
 
+    @NotBlank(message = "Subcategory is required")
+    @Size(max = 50, message = "Subcategory cannot exceed 50 characters")
+    @Column(name = "subcategory", nullable = false, length = 50)
+    private String subcategory;
+
     @NotBlank(message = "Value is required")
     @Size(max = 255, message = "Value cannot exceed 255 characters")
     @Column(name = "itemvalue", nullable = false, length = 255)
@@ -37,9 +42,11 @@ public class DropdownValue {
 
     public DropdownValue() {}
 
-    public DropdownValue(String category, String itemValue, Integer displayOrder,
+    public DropdownValue(String category, String subcategory, String itemValue,
+            Integer displayOrder,
             Boolean isActive) {
         this.category = category;
+        this.subcategory = subcategory;
         this.itemValue = itemValue;
         this.displayOrder = displayOrder;
         this.isActive = isActive;
@@ -59,6 +66,14 @@ public class DropdownValue {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getSubcategory() {
+        return subcategory;
+    }
+
+    public void setSubcategory(String subcategory) {
+        this.subcategory = subcategory;
     }
 
     public String getItemValue() {
@@ -87,8 +102,9 @@ public class DropdownValue {
 
     @Override
     public String toString() {
-        return "DropdownValue{" + "id=" + id + ", category='" + category + '\'' + ", itemValue='"
-                + itemValue + '\'' + ", displayOrder=" + displayOrder + ", isActive=" + isActive
+        return "DropdownValue{" + "id=" + id + ", category='" + category + '\'' + ", subcategory='"
+                + subcategory + '\'' + ", itemValue='" + itemValue + '\'' + ", displayOrder="
+                + displayOrder + ", isActive=" + isActive
                 + '}';
     }
 

@@ -33,8 +33,17 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
 
     /**
      * Checks if a value already exists for a category.
+     * 
+     * @deprecated Use existsByCategoryAndSubcategoryAndItemValueIgnoreCase instead
      */
+    @Deprecated(since = "2.0", forRemoval = true)
     public boolean existsByCategoryAndItemValueIgnoreCase(String category, String itemValue);
+
+    /**
+     * Checks if a value already exists for a category and subcategory.
+     */
+    public boolean existsByCategoryAndSubcategoryAndItemValueIgnoreCase(String category,
+                    String subcategory, String itemValue);
 
     /**
      * Finds the highest display order for a category. Used to next display order number for a new
@@ -42,4 +51,9 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
      */
     @Query("SELECT COALESCE(MAX(dropdownValue.displayOrder), 0) FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category")
     public Integer findMaxDisplayOrderByCategory(@Param("category") String category);
+
+    /**
+     * Finds all dropdown values sorted by category, displayOrder, and itemValue
+     */
+    public List<DropdownValue> findAllByOrderByCategoryAscDisplayOrderAscItemValueAsc();
 }

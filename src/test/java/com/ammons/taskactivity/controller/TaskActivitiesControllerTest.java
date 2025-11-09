@@ -3,6 +3,7 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
 import com.ammons.taskactivity.service.TaskActivityService;
+import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -26,6 +29,7 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,6 +53,9 @@ class TaskActivitiesControllerTest {
 
     @MockitoBean
     private TaskActivityService taskActivityService;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private UserRepository userRepository;
@@ -173,11 +180,13 @@ class TaskActivitiesControllerTest {
     class GetAllTaskActivitiesTests {
 
         @Test
-        @WithMockUser(roles = "USER")
+        @WithMockUser(roles = "USER", username = "testuser")
         @DisplayName("Should get all task activities successfully")
         void shouldGetAllTaskActivitiesSuccessfully() throws Exception {
-            List<TaskActivity> taskActivities = Arrays.asList(testTaskActivity);
-            when(taskActivityService.getAllTaskActivities()).thenReturn(taskActivities);
+                Page<TaskActivity> taskPage = new PageImpl<>(Arrays.asList(testTaskActivity));
+                when(taskActivityService.getTaskActivitiesByFilters(eq("testuser"), isNull(),
+                                isNull(), isNull(), isNull(), isNull(), any()))
+                                                .thenReturn(taskPage);
 
             mockMvc.perform(get("/api/task-activities")).andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -187,7 +196,8 @@ class TaskActivitiesControllerTest {
                     .andExpect(jsonPath("$.data", hasSize(1)))
                     .andExpect(jsonPath("$.count").value(1));
 
-            verify(taskActivityService, times(1)).getAllTaskActivities();
+            verify(taskActivityService, times(1)).getTaskActivitiesByFilters(eq("testuser"),
+                            isNull(), isNull(), isNull(), isNull(), isNull(), any());
         }
 
         @Test
@@ -199,16 +209,17 @@ class TaskActivitiesControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "USER")
+        @WithMockUser(roles = "USER", username = "testuser")
         @DisplayName("Should handle service exception")
         void shouldHandleServiceException() throws Exception {
-            when(taskActivityService.getAllTaskActivities())
+                when(taskActivityService.getTaskActivitiesByFilters(eq("testuser"), isNull(),
+                                isNull(), isNull(), isNull(), isNull(), any()))
                     .thenThrow(new RuntimeException("Database error"));
 
             mockMvc.perform(get("/api/task-activities")).andExpect(status().isInternalServerError())
                             .andExpect(jsonPath("$.success").value(false))
                             .andExpect(jsonPath("$.message").value(
-                                            "An error occurred while processing your request"));
+                                            "Error filtering tasks: Database error"));
         }
     }
 
@@ -264,9 +275,11 @@ class TaskActivitiesControllerTest {
     class UpdateTaskActivityTests {
 
         @Test
-        @WithMockUser(roles = "USER")
+        @WithMockUser(roles = "USER", username = "testuser")
         @DisplayName("Should update task activity successfully")
         void shouldUpdateTaskActivitySuccessfully() throws Exception {
+                when(taskActivityService.getTaskActivityById(1L))
+                                .thenReturn(Optional.of(testTaskActivity));
             when(taskActivityService.updateTaskActivity(eq(1L), any(TaskActivityDto.class)))
                     .thenReturn(testTaskActivity);
 

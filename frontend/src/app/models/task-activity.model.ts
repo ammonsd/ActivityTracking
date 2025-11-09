@@ -24,6 +24,7 @@ export interface DropdownValue {
   id?: number;
   category: string;
   categoryName: string;
+  subcategory: string;
   itemValue: string;
   displayOrder: number;
   isActive: boolean;

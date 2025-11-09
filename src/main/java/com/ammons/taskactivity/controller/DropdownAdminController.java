@@ -77,16 +77,17 @@ public class DropdownAdminController {
      * Form Submission Handler
      */
     @PostMapping("/add")
-    public String addDropdownValue(@RequestParam String category, @RequestParam String value,
+    public String addDropdownValue(@RequestParam String category, @RequestParam String subcategory,
+            @RequestParam String value,
             RedirectAttributes redirectAttributes) {
         try {
             // Delegate business logic to service layer
-            dropdownValueService.createDropdownValue(category, value);
+            dropdownValueService.createDropdownValue(category, subcategory, value);
 
             // Success message via flash attribute (available for next request only)
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
-                    + value
-                    + "' to " + category.toLowerCase() + " dropdown.");
+                    + value + "' to " + category.toLowerCase() + " / " + subcategory.toLowerCase()
+                    + " dropdown.");
 
             // Redirect back to the same category
             return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + category.toUpperCase();
