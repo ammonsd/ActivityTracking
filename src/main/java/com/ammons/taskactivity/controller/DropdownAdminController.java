@@ -320,11 +320,12 @@ public class DropdownAdminController {
         StringBuilder csv = new StringBuilder();
 
         // Header
-        csv.append("Category,Item Value,Display Order,Active\n");
+        csv.append("Category,Subcategory,Item Value,Display Order,Active\n");
 
         // Data rows
         for (DropdownValue dv : dropdownValues) {
             csv.append(escapeCsvField(dv.getCategory())).append(",");
+            csv.append(escapeCsvField(dv.getSubcategory())).append(",");
             csv.append(escapeCsvField(dv.getItemValue())).append(",");
             csv.append(dv.getDisplayOrder()).append(",");
             csv.append(dv.getIsActive());
