@@ -70,9 +70,13 @@ Interactive API documentation is available via Swagger UI:
 - 🏗️ [CloudFormation Guide](cloudformation/README.md) - Infrastructure as Code automation (deployment-ready)
 - 📋 [AWS Console Guide](aws/AWS_Console_Guide.md) - Manual AWS setup via console
 
+### Kubernetes
+
+- ⚓ [Kubernetes Deployments](k8s/) - K8s manifests with RBAC and secrets management (deployment-ready)
+
 ### CI/CD & Automation
 
-- � [Jenkins CI/CD Guide](jenkins/README.md) - Continuous integration and deployment pipeline (deployment-ready)
+- 🚀 [Jenkins CI/CD Guide](jenkins/README.md) - Continuous integration and deployment pipeline (deployment-ready)
 
 ### Architecture & Design
 
