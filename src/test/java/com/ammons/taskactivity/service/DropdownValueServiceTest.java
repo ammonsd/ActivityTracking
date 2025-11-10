@@ -153,7 +153,8 @@ class DropdownValueServiceTest {
             when(dropdownValueRepository.save(any(DropdownValue.class))).thenReturn(expectedValue);
 
             // When
-            DropdownValue result = dropdownValueService.createDropdownValue(category, value);
+            DropdownValue result =
+                    dropdownValueService.createDropdownValue(category, "TASK", value);
 
             // Then
             assertThat(result).isNotNull();
@@ -180,7 +181,8 @@ class DropdownValueServiceTest {
                     .thenReturn(true);
 
             // When/Then
-            assertThatThrownBy(() -> dropdownValueService.createDropdownValue(category, value))
+            assertThatThrownBy(() -> dropdownValueService.createDropdownValue(category, "TASK",
+                    value))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage(
                             "Value 'Existing Client' already exists for category CLIENT and subcategory TASK");
@@ -203,7 +205,8 @@ class DropdownValueServiceTest {
             when(dropdownValueRepository.findMaxDisplayOrderByCategory(category)).thenReturn(null);
 
             // When/Then
-            assertThatThrownBy(() -> dropdownValueService.createDropdownValue(category, value))
+            assertThatThrownBy(
+                    () -> dropdownValueService.createDropdownValue(category, "TASK", value))
                     .isInstanceOf(NullPointerException.class);
 
             verify(dropdownValueRepository)
