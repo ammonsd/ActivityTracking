@@ -67,7 +67,7 @@ Interactive API documentation is available via Swagger UI:
 ### AWS Deployment
 
 - ☁️ [AWS Deployment Guide](aws/AWS_Deployment.md) - AWS ECS Fargate deployment
-- 🏗️ [CloudFormation Guide](cloudformation/README.md) - Infrastructure as Code automation (deployment-ready)
+- 🏗️ [CloudFormation Guide](cloudformation/ReadMe.md) - Infrastructure as Code automation (deployment-ready)
 - 📋 [AWS Console Guide](aws/AWS_Console_Guide.md) - Manual AWS setup via console
 
 ### Kubernetes
@@ -76,7 +76,7 @@ Interactive API documentation is available via Swagger UI:
 
 ### CI/CD & Automation
 
-- 🚀 [Jenkins CI/CD Guide](jenkins/README.md) - Continuous integration and deployment pipeline (deployment-ready)
+- 🚀 [Jenkins CI/CD Guide](jenkins/ReadMe.md) - Continuous integration and deployment pipeline (deployment-ready)
 
 ### Architecture & Design
 
