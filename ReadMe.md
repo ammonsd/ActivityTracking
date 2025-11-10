@@ -72,7 +72,7 @@ Interactive API documentation is available via Swagger UI:
 
 ### Kubernetes
 
-- ⚓ [Kubernetes Deployment Guide](k8s/README.md) - K8s manifests with RBAC and secrets management (deployment-ready)
+- ⚓ [Kubernetes Deployment Guide](k8s/ReadMe.md) - K8s manifests with RBAC and secrets management (deployment-ready)
 
 ### CI/CD & Automation
 
