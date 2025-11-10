@@ -4,15 +4,13 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 
 ## Features
 
-## Features
-
 - ✅ Daily task recording with client/project/phase tracking
 - 📊 Weekly timesheet view (Monday-Sunday format)
 - 📥 Export filtered tasks and weekly timesheets to CSV format
 - 🔍 Filter and search capabilities
 - 🎯 Dynamic dropdown management for clients, projects, and phases
 - ✔️ Data validation and error handling
-- � Comprehensive API documentation (Swagger/OpenAPI)
+- 📚 Comprehensive API documentation (Swagger/OpenAPI)
 
 ## Tech Stack
 
@@ -27,9 +25,9 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 
 ### Prerequisites
 
-- Java 17+
+- Java 21+
 - Maven 3.9+
-- PostgreSQL 14+ (or Docker)
+- PostgreSQL 15+ (or Docker)
 
 ### Run Locally
 
@@ -55,17 +53,34 @@ Interactive API documentation is available via Swagger UI:
 
 ## Documentation
 
-- 📚 [Quick Start Guide](docs/Quick_Start.md) - Fast setup for daily development workflow
-- 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference
-- 📖 [User Guide](docs/User_Guide.md) - End-user documentation
+### Core Guides
+
+- 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
+- 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking
 - 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features and user management
-- 📦 [Docker Build Guide](docs/Docker_Build_Guide.md) - Containerization and Docker deployment
-- ☁️ [AWS Deployment Guide](docs/AWS_Deployment.md) - AWS ECS Fargate deployment
+
+### Docker & Containerization
+
+- 📦 [Docker Build Guide](docs/Docker_Build_Guide.md) - Complete Docker containerization guide
+- 🚀 [Docker Quick Start](docs/Docker_Quick_Start.md) - Fast Docker setup for local development
+
+### AWS Deployment
+
+- ☁️ [AWS Deployment Guide](aws/AWS_Deployment.md) - AWS ECS Fargate deployment
 - 🏗️ [CloudFormation Guide](cloudformation/README.md) - Infrastructure as Code automation (deployment-ready)
-- 🌐 [WSL Port Forwarding Guide](docs/WSL_PORT_FORWARDING.md) - Network configuration for WSL2
-- 🛠️ [Helper Scripts Guide](docs/HELPER_SCRIPTS_README.md) - AWS log export scripts and automation
-- ⚡ [Lambda Setup Guide](aws/LAMBDA_CONSOLE_SETUP_GUIDE.md) - Automated CloudWatch log exports with Lambda
-- 🚀 [Jenkins CI/CD Guide](jenkins/README.md) - Continuous integration and deployment pipeline (deployment-ready)
+- 📋 [AWS Console Guide](aws/AWS_Console_Guide.md) - Manual AWS setup via console
+
+### CI/CD & Automation
+
+- � [Jenkins CI/CD Guide](jenkins/README.md) - Continuous integration and deployment pipeline (deployment-ready)
+
+### Architecture & Design
+
+- 🏛️ [Blueprint Part 1: Overview and Architecture](docs/Blueprint_Part_1_Overview_and_Architecture.md) - System architecture
+- 💾 [Blueprint Part 2: Database and Configuration](docs/Blueprint_Part_2_Database_and_Configuration.md) - Data model
+- � [Blueprint Part 3: Entities and Repositories](docs/Blueprint_Part_3_Entities_and_Repositories.md) - JPA layer
+- 📝 [Blueprint Part 4-8: Complete Implementation](docs/Blueprint_Part_4-8_Complete_Implementation.md) - Services and controllers
+- 📊 [Technical Features Summary](docs/Technical_Features_Summary.md) - Comprehensive feature list
 
 ## License
 
