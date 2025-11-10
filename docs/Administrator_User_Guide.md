@@ -137,7 +137,19 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - This prevents accidentally adding values to the wrong category
     - Select a specific category to enable the "Add" form
 
-5. **Add New Values**:
+5. **Add New Category**:
+    - Click the **"Add New Category"** button in the header (next to "Task Activity List")
+    - A modal dialog opens with three required fields:
+        - **Category**: Enter the new category name (automatically converted to uppercase)
+        - **Subcategory**: Enter the subcategory (automatically converted to uppercase)
+        - **Value**: Enter the first dropdown value for this category
+    - All three fields are required
+    - The system validates that the category name doesn't already exist
+    - After successful creation, you're automatically redirected to the new category's view
+    - **Example**: Create a new "LOCATION" category with subcategory "OFFICE" and value "New York HQ"
+    - **Note**: This creates the category AND its first value in a single operation
+
+6. **Add New Values**:
     - Select a category from the filter dropdown
     - Enter a subcategory (e.g., 'TASK' for PHASE entries, 'GENERAL' for CLIENT/PROJECT)
     - Enter new value name in the "Item Value" field
@@ -146,27 +158,27 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **Note**: Display order is automatically assigned based on existing values
     - **Subcategory Purpose**: Allows for finer-grained categorization within main categories (e.g., different types of phases like 'TASK', 'MEETING', 'ADMIN')
 
-6. **Edit Values**:
+7. **Edit Values**:
     - Click the "Edit" (pencil icon) button next to any value
     - Opens a modal dialog with the current details
     - Update the category, subcategory, item value, display order, or active status
     - Click "Update" to save changes
     - Changes are reflected immediately in the table
 
-7. **Delete Values**:
+8. **Delete Values**:
     - Click the "Delete" (trash icon) button next to any value
     - A styled confirmation modal appears (no more ugly browser dialogs!)
     - Confirm deletion by clicking "Delete" in the modal
     - Click "Cancel" to abort
     - **Note**: Cannot delete values that are in use by existing tasks
 
-8. **Category Display**:
+9. **Category Display**:
     - When viewing "All Categories", both "Category" and "Subcategory" columns show the full classification
     - When filtering by a specific category, the category column is hidden since all values belong to the same category
     - Active/inactive status is displayed with color-coded badges
     - Values are sorted by category → displayOrder → itemValue for consistent display
 
-9. **Active/Inactive Toggle**:
+10. **Active/Inactive Toggle**:
     - Values can be marked as active or inactive via the Edit dialog
     - Inactive values don't appear in dropdown lists when creating/editing tasks
     - Use this instead of deleting values that are still referenced by existing tasks
@@ -175,6 +187,9 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 - ✅ Single interface for all dropdown categories
 - ✅ Automatically supports new categories added to the database
 - ✅ No code changes required when adding new dropdown categories
+- ✅ "Add New Category" button for creating categories without database access
+- ✅ Category uniqueness validation prevents duplicate categories
+- ✅ Auto-uppercase for consistent category naming
 - ✅ Filter-first design prevents errors
 - ✅ Subcategory filtering for easier management of large value lists
 - ✅ Cascading filters (subcategory auto-resets when category changes)

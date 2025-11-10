@@ -1868,6 +1868,22 @@ GET /api/health
 
 The Dropdown Management API provides consolidated endpoints for managing dropdown values across multiple categories (CLIENT, PROJECT, PHASE, etc.). This API supports the Angular frontend and follows a dynamic, extensible design that automatically adapts to new categories added to the database.
 
+**Add New Category Feature:**
+
+The Thymeleaf admin interface includes an "Add New Category" button that allows administrators to create entirely new dropdown categories without database manipulation. This feature:
+
+- Opens a modal dialog with three required fields: Category, Subcategory, and Value
+- Auto-converts both category and subcategory to uppercase (CSS `text-transform` + JavaScript)
+- Validates category uniqueness on the server side before creation
+- Creates the first dropdown value for the new category in a single operation
+- Redirects to the new category's filter view after successful creation
+- Uses Spring MVC form handling with CSRF protection and flash messages
+- **Endpoint**: `POST /admin/dropdowns/add-category`
+- **Parameters**: `category`, `subcategory`, `value` (all required)
+- **Validation**: Checks against `getAllCategories()` for duplicates
+
+**Note:** The Angular dashboard currently does not implement category creation (only Edit/Delete for existing values). Category creation is available only through the Thymeleaf admin interface.
+
 #### Get All Categories
 
 ```http

@@ -218,7 +218,10 @@
     <div class="container">
         <div class="header">
             <h1>Dropdown Management</h1>
-            <a th:href="@{/task-activity/list}" class="btn btn-secondary">Task Activity List</a>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="openAddCategoryModal()" class="btn btn-info">Add New Category</button>
+                <a th:href="@{/task-activity/list}" class="btn btn-secondary">Task Activity List</a>
+            </div>
         </div>
 
         <div class="content">
@@ -353,6 +356,42 @@
         </div>
     </div>
     
+    <!-- Add New Category Modal -->
+    <div id="addCategoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 style="border-bottom: 2px solid #17a2b8;">Add New Category</h3>
+            <form th:action="@{/admin/dropdowns/add-category}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                
+                <div style="margin: 20px 0;">
+                    <label for="newCategory" style="display: block; margin-bottom: 5px; font-weight: bold;">Category *</label>
+                    <input type="text" id="newCategory" name="category" required maxlength="50" 
+                           placeholder="Enter category name" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; text-transform: uppercase;">
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label for="newSubcategory" style="display: block; margin-bottom: 5px; font-weight: bold;">Subcategory *</label>
+                    <input type="text" id="newSubcategory" name="subcategory" required maxlength="50" 
+                           placeholder="Enter subcategory" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; text-transform: uppercase;">
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label for="newValue" style="display: block; margin-bottom: 5px; font-weight: bold;">Value *</label>
+                    <input type="text" id="newValue" name="value" required maxlength="255" 
+                           placeholder="Enter first dropdown value" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()">Cancel</button>
+                    <button type="submit" class="btn btn-info">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
         function confirmDelete(button) {
             const id = button.getAttribute('data-id');
@@ -369,13 +408,47 @@
             document.getElementById('deleteModal').style.display = 'none';
         }
         
+        function openAddCategoryModal() {
+            document.getElementById('addCategoryModal').style.display = 'flex';
+            // Clear form fields
+            document.getElementById('newCategory').value = '';
+            document.getElementById('newSubcategory').value = '';
+            document.getElementById('newValue').value = '';
+        }
+        
+        function closeAddCategoryModal() {
+            document.getElementById('addCategoryModal').style.display = 'none';
+        }
+        
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('deleteModal');
-            if (event.target === modal) {
+            const deleteModal = document.getElementById('deleteModal');
+            const addCategoryModal = document.getElementById('addCategoryModal');
+            if (event.target === deleteModal) {
                 closeDeleteModal();
             }
+            if (event.target === addCategoryModal) {
+                closeAddCategoryModal();
+            }
         }
+        
+        // Auto-uppercase category input
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryInput = document.getElementById('newCategory');
+            const subcategoryInput = document.getElementById('newSubcategory');
+            
+            if (categoryInput) {
+                categoryInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+            
+            if (subcategoryInput) {
+                subcategoryInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+        });
     </script>
 </body>
 </html>

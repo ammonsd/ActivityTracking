@@ -118,6 +118,41 @@ public class DropdownAdminController {
     }
 
     /**
+     * Add New Category with Initial Value
+     */
+    @PostMapping("/add-category")
+    public String addNewCategory(@RequestParam String category, @RequestParam String subcategory,
+            @RequestParam String value, RedirectAttributes redirectAttributes) {
+        try {
+            // Ensure category is uppercase
+            String upperCategory = category.toUpperCase().trim();
+
+            // Check if category already exists
+            List<String> existingCategories = dropdownValueService.getAllCategories();
+            if (existingCategories.contains(upperCategory)) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Category '" + upperCategory + "' already exists.");
+                return REDIRECT_ADMIN_DROPDOWNS;
+            }
+
+            // Create the first value for the new category
+            dropdownValueService.createDropdownValue(upperCategory, subcategory, value);
+
+            // Success message
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
+                    "Successfully created new category '" + upperCategory + "' with initial value '"
+                            + value + "'.");
+
+            // Redirect to the new category
+            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + upperCategory;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to create category: " + e.getMessage());
+            return REDIRECT_ADMIN_DROPDOWNS;
+        }
+    }
+
+    /**
      * Show edit form for a dropdown value
      */
     @GetMapping("/edit/{id}")
