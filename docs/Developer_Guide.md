@@ -118,10 +118,13 @@ This guide is part of a comprehensive documentation set for the Task Activity Ma
 - [JENKINS_QUICK_REFERENCE.md](JENKINS_QUICK_REFERENCE.md) - Jenkins quick reference guide
 - [WSL_PORT_FORWARDING.md](WSL_PORT_FORWARDING.md) - Network configuration for WSL2 development
 - [HELPER_SCRIPTS_README.md](HELPER_SCRIPTS_README.md) - AWS helper scripts for log management
+- [SWAGGER_API_GUIDE.md](SWAGGER_API_GUIDE.md) - Complete REST API usage guide with JWT authentication
 
 ### Related Resources
 
 - **API Documentation**: Available via Swagger UI at http://localhost:8080/swagger-ui.html
+- **OpenAPI Specification**: http://localhost:8080/v3/api-docs
+- **Swagger API Guide**: Comprehensive guide for REST API usage with JWT authentication
 - **Scripts Directory**: Production automation scripts in `scripts/` folder
 - **SQL Scripts**: Database schema files in `sql/` folder
 - **Local Documentation**: Additional guides in `localdocs/` folder (gitignored, environment-specific)
@@ -2348,12 +2351,35 @@ For production environments, you should restrict access to Swagger UI:
 4. Click "Execute"
 5. View the response
 
-**3. Authentication:**
+**3. Authentication with JWT:**
+
+The Swagger UI now supports JWT authentication for testing API endpoints:
+
+1. Navigate to the **Authentication** section in Swagger UI
+2. Expand **POST /api/auth/login**
+3. Click "Try it out" and enter your credentials:
+   ```json
+   {
+     "username": "admin",
+     "password": "your_password"
+   }
+   ```
+4. Click "Execute" and copy the `accessToken` from the response
+5. Click the **"Authorize"** button (🔒) at the top of Swagger UI
+6. Enter: `Bearer <your-access-token>` (include "Bearer " prefix)
+7. Click "Authorize" and close the dialog
+8. All subsequent "Try it out" requests will include your JWT token automatically
+
+**Alternative: Basic Authentication (for session-based testing):**
 
 1. Click the "Authorize" button (top right)
-2. Enter username and password
+2. Enter username and password for HTTP Basic Auth
 3. Click "Authorize"
-4. All subsequent requests include authentication
+4. All subsequent requests include authentication via session
+
+**Note**: JWT authentication is recommended for API testing as it's stateless and better represents how external API clients will integrate with the system.
+
+**For detailed API usage guide, see**: [Swagger API Guide](SWAGGER_API_GUIDE.md)
 
 **4. Response Codes:**
 
@@ -2704,6 +2730,235 @@ public String showTaskList(
 | Manage Dropdowns   | ❌             | ❌             | ✅             |
 | Change Password    | ❌             | ✅             | ❌             |
 | Filter by Username | ❌             | ❌             | ✅             |
+
+### JWT Authentication for REST API
+
+The application provides **dual authentication mechanisms** to support both web browser access and API integration:
+
+1. **Form-Based Authentication**: Session-based authentication for web UI (Thymeleaf and Angular)
+2. **JWT Authentication**: Token-based authentication for REST API clients
+
+**Why JWT?**
+
+JWT (JSON Web Token) authentication enables:
+- **Stateless API access**: No server-side session required
+- **API integration**: External applications can authenticate and consume the REST API
+- **Swagger UI testing**: "Try It Out" functionality in Swagger UI
+- **Mobile/SPA support**: Token-based auth suitable for single-page applications
+- **Microservices ready**: Tokens can be validated by multiple services
+
+#### JWT Configuration
+
+**Location**: `src/main/java/com/ammons/taskactivity/security/JwtUtil.java`
+
+**Token Configuration** (application.properties):
+
+```properties
+# JWT Secret Key (should be changed in production and stored securely)
+jwt.secret=taskactivity-secret-key-change-this-in-production-must-be-at-least-256-bits-long
+
+# Access Token Expiration (24 hours in milliseconds)
+jwt.expiration=86400000
+
+# Refresh Token Expiration (7 days in milliseconds)
+jwt.refresh.expiration=604800000
+```
+
+**Key Components:**
+
+1. **JwtUtil** (`src/main/java/com/ammons/taskactivity/security/JwtUtil.java`):
+   - Generates access tokens (24 hour expiration)
+   - Generates refresh tokens (7 day expiration)
+   - Validates tokens
+   - Extracts user information from tokens
+
+2. **JwtAuthenticationFilter** (`src/main/java/com/ammons/taskactivity/security/JwtAuthenticationFilter.java`):
+   - Intercepts requests with `Authorization: Bearer <token>` headers
+   - Validates JWT tokens
+   - Sets Spring Security authentication context
+
+3. **ApiAuthController** (`src/main/java/com/ammons/taskactivity/controller/ApiAuthController.java`):
+   - **POST /api/auth/login**: Authenticate with username/password, receive JWT tokens
+   - **POST /api/auth/refresh**: Refresh expired access token using refresh token
+
+#### Authentication Workflow
+
+**Step 1: Login and Obtain Tokens**
+
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "your_password"
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400000,
+  "username": "admin"
+}
+```
+
+**Step 2: Use Access Token for API Calls**
+
+```bash
+GET /api/tasks
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Step 3: Refresh Token When Access Token Expires**
+
+```bash
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400000,
+  "username": "admin"
+}
+```
+
+#### Security Configuration Integration
+
+**Location**: `src/main/java/com/ammons/taskactivity/config/SecurityConfig.java`
+
+The JWT filter is added to the Spring Security filter chain:
+
+```java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http, 
+                                      JwtAuthenticationFilter jwtAuthenticationFilter) {
+    http
+        .authorizeHttpRequests(auth -> auth
+            // JWT auth endpoints - public access
+            .requestMatchers("/api/auth/**").permitAll()
+            
+            // API endpoints - require authentication (JWT or session)
+            .requestMatchers("/api/**").authenticated()
+            
+            // ... other rules
+        )
+        // Add JWT filter before UsernamePasswordAuthenticationFilter
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        // ... other configuration
+}
+```
+
+#### Using JWT with Swagger UI
+
+The Swagger UI is configured with JWT authentication support:
+
+1. Navigate to **http://localhost:8080/swagger-ui.html**
+2. Find the **POST /api/auth/login** endpoint under "Authentication"
+3. Click "Try it out" and enter your credentials
+4. Copy the `accessToken` from the response
+5. Click the **"Authorize"** button (🔒) at the top of Swagger UI
+6. Enter: `Bearer <your-access-token>`
+7. Click "Authorize" and close the dialog
+8. Now all "Try It Out" buttons will include your JWT token automatically
+
+**OpenAPI Configuration** (`src/main/java/com/ammons/taskactivity/config/OpenApiConfig.java`):
+
+```java
+@Bean
+public OpenAPI customOpenAPI() {
+    return new OpenAPI()
+            .info(new Info()
+                    .title("Task Activity Management API")
+                    .version("1.0.0")
+                    .description("REST API with JWT authentication..."))
+            .components(new Components()
+                    .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
+                            .type(SecurityScheme.Type.HTTP)
+                            .scheme("bearer")
+                            .bearerFormat("JWT")))
+            .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"));
+}
+```
+
+#### Security Best Practices
+
+**Production Deployment:**
+
+1. **Change JWT Secret**: Replace the default secret with a strong, randomly generated key
+2. **Environment Variables**: Store secret in environment variables or secrets manager (AWS Secrets Manager, Kubernetes Secrets)
+3. **HTTPS Only**: Always use HTTPS in production to protect tokens in transit
+4. **Token Storage**: Client applications should store tokens securely (not in localStorage for sensitive apps)
+5. **Token Expiration**: Adjust expiration times based on security requirements
+6. **Refresh Token Rotation**: Consider implementing refresh token rotation for enhanced security
+
+**Example Production Configuration:**
+
+```properties
+# Use environment variable for secret
+jwt.secret=${JWT_SECRET:fallback-secret-for-dev-only}
+
+# Shorter expiration for production
+jwt.expiration=3600000  # 1 hour
+jwt.refresh.expiration=604800000  # 7 days
+```
+
+#### Integration with Existing Authentication
+
+The JWT authentication works **alongside** the existing form-based authentication:
+
+- **Web UI (Thymeleaf/Angular)**: Uses form-based authentication with sessions
+- **REST API clients**: Use JWT authentication with Bearer tokens
+- **Swagger UI**: Uses JWT authentication for "Try It Out" functionality
+- **Both methods**: Can be used simultaneously (JWT for API, sessions for web)
+
+The `JwtAuthenticationFilter` only activates when it detects a `Bearer` token in the `Authorization` header, so it doesn't interfere with session-based authentication.
+
+#### JWT Authentication DTOs
+
+**Request/Response Models:**
+
+```java
+// LoginRequest.java
+public class LoginRequest {
+    @NotBlank
+    private String username;
+    
+    @NotBlank
+    private String password;
+}
+
+// LoginResponse.java
+public class LoginResponse {
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType = "Bearer";
+    private Long expiresIn;
+    private String username;
+}
+
+// RefreshTokenRequest.java
+public class RefreshTokenRequest {
+    @NotBlank
+    private String refreshToken;
+}
+```
+
+**For complete API usage guide, see**: [Swagger API Guide](SWAGGER_API_GUIDE.md)
 
 ### User Display Name Format
 

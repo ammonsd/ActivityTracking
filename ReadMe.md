@@ -51,6 +51,8 @@ Interactive API documentation is available via Swagger UI:
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
 
+📘 **[Swagger API Guide](docs/Swagger_API_Guide.md)** - Complete guide for using the REST API with JWT authentication
+
 ## Documentation
 
 ### Core Guides

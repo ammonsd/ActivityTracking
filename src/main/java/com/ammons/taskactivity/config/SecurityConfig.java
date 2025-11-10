@@ -1,5 +1,7 @@
 package com.ammons.taskactivity.config;
 
+import com.ammons.taskactivity.repository.UserRepository;
+import com.ammons.taskactivity.security.JwtAuthenticationFilter;
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -19,8 +21,6 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import com.ammons.taskactivity.repository.UserRepository;
 
 import java.util.List;
 
@@ -51,6 +51,7 @@ public class SecurityConfig {
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final ForcePasswordUpdateFilter forcePasswordUpdateFilter;
     private final UserRepository userRepository;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                     CustomAccessDeniedHandler customAccessDeniedHandler,
@@ -58,7 +59,8 @@ public class SecurityConfig {
             CustomAuthenticationFailureHandler customAuthenticationFailureHandler,
             CustomLogoutSuccessHandler customLogoutSuccessHandler,
                     ForcePasswordUpdateFilter forcePasswordUpdateFilter,
-                    UserRepository userRepository) {
+                    UserRepository userRepository,
+                    JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
@@ -66,6 +68,7 @@ public class SecurityConfig {
         this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.forcePasswordUpdateFilter = forcePasswordUpdateFilter;
         this.userRepository = userRepository;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -96,6 +99,9 @@ public class SecurityConfig {
                         .permitAll()
                         // Health checks
                         .requestMatchers("/api/health/**", "/actuator/health").permitAll()
+
+                                        // JWT Authentication endpoints - public access
+                                        .requestMatchers("/api/auth/**").permitAll()
 
                                         // Swagger/OpenAPI endpoints - public access for
                                         // documentation
@@ -209,12 +215,41 @@ public class SecurityConfig {
                                                                 // (Angular interceptor will handle)
                                                                 if (requestUri.startsWith(
                                                                                 "/api/")) {
-                                                                        response.setStatus(
-                                                                                        HttpServletResponse.SC_UNAUTHORIZED);
-                                                                        response.setContentType(
-                                                                                        "application/json");
-                                                                        response.getWriter().write(
-                                                                                        "{\"error\":\"Session Expired\",\"message\":\"Your session has expired. Please log in again.\"}");
+                                                                        // Check if this is a JWT
+                                                                        // authentication attempt
+                                                                        String authHeader = request
+                                                                                        .getHeader("Authorization");
+                                                                        if (authHeader != null
+                                                                                        && authHeader.startsWith(
+                                                                                                        "Bearer ")) {
+                                                                                // JWT token present
+                                                                                // but
+                                                                                // invalid/expired
+                                                                                response.setStatus(
+                                                                                                HttpServletResponse.SC_UNAUTHORIZED);
+                                                                                response.setContentType(
+                                                                                                "application/json");
+                                                                                response.getWriter()
+                                                                                                .write("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired JWT token.\"}");
+                                                                        } else if (hadSession) {
+                                                                                // Session-based
+                                                                                // auth that expired
+                                                                                response.setStatus(
+                                                                                                HttpServletResponse.SC_UNAUTHORIZED);
+                                                                                response.setContentType(
+                                                                                                "application/json");
+                                                                                response.getWriter()
+                                                                                                .write("{\"error\":\"Session Expired\",\"message\":\"Your session has expired. Please log in again.\"}");
+                                                                        } else {
+                                                                                // No authentication
+                                                                                // provided
+                                                                                response.setStatus(
+                                                                                                HttpServletResponse.SC_UNAUTHORIZED);
+                                                                                response.setContentType(
+                                                                                                "application/json");
+                                                                                response.getWriter()
+                                                                                                .write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required.\"}");
+                                                                        }
                                                                 } else if (!requestUri.equals(
                                                                                 LOGIN_URL)) {
                                                                         // For web requests (except
@@ -242,6 +277,8 @@ public class SecurityConfig {
                                                                                      // dual UI
                                                                                      // support
                         .authenticationProvider(customAuthenticationProvider)
+                        .addFilterBefore(jwtAuthenticationFilter,
+                                        UsernamePasswordAuthenticationFilter.class)
                         .addFilterAfter(forcePasswordUpdateFilter,
                                         UsernamePasswordAuthenticationFilter.class);
 
