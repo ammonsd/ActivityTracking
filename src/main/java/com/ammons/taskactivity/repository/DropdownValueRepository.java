@@ -32,14 +32,6 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
             @Param("category") String category);
 
     /**
-     * Checks if a value already exists for a category.
-     * 
-     * @deprecated Use existsByCategoryAndSubcategoryAndItemValueIgnoreCase instead
-     */
-    @Deprecated(since = "2.0", forRemoval = true)
-    public boolean existsByCategoryAndItemValueIgnoreCase(String category, String itemValue);
-
-    /**
      * Checks if a value already exists for a category and subcategory.
      */
     public boolean existsByCategoryAndSubcategoryAndItemValueIgnoreCase(String category,

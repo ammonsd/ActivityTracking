@@ -96,17 +96,6 @@ public class DropdownValueService {
     }
 
     /**
-     * Create dropdown value for backward compatibility - defaults subcategory to "TASK"
-     * 
-     * @deprecated Use createDropdownValue(String category, String subcategory, String value)
-     *             instead
-     */
-    @Deprecated(since = "2.0", forRemoval = true)
-    public DropdownValue createDropdownValue(String category, String value) {
-        return createDropdownValue(category, "TASK", value);
-    }
-
-    /**
      * Update dropdown value
      */
     public DropdownValue updateDropdownValue(Long id, String value, Integer displayOrder,

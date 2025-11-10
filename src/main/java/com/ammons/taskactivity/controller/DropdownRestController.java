@@ -60,20 +60,6 @@ public class DropdownRestController {
     }
 
     /**
-     * Get all dropdown values for a specific category (legacy endpoint)
-     * 
-     * @deprecated Use /category/{category} endpoint instead
-     */
-    @Deprecated(since = "2.0", forRemoval = true)
-    @GetMapping("/{category}")
-    public ResponseEntity<List<DropdownValue>> getDropdownsByCategory(
-            @PathVariable String category) {
-        logger.debug("REST API: Getting dropdown values for category (legacy): {}", category);
-        List<DropdownValue> values = dropdownValueService.getAllValuesByCategory(category);
-        return ResponseEntity.ok(values);
-    }
-
-    /**
      * Get clients
      */
     @GetMapping("/clients")
