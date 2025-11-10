@@ -80,10 +80,6 @@ Interactive API documentation is available via Swagger UI:
 
 ### Architecture & Design
 
-- 🏛️ [Blueprint Part 1: Overview and Architecture](docs/Blueprint_Part_1_Overview_and_Architecture.md) - System architecture
-- 💾 [Blueprint Part 2: Database and Configuration](docs/Blueprint_Part_2_Database_and_Configuration.md) - Data model
-- � [Blueprint Part 3: Entities and Repositories](docs/Blueprint_Part_3_Entities_and_Repositories.md) - JPA layer
-- 📝 [Blueprint Part 4-8: Complete Implementation](docs/Blueprint_Part_4-8_Complete_Implementation.md) - Services and controllers
 - 📊 [Technical Features Summary](docs/Technical_Features_Summary.md) - Comprehensive feature list
 
 ## License
