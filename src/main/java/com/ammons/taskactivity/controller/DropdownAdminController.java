@@ -294,10 +294,8 @@ public class DropdownAdminController {
         if (category != null && !category.trim().isEmpty()) {
             dropdownValues = dropdownValueService.getAllValuesByCategory(category);
         } else {
-            // Get all dropdowns from all categories
-            dropdownValues = dropdownValueService.getAllValuesByCategory("CLIENT");
-            dropdownValues.addAll(dropdownValueService.getAllValuesByCategory("PROJECT"));
-            dropdownValues.addAll(dropdownValueService.getAllValuesByCategory("PHASE"));
+            // Get all dropdowns from all categories dynamically
+            dropdownValues = dropdownValueService.getAllDropdownValues();
         }
 
         // Sort by category, then display order, then item value
