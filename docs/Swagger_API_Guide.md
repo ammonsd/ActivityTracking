@@ -50,6 +50,17 @@ The Task Activity Management application uses **two different authentication mec
 -   Login via `POST /api/auth/login`
 -   Suitable for API integrations, mobile apps, and testing
 
+### Important: Already Logged In?
+
+**If you're already logged into the web application**, you're automatically authenticated in Swagger UI as well! Your browser sends the session cookie (JSESSIONID) with Swagger requests, so you can immediately use the "Try It Out" feature on any endpoint without needing to use the JWT "Authorize" button.
+
+**When to use JWT authentication in Swagger:**
+
+-   Testing API access **independently** of the web UI session
+-   Simulating how external API clients (mobile apps, third-party services) would authenticate
+-   Testing with **different user roles** while maintaining your web UI session
+-   Development of stateless API integrations
+
 **This guide focuses on JWT authentication for API access.**
 
 ---
