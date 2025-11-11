@@ -131,8 +131,9 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
           </div>
 
           <!-- Pagination Controls -->
-          <div *ngIf="totalPages > 1 && !loading" class="pagination">
+          <div *ngIf="totalElements > 0 && !loading" class="pagination">
             <button
+              *ngIf="totalPages > 1"
               mat-icon-button
               [disabled]="currentPage === 0"
               (click)="goToPage(0)"
@@ -141,6 +142,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               <mat-icon>first_page</mat-icon>
             </button>
             <button
+              *ngIf="totalPages > 1"
               mat-icon-button
               [disabled]="currentPage === 0"
               (click)="goToPage(currentPage - 1)"
@@ -154,6 +156,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
             </span>
 
             <button
+              *ngIf="totalPages > 1"
               mat-icon-button
               [disabled]="currentPage === totalPages - 1"
               (click)="goToPage(currentPage + 1)"
@@ -162,6 +165,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               <mat-icon>chevron_right</mat-icon>
             </button>
             <button
+              *ngIf="totalPages > 1"
               mat-icon-button
               [disabled]="currentPage === totalPages - 1"
               (click)="goToPage(totalPages - 1)"
