@@ -43,6 +43,7 @@ public class SecurityConfig {
     private static final String ADMIN_ROLE = "ADMIN";
     private static final String USER_ROLE = "USER";
     private static final String GUEST_ROLE = "GUEST";
+    private static final String CONTENT_TYPE_JSON = "application/json";
 
     private final UserDetailsServiceImpl userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -79,6 +80,8 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("java:S3776") // Cognitive complexity justified: central security
+                                    // configuration
     public SecurityFilterChain filterChain(HttpSecurity http,
                     CustomAuthenticationProvider customAuthenticationProvider) throws Exception {
         http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -192,13 +195,7 @@ public class SecurityConfig {
                 .logout(logout -> logout.logoutUrl(LOGOUT_URL)
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "XSRF-TOKEN")
-                        .clearAuthentication(true)
-                        .logoutRequestMatcher(
-                                new org.springframework.security.web.util.matcher.OrRequestMatcher(
-                                        new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
-                                                LOGOUT_URL, "POST"),
-                                        new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
-                                                LOGOUT_URL, "GET")))
+                                        .clearAuthentication(true)
                         .permitAll())
                         .exceptionHandling(exceptions -> exceptions
                                         .accessDeniedHandler(customAccessDeniedHandler)
@@ -209,10 +206,18 @@ public class SecurityConfig {
                                                                                 .getRequestURI();
 
                                                                 // Check if user had a session that
-                                                                // expired
-                                                                // (vs never having a session)
+                                                                // expired (vs never having a
+                                                                // session)
+                                                                // Note: getRequestedSessionId() is
+                                                                // only used to check for
+                                                                // session existence, not for
+                                                                // authentication
                                                                 boolean hadSession = request
-                                                                                .getRequestedSessionId() != null
+                                                                                .getRequestedSessionId() != null // NOSONAR
+                                                                                                                 // -
+                                                                                                                 // Only
+                                                                                                                 // checking
+                                                                                                                 // existence
                                                                                 && !request.isRequestedSessionIdValid();
 
                                                                 // For API calls, return 401
@@ -232,7 +237,7 @@ public class SecurityConfig {
                                                                                 response.setStatus(
                                                                                                 HttpServletResponse.SC_UNAUTHORIZED);
                                                                                 response.setContentType(
-                                                                                                "application/json");
+                                                                                                CONTENT_TYPE_JSON);
                                                                                 response.getWriter()
                                                                                                 .write("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired JWT token.\"}");
                                                                         } else if (hadSession) {
@@ -241,7 +246,7 @@ public class SecurityConfig {
                                                                                 response.setStatus(
                                                                                                 HttpServletResponse.SC_UNAUTHORIZED);
                                                                                 response.setContentType(
-                                                                                                "application/json");
+                                                                                                CONTENT_TYPE_JSON);
                                                                                 response.getWriter()
                                                                                                 .write("{\"error\":\"Session Expired\",\"message\":\"Your session has expired. Please log in again.\"}");
                                                                         } else {
@@ -250,7 +255,7 @@ public class SecurityConfig {
                                                                                 response.setStatus(
                                                                                                 HttpServletResponse.SC_UNAUTHORIZED);
                                                                                 response.setContentType(
-                                                                                                "application/json");
+                                                                                                CONTENT_TYPE_JSON);
                                                                                 response.getWriter()
                                                                                                 .write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required.\"}");
                                                                         }

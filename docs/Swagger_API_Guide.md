@@ -227,6 +227,8 @@ Once authenticated, you can test any API endpoint:
 
 When your access token expires (after 24 hours), use the refresh token:
 
+> **Note for Swagger UI Testing**: For manual testing in Swagger UI, it's usually easier to simply login again at `/api/auth/login` rather than using the refresh endpoint. The refresh token feature is primarily designed for **automated API clients** (mobile apps, background services, integrations) that need to maintain long-running sessions without storing user credentials.
+
 **Endpoint**: `POST /api/auth/refresh`
 
 ```
