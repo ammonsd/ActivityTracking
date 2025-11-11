@@ -443,9 +443,10 @@ T<!DOCTYPE html>
             </div>
 
             <!-- Pagination Controls -->
-            <div th:if="${totalPages > 1}" class="pagination">
+            <div th:if="${totalElements > 0}" class="pagination">
                 <!-- First page -->
                 <a
+                    th:if="${totalPages > 1}"
                     th:href="@{/task-activity/list(page=0, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == 0} ? 'return false;' : null"
@@ -455,6 +456,7 @@ T<!DOCTYPE html>
 
                 <!-- Previous page -->
                 <a
+                    th:if="${totalPages > 1}"
                     th:href="@{/task-activity/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${!hasPrevious} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasPrevious} ? 'return false;' : null"
@@ -462,7 +464,7 @@ T<!DOCTYPE html>
                     &laquo;
                 </a>
 
-                <!-- Entry range info -->
+                <!-- Entry range info - Always shown -->
                 <span class="pagination-info">
                     <span th:text="${startEntry}">1</span> to
                     <span th:text="${endEntry}">20</span> of
@@ -471,6 +473,7 @@ T<!DOCTYPE html>
 
                 <!-- Next page -->
                 <a
+                    th:if="${totalPages > 1}"
                     th:href="@{/task-activity/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${!hasNext} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasNext} ? 'return false;' : null"
@@ -480,6 +483,7 @@ T<!DOCTYPE html>
 
                 <!-- Last page -->
                 <a
+                    th:if="${totalPages > 1}"
                     th:href="@{/task-activity/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${currentPage == totalPages - 1} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == totalPages - 1} ? 'return false;' : null"
@@ -571,17 +575,22 @@ T<!DOCTYPE html>
         <script>
             // CSV Export Functionality
             function generateCSV() {
-                // Get current filter parameters from URL
-                const urlParams = new URLSearchParams(window.location.search);
-                
-                // Build query string for export endpoint
+                // Get current filter values directly from form inputs
                 const exportParams = new URLSearchParams();
-                if (urlParams.get('client')) exportParams.set('client', urlParams.get('client'));
-                if (urlParams.get('project')) exportParams.set('project', urlParams.get('project'));
-                if (urlParams.get('phase')) exportParams.set('phase', urlParams.get('phase'));
-                if (urlParams.get('username')) exportParams.set('username', urlParams.get('username'));
-                if (urlParams.get('startDate')) exportParams.set('startDate', urlParams.get('startDate'));
-                if (urlParams.get('endDate')) exportParams.set('endDate', urlParams.get('endDate'));
+                
+                const client = document.getElementById('client')?.value;
+                const project = document.getElementById('project')?.value;
+                const phase = document.getElementById('phase')?.value;
+                const username = document.getElementById('username')?.value;
+                const startDate = document.getElementById('startDate')?.value;
+                const endDate = document.getElementById('endDate')?.value;
+                
+                if (client) exportParams.set('client', client);
+                if (project) exportParams.set('project', project);
+                if (phase) exportParams.set('phase', phase);
+                if (username) exportParams.set('username', username);
+                if (startDate) exportParams.set('startDate', startDate);
+                if (endDate) exportParams.set('endDate', endDate);
                 
                 // Fetch CSV data from server (all filtered entries)
                 const exportUrl = '/task-activity/list/export-csv?' + exportParams.toString();

@@ -40,12 +40,6 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
       <mat-card>
         <mat-card-header>
           <mat-card-title>Task Activities</mat-card-title>
-          <div class="user-info">
-            <span class="current-user">{{ currentUser }}</span>
-            <span class="current-date">{{
-              currentDate | date : 'M/d/yy'
-            }}</span>
-          </div>
         </mat-card-header>
         <mat-card-content>
           <!-- Filter Section -->

@@ -213,13 +213,10 @@ public class TaskActivityWebController {
 
         // Fetch tasks based on filters and user role
         Page<TaskActivity> tasksPage = fetchTasksPage(client, project, startDate, endDate, pageable,
-                isUserAdmin, filterUsername);
-
-        // Apply phase filter in-memory if needed
-        List<TaskActivity> filteredTasks = filterByPhase(tasksPage.getContent(), phase);
+                isUserAdmin, filterUsername, phase);
 
         // Add pagination and filtering attributes to model
-        addPaginationAttributes(model, tasksPage, page, filteredTasks);
+        addPaginationAttributes(model, tasksPage, page, tasksPage.getContent());
         addFilterAttributes(model, client, project, phase, username, startDate, endDate);
         addDropdownOptions(model);
 
@@ -232,55 +229,16 @@ public class TaskActivityWebController {
     }
 
     private Page<TaskActivity> fetchTasksPage(String client, String project, LocalDate startDate,
-            LocalDate endDate, Pageable pageable, boolean isUserAdmin, String username) {
-        if (isUserAdmin && (username == null || username.trim().isEmpty())) {
-            // Admin with no username filter - fetch all tasks
-            return fetchAllTasks(client, project, startDate, endDate, pageable);
-        } else {
-            // Admin with username filter OR regular user - fetch filtered tasks
-            return fetchUserTasks(username, client, project, startDate, endDate, pageable);
-        }
-    }
+            LocalDate endDate, Pageable pageable, boolean isUserAdmin, String username,
+            String phase) {
+        // Convert empty strings to null for proper SQL NULL handling
+        String clientFilter = (client != null && !client.trim().isEmpty()) ? client : null;
+        String projectFilter = (project != null && !project.trim().isEmpty()) ? project : null;
+        String phaseFilter = (phase != null && !phase.trim().isEmpty()) ? phase : null;
 
-    private Page<TaskActivity> fetchAllTasks(String client, String project, LocalDate startDate,
-            LocalDate endDate, Pageable pageable) {
-        if (startDate != null && endDate != null) {
-            return taskActivityService.getTaskActivitiesInDateRange(startDate, endDate, pageable);
-        } else if (startDate != null) {
-            return taskActivityService.getTaskActivitiesByDate(startDate, pageable);
-        } else if (client != null && !client.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByClient(client, pageable);
-        } else if (project != null && !project.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByProject(project, pageable);
-        } else {
-            return taskActivityService.getAllTaskActivities(pageable);
-        }
-    }
-
-    private Page<TaskActivity> fetchUserTasks(String username, String client, String project,
-            LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        if (startDate != null && endDate != null) {
-            return taskActivityService.getTaskActivitiesInDateRangeForUser(username, startDate,
-                    endDate, pageable);
-        } else if (startDate != null) {
-            return taskActivityService.getTaskActivitiesByDateForUser(username, startDate,
-                    pageable);
-        } else if (client != null && !client.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByClientForUser(username, client, pageable);
-        } else if (project != null && !project.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByProjectForUser(username, project,
-                    pageable);
-        } else {
-            return taskActivityService.getAllTaskActivitiesForUser(username, pageable);
-        }
-    }
-
-    private List<TaskActivity> filterByPhase(List<TaskActivity> tasks, String phase) {
-        if (phase != null && !phase.trim().isEmpty()) {
-            return tasks.stream().filter(task -> task.getPhase().equalsIgnoreCase(phase))
-                    .toList();
-        }
-        return tasks;
+        // Use the comprehensive filter method that handles ALL filter combinations
+        return taskActivityService.getTaskActivitiesByFilters(username, clientFilter, projectFilter,
+                phaseFilter, startDate, endDate, pageable);
     }
 
     private void addPaginationAttributes(Model model, Page<TaskActivity> tasksPage, int page,
@@ -699,63 +657,21 @@ public class TaskActivityWebController {
                 (isUserAdmin && username != null && !username.trim().isEmpty()) ? username
                         : currentUsername;
 
-        // Fetch ALL tasks based on filters (no pagination)
-        List<TaskActivity> allTasks = fetchAllFilteredTasks(client, project, startDate, endDate,
-                isUserAdmin, filterUsername);
+        // Convert empty strings to null for proper SQL NULL handling
+        String clientFilter = (client != null && !client.trim().isEmpty()) ? client : null;
+        String projectFilter = (project != null && !project.trim().isEmpty()) ? project : null;
+        String phaseFilter = (phase != null && !phase.trim().isEmpty()) ? phase : null;
 
-        // Apply phase filter in-memory if needed
-        List<TaskActivity> filteredTasks = filterByPhase(allTasks, phase);
+        // Fetch ALL tasks based on filters using the comprehensive filter method (no pagination)
+        // Use Pageable.unpaged() to get all results without pagination
+        Page<TaskActivity> allTasksPage =
+                taskActivityService.getTaskActivitiesByFilters(filterUsername, clientFilter,
+                        projectFilter, phaseFilter, startDate, endDate, Pageable.unpaged());
+
+        List<TaskActivity> filteredTasks = allTasksPage.getContent();
 
         // Generate CSV
         return generateCsvFromTasks(filteredTasks, isUserAdmin);
-    }
-
-    private List<TaskActivity> fetchAllFilteredTasks(String client, String project,
-            LocalDate startDate, LocalDate endDate, boolean isUserAdmin, String username) {
-        if (isUserAdmin && (username == null || username.trim().isEmpty())) {
-            // Admin with no username filter - fetch all tasks
-            return fetchAllTasksNoPagination(client, project, startDate, endDate);
-        } else {
-            // Admin with username filter OR regular user - fetch filtered tasks
-            return fetchUserTasksNoPagination(username, client, project, startDate, endDate);
-        }
-    }
-
-    private List<TaskActivity> fetchAllTasksNoPagination(String client, String project,
-            LocalDate startDate, LocalDate endDate) {
-        if (startDate != null && endDate != null) {
-            return taskActivityService.getTaskActivitiesInDateRange(startDate, endDate);
-        } else if (startDate != null) {
-            return taskActivityService.getTaskActivitiesByDate(startDate);
-        } else if (client != null && !client.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByClient(client);
-        } else if (project != null && !project.trim().isEmpty()) {
-            return taskActivityService.getTaskActivitiesByProject(project);
-        } else {
-            return taskActivityService.getAllTaskActivities();
-        }
-    }
-
-    private List<TaskActivity> fetchUserTasksNoPagination(String username, String client,
-            String project, LocalDate startDate, LocalDate endDate) {
-        if (startDate != null && endDate != null) {
-            return taskActivityService.getTaskActivitiesInDateRangeForUser(username, startDate,
-                    endDate);
-        } else if (client != null && !client.trim().isEmpty()) {
-            // Filter by client - get all user tasks then filter
-            return taskActivityService.getTaskActivitiesByUsername(username).stream()
-                    .filter(task -> task.getClient().equalsIgnoreCase(client)).toList();
-        } else if (project != null && !project.trim().isEmpty()) {
-            // Filter by project - get all user tasks then filter
-            return taskActivityService.getTaskActivitiesByUsername(username).stream()
-                    .filter(task -> task.getProject().equalsIgnoreCase(project)).toList();
-        } else if (startDate != null) {
-            // Filter by single date - get all user tasks then filter
-            return taskActivityService.getTaskActivitiesByUsername(username).stream()
-                    .filter(task -> task.getTaskDate().equals(startDate)).toList();
-        } else {
-            return taskActivityService.getTaskActivitiesByUsername(username);
-        }
     }
 
     private String generateCsvFromTasks(List<TaskActivity> tasks, boolean includeUsername) {
