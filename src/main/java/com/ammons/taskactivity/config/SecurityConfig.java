@@ -103,6 +103,10 @@ public class SecurityConfig {
                                         // JWT Authentication endpoints - public access
                                         .requestMatchers("/api/auth/**").permitAll()
 
+                                        // Admin-only API endpoints
+                                        .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
+                                        .hasRole(ADMIN_ROLE)
+
                                         // Swagger/OpenAPI endpoints - public access for
                                         // documentation
                                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",

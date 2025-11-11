@@ -89,19 +89,19 @@ The Task Activity Management application uses **two different authentication mec
 ### Step 2: Authorize in Swagger UI
 
 1. Click the **"Authorize"** button (🔒 lock icon) at the top right of the Swagger UI page
-2. A dialog box will appear
-3. In the "Value" field, enter your token in this format:
+2. A dialog box will appear titled "Available authorizations"
+3. In the "Value" field, enter **ONLY your token** (do NOT include "Bearer"):
     ```
-    Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     ```
-    ⚠️ **Important**: Include the word "Bearer" followed by a space, then your token
+    ⚠️ **Important**: Enter ONLY the token string. Swagger UI automatically adds "Bearer " prefix for you.
 4. Click the **"Authorize"** button in the dialog
 5. Click **"Close"** to close the dialog
 6. The lock icon should now appear closed/locked (🔒) indicating you're authenticated
 
 ### Step 3: Make Authenticated Requests
 
-Now you can use the "Try it out" button on any API endpoint, and your JWT token will be automatically included in the request headers.
+Now you can use the "Try it out" button on any API endpoint, and your JWT token will be automatically included in the request headers as `Authorization: Bearer <your-token>`.
 
 ---
 
