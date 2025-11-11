@@ -37,6 +37,10 @@
                     "value": "https://yourdomain.com,https://www.yourdomain.com"
                 },
                 {
+                    "name": "SWAGGER_SERVER_URL",
+                    "value": "https://taskactivitytracker.com"
+                },
+                {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
                 },
