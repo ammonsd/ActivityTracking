@@ -36,6 +36,22 @@ export class AuthService {
       // User came through Spring Security - trust the session
       this.isAuthenticatedSubject.next(true);
 
+      // Try to restore from sessionStorage first (for page refreshes)
+      const storedUsername = sessionStorage.getItem('username');
+      const storedRole = sessionStorage.getItem('userRole');
+
+      if (storedUsername && storedRole) {
+        this.username = storedUsername;
+        this.userRole = storedRole;
+        this.currentUserSubject.next(storedUsername);
+        this.userRoleSubject.next(storedRole);
+        console.log(
+          'AuthService - Restored from session:',
+          storedUsername,
+          storedRole
+        );
+      }
+
       // Try to get username and role from API
       this.http.get<any>(`${environment.apiUrl}/users/me`).subscribe({
         next: (response) => {
@@ -64,11 +80,20 @@ export class AuthService {
             }
           }
         },
-        error: () => {
+        error: (err) => {
           // API call failed but we trust Spring Security session
           console.warn(
-            'Failed to fetch user details, but Spring Security session is valid'
+            'Failed to fetch user details from API, but Spring Security session is valid',
+            err
           );
+          // If we don't have cached data, set a default to prevent blank screen
+          if (!this.username) {
+            console.warn(
+              'No cached user data - app may have limited functionality'
+            );
+            // Still authenticated via Spring Security session, just missing user details
+            // The app will continue to work, subsequent API calls will succeed
+          }
         },
       });
     }
