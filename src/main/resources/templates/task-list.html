@@ -1,24 +1,46 @@
 T<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Task Activity List</title>
-        
+
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
-        <link rel="icon" type="image/png" sizes="32x32" th:href="@{/favicon-32x32.png}" />
-        <link rel="icon" type="image/png" sizes="16x16" th:href="@{/favicon-16x16.png}" />
-        <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
         <link rel="manifest" th:href="@{/site.webmanifest}" />
-        
+
         <link rel="stylesheet" th:href="@{/css/base.css}" />
         <link rel="stylesheet" th:href="@{/css/components.css}" />
         <script>
             // Maintain URL display as /task-activity
-            document.addEventListener('DOMContentLoaded', function() {
-                if (globalThis.location.pathname !== '/task-activity') {
-                    globalThis.history.replaceState(null, null, '/task-activity');
+            document.addEventListener("DOMContentLoaded", function () {
+                if (globalThis.location.pathname !== "/task-activity") {
+                    globalThis.history.replaceState(
+                        null,
+                        null,
+                        "/task-activity"
+                    );
                 }
             });
         </script>
@@ -37,7 +59,7 @@ T<!DOCTYPE html>
                 white-space: nowrap;
             }
             .task-hours {
-                text-align: right !important;
+                text-align: right;
                 font-weight: bold;
             }
             .task-details {
@@ -47,15 +69,15 @@ T<!DOCTYPE html>
                 white-space: nowrap;
             }
             .actions-column {
-                white-space: nowrap !important;
-                text-align: right !important;
-                padding-right: 2px !important;
+                white-space: nowrap;
+                text-align: right;
+                padding-right: 2px;
             }
             .actions-column .btn {
-                margin: 0 !important;
+                margin: 0;
             }
             .actions-column .btn:first-child {
-                margin-right: 1px !important;
+                margin-right: 1px;
             }
             .no-tasks {
                 text-align: center;
@@ -151,7 +173,7 @@ T<!DOCTYPE html>
             .csv-textarea {
                 width: 100%;
                 min-height: 300px;
-                font-family: 'Courier New', monospace;
+                font-family: "Courier New", monospace;
                 font-size: 12px;
                 padding: 10px;
                 border: 1px solid #ddd;
@@ -164,7 +186,39 @@ T<!DOCTYPE html>
                 gap: 10px;
                 justify-content: flex-end;
             }
+
+            /* Common table styles for all screen sizes - must come BEFORE media queries */
+            /* Left-align all table headers */
+            table th {
+                text-align: left;
+            }
+            /* Hours column alignment - header left, data right */
+            table th.hours-header {
+                text-align: left;
+            }
+            table td.task-hours {
+                text-align: right;
+                padding-right: 10px;
+            }
+
+            /* Mobile scroll hint */
+            .scroll-hint {
+                display: none;
+                text-align: center;
+                padding: 8px;
+                background-color: #e7f3ff;
+                color: #004085;
+                font-size: 12px;
+                border-top: 1px solid #b8daff;
+                border-bottom: 1px solid #b8daff;
+            }
+
+            /* MOBILE STYLES - Max width 768px */
             @media (max-width: 768px) {
+                /* Allow container to show horizontal overflow on mobile */
+                .container {
+                    overflow-x: visible;
+                }
                 .filter-row {
                     flex-direction: column;
                     align-items: stretch;
@@ -184,7 +238,7 @@ T<!DOCTYPE html>
                 }
                 /* Remove fixed width constraints on mobile to allow natural table sizing */
                 table {
-                    table-layout: auto !important;
+                    table-layout: auto;
                     min-width: 800px; /* Ensures table is wide enough to show all columns */
                 }
                 th,
@@ -197,79 +251,76 @@ T<!DOCTYPE html>
                     min-width: 150px;
                 }
                 .actions-column {
-                    padding-right: 8px !important;
+                    padding-right: 8px;
                 }
                 /* Ensure action buttons are visible and properly sized */
                 table td.actions-column a.btn {
                     padding: 6px 10px;
                     font-size: 13px;
+                    margin: 0;
+                    display: inline-block;
+                }
+                table td.actions-column a.btn:first-child {
+                    margin-right: 1px;
+                }
+                /* Show scroll hint on mobile */
+                .scroll-hint {
+                    display: block;
                 }
             }
-            /* Desktop/tablet table styling - only apply on larger screens */
+
+            /* DESKTOP/TABLET STYLES - Min width 769px */
             @media (min-width: 769px) {
                 /* Force actions column styling */
                 table {
-                    width: 100% !important;
-                    table-layout: fixed !important;
+                    width: 100%;
+                    table-layout: fixed;
                 }
                 /* Fixed column widths to prevent Phase expansion when Username is hidden */
-                table th:nth-child(1), table td:nth-child(1) { width: 110px !important; } /* Date */
-                table th:nth-child(2), table td:nth-child(2) { width: 180px !important; } /* Client */
-                table th:nth-child(3), table td:nth-child(3) { width: 180px !important; } /* Project */
-                table th:nth-child(4), table td:nth-child(4) { width: 160px !important; } /* Phase */
-                table th:nth-child(5), table td:nth-child(5) { width: 80px !important; } /* Hours */
+                table th:nth-child(1),
+                table td:nth-child(1) {
+                    width: 110px;
+                } /* Date */
+                table th:nth-child(2),
+                table td:nth-child(2) {
+                    width: 180px;
+                } /* Client */
+                table th:nth-child(3),
+                table td:nth-child(3) {
+                    width: 180px;
+                } /* Project */
+                table th:nth-child(4),
+                table td:nth-child(4) {
+                    width: 160px;
+                } /* Phase */
+                table th:nth-child(5),
+                table td:nth-child(5) {
+                    width: 80px;
+                } /* Hours */
                 /* Details column gets remaining space */
                 /* Username column - fixed width and alignment */
                 table th.username-header,
                 table td.username-column {
-                    width: 120px !important;
-                    text-align: left !important;
-                    padding-left: 10px !important;
+                    width: 120px;
+                    text-align: left;
+                    padding-left: 10px;
                 }
                 /* Actions column styling */
                 table th:last-child,
                 table td.actions-column {
-                    width: 140px !important;
-                    white-space: nowrap !important;
-                    text-align: right !important;
-                    padding-right: 0 !important;
-                    padding-left: 0 !important;
+                    width: 140px;
+                    white-space: nowrap;
+                    text-align: right;
+                    padding-right: 0;
+                    padding-left: 0;
                 }
-            }
-            /* Common table styles for all screen sizes */
-            /* Left-align all table headers */
-            table th {
-                text-align: left !important;
-            }
-            /* Hours column alignment - header left, data right */
-            table th.hours-header {
-                text-align: left !important;
-            }
-            table td.task-hours {
-                text-align: right !important;
-                padding-right: 10px !important;
-            }
-            table td.actions-column a.btn {
-                margin: 0 !important;
-                display: inline-block !important;
-            }
-            table td.actions-column a.btn:first-child {
-                margin-right: 1px !important;
-            }
-            /* Mobile scroll hint */
-            .scroll-hint {
-                display: none;
-                text-align: center;
-                padding: 8px;
-                background-color: #e7f3ff;
-                color: #004085;
-                font-size: 12px;
-                border-top: 1px solid #b8daff;
-                border-bottom: 1px solid #b8daff;
-            }
-            @media (max-width: 768px) {
-                .scroll-hint {
-                    display: block;
+                /* Desktop-specific button styling */
+                table td.actions-column a.btn {
+                    margin: 0;
+                    display: inline-block;
+                }
+                table td.actions-column a.btn:first-child {
+                    margin-right: 1px;
                 }
             }
         </style>
@@ -279,20 +330,54 @@ T<!DOCTYPE html>
             <div class="nav-content">
                 <h1>Task Activity Tracker</h1>
                 <div class="user-info">
-                    <div style="display: inline-flex; align-items: center; gap: 15px;">
-                        <div th:if="${passwordExpiringWarning}" 
-                             style="background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 4px; font-size: 13px; border: 1px solid #ffc107;">
+                    <div
+                        style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 15px;
+                        "
+                    >
+                        <div
+                            th:if="${passwordExpiringWarning}"
+                            style="
+                                background-color: #fff3cd;
+                                color: #856404;
+                                padding: 8px 12px;
+                                border-radius: 4px;
+                                font-size: 13px;
+                                border: 1px solid #ffc107;
+                            "
+                        >
                             <span th:text="${passwordExpiringWarning}"></span>
                         </div>
                         <span class="welcome-text">
                             <span th:text="${userDisplayName}">Username</span>
                         </span>
-                        <form th:action="@{/logout}" method="post" style="margin: 0;">
-                            <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                        <form
+                            th:action="@{/logout}"
+                            method="post"
+                            style="margin: 0"
+                        >
+                            <button
+                                type="submit"
+                                class="btn btn-secondary btn-sm"
+                            >
+                                Logout
+                            </button>
                         </form>
-                        <span class="current-date" style="font-size: 14px; white-space: nowrap;">
+                        <span
+                            class="current-date"
+                            style="font-size: 14px; white-space: nowrap"
+                        >
                             <script>
-                                document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                                document.write(
+                                    new Date().toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                    })
+                                );
                             </script>
                         </span>
                     </div>
@@ -318,8 +403,9 @@ T<!DOCTYPE html>
                         id="exportCsvBtn"
                         title="Export to CSV"
                         style="margin-right: 10px"
-                        >📋 Export CSV</button
                     >
+                        📋 Export CSV
+                    </button>
                     <!-- Weekly Timesheet - USER, GUEST, and ADMIN -->
                     <a
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'')')}"
@@ -365,9 +451,7 @@ T<!DOCTYPE html>
                         >🔧 Manage Dropdowns</a
                     >
                     <!-- Add New Task - All authenticated users -->
-                    <a 
-                        th:href="@{/task-activity/add}" 
-                        class="btn btn-primary"
+                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
                         >➕ Add New Task</a
                     >
                 </div>
@@ -386,7 +470,10 @@ T<!DOCTYPE html>
             ></div>
 
             <!-- Filters -->
-            <div class="filters" style="padding-left: 15px; padding-right: 15px;">
+            <div
+                class="filters"
+                style="padding-left: 15px; padding-right: 15px"
+            >
                 <form th:action="@{/task-activity/list}" method="get">
                     <div class="filter-row">
                         <div class="filter-group">
@@ -429,7 +516,10 @@ T<!DOCTYPE html>
                         </div>
 
                         <!-- Username Filter - Admin only -->
-                        <div class="filter-group" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                        <div
+                            class="filter-group"
+                            th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                        >
                             <label for="username">User</label>
                             <select id="username" name="username">
                                 <option value="">All Users</option>
@@ -462,7 +552,13 @@ T<!DOCTYPE html>
                             />
                         </div>
 
-                        <div style="margin-left: auto; display: flex; align-items: flex-end;">
+                        <div
+                            style="
+                                margin-left: auto;
+                                display: flex;
+                                align-items: flex-end;
+                            "
+                        >
                             <div style="display: flex; gap: 10px">
                                 <button type="submit" class="btn btn-info">
                                     Filter
@@ -544,7 +640,12 @@ T<!DOCTYPE html>
                             <th>Phase</th>
                             <th class="hours-header">Hours</th>
                             <th>Details</th>
-                            <th class="username-header" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Username</th>
+                            <th
+                                class="username-header"
+                                th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                            >
+                                Username
+                            </th>
                             <th></th>
                         </tr>
                     </thead>
@@ -566,20 +667,37 @@ T<!DOCTYPE html>
                                 th:text="${task.details}"
                                 th:title="${task.details}"
                             ></td>
-                            <td class="username-column" th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:text="${task.username}"></td>
-                            <td class="actions-column" style="white-space: nowrap; text-align: right; padding: 0;">
+                            <td
+                                class="username-column"
+                                th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                                th:text="${task.username}"
+                            ></td>
+                            <td
+                                class="actions-column"
+                                style="
+                                    white-space: nowrap;
+                                    text-align: right;
+                                    padding: 0;
+                                "
+                            >
                                 <!-- All authenticated users see Edit and Clone buttons -->
                                 <a
                                     th:href="@{'/task-activity/detail/' + ${task.id}}"
                                     class="btn btn-info"
-                                    style="margin: 0; margin-right: 1px; display: inline-block;"
-                                    >Edit</a>
+                                    style="
+                                        margin: 0;
+                                        margin-right: 1px;
+                                        display: inline-block;
+                                    "
+                                    >Edit</a
+                                >
                                 <a
                                     th:href="@{'/task-activity/clone/' + ${task.id}}"
                                     class="btn btn-info"
-                                    style="margin: 0; display: inline-block;"
+                                    style="margin: 0; display: inline-block"
                                     title="Clone this task"
-                                    >Clone</a>
+                                    >Clone</a
+                                >
                             </td>
                         </tr>
                     </tbody>
@@ -587,9 +705,7 @@ T<!DOCTYPE html>
 
                 <div th:if="${#lists.isEmpty(tasks)}" class="no-tasks">
                     <p>No tasks found matching the current filters.</p>
-                    <a 
-                        th:href="@{/task-activity/add}" 
-                        class="btn btn-primary"
+                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
                         >Add Your First Task</a
                     >
                 </div>
@@ -604,11 +720,21 @@ T<!DOCTYPE html>
                     <button class="csv-close" id="csvCloseBtn">&times;</button>
                 </div>
                 <p>Copy the CSV data below (filtered entries only):</p>
-                <textarea id="csvOutput" class="csv-textarea" readonly></textarea>
+                <textarea
+                    id="csvOutput"
+                    class="csv-textarea"
+                    readonly
+                ></textarea>
                 <div class="csv-actions">
-                    <button class="btn btn-primary" id="copyCsvBtn">📋 Copy to Clipboard</button>
-                    <button class="btn btn-secondary" id="downloadCsvBtn">💾 Download CSV</button>
-                    <button class="btn btn-secondary" id="closeCsvBtn">Close</button>
+                    <button class="btn btn-primary" id="copyCsvBtn">
+                        📋 Copy to Clipboard
+                    </button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">
+                        💾 Download CSV
+                    </button>
+                    <button class="btn btn-secondary" id="closeCsvBtn">
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
@@ -618,51 +744,53 @@ T<!DOCTYPE html>
             function generateCSV() {
                 // Get current filter values directly from form inputs
                 const exportParams = new URLSearchParams();
-                
-                const client = document.getElementById('client')?.value;
-                const project = document.getElementById('project')?.value;
-                const phase = document.getElementById('phase')?.value;
-                const username = document.getElementById('username')?.value;
-                const startDate = document.getElementById('startDate')?.value;
-                const endDate = document.getElementById('endDate')?.value;
-                
-                if (client) exportParams.set('client', client);
-                if (project) exportParams.set('project', project);
-                if (phase) exportParams.set('phase', phase);
-                if (username) exportParams.set('username', username);
-                if (startDate) exportParams.set('startDate', startDate);
-                if (endDate) exportParams.set('endDate', endDate);
-                
+
+                const client = document.getElementById("client")?.value;
+                const project = document.getElementById("project")?.value;
+                const phase = document.getElementById("phase")?.value;
+                const username = document.getElementById("username")?.value;
+                const startDate = document.getElementById("startDate")?.value;
+                const endDate = document.getElementById("endDate")?.value;
+
+                if (client) exportParams.set("client", client);
+                if (project) exportParams.set("project", project);
+                if (phase) exportParams.set("phase", phase);
+                if (username) exportParams.set("username", username);
+                if (startDate) exportParams.set("startDate", startDate);
+                if (endDate) exportParams.set("endDate", endDate);
+
                 // Fetch CSV data from server (all filtered entries)
-                const exportUrl = '/task-activity/list/export-csv?' + exportParams.toString();
-                
+                const exportUrl =
+                    "/task-activity/list/export-csv?" + exportParams.toString();
+
                 return fetch(exportUrl)
-                    .then(response => response.text())
-                    .catch(error => {
-                        console.error('Error fetching CSV data:', error);
-                        return 'Error generating CSV data';
+                    .then((response) => response.text())
+                    .catch((error) => {
+                        console.error("Error fetching CSV data:", error);
+                        return "Error generating CSV data";
                     });
             }
 
             // CSV Modal functionality
-            document.addEventListener('DOMContentLoaded', function() {
-                const modal = document.getElementById('csvModal');
-                const exportBtn = document.getElementById('exportCsvBtn');
-                const closeBtn = document.getElementById('csvCloseBtn');
-                const closeCsvBtn = document.getElementById('closeCsvBtn');
-                const copyCsvBtn = document.getElementById('copyCsvBtn');
-                const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-                const csvOutput = document.getElementById('csvOutput');
+            document.addEventListener("DOMContentLoaded", function () {
+                const modal = document.getElementById("csvModal");
+                const exportBtn = document.getElementById("exportCsvBtn");
+                const closeBtn = document.getElementById("csvCloseBtn");
+                const closeCsvBtn = document.getElementById("closeCsvBtn");
+                const copyCsvBtn = document.getElementById("copyCsvBtn");
+                const downloadCsvBtn =
+                    document.getElementById("downloadCsvBtn");
+                const csvOutput = document.getElementById("csvOutput");
 
                 // Open modal and generate CSV
                 if (exportBtn) {
-                    exportBtn.addEventListener('click', function() {
+                    exportBtn.addEventListener("click", function () {
                         // Show loading message
-                        csvOutput.value = 'Loading data...';
-                        modal.style.display = 'block';
-                        
+                        csvOutput.value = "Loading data...";
+                        modal.style.display = "block";
+
                         // Fetch CSV data asynchronously
-                        generateCSV().then(csv => {
+                        generateCSV().then((csv) => {
                             csvOutput.value = csv;
                         });
                     });
@@ -670,14 +798,15 @@ T<!DOCTYPE html>
 
                 // Close modal handlers
                 const closeModal = () => {
-                    modal.style.display = 'none';
+                    modal.style.display = "none";
                 };
 
-                if (closeBtn) closeBtn.addEventListener('click', closeModal);
-                if (closeCsvBtn) closeCsvBtn.addEventListener('click', closeModal);
+                if (closeBtn) closeBtn.addEventListener("click", closeModal);
+                if (closeCsvBtn)
+                    closeCsvBtn.addEventListener("click", closeModal);
 
                 // Close when clicking outside modal
-                window.addEventListener('click', function(event) {
+                window.addEventListener("click", function (event) {
                     if (event.target === modal) {
                         closeModal();
                     }
@@ -685,62 +814,83 @@ T<!DOCTYPE html>
 
                 // Copy to clipboard
                 if (copyCsvBtn) {
-                    copyCsvBtn.addEventListener('click', function() {
+                    copyCsvBtn.addEventListener("click", function () {
                         csvOutput.select();
-                        navigator.clipboard.writeText(csvOutput.value).then(() => {
-                            const originalText = copyCsvBtn.textContent;
-                            copyCsvBtn.textContent = '✓ Copied!';
-                            copyCsvBtn.style.backgroundColor = '#28a745';
-                            setTimeout(() => {
-                                copyCsvBtn.textContent = originalText;
-                                copyCsvBtn.style.backgroundColor = '';
-                            }, 2000);
-                        }).catch(err => {
-                            alert('Failed to copy to clipboard. Please select and copy manually.');
-                        });
+                        navigator.clipboard
+                            .writeText(csvOutput.value)
+                            .then(() => {
+                                const originalText = copyCsvBtn.textContent;
+                                copyCsvBtn.textContent = "✓ Copied!";
+                                copyCsvBtn.style.backgroundColor = "#28a745";
+                                setTimeout(() => {
+                                    copyCsvBtn.textContent = originalText;
+                                    copyCsvBtn.style.backgroundColor = "";
+                                }, 2000);
+                            })
+                            .catch((err) => {
+                                alert(
+                                    "Failed to copy to clipboard. Please select and copy manually."
+                                );
+                            });
                     });
                 }
 
                 // Download CSV
                 if (downloadCsvBtn) {
-                    downloadCsvBtn.addEventListener('click', function() {
+                    downloadCsvBtn.addEventListener("click", function () {
                         const csv = csvOutput.value;
-                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                        const link = document.createElement('a');
+                        const blob = new Blob([csv], {
+                            type: "text/csv;charset=utf-8;",
+                        });
+                        const link = document.createElement("a");
                         const url = URL.createObjectURL(blob);
-                        
+
                         // Generate filename with filter info
-                        let filename = 'TaskActivity';
-                        
+                        let filename = "TaskActivity";
+
                         // Add filter info to filename if applicable
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const client = urlParams.get('client');
-                        const project = urlParams.get('project');
-                        const phase = urlParams.get('phase');
-                        const startDate = urlParams.get('startDate');
-                        const endDate = urlParams.get('endDate');
-                        
-                        if (client) filename += '_' + client.replace(/[^a-zA-Z0-9]/g, '_');
-                        if (project) filename += '_' + project.replace(/[^a-zA-Z0-9]/g, '_');
-                        if (phase) filename += '_' + phase.replace(/[^a-zA-Z0-9]/g, '_');
+                        const urlParams = new URLSearchParams(
+                            window.location.search
+                        );
+                        const client = urlParams.get("client");
+                        const project = urlParams.get("project");
+                        const phase = urlParams.get("phase");
+                        const startDate = urlParams.get("startDate");
+                        const endDate = urlParams.get("endDate");
+
+                        if (client)
+                            filename +=
+                                "_" + client.replace(/[^a-zA-Z0-9]/g, "_");
+                        if (project)
+                            filename +=
+                                "_" + project.replace(/[^a-zA-Z0-9]/g, "_");
+                        if (phase)
+                            filename +=
+                                "_" + phase.replace(/[^a-zA-Z0-9]/g, "_");
                         if (startDate && endDate) {
-                            filename += '_' + startDate.replace(/\//g, '-') + '_to_' + endDate.replace(/\//g, '-');
+                            filename +=
+                                "_" +
+                                startDate.replace(/\//g, "-") +
+                                "_to_" +
+                                endDate.replace(/\//g, "-");
                         } else if (startDate) {
-                            filename += '_from_' + startDate.replace(/\//g, '-');
+                            filename +=
+                                "_from_" + startDate.replace(/\//g, "-");
                         } else if (endDate) {
-                            filename += '_to_' + endDate.replace(/\//g, '-');
+                            filename += "_to_" + endDate.replace(/\//g, "-");
                         }
-                        
+
                         // Add timestamp
                         const now = new Date();
-                        const timestamp = now.getFullYear() + 
-                            String(now.getMonth() + 1).padStart(2, '0') + 
-                            String(now.getDate()).padStart(2, '0');
-                        filename += '_' + timestamp + '.csv';
-                        
-                        link.setAttribute('href', url);
-                        link.setAttribute('download', filename);
-                        link.style.visibility = 'hidden';
+                        const timestamp =
+                            now.getFullYear() +
+                            String(now.getMonth() + 1).padStart(2, "0") +
+                            String(now.getDate()).padStart(2, "0");
+                        filename += "_" + timestamp + ".csv";
+
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", filename);
+                        link.style.visibility = "hidden";
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);

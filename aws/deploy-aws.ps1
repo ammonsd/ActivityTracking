@@ -174,6 +174,21 @@ function Test-Prerequisites {
 function Build-AndPushImage {
     Write-Info "Building Docker image..."
     
+    # Clean Angular build cache to prevent LMDB "Not enough space" errors
+    Write-Info "Cleaning Angular build cache..."
+    $angularCachePath = Join-Path $PWD "frontend\.angular"
+    $nodeModulesCachePath = Join-Path $PWD "frontend\node_modules\.cache"
+    
+    if (Test-Path $angularCachePath) {
+        Remove-Item -Recurse -Force $angularCachePath -ErrorAction SilentlyContinue
+        Write-Info "Angular cache cleaned"
+    }
+    
+    if (Test-Path $nodeModulesCachePath) {
+        Remove-Item -Recurse -Force $nodeModulesCachePath -ErrorAction SilentlyContinue
+        Write-Info "Node modules cache cleaned"
+    }
+    
     # Build the application
     Write-Info "Building Spring Boot application with Maven..."
     & .\mvnw.cmd clean package -DskipTests

@@ -108,6 +108,18 @@ check_prerequisites() {
 build_and_push_image() {
     log_info "Building Docker image..."
     
+    # Clean Angular build cache to prevent LMDB "Not enough space" errors
+    log_info "Cleaning Angular build cache..."
+    if [ -d "frontend/.angular" ]; then
+        rm -rf frontend/.angular
+        log_info "Angular cache cleaned"
+    fi
+    
+    if [ -d "frontend/node_modules/.cache" ]; then
+        rm -rf frontend/node_modules/.cache
+        log_info "Node modules cache cleaned"
+    fi
+    
     # Build the application
     log_info "Building Spring Boot application with Maven..."
     ./mvnw.cmd clean package -DskipTests
