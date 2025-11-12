@@ -92,6 +92,15 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
 
+                // Reset failed login attempts on successful login
+                if (user.getFailedLoginAttempts() > 0) {
+                    log.info("Resetting failed login attempts for user '{}' (was: {})", username,
+                            user.getFailedLoginAttempts());
+                    user.setFailedLoginAttempts(0);
+                    user.setAccountLocked(false); // Also unlock if locked
+                    userRepository.save(user);
+                }
+
                 // Check if password has expired
                 if (userService.isPasswordExpired(username)) {
                     log.info("User '{}' has an expired password", username);

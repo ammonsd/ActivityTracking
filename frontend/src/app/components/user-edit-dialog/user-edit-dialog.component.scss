@@ -24,3 +24,28 @@ mat-form-field {
   gap: 12px;
   margin-top: 8px;
 }
+
+.lock-status-section {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    color: #e65100;
+  }
+
+  .lock-info {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #424242;
+  }
+
+  .locked-text {
+    color: #d32f2f;
+    font-weight: 500;
+  }
+}

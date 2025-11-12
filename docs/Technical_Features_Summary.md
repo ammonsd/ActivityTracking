@@ -104,6 +104,11 @@ This document provides a comprehensive summary of all technical features, framew
 - Session fixation protection
 - Remember-me functionality
 - Forced password update mechanism
+- **Account lockout protection** against brute force attacks
+  - Automatic lockout after 5 failed login attempts (configurable)
+  - Failed attempt counter resets on successful login
+  - Admin unlock capability via User Management UI
+  - Visual indicators for locked accounts
 
 ### Password Security
 
@@ -170,7 +175,32 @@ This document provides a comprehensive summary of all technical features, framew
 
 ## 🎨 Frontend Technologies
 
-### Template Engine
+### Angular Frontend (Modern SPA)
+
+- **Angular 19** - Latest version with standalone components architecture
+- **TypeScript** - Type-safe development
+- **RxJS** - Reactive programming with observables
+- **Angular Material** - Google's Material Design components
+- **Responsive design** - Mobile-friendly layouts
+- **HTTP Client** - RESTful API integration
+- **Angular Router** - Client-side routing with guards
+- **Reactive Forms** - Data binding and validation
+
+### Angular Dashboard Features
+
+- **Task Management** - View, create, edit, clone, and delete tasks
+- **User Management** - Admin interface for managing users
+  - User list with role badges and status indicators
+  - **Account lock status display** - 🔒 indicator for locked accounts
+  - **Failed login attempts** - View attempt count in user details
+  - **Admin unlock capability** - Unlock locked accounts via checkbox
+  - Edit dialog with comprehensive user details
+- **Dropdown Management** - Manage system dropdown values
+- **Role-based UI** - Different views for ADMIN, USER, and GUEST roles
+- **Material Design** - Professional, modern interface
+- **Session Management** - Integrated with Spring Security
+
+### Template Engine (Thymeleaf)
 
 - **Thymeleaf** - Server-side HTML template engine
 - Thymeleaf Spring Security integration

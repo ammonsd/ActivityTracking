@@ -37,6 +37,10 @@ public class UserEditDto {
 
     private boolean forcePasswordUpdate;
 
+    private boolean accountLocked;
+
+    private int failedLoginAttempts;
+
     // Constructors
     public UserEditDto() {}
 
@@ -119,5 +123,21 @@ public class UserEditDto {
 
     public void setForcePasswordUpdate(boolean forcePasswordUpdate) {
         this.forcePasswordUpdate = forcePasswordUpdate;
+    }
+
+    public boolean isAccountLocked() {
+        return accountLocked;
+    }
+
+    public void setAccountLocked(boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
     }
 }

@@ -108,6 +108,24 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                 </td>
               </ng-container>
 
+              <ng-container matColumnDef="accountLocked">
+                <th mat-header-cell *matHeaderCellDef>Lock Status</th>
+                <td mat-cell *matCellDef="let user">
+                  <span
+                    *ngIf="user.accountLocked"
+                    class="locked-badge"
+                    [title]="
+                      'Failed attempts: ' + (user.failedLoginAttempts || 0)
+                    "
+                  >
+                    🔒 Locked
+                  </span>
+                  <span *ngIf="!user.accountLocked" class="unlocked-text">
+                    Unlocked
+                  </span>
+                </td>
+              </ng-container>
+
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let user">
@@ -225,6 +243,21 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
         color: #f44336;
         font-weight: 500;
       }
+
+      .locked-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        background-color: #ffebee;
+        color: #d32f2f;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: help;
+      }
+
+      .unlocked-text {
+        color: #4caf50;
+        font-size: 12px;
+      }
     `,
   ],
 })
@@ -237,6 +270,7 @@ export class UserListComponent implements OnInit {
     'company',
     'role',
     'enabled',
+    'accountLocked',
     'actions',
   ];
   loading = false;

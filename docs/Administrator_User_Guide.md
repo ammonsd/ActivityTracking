@@ -78,6 +78,9 @@ Administrators can create, edit, and delete user accounts:
     - **Note**: Usernames are immutable and cannot be changed after account creation
     - If a username needs to be changed, deactivate the current account and create a new user with the desired username
     - All other user details (first name, last name, company, role, enabled status) can be edited at any time
+    - **Account Lock Status**: View if an account is locked due to failed login attempts (🔒 indicator in user list)
+    - **Unlock Accounts**: Administrators can unlock locked accounts by unchecking the "Account Locked" checkbox in the edit dialog
+    - **Failed Login Attempts**: View the count of failed login attempts in the edit dialog
 6. **Delete Users**: Remove user accounts (with confirmation)
     - **Note**: The Delete button is disabled (grayed out) for:
         - Your own account (cannot delete yourself)

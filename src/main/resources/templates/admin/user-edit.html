@@ -245,7 +245,9 @@
                                 >
                             </div>
                         </div>
+                    </div>
 
+                    <div class="form-row">
                         <!-- Force Password Update -->
                         <div class="form-group">
                             <span
@@ -271,6 +273,40 @@
                             </div>
                             <div class="help-text" style="margin-top: 5px; font-size: 12px; color: #666;">
                                 Check this to require the user to change their password on their next login
+                            </div>
+                        </div>
+
+                        <!-- Account Locked Status -->
+                        <div class="form-group">
+                            <span
+                                style="
+                                    display: block;
+                                    margin-bottom: 5px;
+                                    font-weight: bold;
+                                    color: #555;
+                                "
+                                >Security Lock</span
+                            >
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="accountLocked"
+                                    th:field="*{accountLocked}"
+                                />
+                                <label
+                                    for="accountLocked"
+                                    style="margin: 0; font-weight: normal"
+                                    >Account is locked (due to failed login attempts)</label
+                                >
+                            </div>
+                            <div class="help-text" style="margin-top: 5px; font-size: 12px; color: #666;">
+                                Uncheck this to unlock an account that was locked due to too many failed login attempts
+                            </div>
+                            <div 
+                                th:if="${userEditDto.failedLoginAttempts != null and userEditDto.failedLoginAttempts > 0}"
+                                class="help-text" 
+                                style="margin-top: 5px; font-size: 12px; color: #dc3545; font-weight: bold;">
+                                Failed login attempts: <span th:text="${userEditDto.failedLoginAttempts}">0</span>
                             </div>
                         </div>
                     </div>

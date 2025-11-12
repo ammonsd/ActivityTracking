@@ -196,10 +196,13 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "XSRF-TOKEN")
                                         .clearAuthentication(true)
+                                        // Accept both GET (Angular) and POST (Thymeleaf with CSRF)
                                         .logoutRequestMatcher(request -> LOGOUT_URL
                                                         .equals(request.getRequestURI())
-                                                        && "GET".equalsIgnoreCase(
-                                                                        request.getMethod()))
+                                                        && ("POST".equalsIgnoreCase(
+                                                                        request.getMethod())
+                                                                        || "GET".equalsIgnoreCase(
+                                                                                        request.getMethod())))
                         .permitAll())
                         .exceptionHandling(exceptions -> exceptions
                                         .accessDeniedHandler(customAccessDeniedHandler)

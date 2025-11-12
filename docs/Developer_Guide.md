@@ -1684,6 +1684,9 @@ CREATE TABLE "Users" (
     "userrole" VARCHAR(20) NOT NULL,
     "enabled" BOOLEAN DEFAULT TRUE,
     "forcepasswordupdate" BOOLEAN DEFAULT FALSE,
+    "expiration_date" DATE NULL,
+    "failed_login_attempts" INTEGER NOT NULL DEFAULT 0,
+    "account_locked" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "last_login" TIMESTAMP
 );
@@ -1725,6 +1728,15 @@ public class User {
     @Column(name = "forcePasswordUpdate")
     private Boolean forcePasswordUpdate = false;
 
+    @Column(name = "expiration_date")
+    private LocalDate expirationDate;
+
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "account_locked", nullable = false)
+    private boolean accountLocked = false;
+
     @Column(name = "created_date")
     private LocalDateTime createdDate;
 
@@ -1738,9 +1750,19 @@ public class User {
 - **First Name**: Optional field (nullable) for the user's first name, maximum 50 characters
 - **Last Name**: Required field for the user's last name, maximum 50 characters
 - **Company**: Optional field (nullable) for the user's company/organization, maximum 100 characters
+- **Expiration Date**: Optional password expiration date for automatic password rotation
+- **Failed Login Attempts**: Counter for failed login attempts, automatically incremented on authentication failures
+- **Account Locked**: Boolean flag set to true when failed login attempts exceed the configured maximum (default: 5)
 - **Created Date**: Automatically set to current timestamp when user is created
 - **Last Login**: Automatically updated when user successfully authenticates
 - **Display Format**: Throughout the application, users are displayed as "firstname lastname (username)" with automatic space normalization
+
+**Security Features:**
+
+- **Account Lockout**: After 5 failed login attempts (configurable via `security.login.max-attempts`), the account is automatically locked
+- **Automatic Reset**: Failed login counter resets to 0 on successful authentication
+- **Admin Unlock**: Administrators can unlock accounts via the User Management UI
+- **Lockout Visibility**: Locked accounts display a 🔒 indicator in the user management interface
 
 ## API Reference
 
@@ -3752,6 +3774,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 - **Role** (required) - Dropdown with options: GUEST, USER, ADMIN
 - **Account Enabled** (checkbox)
 - **Force Password Update** (checkbox)
+- **Account Locked** (checkbox) - Displays in highlighted section when account is locked; admin can uncheck to unlock
+- **Failed Login Attempts** (read-only) - Shows count of failed login attempts when applicable
 
 **Implementation Note**: First Name field was changed from required to optional. Both the TypeScript form validator and HTML `required` attribute were removed:
 
@@ -3763,6 +3787,7 @@ this.userForm = this.fb.group({
   role: [data.user.role, Validators.required],
   enabled: [data.user.enabled],
   forcePasswordUpdate: [data.user.forcePasswordUpdate],
+  accountLocked: [data.user.accountLocked],  // Added for account lockout
 });
 ```
 
@@ -3771,6 +3796,21 @@ this.userForm = this.fb.group({
   <mat-label>First Name</mat-label>
   <input matInput formControlName="firstname" />  <!-- No required attribute -->
 </mat-form-field>
+
+<!-- Account Lock Status Section -->
+<div class="lock-status-section" *ngIf="data.user.accountLocked || data.user.failedLoginAttempts">
+  <h3>Account Lock Status</h3>
+  <p class="lock-info">
+    <strong>Failed Login Attempts:</strong> {{ data.user.failedLoginAttempts || 0 }}
+  </p>
+  <mat-checkbox 
+    formControlName="accountLocked"
+    [disabled]="!data.user.accountLocked"
+    *ngIf="data.user.accountLocked"
+  >
+    <span class="locked-text">🔒 Account is Locked - Uncheck to unlock</span>
+  </mat-checkbox>
+</div>
 ```
 
 **Styling Fix**: To prevent label clipping, the dialog content uses proper padding and the first form field has top margin:

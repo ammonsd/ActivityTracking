@@ -181,6 +181,8 @@ public class UserManagementController {
         userEditDto.setFirstname(user.getFirstname());
         userEditDto.setLastname(user.getLastname());
         userEditDto.setCompany(user.getCompany());
+        userEditDto.setAccountLocked(user.isAccountLocked());
+        userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
 
         model.addAttribute("userEditDto", userEditDto);
         model.addAttribute(ROLES, Role.values());
@@ -220,6 +222,14 @@ public class UserManagementController {
             user.setRole(userEditDto.getRole());
             user.setEnabled(userEditDto.isEnabled());
             user.setForcePasswordUpdate(userEditDto.isForcePasswordUpdate());
+            user.setAccountLocked(userEditDto.isAccountLocked());
+            
+            // If admin is unlocking the account, reset failed login attempts
+            if (!userEditDto.isAccountLocked() && user.getFailedLoginAttempts() > 0) {
+                logger.info("Admin {} unlocking account for user: {}", authentication.getName(),
+                        user.getUsername());
+                user.setFailedLoginAttempts(0);
+            }
 
             User updatedUser = userService.updateUser(user);
             logger.info("Admin {} successfully updated user: {}", authentication.getName(),

@@ -41,6 +41,20 @@
         >Force Password Update</mat-checkbox
       >
     </div>
+
+    <div class="lock-status-section" *ngIf="data.user.accountLocked || data.user.failedLoginAttempts">
+      <h3>Account Lock Status</h3>
+      <p class="lock-info">
+        <strong>Failed Login Attempts:</strong> {{ data.user.failedLoginAttempts || 0 }}
+      </p>
+      <mat-checkbox 
+        formControlName="accountLocked"
+        [disabled]="!data.user.accountLocked"
+        *ngIf="data.user.accountLocked"
+      >
+        <span class="locked-text">🔒 Account is Locked - Uncheck to unlock</span>
+      </mat-checkbox>
+    </div>
   </form>
 </mat-dialog-content>
 

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -39,6 +40,9 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     private static final String LOGIN_URL = "/login";
 
     private final UserRepository userRepository;
+
+    @Value("${security.login.max-attempts:5}")
+    private int maxLoginAttempts;
 
     public CustomAuthenticationFailureHandler(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -93,10 +97,37 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         // For other authentication failures, check if user exists and is disabled
         if (username != null && !username.isEmpty()) {
             Optional<User> userOptional = userRepository.findByUsername(username);
-            if (userOptional.isPresent() && !userOptional.get().isEnabled()) {
-                log.info("Authentication failed for existing disabled user: {}", username);
-                getRedirectStrategy().sendRedirect(request, response, LOGIN_URL + "?disabled=true");
-                return;
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+
+                // Increment failed login attempts
+                int attempts = user.getFailedLoginAttempts() + 1;
+                user.setFailedLoginAttempts(attempts);
+
+                // Check if account should be locked
+                if (attempts >= maxLoginAttempts && !user.isAccountLocked()) {
+                    user.setAccountLocked(true);
+                    log.warn("User '{}' account locked after {} failed login attempts", username,
+                            attempts);
+                } else {
+                    log.info("Failed login attempt {} of {} for user '{}'", attempts,
+                            maxLoginAttempts, username);
+                }
+
+                userRepository.save(user);
+
+                // Check if user is locked or disabled
+                if (user.isAccountLocked()) {
+                    log.info("Authentication failed for locked user: {}", username);
+                    getRedirectStrategy().sendRedirect(request, response, LOGIN_URL + "?locked=true");
+                    return;
+                }
+
+                if (!user.isEnabled()) {
+                    log.info("Authentication failed for existing disabled user: {}", username);
+                    getRedirectStrategy().sendRedirect(request, response, LOGIN_URL + "?disabled=true");
+                    return;
+                }
             }
         }
 

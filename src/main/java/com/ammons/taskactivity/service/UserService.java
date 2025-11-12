@@ -376,4 +376,37 @@ public class UserService {
 
         return java.time.temporal.ChronoUnit.DAYS.between(now, user.getExpirationDate());
     }
+
+    /**
+     * Unlock a user account and reset failed login attempts. This is typically called by
+     * administrators to manually unlock an account that was locked due to too many failed login
+     * attempts.
+     * 
+     * @param username the username of the account to unlock
+     * @throws IllegalArgumentException if username is null/empty or user not found
+     */
+    @Transactional
+    public void unlockAccount(String username) {
+        logger.info("Account unlock requested for user: {}", username);
+
+        if (!StringUtils.hasText(username)) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+
+        User user = userRepository.findByUsername(username).orElseThrow(() -> {
+            logger.warn("Account unlock attempted for non-existent user: {}", username);
+            return new IllegalArgumentException("User not found");
+        });
+
+        if (!user.isAccountLocked() && user.getFailedLoginAttempts() == 0) {
+            logger.info("User '{}' account is already unlocked with no failed attempts", username);
+            return;
+        }
+
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(0);
+        userRepository.save(user);
+
+        logger.info("Successfully unlocked account for user: {}", username);
+    }
 }

@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS public.users (
     enabled BOOLEAN NOT NULL DEFAULT true,
     forcepasswordupdate BOOLEAN NOT NULL DEFAULT true,
     expiration_date DATE NULL,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    account_locked BOOLEAN NOT NULL DEFAULT false,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL
 );

@@ -18,6 +18,8 @@ export interface User {
   role: string;
   enabled: boolean;
   forcePasswordUpdate?: boolean;
+  accountLocked?: boolean;
+  failedLoginAttempts?: number;
 }
 
 export interface DropdownValue {

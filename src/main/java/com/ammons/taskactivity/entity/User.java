@@ -54,6 +54,12 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "account_locked", nullable = false)
+    private boolean accountLocked = false;
+
     // Constructors
     public User() {
         this.createdDate = LocalDateTime.now(ZoneOffset.UTC);
@@ -163,6 +169,22 @@ public class User {
         this.expirationDate = expirationDate;
     }
 
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public boolean isAccountLocked() {
+        return accountLocked;
+    }
+
+    public void setAccountLocked(boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -184,7 +206,8 @@ public class User {
                 + '\'' + ", lastname='" + lastname + '\'' + ", company='" + company + '\''
                 + ", role=" + role + ", enabled=" + enabled + ", forcePasswordUpdate="
                 + forcePasswordUpdate + ", createdDate=" + createdDate + ", lastLogin=" + lastLogin
-                + '}';
+                + ", failedLoginAttempts=" + failedLoginAttempts + ", accountLocked="
+                + accountLocked + '}';
         // Note: Password is intentionally excluded from toString for security
     }
 }

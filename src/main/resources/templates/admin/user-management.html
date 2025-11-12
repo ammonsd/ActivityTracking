@@ -321,6 +321,13 @@
                                     th:text="${user.enabled ? 'Enabled' : 'Disabled'}"
                                     >Enabled</span
                                 >
+                                <span
+                                    th:if="${user.accountLocked}"
+                                    class="status-disabled"
+                                    style="display: block; margin-top: 3px; font-size: 11px;"
+                                    title="Account locked due to failed login attempts"
+                                    >🔒 Locked</span
+                                >
                             </td>
                             <td
                                 class="utc-time"

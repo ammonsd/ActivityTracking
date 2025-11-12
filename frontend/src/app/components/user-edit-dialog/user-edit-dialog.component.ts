@@ -49,6 +49,7 @@ export class UserEditDialogComponent {
       role: [data.user.role, Validators.required],
       enabled: [data.user.enabled],
       forcePasswordUpdate: [data.user.forcePasswordUpdate],
+      accountLocked: [data.user.accountLocked],
     });
   }
 
