@@ -158,10 +158,30 @@ public class UserService {
 
         logger.info("Updating user: {}", user.getUsername());
 
-        // Verify user exists before updating
-        if (!userRepository.existsById(user.getId())) {
+        // Verify user exists before updating and fetch existing user
+        User existingUser = userRepository.findById(user.getId()).orElseThrow(() -> {
             logger.warn("Attempt to update non-existent user with ID: {}", user.getId());
-            throw new IllegalArgumentException("User not found for update");
+            return new IllegalArgumentException("User not found for update");
+        });
+
+        // Preserve the existing password if the incoming user has null password
+        // This allows updates without requiring password to be sent (security best practice)
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            logger.debug("Preserving existing password for user: {}", user.getUsername());
+            user.setPassword(existingUser.getPassword());
+        }
+
+        // Preserve created date and expiration date
+        user.setCreatedDate(existingUser.getCreatedDate());
+        if (user.getExpirationDate() == null) {
+            user.setExpirationDate(existingUser.getExpirationDate());
+        }
+
+        // If admin is unlocking the account, reset failed login attempts
+        if (!user.isAccountLocked() && existingUser.isAccountLocked()) {
+            logger.info("Account unlocked for user: {} - resetting failed login attempts",
+                    user.getUsername());
+            user.setFailedLoginAttempts(0);
         }
 
         User updatedUser = userRepository.save(user);
