@@ -177,34 +177,70 @@ T<!DOCTYPE html>
                     gap: 10px;
                     text-align: center;
                 }
+                /* Make table container scrollable horizontally on mobile */
+                .table-container {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                /* Remove fixed width constraints on mobile to allow natural table sizing */
+                table {
+                    table-layout: auto !important;
+                    min-width: 800px; /* Ensures table is wide enough to show all columns */
+                }
                 th,
                 td {
-                    padding: 8px 4px;
-                    font-size: 12px;
+                    padding: 8px 6px;
+                    font-size: 13px;
                 }
                 .task-details {
-                    max-width: 150px;
+                    max-width: 200px;
+                    min-width: 150px;
                 }
                 .actions-column {
-                    padding-right: 2px !important;
+                    padding-right: 8px !important;
+                }
+                /* Ensure action buttons are visible and properly sized */
+                table td.actions-column a.btn {
+                    padding: 6px 10px;
+                    font-size: 13px;
                 }
             }
-            /* Force actions column styling - must be after media query */
-            table {
-                width: 100% !important;
-                table-layout: fixed !important;
+            /* Desktop/tablet table styling - only apply on larger screens */
+            @media (min-width: 769px) {
+                /* Force actions column styling */
+                table {
+                    width: 100% !important;
+                    table-layout: fixed !important;
+                }
+                /* Fixed column widths to prevent Phase expansion when Username is hidden */
+                table th:nth-child(1), table td:nth-child(1) { width: 110px !important; } /* Date */
+                table th:nth-child(2), table td:nth-child(2) { width: 180px !important; } /* Client */
+                table th:nth-child(3), table td:nth-child(3) { width: 180px !important; } /* Project */
+                table th:nth-child(4), table td:nth-child(4) { width: 160px !important; } /* Phase */
+                table th:nth-child(5), table td:nth-child(5) { width: 80px !important; } /* Hours */
+                /* Details column gets remaining space */
+                /* Username column - fixed width and alignment */
+                table th.username-header,
+                table td.username-column {
+                    width: 120px !important;
+                    text-align: left !important;
+                    padding-left: 10px !important;
+                }
+                /* Actions column styling */
+                table th:last-child,
+                table td.actions-column {
+                    width: 140px !important;
+                    white-space: nowrap !important;
+                    text-align: right !important;
+                    padding-right: 0 !important;
+                    padding-left: 0 !important;
+                }
             }
+            /* Common table styles for all screen sizes */
             /* Left-align all table headers */
             table th {
                 text-align: left !important;
             }
-            /* Fixed column widths to prevent Phase expansion when Username is hidden */
-            table th:nth-child(1), table td:nth-child(1) { width: 110px !important; } /* Date */
-            table th:nth-child(2), table td:nth-child(2) { width: 180px !important; } /* Client */
-            table th:nth-child(3), table td:nth-child(3) { width: 180px !important; } /* Project */
-            table th:nth-child(4), table td:nth-child(4) { width: 160px !important; } /* Phase */
-            table th:nth-child(5), table td:nth-child(5) { width: 80px !important; } /* Hours */
-            /* Details column gets remaining space */
             /* Hours column alignment - header left, data right */
             table th.hours-header {
                 text-align: left !important;
@@ -213,28 +249,28 @@ T<!DOCTYPE html>
                 text-align: right !important;
                 padding-right: 10px !important;
             }
-            /* Username column - fixed width and alignment */
-            table th.username-header,
-            table td.username-column {
-                width: 120px !important;
-                text-align: left !important;
-                padding-left: 10px !important;
-            }
-            /* Actions column styling */
-            table th:last-child,
-            table td.actions-column {
-                width: 140px !important;
-                white-space: nowrap !important;
-                text-align: right !important;
-                padding-right: 0 !important;
-                padding-left: 0 !important;
-            }
             table td.actions-column a.btn {
                 margin: 0 !important;
                 display: inline-block !important;
             }
             table td.actions-column a.btn:first-child {
                 margin-right: 1px !important;
+            }
+            /* Mobile scroll hint */
+            .scroll-hint {
+                display: none;
+                text-align: center;
+                padding: 8px;
+                background-color: #e7f3ff;
+                color: #004085;
+                font-size: 12px;
+                border-top: 1px solid #b8daff;
+                border-bottom: 1px solid #b8daff;
+            }
+            @media (max-width: 768px) {
+                .scroll-hint {
+                    display: block;
+                }
             }
         </style>
     </head>
@@ -490,6 +526,11 @@ T<!DOCTYPE html>
                 >
                     &raquo;&raquo;
                 </a>
+            </div>
+
+            <!-- Mobile Scroll Hint -->
+            <div class="scroll-hint" th:if="${not #lists.isEmpty(tasks)}">
+                ← Swipe left to see all columns →
             </div>
 
             <!-- Task Table -->

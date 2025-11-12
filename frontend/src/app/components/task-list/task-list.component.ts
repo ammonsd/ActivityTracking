@@ -125,6 +125,9 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
           </div>
 
           <div class="table-actions">
+            <button mat-raised-button color="primary" (click)="addTask()">
+              <mat-icon>add</mat-icon> Add Task
+            </button>
             <button mat-raised-button color="accent" (click)="clearFilters()">
               <mat-icon>clear</mat-icon> Clear Filters
             </button>
@@ -236,6 +239,14 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                   title="Edit Task"
                 >
                   <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="cloneTask(task)"
+                  title="Clone Task"
+                >
+                  <mat-icon>content_copy</mat-icon>
                 </button>
                 <button
                   mat-icon-button
@@ -539,11 +550,111 @@ export class TaskListComponent implements OnInit {
     this.applyFilters();
   }
 
+  addTask(): void {
+    // Create an empty task with today's date
+    const today = new Date().toISOString().split('T')[0];
+    const emptyTask: TaskActivity = {
+      taskDate: today,
+      client: '',
+      project: '',
+      phase: '',
+      hours: 0,
+      details: '',
+      username: this.authService.getCurrentUsername() || '',
+    };
+
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      data: { task: emptyTask, isAddMode: true },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Submitting new task:', result);
+        // Remove the id field if present since this is a new task
+        const { id, ...taskData } = result;
+        this.taskService.createTask(taskData).subscribe({
+          next: (response) => {
+            console.log('Task created successfully:', response);
+            this.loadTasks(); // Reload the list
+          },
+          error: (err) => {
+            console.error('Error creating task:', err);
+            console.error('Error status:', err.status);
+            console.error('Error message:', err.error);
+
+            let errorMessage = 'Failed to create task. ';
+            if (err.status === 403) {
+              errorMessage += 'You do not have permission to create tasks.';
+            } else if (err.error?.message) {
+              errorMessage += err.error.message;
+            } else {
+              errorMessage += 'Please try again.';
+            }
+
+            alert(errorMessage);
+          },
+        });
+      }
+    });
+  }
+
+  cloneTask(task: TaskActivity): void {
+    // Create a copy of the task with today's date and no ID
+    const today = new Date().toISOString().split('T')[0];
+    const clonedTask: TaskActivity = {
+      taskDate: today,
+      client: task.client,
+      project: task.project,
+      phase: task.phase,
+      hours: task.hours,
+      details: task.details,
+      username: this.authService.getCurrentUsername() || '',
+    };
+
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      data: { task: clonedTask, isAddMode: true },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Submitting cloned task:', result);
+        // Remove the id field if present since this is a new task
+        const { id, ...taskData } = result;
+        this.taskService.createTask(taskData).subscribe({
+          next: (response) => {
+            console.log('Task cloned successfully:', response);
+            this.loadTasks(); // Reload the list
+          },
+          error: (err) => {
+            console.error('Error cloning task:', err);
+            console.error('Error status:', err.status);
+            console.error('Error message:', err.error);
+
+            let errorMessage = 'Failed to clone task. ';
+            if (err.status === 403) {
+              errorMessage += 'You do not have permission to create tasks.';
+            } else if (err.error?.message) {
+              errorMessage += err.error.message;
+            } else {
+              errorMessage += 'Please try again.';
+            }
+
+            alert(errorMessage);
+          },
+        });
+      }
+    });
+  }
+
   editTask(task: TaskActivity): void {
     const dialogRef = this.dialog.open(TaskEditDialogComponent, {
       width: '600px',
       maxHeight: '90vh',
-      data: { task: { ...task } }, // Pass a copy
+      data: { task: { ...task }, isAddMode: false }, // Pass a copy
     });
 
     dialogRef.afterClosed().subscribe((result) => {

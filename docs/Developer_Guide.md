@@ -3791,6 +3791,271 @@ mat-dialog-content {
 }
 ```
 
+### Task Activity Management Components
+
+#### Task List Component
+
+**Location**: `frontend/src/app/components/task-list/`
+
+**Purpose**: Main dashboard for displaying, creating, editing, cloning, and deleting task activities.
+
+**Features:**
+
+- **View Task Activities**: Paginated table with sorting and filtering
+- **Add Task**: Create new task activities via toolbar button
+- **Edit Task**: Modify existing task activities via Actions column
+- **Clone Task**: Duplicate existing tasks with today's date
+- **Delete Task**: Remove task activities with confirmation dialog
+- **Mobile Responsive**: Horizontal scrolling on mobile devices
+
+**User Interface Elements:**
+
+1. **Toolbar**:
+   - **Add Task Button** (`<button mat-raised-button color="primary">`): Opens add task dialog
+   - **Refresh Button** (`mat-icon-button`): Reloads task list
+   - Search and filter controls
+
+2. **Actions Column** (per row):
+   - **Edit Button** (`mat-icon-button` with `edit` icon): Opens edit dialog for selected task
+   - **Clone Button** (`mat-icon-button` with `content_copy` icon): Creates duplicate of selected task
+   - **Delete Button** (`mat-icon-button` with `delete` icon): Deletes selected task with confirmation
+
+**Key Methods:**
+
+```typescript
+export class TaskListComponent implements OnInit {
+
+  // Create new task with today's date
+  addTask(): void {
+    const newTask: TaskActivity = {
+      taskDate: new Date(),
+      client: '',
+      project: '',
+      phase: '',
+      hours: 0,
+      details: '',
+      username: this.authService.getCurrentUsername() || '',
+    };
+
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      data: { task: newTask, isAddMode: true },
+    });
+
+    dialogRef.afterClosed().subscribe((result: TaskActivity | undefined) => {
+      if (result) {
+        this.taskService.createTask(result).subscribe({
+          next: () => {
+            this.loadTasks();
+            this.snackBar.open('Task created successfully', 'Close', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Error creating task:', error);
+            this.snackBar.open('Failed to create task', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
+  }
+
+  // Clone existing task with today's date
+  cloneTask(task: TaskActivity): void {
+    const clonedTask: TaskActivity = {
+      ...task,
+      id: undefined, // Remove ID to create new record
+      taskDate: new Date(), // Set to today
+    };
+
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      data: { task: clonedTask, isAddMode: true },
+    });
+
+    dialogRef.afterClosed().subscribe((result: TaskActivity | undefined) => {
+      if (result) {
+        this.taskService.createTask(result).subscribe({
+          next: () => {
+            this.loadTasks();
+            this.snackBar.open('Task cloned successfully', 'Close', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Error cloning task:', error);
+            this.snackBar.open('Failed to clone task', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
+  }
+
+  // Edit existing task
+  editTask(task: TaskActivity): void {
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      width: '600px',
+      data: { task: { ...task }, isAddMode: false },
+    });
+
+    dialogRef.afterClosed().subscribe((result: TaskActivity | undefined) => {
+      if (result && result.id) {
+        this.taskService.updateTask(result.id, result).subscribe({
+          next: () => {
+            this.loadTasks();
+            this.snackBar.open('Task updated successfully', 'Close', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Error updating task:', error);
+            this.snackBar.open('Failed to update task', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
+  }
+}
+```
+
+**Implementation Details:**
+
+1. **Add Task Flow**:
+   - User clicks "Add Task" button in toolbar
+   - Dialog opens with empty form fields and today's date
+   - Dialog title shows "Add Task Activity"
+   - On save, calls `taskService.createTask()` (POST request)
+   - Success: Shows confirmation, reloads task list
+
+2. **Clone Task Flow**:
+   - User clicks clone icon button (content_copy) in Actions column for specific row
+   - Copies all task data except ID
+   - Sets `taskDate` to today's date
+   - Dialog opens with cloned data
+   - Dialog title shows "Add Task Activity" (uses `isAddMode: true`)
+   - On save, calls `taskService.createTask()` (POST request)
+   - Success: Shows "Task cloned successfully", reloads task list
+
+3. **Edit Task Flow**:
+   - User clicks edit icon button (pencil) in Actions column
+   - Dialog opens with existing task data
+   - Dialog title shows "Edit Task Activity" (uses `isAddMode: false`)
+   - On save, calls `taskService.updateTask()` (PUT request)
+   - Success: Shows confirmation, reloads task list
+
+**Important Notes:**
+
+- Both Add and Clone use the same dialog component (`TaskEditDialogComponent`)
+- The `isAddMode` parameter controls dialog title and behavior
+- Clone preserves all task details (client, project, phase, hours, details) but updates the date
+- All operations use the shared `TaskActivityService` for API calls
+- Success/error messages use Angular Material's `MatSnackBar`
+
+#### Task Edit Dialog Component
+
+**Location**: `frontend/src/app/components/task-edit-dialog/`
+
+**Purpose**: Reusable modal dialog for adding and editing task activities.
+
+**Form Fields:**
+
+- **Task Date** (required) - Date picker with validation
+- **Client** (required) - Dropdown populated from `DropdownService`
+- **Project** (required) - Dropdown populated from `DropdownService`
+- **Phase** (required) - Dropdown populated from `DropdownService`
+- **Hours** (required) - Number input with min/max validation
+- **Details** (optional) - Multi-line text area
+
+**Configuration:**
+
+```typescript
+export class TaskEditDialogComponent implements OnInit {
+  taskForm: FormGroup;
+  isAddMode: boolean;
+
+  constructor(
+    public dialogRef: MatDialogRef<TaskEditDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { task: TaskActivity; isAddMode?: boolean },
+    private fb: FormBuilder,
+    private dropdownService: DropdownService
+  ) {
+    this.isAddMode = data.isAddMode || false;
+    
+    this.taskForm = this.fb.group({
+      taskDate: [data.task.taskDate, Validators.required],
+      client: [data.task.client, Validators.required],
+      project: [data.task.project, Validators.required],
+      phase: [data.task.phase, Validators.required],
+      hours: [data.task.hours, [Validators.required, Validators.min(0), Validators.max(24)]],
+      details: [data.task.details],
+    });
+  }
+}
+```
+
+**Template (Dynamic Title):**
+
+```html
+<h2 mat-dialog-title>{{ isAddMode ? 'Add Task Activity' : 'Edit Task Activity' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="taskForm">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Task Date</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="taskDate" required>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Client, Project, Phase dropdowns -->
+    <!-- Hours input -->
+    <!-- Details textarea -->
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!taskForm.valid">
+    Save
+  </button>
+</mat-dialog-actions>
+```
+
+**Usage Modes:**
+
+| Mode  | `isAddMode` | Dialog Title          | API Call       | ID Handling           |
+| ----- | ----------- | --------------------- | -------------- | --------------------- |
+| Add   | `true`      | "Add Task Activity"   | `createTask()` | ID undefined/omitted  |
+| Clone | `true`      | "Add Task Activity"   | `createTask()` | ID removed from clone |
+| Edit  | `false`     | "Edit Task Activity"  | `updateTask()` | ID preserved          |
+
+**Validation:**
+
+- All fields except "Details" are required
+- Hours must be between 0 and 24
+- Task Date uses Angular Material date picker
+- Save button is disabled until form is valid
+
+**Styling:**
+
+```scss
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-dialog-content {
+  min-width: 600px;
+  padding: 20px 24px;
+}
+```
+
 ### Build Integration
 
 The Angular frontend is automatically built during Maven build using the `frontend-maven-plugin`.

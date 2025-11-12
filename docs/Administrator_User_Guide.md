@@ -102,6 +102,119 @@ As an administrator, you have the ability to view and manage tasks for all users
 
 **Note:** Regular users only see their own tasks and do not have access to this filtering feature.
 
+### Managing Task Activities
+
+Both the Thymeleaf and Angular UIs provide comprehensive task management capabilities. This section covers common operations for administrators and users.
+
+#### Adding New Tasks
+
+**Angular Dashboard:**
+
+1. **Access Dashboard**: Navigate to the Angular UI at http://localhost:4200/app/dashboard
+2. **Click "Add Task" Button**: Located in the toolbar at the top of the task list
+3. **Fill Out Task Form**:
+    - **Task Date**: Select the date using the date picker (defaults to today)
+    - **Client**: Choose from dropdown (required)
+    - **Project**: Choose from dropdown (required)
+    - **Phase**: Choose from dropdown (required)
+    - **Hours**: Enter hours worked (0-24)
+    - **Details**: Enter task description (optional)
+4. **Save Task**: Click "Save" button
+5. **Confirmation**: Success message appears and task list refreshes
+
+**Thymeleaf UI:**
+
+1. **Access Task List**: Navigate to the task list page
+2. **Click "Add Task Activity"**: Opens task creation form
+3. **Fill Out Form**: Enter task date, client, project, phase, hours, and details
+4. **Submit**: Click "Save" to create the task
+
+#### Cloning Existing Tasks
+
+The **Clone** feature allows you to quickly duplicate an existing task with today's date, useful for recurring activities.
+
+**Angular Dashboard:**
+
+1. **Locate Task to Clone**: Find the task in the task list table
+2. **Click Clone Button**: Click the **content_copy icon** (📋) in the Actions column
+3. **Review Cloned Data**: A dialog opens with:
+    - All original task data (client, project, phase, hours, details) preserved
+    - **Task Date automatically set to today**
+    - Dialog title shows "Add Task Activity"
+4. **Modify if Needed**: Update any fields (e.g., adjust hours or details)
+5. **Save Cloned Task**: Click "Save" to create the new task
+6. **Confirmation**: "Task cloned successfully" message appears
+
+**Thymeleaf UI:**
+
+1. **View Task Details**: Navigate to the task you want to clone
+2. **Click "Clone Task"**: Creates a duplicate with today's date
+3. **Modify and Save**: Adjust any fields and save
+
+**Clone Use Cases:**
+
+- **Daily Recurring Tasks**: Clone yesterday's standup meeting task
+- **Similar Projects**: Clone a task and change only the client/project
+- **Template Tasks**: Create a template task and clone it for each use
+- **Bulk Entry**: Clone a task multiple times with minor modifications
+
+#### Editing Tasks
+
+**Angular Dashboard:**
+
+1. **Locate Task**: Find the task in the task list table
+2. **Click Edit Button**: Click the **edit icon** (✏️) in the Actions column
+3. **Modify Task Data**:
+    - Update any fields except username (username is immutable)
+    - Dialog title shows "Edit Task Activity"
+4. **Save Changes**: Click "Save"
+5. **Confirmation**: "Task updated successfully" message appears
+
+**Thymeleaf UI:**
+
+1. **View Task**: Click on a task in the list
+2. **Click "Edit"**: Opens the edit form
+3. **Make Changes**: Update any field except username
+4. **Save**: Click "Save" to apply changes
+
+**Note for Administrators:**
+- Administrators can edit tasks created by any user
+- Regular users can only edit their own tasks
+- The username field is always read-only to maintain data integrity
+
+#### Deleting Tasks
+
+**Angular Dashboard:**
+
+1. **Locate Task**: Find the task in the task list table
+2. **Click Delete Button**: Click the **delete icon** (🗑️) in the Actions column
+3. **Confirm Deletion**: A confirmation dialog appears
+4. **Confirm**: Click "Delete" in the confirmation dialog
+5. **Task Removed**: Task is permanently deleted and list refreshes
+
+**Thymeleaf UI:**
+
+1. **View Task**: Navigate to the task details
+2. **Click "Delete"**: Confirmation dialog appears
+3. **Confirm**: Click "Yes" to permanently delete
+
+**Important:**
+- Deletion is permanent and cannot be undone
+- Consider marking tasks as inactive instead if historical data is important
+- Administrators can delete any user's tasks; users can only delete their own
+
+#### Actions Column (Angular Dashboard)
+
+The Actions column in the Angular dashboard provides three action buttons for each task row:
+
+| Icon | Action | Description |
+|------|--------|-------------|
+| ✏️ (edit) | **Edit** | Opens edit dialog to modify task data |
+| 📋 (content_copy) | **Clone** | Creates duplicate task with today's date |
+| 🗑️ (delete) | **Delete** | Permanently deletes task after confirmation |
+
+All action buttons use Angular Material icon buttons with tooltips for better usability.
+
 ### Changing User Passwords
 
 1. **Access User Management**: Navigate to **"Manage Users"**

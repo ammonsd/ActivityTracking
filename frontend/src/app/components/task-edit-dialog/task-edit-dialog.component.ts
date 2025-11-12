@@ -43,13 +43,17 @@ export class TaskEditDialogComponent implements OnInit {
   clients: DropdownValue[] = [];
   projects: DropdownValue[] = [];
   phases: DropdownValue[] = [];
+  isAddMode: boolean = false;
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly dialogRef: MatDialogRef<TaskEditDialogComponent>,
     private readonly dropdownService: DropdownService,
-    @Inject(MAT_DIALOG_DATA) public data: { task: TaskActivity }
+    @Inject(MAT_DIALOG_DATA)
+    public data: { task: TaskActivity; isAddMode?: boolean }
   ) {
+    this.isAddMode = data.isAddMode || false;
+
     // Convert string date to Date object for the datepicker
     // Parse as local date to avoid timezone offset issues
     let taskDate = null;

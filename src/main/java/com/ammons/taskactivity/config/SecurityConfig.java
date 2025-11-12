@@ -196,6 +196,10 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "XSRF-TOKEN")
                                         .clearAuthentication(true)
+                                        .logoutRequestMatcher(request -> LOGOUT_URL
+                                                        .equals(request.getRequestURI())
+                                                        && "GET".equalsIgnoreCase(
+                                                                        request.getMethod()))
                         .permitAll())
                         .exceptionHandling(exceptions -> exceptions
                                         .accessDeniedHandler(customAccessDeniedHandler)

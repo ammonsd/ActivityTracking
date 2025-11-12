@@ -154,52 +154,109 @@ Once authenticated, you can test any API endpoint:
 
 **Expected Response**: `200 OK` with list of tasks
 
-### 2. Creating a New Task
+### 2. Creating a New Task Activity
 
-**Endpoint**: `POST /api/tasks`
+**Endpoint**: `POST /api/task-activities`
 
-```
-1. Expand POST /api/tasks
-2. Click "Try it out"
-3. Modify the request body example:
-```
+**Purpose**: Create a new task activity record. Used by both the "Add Task" and "Clone Task" features in the Angular dashboard.
+
+**Usage Scenarios:**
+
+- **Add New Task**: Create a task activity from scratch
+- **Clone Existing Task**: Duplicate a task with today's date (Angular dashboard automatically removes the ID before calling this endpoint)
+- **API Integration**: Programmatically create task activities from external systems
+
+**Request Body Example:**
 
 ```json
 {
-    "taskName": "Review Q4 Reports",
-    "taskDescription": "Review and analyze Q4 financial reports",
-    "projectId": 1,
-    "clientId": 2,
-    "startDate": "2025-11-10T09:00:00",
-    "endDate": "2025-11-10T17:00:00",
-    "duration": 480,
-    "notes": "Focus on revenue trends"
+    "taskDate": "2025-11-10",
+    "client": "Acme Corporation",
+    "project": "Website Redesign",
+    "phase": "Development",
+    "hours": 6.5,
+    "details": "Implemented responsive navigation menu",
+    "username": "jdoe"
 }
 ```
 
+**Steps to Test:**
+
 ```
+1. Expand POST /api/task-activities
+2. Click "Try it out"
+3. Modify the request body with your task data:
+   - taskDate: Required (format: YYYY-MM-DD)
+   - client: Required (must match dropdown value)
+   - project: Required (must match dropdown value)
+   - phase: Required (must match dropdown value)
+   - hours: Required (0-24)
+   - details: Optional
+   - username: Required (automatically set by Angular for logged-in user)
 4. Click "Execute"
 ```
 
-**Expected Response**: `201 Created` with the new task details
+**Expected Response**: `201 Created` with the new task activity details including the generated ID
 
-### 3. Updating an Existing Task
+**Response Example:**
 
-**Endpoint**: `PUT /api/tasks/{id}`
+```json
+{
+    "id": 123,
+    "taskDate": "2025-11-10",
+    "client": "Acme Corporation",
+    "project": "Website Redesign",
+    "phase": "Development",
+    "hours": 6.5,
+    "details": "Implemented responsive navigation menu",
+    "username": "jdoe"
+}
+```
+
+**Validation Rules:**
+
+- `taskDate`: Must be a valid date, cannot be null
+- `client`, `project`, `phase`: Must exist in dropdown values
+- `hours`: Must be between 0 and 24
+- `username`: Must be a valid user, automatically set by the application
+- `details`: Optional, maximum 1000 characters
+
+**Common Use Cases:**
+
+| Use Case | Description | Angular Component |
+|----------|-------------|-------------------|
+| **Add Task** | User clicks "Add Task" button, fills form, saves | `TaskListComponent.addTask()` |
+| **Clone Task** | User clicks clone icon, modifies cloned data, saves | `TaskListComponent.cloneTask()` |
+| **Bulk Import** | External system imports multiple task records | API client with authentication |
+| **Mobile App** | Mobile application creates task activities | Mobile app with JWT tokens |
+
+**Security:**
+
+- Requires authentication (JWT token or session)
+- Users can only create tasks for themselves (username is validated)
+- Administrators can create tasks for any user
+
+### 3. Updating an Existing Task Activity
+
+**Endpoint**: `PUT /api/task-activities/{id}`
+
+**Purpose**: Update an existing task activity record.
 
 ```
-1. Expand PUT /api/tasks/{id}
+1. Expand PUT /api/task-activities/{id}
 2. Click "Try it out"
 3. Enter the task ID in the path parameter
 4. Modify the request body with updated values
 5. Click "Execute"
 ```
 
-**Expected Response**: `200 OK` with updated task details
+**Important**: The `username` field is **immutable** and cannot be changed. The API will preserve the original username even if a different value is provided in the request.
 
-### 4. Searching Tasks
+**Expected Response**: `200 OK` with updated task activity details
 
-**Endpoint**: `POST /api/tasks/search`
+### 4. Searching Task Activities
+
+**Endpoint**: `POST /api/task-activities/search`
 
 ```
 1. Expand POST /api/tasks/search
