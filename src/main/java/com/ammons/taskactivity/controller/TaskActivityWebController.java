@@ -64,11 +64,6 @@ public class TaskActivityWebController {
     private static final String USERNAME_ATTR = "username";
     private static final String AUTHORITIES_ATTR = "authorities";
 
-    // Constants for dropdown categories
-    private static final String CLIENT_CATEGORY = "CLIENT";
-    private static final String PROJECT_CATEGORY = "PROJECT";
-    private static final String PHASE_CATEGORY = "PHASE";
-
     private final TaskActivityService taskActivityService;
     private final DropdownConfig dropdownConfig;
     private final DropdownValueService dropdownValueService;
@@ -462,13 +457,10 @@ public class TaskActivityWebController {
     public String showDropdownManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            // Get all dropdown values by category
-            List<DropdownValue> clients =
-                    dropdownValueService.getAllValuesByCategory(CLIENT_CATEGORY);
-            List<DropdownValue> projects =
-                    dropdownValueService.getAllValuesByCategory(PROJECT_CATEGORY);
-            List<DropdownValue> phases =
-                    dropdownValueService.getAllValuesByCategory(PHASE_CATEGORY);
+            // Get all dropdown values by category and subcategory
+            List<DropdownValue> clients = dropdownValueService.getActiveClients();
+            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
+            List<DropdownValue> phases = dropdownValueService.getActivePhases();
 
             model.addAttribute("clients", clients);
             model.addAttribute("projects", projects);
@@ -486,10 +478,9 @@ public class TaskActivityWebController {
     public String showClientManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> clients =
-                    dropdownValueService.getAllValuesByCategory(CLIENT_CATEGORY);
+            List<DropdownValue> clients = dropdownValueService.getActiveClients();
             model.addAttribute(DROPDOWN_VALUES_ATTR, clients);
-            model.addAttribute(CATEGORY_ATTR, CLIENT_CATEGORY);
+            model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_CLIENT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Clients");
             return DROPDOWN_CATEGORY_MANAGEMENT_VIEW;
         } catch (Exception e) {
@@ -503,10 +494,9 @@ public class TaskActivityWebController {
     public String showProjectManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> projects =
-                    dropdownValueService.getAllValuesByCategory(PROJECT_CATEGORY);
+            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
             model.addAttribute(DROPDOWN_VALUES_ATTR, projects);
-            model.addAttribute(CATEGORY_ATTR, PROJECT_CATEGORY);
+            model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PROJECT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Projects");
             return DROPDOWN_CATEGORY_MANAGEMENT_VIEW;
         } catch (Exception e) {
@@ -520,10 +510,9 @@ public class TaskActivityWebController {
     public String showPhaseManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> phases =
-                    dropdownValueService.getAllValuesByCategory(PHASE_CATEGORY);
+            List<DropdownValue> phases = dropdownValueService.getActivePhases();
             model.addAttribute(DROPDOWN_VALUES_ATTR, phases);
-            model.addAttribute(CATEGORY_ATTR, PHASE_CATEGORY);
+            model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PHASE);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Phases");
             return DROPDOWN_CATEGORY_MANAGEMENT_VIEW;
         } catch (Exception e) {

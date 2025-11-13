@@ -18,9 +18,14 @@ import java.util.Optional;
 @Transactional
 public class DropdownValueService {
 
-    public static final String CATEGORY_CLIENT = "CLIENT";
-    public static final String CATEGORY_PROJECT = "PROJECT";
-    public static final String CATEGORY_PHASE = "PHASE";
+    // Main categories
+    public static final String CATEGORY_TASK = "TASK";
+    public static final String CATEGORY_EXPENSE = "EXPENSE";
+
+    // Task subcategories
+    public static final String SUBCATEGORY_CLIENT = "CLIENT";
+    public static final String SUBCATEGORY_PROJECT = "PROJECT";
+    public static final String SUBCATEGORY_PHASE = "PHASE";
 
     /**
      * Repository dependency for data access operations.
@@ -151,5 +156,46 @@ public class DropdownValueService {
     @Transactional(readOnly = true)
     public Optional<DropdownValue> getDropdownValueById(Long id) {
         return dropdownValueRepository.findById(id);
+    }
+
+    /**
+     * Get active values by category and subcategory (new pattern)
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveValuesByCategoryAndSubcategory(String category,
+            String subcategory) {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                category.toUpperCase(), subcategory.toUpperCase());
+    }
+
+    /**
+     * Get all values by category and subcategory (new pattern)
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAllValuesByCategoryAndSubcategory(String category,
+            String subcategory) {
+        return dropdownValueRepository.findByCategoryAndSubcategoryOrderByDisplayOrder(
+                category.toUpperCase(), subcategory.toUpperCase());
+    }
+
+    /**
+     * Convenience methods for TASK subcategories
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveClients() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_TASK, SUBCATEGORY_CLIENT);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveProjects() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_TASK, SUBCATEGORY_PROJECT);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActivePhases() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_TASK, SUBCATEGORY_PHASE);
     }
 }

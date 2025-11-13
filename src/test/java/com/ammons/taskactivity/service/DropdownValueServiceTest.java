@@ -30,8 +30,8 @@ class DropdownValueServiceTest {
     private DropdownValueService dropdownValueService;
 
     private DropdownValue testDropdownValue;
-    private final String TEST_CATEGORY = "CLIENT";
-    private static final String TEST_SUBCATEGORY = "TASK";
+    private static final String TEST_CATEGORY = "TASK";
+    private static final String TEST_SUBCATEGORY = "CLIENT";
     private final String TEST_VALUE = "Test Client";
 
     @BeforeEach
@@ -39,7 +39,7 @@ class DropdownValueServiceTest {
         testDropdownValue = new DropdownValue();
         testDropdownValue.setId(1L);
         testDropdownValue.setCategory(TEST_CATEGORY);
-        testDropdownValue.setSubcategory("TASK");
+        testDropdownValue.setSubcategory(TEST_SUBCATEGORY);
         testDropdownValue.setItemValue(TEST_VALUE);
         testDropdownValue.setDisplayOrder(1);
         testDropdownValue.setIsActive(true);
@@ -53,19 +53,19 @@ class DropdownValueServiceTest {
         @DisplayName("Should get active values by category")
         void shouldGetActiveValuesByCategory() {
             // Given
-            DropdownValue value1 = new DropdownValue("CLIENT", "TASK", "Client 1", 1, true);
-            DropdownValue value2 = new DropdownValue("CLIENT", "TASK", "Client 2", 2, true);
+            DropdownValue value1 = new DropdownValue("TASK", "CLIENT", "Client 1", 1, true);
+            DropdownValue value2 = new DropdownValue("TASK", "CLIENT", "Client 2", 2, true);
             List<DropdownValue> dropdownValues = Arrays.asList(value1, value2);
 
-            when(dropdownValueRepository.findActiveByCategoryOrderByDisplayOrder("CLIENT"))
+            when(dropdownValueRepository.findActiveByCategoryOrderByDisplayOrder("TASK"))
                     .thenReturn(dropdownValues);
 
             // When
-            List<String> result = dropdownValueService.getActiveValuesByCategory("client");
+            List<String> result = dropdownValueService.getActiveValuesByCategory("task");
 
             // Then
             assertThat(result).hasSize(2).containsExactly("Client 1", "Client 2");
-            verify(dropdownValueRepository).findActiveByCategoryOrderByDisplayOrder("CLIENT");
+            verify(dropdownValueRepository).findActiveByCategoryOrderByDisplayOrder("TASK");
         }
 
         @Test
@@ -107,16 +107,16 @@ class DropdownValueServiceTest {
         void shouldGetAllValuesByCategory() {
             // Given
             DropdownValue activeValue =
-                    new DropdownValue("PROJECT", "TASK", "Active Project", 1, true);
+                    new DropdownValue("TASK", "PROJECT", "Active Project", 1, true);
             DropdownValue inactiveValue =
-                    new DropdownValue("PROJECT", "TASK", "Inactive Project", 2, false);
+                    new DropdownValue("TASK", "PROJECT", "Inactive Project", 2, false);
             List<DropdownValue> allValues = Arrays.asList(activeValue, inactiveValue);
 
-            when(dropdownValueRepository.findByCategoryOrderByDisplayOrder("PROJECT"))
+            when(dropdownValueRepository.findByCategoryOrderByDisplayOrder("TASK"))
                     .thenReturn(allValues);
 
             // When
-            List<DropdownValue> result = dropdownValueService.getAllValuesByCategory("project");
+            List<DropdownValue> result = dropdownValueService.getAllValuesByCategory("task");
 
             // Then
             assertThat(result).hasSize(2);
@@ -124,7 +124,7 @@ class DropdownValueServiceTest {
             assertThat(result.get(0).getIsActive()).isTrue();
             assertThat(result.get(1).getItemValue()).isEqualTo("Inactive Project");
             assertThat(result.get(1).getIsActive()).isFalse();
-            verify(dropdownValueRepository).findByCategoryOrderByDisplayOrder("PROJECT");
+            verify(dropdownValueRepository).findByCategoryOrderByDisplayOrder("TASK");
         }
     }
 
@@ -136,14 +136,15 @@ class DropdownValueServiceTest {
         @DisplayName("Should create dropdown value successfully")
         void shouldCreateDropdownValueSuccessfully() {
             // Given
-            String category = "CLIENT";
+            String category = "TASK";
+            String subcategory = "CLIENT";
             String value = "New Client";
             Integer maxOrder = 5;
 
             DropdownValue expectedValue = new DropdownValue();
             expectedValue.setId(1L);
             expectedValue.setCategory(category);
-            expectedValue.setSubcategory("TASK");
+            expectedValue.setSubcategory(subcategory);
             expectedValue.setItemValue(value);
             expectedValue.setDisplayOrder(maxOrder + 1);
             expectedValue.setIsActive(true);
@@ -154,17 +155,19 @@ class DropdownValueServiceTest {
 
             // When
             DropdownValue result =
-                    dropdownValueService.createDropdownValue(category, "TASK", value);
+                    dropdownValueService.createDropdownValue(category, subcategory, value);
 
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getCategory()).isEqualTo(category);
+            assertThat(result.getSubcategory()).isEqualTo(subcategory);
             assertThat(result.getItemValue()).isEqualTo(value);
             assertThat(result.getDisplayOrder()).isEqualTo(maxOrder + 1);
             assertThat(result.getIsActive()).isTrue();
 
             verify(dropdownValueRepository)
-                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, "TASK", value);
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
+                            value);
             verify(dropdownValueRepository).findMaxDisplayOrderByCategory(category);
             verify(dropdownValueRepository).save(any(DropdownValue.class));
         }
@@ -173,22 +176,25 @@ class DropdownValueServiceTest {
         @DisplayName("Should throw exception for duplicate value")
         void shouldThrowExceptionForDuplicateValue() {
             // Given
-            String category = "CLIENT";
+            String category = "TASK";
+            String subcategory = "CLIENT";
             String value = "Existing Client";
 
             when(dropdownValueRepository
-                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, "TASK", value))
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
+                            value))
                     .thenReturn(true);
 
             // When/Then
-            assertThatThrownBy(() -> dropdownValueService.createDropdownValue(category, "TASK",
+            assertThatThrownBy(() -> dropdownValueService.createDropdownValue(category, subcategory,
                     value))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage(
-                            "Value 'Existing Client' already exists for category CLIENT and subcategory TASK");
+                                    "Value 'Existing Client' already exists for category TASK and subcategory CLIENT");
 
             verify(dropdownValueRepository)
-                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, "TASK", value);
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
+                            value);
             verify(dropdownValueRepository, never()).save(any(DropdownValue.class));
         }
 
@@ -196,25 +202,27 @@ class DropdownValueServiceTest {
         @DisplayName("Should handle null max order")
         void shouldHandleNullMaxOrder() {
             // Given
-            String category = "PROJECT";
+            String category = "TASK";
+            String subcategory = "PROJECT";
             String value = "First Project";
 
             when(dropdownValueRepository
-                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, "TASK", value))
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
+                            value))
                     .thenReturn(false);
             when(dropdownValueRepository.findMaxDisplayOrderByCategory(category)).thenReturn(null);
 
             // When/Then
             assertThatThrownBy(
-                    () -> dropdownValueService.createDropdownValue(category, "TASK", value))
+                    () -> dropdownValueService.createDropdownValue(category, subcategory, value))
                     .isInstanceOf(NullPointerException.class);
 
             verify(dropdownValueRepository)
-                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, "TASK", value);
+                    .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
+                            value);
             verify(dropdownValueRepository).findMaxDisplayOrderByCategory(category);
         }
     }
-
     @Nested
     @DisplayName("Update Dropdown Value Tests")
     class UpdateDropdownValueTests {
@@ -297,14 +305,13 @@ class DropdownValueServiceTest {
             assertThatThrownBy(
                     () -> dropdownValueService.updateDropdownValue(id, duplicateValue, 1, true))
                             .isInstanceOf(RuntimeException.class).hasMessage(
-                                    "Value 'Existing Value' already exists for category CLIENT and subcategory TASK");
+                                    "Value 'Existing Value' already exists for category TASK and subcategory CLIENT");
 
             verify(dropdownValueRepository).findById(id);
             verify(dropdownValueRepository).existsByCategoryAndSubcategoryAndItemValueIgnoreCase(
                     TEST_CATEGORY, TEST_SUBCATEGORY, duplicateValue);
             verify(dropdownValueRepository, never()).save(any(DropdownValue.class));
         }
-
         @Test
         @DisplayName("Should throw exception when updating non-existent dropdown value")
         void shouldThrowExceptionWhenUpdatingNonExistentDropdownValue() {
@@ -478,12 +485,16 @@ class DropdownValueServiceTest {
     class CategoryConstantsTests {
 
         @Test
-        @DisplayName("Should have correct category constants")
+        @DisplayName("Should have correct category and subcategory constants")
         void shouldHaveCorrectCategoryConstants() {
-            // Then
-            assertThat(DropdownValueService.CATEGORY_CLIENT).isEqualTo("CLIENT");
-            assertThat(DropdownValueService.CATEGORY_PROJECT).isEqualTo("PROJECT");
-            assertThat(DropdownValueService.CATEGORY_PHASE).isEqualTo("PHASE");
+            // Then - Categories
+            assertThat(DropdownValueService.CATEGORY_TASK).isEqualTo("TASK");
+            assertThat(DropdownValueService.CATEGORY_EXPENSE).isEqualTo("EXPENSE");
+
+            // Then - Task Subcategories
+            assertThat(DropdownValueService.SUBCATEGORY_CLIENT).isEqualTo("CLIENT");
+            assertThat(DropdownValueService.SUBCATEGORY_PROJECT).isEqualTo("PROJECT");
+            assertThat(DropdownValueService.SUBCATEGORY_PHASE).isEqualTo("PHASE");
         }
     }
 }

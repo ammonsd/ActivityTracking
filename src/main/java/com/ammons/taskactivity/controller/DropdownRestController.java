@@ -60,32 +60,32 @@ public class DropdownRestController {
     }
 
     /**
-     * Get clients
+     * Get clients (now from TASK/CLIENT)
      */
     @GetMapping("/clients")
     public ResponseEntity<List<DropdownValue>> getClients() {
         logger.debug("REST API: Getting clients");
-        List<DropdownValue> clients = dropdownValueService.getAllValuesByCategory("CLIENT");
+        List<DropdownValue> clients = dropdownValueService.getActiveClients();
         return ResponseEntity.ok(clients);
     }
 
     /**
-     * Get projects
+     * Get projects (now from TASK/PROJECT)
      */
     @GetMapping("/projects")
     public ResponseEntity<List<DropdownValue>> getProjects() {
         logger.debug("REST API: Getting projects");
-        List<DropdownValue> projects = dropdownValueService.getAllValuesByCategory("PROJECT");
+        List<DropdownValue> projects = dropdownValueService.getActiveProjects();
         return ResponseEntity.ok(projects);
     }
 
     /**
-     * Get phases
+     * Get phases (now from TASK/PHASE)
      */
     @GetMapping("/phases")
     public ResponseEntity<List<DropdownValue>> getPhases() {
         logger.debug("REST API: Getting phases");
-        List<DropdownValue> phases = dropdownValueService.getAllValuesByCategory("PHASE");
+        List<DropdownValue> phases = dropdownValueService.getActivePhases();
         return ResponseEntity.ok(phases);
     }
 

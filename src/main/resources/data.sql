@@ -1,14 +1,19 @@
 -- Insert dropdown values (skip if already exists)
+-- Structure: category=TASK, subcategory=CLIENT/PROJECT/PHASE
+-- This allows for future EXPENSE category with its own subcategories
 INSERT INTO public.dropdownvalues 
 (category, subcategory, itemvalue, displayorder, isactive)
 VALUES 
-  ('PHASE', 'TASK', 'Development', 1, true),
-  ('PHASE', 'TASK', 'Holiday', 2, true),
-  ('PHASE', 'TASK', 'Meeting', 3, true),
-  ('PHASE', 'TASK', 'Miscellaneous', 4, true),
-  ('PHASE', 'TASK', 'Code Review', 5, true),
-  ('PHASE', 'TASK', 'PTO', 6, true),
-  ('PHASE', 'TASK', 'Training', 7, true),
-  ('CLIENT', 'TASK', 'Corporate', 1, true),
-  ('PROJECT', 'TASK', 'General Administration', 1, true)
+  -- TASK -> PHASE subcategory
+  ('TASK', 'PHASE', 'Development', 1, true),
+  ('TASK', 'PHASE', 'Holiday', 2, true),
+  ('TASK', 'PHASE', 'Meeting', 3, true),
+  ('TASK', 'PHASE', 'Miscellaneous', 4, true),
+  ('TASK', 'PHASE', 'Code Review', 5, true),
+  ('TASK', 'PHASE', 'PTO', 6, true),
+  ('TASK', 'PHASE', 'Training', 7, true),
+  -- TASK -> CLIENT subcategory
+  ('TASK', 'CLIENT', 'Corporate', 1, true),
+  -- TASK -> PROJECT subcategory
+  ('TASK', 'PROJECT', 'General Administration', 1, true)
 ON CONFLICT (category, subcategory, itemvalue) DO NOTHING;

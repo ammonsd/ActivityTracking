@@ -32,6 +32,20 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
             @Param("category") String category);
 
     /**
+     * Finds active values for a category and subcategory
+     */
+    @Query("SELECT dropdownValue FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category AND dropdownValue.subcategory = :subcategory AND dropdownValue.isActive = true ORDER BY dropdownValue.displayOrder, dropdownValue.itemValue")
+    public List<DropdownValue> findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                    @Param("category") String category, @Param("subcategory") String subcategory);
+
+    /**
+     * Finds ALL values for a category and subcategory
+     */
+    @Query("SELECT dropdownValue FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category AND dropdownValue.subcategory = :subcategory ORDER BY dropdownValue.displayOrder, dropdownValue.itemValue")
+    public List<DropdownValue> findByCategoryAndSubcategoryOrderByDisplayOrder(
+                    @Param("category") String category, @Param("subcategory") String subcategory);
+
+    /**
      * Checks if a value already exists for a category and subcategory.
      */
     public boolean existsByCategoryAndSubcategoryAndItemValueIgnoreCase(String category,
