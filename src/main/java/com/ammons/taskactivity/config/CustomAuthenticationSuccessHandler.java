@@ -82,7 +82,8 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             Authentication authentication) throws IOException, ServletException {
 
         String username = authentication.getName();
-        log.info("User '{}' successfully authenticated", username);
+        String ipAddress = getClientIpAddress(request);
+        log.info("User '{}' successfully authenticated from IP: {}", username, ipAddress);
 
         try {
             // Update the last login time for this user
@@ -159,5 +160,44 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Fall back to default behavior on error
             super.onAuthenticationSuccess(request, response, authentication);
         }
+    }
+
+    /**
+     * Extracts the client's IP address from the HTTP request, handling proxies and load balancers.
+     * 
+     * <p>
+     * Checks the following headers in order:
+     * <ul>
+     * <li>X-Forwarded-For - Standard proxy header (Cloudflare, AWS ALB, etc.)</li>
+     * <li>X-Real-IP - Alternative proxy header</li>
+     * <li>Proxy-Client-IP - WebLogic proxy</li>
+     * <li>WL-Proxy-Client-IP - WebLogic proxy alternative</li>
+     * <li>HTTP_X_FORWARDED_FOR - Alternative format</li>
+     * <li>HTTP_CLIENT_IP - Some proxies</li>
+     * <li>Remote address - Direct connection</li>
+     * </ul>
+     * 
+     * @param request the HTTP request
+     * @return the client's IP address, or "unknown" if not determinable
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP",
+                "WL-Proxy-Client-IP", "HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP"};
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2)
+                // The first one is the original client
+                if (ip.contains(",")) {
+                    ip = ip.split(",")[0].trim();
+                }
+                return ip;
+            }
+        }
+
+        // Fallback to remote address
+        String remoteAddr = request.getRemoteAddr();
+        return (remoteAddr != null && !remoteAddr.isEmpty()) ? remoteAddr : "unknown";
     }
 }

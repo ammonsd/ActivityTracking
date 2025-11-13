@@ -75,7 +75,8 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             AuthenticationException exception) throws IOException, ServletException {
 
         String username = request.getParameter("username");
-        log.debug("Authentication failed for user: {}", username);
+        String ipAddress = getClientIpAddress(request);
+        log.warn("Authentication failed for user: '{}' from IP: {}", username, ipAddress);
 
         // Check for GUEST user with expired password
         if (exception instanceof GuestPasswordExpiredException) {
@@ -134,5 +135,44 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         // Default behavior for other authentication failures
         log.debug("Authentication failed with standard error for user: {}", username);
         getRedirectStrategy().sendRedirect(request, response, LOGIN_URL + "?error=true");
+    }
+
+    /**
+     * Extracts the client's IP address from the HTTP request, handling proxies and load balancers.
+     * 
+     * <p>
+     * Checks the following headers in order:
+     * <ul>
+     * <li>X-Forwarded-For - Standard proxy header (Cloudflare, AWS ALB, etc.)</li>
+     * <li>X-Real-IP - Alternative proxy header</li>
+     * <li>Proxy-Client-IP - WebLogic proxy</li>
+     * <li>WL-Proxy-Client-IP - WebLogic proxy alternative</li>
+     * <li>HTTP_X_FORWARDED_FOR - Alternative format</li>
+     * <li>HTTP_CLIENT_IP - Some proxies</li>
+     * <li>Remote address - Direct connection</li>
+     * </ul>
+     * 
+     * @param request the HTTP request
+     * @return the client's IP address, or "unknown" if not determinable
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP",
+                "WL-Proxy-Client-IP", "HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP"};
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2)
+                // The first one is the original client
+                if (ip.contains(",")) {
+                    ip = ip.split(",")[0].trim();
+                }
+                return ip;
+            }
+        }
+
+        // Fallback to remote address
+        String remoteAddr = request.getRemoteAddr();
+        return (remoteAddr != null && !remoteAddr.isEmpty()) ? remoteAddr : "unknown";
     }
 }
