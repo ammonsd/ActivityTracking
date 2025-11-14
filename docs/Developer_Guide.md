@@ -59,6 +59,170 @@ The application provides two user interface options:
 
 Both UIs connect to the same Spring Boot backend REST API and share authentication.
 
+### Node.js Integration (Frontend Build)
+
+Node.js is used exclusively for building and developing the Angular frontend. The backend is pure Java/Spring Boot.
+
+#### Maven Integration with frontend-maven-plugin
+
+The `pom.xml` includes the `frontend-maven-plugin` which automates the entire Angular build process during Maven builds:
+
+**Plugin Configuration:**
+```xml
+<plugin>
+    <groupId>com.github.eirslett</groupId>
+    <artifactId>frontend-maven-plugin</artifactId>
+    <version>1.15.1</version>
+    <configuration>
+        <workingDirectory>frontend</workingDirectory>
+        <installDirectory>target</installDirectory>
+        <skip>${skip.frontend.build}</skip>
+    </configuration>
+    <executions>
+        <!-- 1. Install Node.js v20.11.0 and npm 10.2.4 into target/ -->
+        <execution>
+            <id>install node and npm</id>
+            <goals>
+                <goal>install-node-and-npm</goal>
+            </goals>
+        </execution>
+        
+        <!-- 2. Run npm install -->
+        <execution>
+            <id>npm install</id>
+            <goals>
+                <goal>npm</goal>
+            </goals>
+            <configuration>
+                <arguments>install</arguments>
+            </configuration>
+        </execution>
+        
+        <!-- 3. Run npm run build:prod -->
+        <execution>
+            <id>npm run build</id>
+            <goals>
+                <goal>npm</goal>
+            </goals>
+            <configuration>
+                <arguments>run build:prod</arguments>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**Resource Copying:**
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-resources-plugin</artifactId>
+    <version>3.3.1</version>
+    <executions>
+        <execution>
+            <id>copy-angular-build</id>
+            <phase>process-classes</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>${project.build.outputDirectory}/static/app</outputDirectory>
+                <resources>
+                    <resource>
+                        <directory>frontend/dist/app/browser</directory>
+                        <filtering>false</filtering>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**Build Flow:**
+1. Maven downloads and installs Node.js v20.11.0 and npm 10.2.4 into `target/node/`
+2. Executes `npm install` in `frontend/` directory to fetch Angular dependencies
+3. Runs `npm run build:prod` to create optimized production build
+4. Copies built files from `frontend/dist/app/browser/` to `target/classes/static/app/`
+5. Spring Boot serves the Angular app at `/app/` endpoint
+
+**Key Benefits:**
+- ✅ **No Node.js pre-installation required** - Maven handles everything
+- ✅ **CI/CD friendly** - Works in Docker builds and build servers
+- ✅ **Consistent versions** - Plugin ensures Node v20.11.0 and npm 10.2.4 everywhere
+- ✅ **Single build command** - `mvnw clean package` builds both backend and frontend
+- ✅ **Optional skip** - Use `-Dskip.frontend.build=true` for backend-only builds
+
+#### Frontend Development Workflow
+
+**Prerequisites for Local Development:**
+- Node.js v18+ (v20.11.0 recommended to match Maven plugin)
+- npm v9+ (v10.2.4 recommended)
+
+**Frontend-Only Commands:**
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start dev server with hot-reload (http://localhost:4200)
+npm start
+
+# Build for production
+npm run build:prod
+
+# Run unit tests
+npm test
+
+# Run tests once (CI mode with coverage)
+npm run test:once
+```
+
+**Full Application Build:**
+```bash
+# Build backend + frontend together (Maven handles Node.js)
+./mvnw clean package
+
+# Windows
+.\mvnw.cmd clean package
+
+# Skip frontend build for faster backend-only builds
+./mvnw clean package -Dskip.frontend.build=true
+```
+
+**Docker Behavior:**
+- Main `Dockerfile` copies the `frontend/` directory but uses `-Dskip.frontend.build=true`
+- Frontend should be pre-built locally or by CI before Docker build
+- Alternatively, remove the skip flag to let Docker run the full Maven frontend build
+
+**Package.json Scripts:**
+```json
+{
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:prod": "ng build --configuration production --output-path=dist/app --base-href=/app/",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "test:once": "ng test --watch=false --code-coverage --browsers=ChromeHeadless"
+  }
+}
+```
+
+**Frontend Dependencies:**
+- **Angular 19.2+**: Core framework with standalone components
+- **Angular Material 19.2+**: UI component library
+- **TypeScript 5.7+**: Type-safe development
+- **RxJS 7.8+**: Reactive programming
+- **Karma/Jasmine**: Unit testing framework
+
+**Development Tools Installed by Maven:**
+- Node.js v20.11.0 → `target/node/node.exe` (Windows) or `target/node/node` (Linux)
+- npm 10.2.4 → `target/node/npm`
+- Installed packages → `frontend/node_modules/`
+
 ### Database
 
 - **PostgreSQL 15+**: Primary database

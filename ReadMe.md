@@ -15,10 +15,11 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 ## Tech Stack
 
 - **Backend:** Java 21, Spring Boot 3.5.6 (MVC + Thymeleaf), Spring Data JPA
+- **Frontend:** Angular 19, Angular Material, TypeScript
 - **Database:** PostgreSQL 15+
 - **API Documentation:** Springdoc OpenAPI 2.6.0 (Swagger UI)
-- **Build:** Maven
-- **Testing:** JUnit 5, Testcontainers
+- **Build:** Maven, npm
+- **Testing:** JUnit 5, Testcontainers, Karma/Jasmine
 - **Deployment:** Docker, AWS ECS (optional)
 
 ## Quick Start
