@@ -1,0 +1,30 @@
+.hours-by-user-card {
+  margin: 20px;
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: var(--primary-color, #3f51b5);
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}

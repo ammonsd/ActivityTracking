@@ -1,0 +1,55 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.table-container {
+  overflow-x: auto;
+  padding: 20px;
+}
+
+.summary-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: #666;
+    padding: 16px;
+  }
+
+  td {
+    padding: 16px;
+  }
+}
+
+.clients-cell {
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
+.change-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+
+  &.positive {
+    color: #4caf50;
+  }
+
+  &.negative {
+    color: #f44336;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+mat-card-header {
+  margin-bottom: 20px;
+}

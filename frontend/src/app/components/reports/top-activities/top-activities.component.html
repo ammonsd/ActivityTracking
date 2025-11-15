@@ -1,0 +1,38 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Top Activities</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <div *ngIf="!loading && activities.length > 0" class="activities-list">
+      <div *ngFor="let activity of activities" class="activity-item">
+        <div class="activity-header">
+          <div class="activity-details">
+            <div class="activity-title">{{ activity.details }}</div>
+            <div class="activity-meta">
+              <span class="client">{{ activity.client }}</span>
+              <span class="separator">•</span>
+              <span class="project">{{ activity.project }}</span>
+              <span class="separator">•</span>
+              <span class="date"
+                >Last: {{ formatDate(activity.lastDate) }}</span
+              >
+            </div>
+          </div>
+          <div class="activity-hours">
+            {{ activity.hours | number : "1.1-1" }} hrs
+          </div>
+        </div>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="getProgressPercentage(activity.hours)"
+          color="primary"
+        >
+        </mat-progress-bar>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,73 @@
+<div class="dashboard-summary">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && summary" class="kpi-grid">
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>calendar_today</mat-icon>
+        </div>
+        <div class="kpi-value">
+          {{ summary.monthHours | number : "1.1-1" }} hrs
+        </div>
+        <div class="kpi-label">Current Month</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="kpi-value">
+          {{ summary.weekHours | number : "1.1-1" }} hrs
+        </div>
+        <div class="kpi-label">Current Week</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>business</mat-icon>
+        </div>
+        <div class="kpi-value">{{ summary.topClient }}</div>
+        <div class="kpi-label">Top Client</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>folder</mat-icon>
+        </div>
+        <div class="kpi-value">{{ summary.topProject }}</div>
+        <div class="kpi-label">Top Project</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="kpi-value">
+          {{ summary.avgDaily | number : "1.1-1" }} hrs
+        </div>
+        <div class="kpi-label">Daily Average</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <div class="kpi-value">{{ summary.clientCount }}</div>
+        <div class="kpi-label">Active Clients</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

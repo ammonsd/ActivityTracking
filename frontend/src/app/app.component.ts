@@ -40,7 +40,7 @@ export class AppComponent {
   passwordExpiringWarning = '';
 
   constructor(
-    private readonly authService: AuthService,
+    public readonly authService: AuthService,
     private readonly router: Router
   ) {
     this.isAuthenticated$ = this.authService.isAuthenticated$;

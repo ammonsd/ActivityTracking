@@ -55,7 +55,7 @@ import { AuthService } from '../../services/auth.service';
         <mat-card class="dashboard-card" routerLink="/reports">
           <mat-card-header>
             <mat-icon>analytics</mat-icon>
-            <mat-card-title>Reports (Coming Soon)</mat-card-title>
+            <mat-card-title>Analytics & Reports</mat-card-title>
           </mat-card-header>
         </mat-card>
       </div>
