@@ -1,0 +1,66 @@
+<div class="reports-container">
+  <div class="reports-header">
+    <mat-icon>analytics</mat-icon>
+    <h1>Analytics & Reports</h1>
+  </div>
+
+  <mat-tab-group animationDuration="300ms" class="reports-tabs">
+    <!-- Overview Tab -->
+    <mat-tab label="Overview">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <app-dashboard-summary></app-dashboard-summary>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Client Analysis Tab -->
+    <mat-tab label="Client Analysis">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="report-grid">
+            <app-time-by-client></app-time-by-client>
+            <app-top-activities></app-top-activities>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Project Analysis Tab -->
+    <mat-tab label="Project Analysis">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="report-grid">
+            <app-time-by-project></app-time-by-project>
+            <app-phase-distribution></app-phase-distribution>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Time Trends Tab -->
+    <mat-tab label="Time Trends">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="report-grid-vertical">
+            <app-daily-tracking></app-daily-tracking>
+            <app-weekly-summary></app-weekly-summary>
+            <app-monthly-comparison></app-monthly-comparison>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- User Analysis Tab (ADMIN only) -->
+    <mat-tab label="User Analysis" *ngIf="isAdmin">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="report-grid-vertical">
+            <app-user-summary></app-user-summary>
+            <app-hours-by-user></app-hours-by-user>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

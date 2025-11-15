@@ -50,9 +50,11 @@ export class AuthService {
           storedUsername,
           storedRole
         );
+      } else {
+        console.log('AuthService - No cached data, will fetch from API');
       }
 
-      // Try to get username and role from API
+      // Try to get username and role from API (always call to ensure fresh data)
       this.http.get<any>(`${environment.apiUrl}/users/me`).subscribe({
         next: (response) => {
           // ApiResponse wrapper - username is in response.data.username
@@ -62,10 +64,16 @@ export class AuthService {
             sessionStorage.setItem('username', response.data.username);
             sessionStorage.setItem('userRole', response.data.role);
 
-            console.log('AuthService - User loaded:', response.data.username);
-            console.log('AuthService - Role loaded:', response.data.role);
+            console.log(
+              'AuthService - User loaded from API:',
+              response.data.username
+            );
+            console.log(
+              'AuthService - Role loaded from API:',
+              response.data.role
+            );
 
-            // Emit to observables
+            // Always emit to observables (even if value unchanged, to ensure UI updates)
             this.currentUserSubject.next(response.data.username);
             this.userRoleSubject.next(response.data.role);
 

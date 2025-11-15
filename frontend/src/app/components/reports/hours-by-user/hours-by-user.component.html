@@ -1,0 +1,27 @@
+<mat-card class="hours-by-user-card"
+  ><p>hours-by-user works!</p>
+
+  <mat-card-header>
+    <mat-icon>bar_chart</mat-icon>
+    <mat-card-title>Hours by User</mat-card-title>
+    <mat-card-subtitle
+      >Comparison of total hours worked across users</mat-card-subtitle
+    >
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="loading" class="loading-spinner">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <div *ngIf="!loading" class="chart-container">
+      <canvas
+        baseChart
+        type="bar"
+        [data]="barChartData"
+        [options]="barChartOptions"
+      >
+      </canvas>
+    </div>
+  </mat-card-content>
+</mat-card>

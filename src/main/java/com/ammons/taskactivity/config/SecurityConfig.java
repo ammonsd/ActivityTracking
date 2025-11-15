@@ -106,6 +106,11 @@ public class SecurityConfig {
                                         // JWT Authentication endpoints - public access
                                         .requestMatchers("/api/auth/**").permitAll()
 
+                                        // Allow all authenticated users to access their own user
+                                        // info
+                                        .requestMatchers("/api/users/me")
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+
                                         // Admin-only API endpoints
                                         .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
                                         .hasRole(ADMIN_ROLE)

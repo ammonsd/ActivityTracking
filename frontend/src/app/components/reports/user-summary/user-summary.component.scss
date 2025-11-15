@@ -1,0 +1,100 @@
+.user-summary-card {
+  margin: 20px;
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: var(--primary-color, #3f51b5);
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  td {
+    padding: 12px 8px;
+  }
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .rank-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+
+    &.rank-1 {
+      color: #ffd700; // Gold
+    }
+
+    &.rank-2 {
+      color: #c0c0c0; // Silver
+    }
+
+    &.rank-3 {
+      color: #cd7f32; // Bronze
+    }
+  }
+
+  .username {
+    font-weight: 500;
+  }
+}
+
+.rank-1 .username {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.rank-2 .username {
+  color: #c0c0c0;
+  font-weight: 600;
+}
+
+.rank-3 .username {
+  color: #cd7f32;
+  font-weight: 600;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: rgba(0, 0, 0, 0.54);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}

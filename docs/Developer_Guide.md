@@ -303,12 +303,350 @@ This guide is part of a comprehensive documentation set for the Task Activity Ma
 - **IDE**: IntelliJ IDEA, Eclipse, or VS Code (recommended)
 - **Docker**: For containerized development/deployment
 - **Git**: Version control
+- **Node.js**: Version 20.11.0 (for Angular frontend development - auto-installed via Maven plugin)
 
 ### Hardware Requirements
 
 - **Minimum**: 2GB RAM, 1GB disk space
 - **Recommended**: 4GB RAM, 2GB disk space
 - **Network**: Connectivity for database and external dependencies
+
+---
+
+## Reports & Analytics Implementation
+
+The application includes a comprehensive Reports & Analytics module built with **Angular 19**, **Angular Material**, and **Chart.js**. This section provides architectural details for developers extending or maintaining the reports functionality.
+
+### Architecture Overview
+
+**Components:** 10 standalone Angular components (8 standard reports + 2 ADMIN-only user analysis)
+
+**Services:** 
+- `ReportsService` - Data aggregation and API integration
+- `AuthService` - Role checking for conditional UI rendering
+
+**Models:** 11 TypeScript interfaces in `report.model.ts`
+
+**Navigation:** Tab-based UI using Angular Material Tabs with role-based visibility
+
+### Reports Service Architecture
+
+**File:** `frontend/src/app/services/reports.service.ts`
+
+**Core Methods:**
+
+```typescript
+// Private helper - Fetches role-filtered task data
+private fetchTasksForDateRange(startDate: Date, endDate: Date): Observable<TaskActivity[]>
+
+// Standard Reports (8 methods)
+getOverviewMetrics(startDate: Date, endDate: Date): Observable<OverviewMetricsDto>
+getClientDistribution(startDate: Date, endDate: Date): Observable<ClientDistributionDto[]>
+getTopActivities(startDate: Date, endDate: Date): Observable<TopActivityDto[]>
+getProjectHours(startDate: Date, endDate: Date): Observable<ProjectHoursDto[]>
+getPhaseDistribution(startDate: Date, endDate: Date): Observable<PhaseDistributionDto[]>
+getDailyHours(startDate: Date, endDate: Date): Observable<DailyHoursDto[]>
+getWeeklyTrends(startDate: Date, endDate: Date): Observable<WeeklyTrendDto[]>
+getMonthlyComparison(year: number): Observable<MonthlyComparisonDto[]>
+
+// User Analysis (3 methods - ADMIN only)
+getUserSummaries(startDate: Date, endDate: Date): Observable<UserSummaryDto[]>
+getHoursByUser(startDate: Date, endDate: Date): Observable<UserHoursDto[]>
+getUserActivityTimeline(startDate: Date, endDate: Date): Observable<UserActivityByDateDto[]>
+```
+
+**Key Implementation Details:**
+
+1. **Role-Based Data Filtering:**
+   - All methods use `fetchTasksForDateRange()` which calls `taskActivityService.getAllTasks()`
+   - Backend `TaskActivitiesController.getAllTaskActivities()` filters by username based on role
+   - ADMIN users receive `null` username filter → returns all user data
+   - Regular users (USER, GUEST) receive their username as filter → returns only their data
+
+2. **Client-Side Aggregation:**
+   - Raw task data fetched from backend API
+   - ReportsService performs grouping, summing, and percentage calculations
+   - Uses RxJS `map` operator for data transformations
+   - Example: `getUserSummaries()` groups by username and calculates 7 metrics per user
+
+3. **Date Handling:**
+   - All methods accept `startDate` and `endDate` parameters for filtering
+   - Components default to current month range
+   - Date comparisons use `toISOString()` for consistency
+
+### Report Components
+
+**Directory:** `frontend/src/app/components/reports/`
+
+**Component Structure:**
+
+Each report component follows the same pattern:
+
+```typescript
+@Component({
+  selector: 'app-{report-name}',
+  standalone: true,
+  imports: [CommonModule, MatCardModule, BaseChartDirective, MatProgressSpinnerModule],
+  templateUrl: './{report-name}.component.html',
+  styleUrls: ['./{report-name}.component.scss']
+})
+export class ReportNameComponent implements OnInit {
+  // Loading state
+  isLoading = false;
+  
+  // Chart.js configuration
+  chartData: ChartData<'bar'|'line'|'pie'|'doughnut'>;
+  chartOptions: ChartOptions;
+  chartType: 'bar' | 'line' | 'pie' | 'doughnut';
+  
+  constructor(private reportsService: ReportsService) {}
+  
+  ngOnInit(): void {
+    this.loadData();
+  }
+  
+  private loadData(): void {
+    this.isLoading = true;
+    const { startDate, endDate } = this.getDateRange();
+    
+    this.reportsService.getReportData(startDate, endDate)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (data) => this.buildChart(data),
+        error: (err) => console.error('Error loading report:', err)
+      });
+  }
+  
+  private buildChart(data: ReportDto[]): void {
+    // Configure Chart.js datasets, labels, options
+  }
+}
+```
+
+**Chart.js Integration:**
+
+- Uses `ng2-charts` wrapper library (BaseChartDirective)
+- Chart types: Pie, Bar, Doughnut, Line
+- Common configuration:
+  - Responsive: true
+  - Tooltips with custom callbacks
+  - Legend positioning
+  - Color palettes from predefined arrays
+
+### Role-Based Visibility
+
+**Implementation:** `reports.component.ts`
+
+```typescript
+export class ReportsComponent implements OnInit {
+  isAdmin: boolean = false;
+  
+  constructor(private authService: AuthService) {}
+  
+  ngOnInit(): void {
+    this.isAdmin = this.authService.getCurrentRole() === 'ADMIN';
+  }
+}
+```
+
+**Template:** `reports.component.html`
+
+```html
+<mat-tab-group>
+  <mat-tab label="Overview">...</mat-tab>
+  <mat-tab label="Client Analysis">...</mat-tab>
+  <mat-tab label="Project Analysis">...</mat-tab>
+  <mat-tab label="Time Trends">...</mat-tab>
+  
+  <!-- ADMIN-only tab -->
+  <mat-tab label="User Analysis" *ngIf="isAdmin">
+    <app-user-summary></app-user-summary>
+    <app-hours-by-user></app-hours-by-user>
+  </mat-tab>
+</mat-tab-group>
+```
+
+**SecurityConfig Backend Integration:**
+
+Critical for `isAdmin` check to work correctly:
+
+```java
+// IMPORTANT: Specific path BEFORE wildcard
+.requestMatchers("/api/users/me").hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+.requestMatchers("/api/users/**").hasRole(ADMIN_ROLE)
+```
+
+**Why order matters:** Spring Security processes request matchers sequentially. If `/api/users/**` comes first, it blocks non-ADMIN access to `/api/users/me`, preventing role detection.
+
+### User Analysis Features (ADMIN-Only)
+
+#### User Summary Table Component
+
+**File:** `frontend/src/app/components/reports/user-summary/user-summary.component.ts`
+
+**Features:**
+- Material Table with sortable columns
+- Trophy rankings: 🏆 (rank 1), 🥈 (rank 2), 🥉 (rank 3)
+- Displays 7 metrics per user:
+  - Total hours worked
+  - Task count
+  - Average hours per day
+  - Top client
+  - Top project
+  - Last activity date
+
+**Data Source:**
+
+```typescript
+this.reportsService.getUserSummaries(startDate, endDate).subscribe(data => {
+  this.dataSource = new MatTableDataSource(data);
+  this.dataSource.sort = this.sort;
+});
+```
+
+#### Hours by User Chart Component
+
+**File:** `frontend/src/app/components/reports/hours-by-user/hours-by-user.component.ts`
+
+**Features:**
+- Horizontal bar chart
+- Color-coded bars per user
+- Percentage labels showing share of total team hours
+- Interactive tooltips with exact values
+
+**Chart Configuration:**
+
+```typescript
+chartData = {
+  labels: ['Alice', 'Bob', 'Charlie'],
+  datasets: [{
+    data: [120, 95, 78],
+    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+    label: 'Hours Worked'
+  }]
+};
+
+chartOptions = {
+  indexAxis: 'y',  // Horizontal bars
+  responsive: true,
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const percentage = ((context.raw / total) * 100).toFixed(1);
+          return `${context.raw} hours (${percentage}%)`;
+        }
+      }
+    }
+  }
+};
+```
+
+### Adding New Reports
+
+**Step 1: Create Data Model**
+
+Add interface to `report.model.ts`:
+
+```typescript
+export interface NewReportDto {
+  metricName: string;
+  value: number;
+  // ... other fields
+}
+```
+
+**Step 2: Add ReportsService Method**
+
+```typescript
+getNewReport(startDate: Date, endDate: Date): Observable<NewReportDto[]> {
+  return this.fetchTasksForDateRange(startDate, endDate).pipe(
+    map(tasks => {
+      // Aggregate data logic here
+      return aggregatedData;
+    })
+  );
+}
+```
+
+**Step 3: Generate Component**
+
+```bash
+cd frontend
+ng generate component components/reports/new-report --standalone
+```
+
+**Step 4: Implement Component**
+
+Follow the pattern from existing components (see Component Structure above)
+
+**Step 5: Add to Reports Component**
+
+Update `reports.component.html`:
+
+```html
+<mat-tab label="New Report">
+  <app-new-report></app-new-report>
+</mat-tab>
+```
+
+### Testing Reports
+
+**Unit Tests:** Test service aggregation logic
+
+```typescript
+it('should calculate user summaries correctly', () => {
+  const mockTasks: TaskActivity[] = [/* mock data */];
+  reportsService.getUserSummaries(startDate, endDate).subscribe(result => {
+    expect(result.length).toBe(3);
+    expect(result[0].username).toBe('alice');
+    expect(result[0].totalHours).toBe(120.5);
+  });
+});
+```
+
+**Integration Tests:** Test component rendering with mock data
+
+```typescript
+it('should display chart when data is loaded', () => {
+  spyOn(reportsService, 'getClientDistribution').and.returnValue(of(mockData));
+  component.ngOnInit();
+  fixture.detectChanges();
+  
+  const canvas = fixture.nativeElement.querySelector('canvas');
+  expect(canvas).toBeTruthy();
+});
+```
+
+### Performance Considerations
+
+1. **Data Volume:** Reports fetch all tasks within date range - consider pagination for large datasets
+2. **Client-Side Aggregation:** Current implementation aggregates in browser - for very large datasets, consider backend aggregation endpoints
+3. **Caching:** No caching currently implemented - consider adding for frequently accessed reports
+4. **Lazy Loading:** Reports tab components could be lazy-loaded to reduce initial bundle size
+
+### Common Issues & Solutions
+
+**Issue:** Chart not rendering
+
+**Solution:** Ensure `BaseChartDirective` imported and Chart.js installed:
+```bash
+npm install chart.js ng2-charts
+```
+
+**Issue:** ADMIN users not seeing User Analysis tab
+
+**Solution:** Check SecurityConfig request matcher ordering (see Role-Based Visibility section)
+
+**Issue:** Role-based filtering not working
+
+**Solution:** Verify backend `TaskActivitiesController` checks username parameter correctly
+
+**Issue:** Data not updating after date range change
+
+**Solution:** Ensure `loadData()` called when date inputs change, with proper `finalize()` for loading state
+
+---
 
 ## Installation and Setup
 

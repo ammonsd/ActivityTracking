@@ -1,0 +1,55 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Weekly Summary</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <div *ngIf="!loading && data.length > 0" class="table-container">
+      <table mat-table [dataSource]="data" class="summary-table">
+        <ng-container matColumnDef="weekRange">
+          <th mat-header-cell *matHeaderCellDef>Week</th>
+          <td mat-cell *matCellDef="let element">
+            {{ formatWeekRange(element.weekStart, element.weekEnd) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="totalHours">
+          <th mat-header-cell *matHeaderCellDef>Total Hours</th>
+          <td mat-cell *matCellDef="let element">
+            <strong>{{ element.totalHours | number : "1.1-1" }}</strong> hrs
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="topClients">
+          <th mat-header-cell *matHeaderCellDef>Top Clients</th>
+          <td mat-cell *matCellDef="let element" class="clients-cell">
+            {{ getTopClients(element) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="change">
+          <th mat-header-cell *matHeaderCellDef>Change</th>
+          <td mat-cell *matCellDef="let element">
+            <span
+              [class.positive]="element.change > 0"
+              [class.negative]="element.change < 0"
+              class="change-indicator"
+            >
+              <mat-icon *ngIf="element.change > 0">trending_up</mat-icon>
+              <mat-icon *ngIf="element.change < 0">trending_down</mat-icon>
+              <mat-icon *ngIf="element.change === 0">trending_flat</mat-icon>
+              {{ element.change > 0 ? "+" : ""
+              }}{{ element.change | number : "1.1-1" }}%
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </mat-card-content>
+</mat-card>
