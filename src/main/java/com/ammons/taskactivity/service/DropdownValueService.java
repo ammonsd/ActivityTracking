@@ -62,7 +62,8 @@ public class DropdownValueService {
      */
     @Transactional(readOnly = true)
     public List<DropdownValue> getAllDropdownValues() {
-        return dropdownValueRepository.findAllByOrderByCategoryAscDisplayOrderAscItemValueAsc();
+        return dropdownValueRepository
+                .findAllByOrderByCategoryAscSubcategoryAscDisplayOrderAscItemValueAsc();
     }
 
     /**

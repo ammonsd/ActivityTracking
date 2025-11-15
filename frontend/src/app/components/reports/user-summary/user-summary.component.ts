@@ -23,8 +23,11 @@ export class UserSummaryComponent implements OnInit {
   userSummaries: UserSummaryDto[] = [];
   loading = false;
   displayedColumns: string[] = [
+    'rank',
     'username',
     'totalHours',
+    'billableHours',
+    'nonBillableHours',
     'taskCount',
     'avgHoursPerDay',
     'topClient',

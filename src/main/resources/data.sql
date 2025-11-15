@@ -15,5 +15,6 @@ VALUES
   -- TASK -> CLIENT subcategory
   ('TASK', 'CLIENT', 'Corporate', 1, true),
   -- TASK -> PROJECT subcategory
-  ('TASK', 'PROJECT', 'General Administration', 1, true)
+  ('TASK', 'PROJECT', 'General Administration', 1, true),
+  ('TASK', 'PROJECT', 'Non-Billable', 2, true)
 ON CONFLICT (category, subcategory, itemvalue) DO NOTHING;

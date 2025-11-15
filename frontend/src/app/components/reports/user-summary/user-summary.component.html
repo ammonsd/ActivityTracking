@@ -13,19 +13,24 @@
     <div *ngIf="!loading && userSummaries.length > 0" class="table-container">
       <table mat-table [dataSource]="userSummaries" class="user-table">
         <!-- Rank Column -->
-        <ng-container matColumnDef="username">
-          <th mat-header-cell *matHeaderCellDef>User</th>
+        <ng-container matColumnDef="rank">
+          <th mat-header-cell *matHeaderCellDef>Rank</th>
           <td
             mat-cell
             *matCellDef="let row; let i = index"
             [class]="getRankClass(i)"
           >
-            <div class="user-cell">
-              <mat-icon class="rank-icon" [class]="getRankClass(i)">{{
-                getRankIcon(i)
-              }}</mat-icon>
-              <span class="username">{{ row.username }}</span>
-            </div>
+            <mat-icon class="rank-icon" [class]="getRankClass(i)">{{
+              getRankIcon(i)
+            }}</mat-icon>
+          </td>
+        </ng-container>
+
+        <!-- Username Column -->
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef>User</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="username">{{ row.username }}</span>
           </td>
         </ng-container>
 
@@ -37,15 +42,31 @@
           </td>
         </ng-container>
 
+        <!-- Billable Hours Column -->
+        <ng-container matColumnDef="billableHours">
+          <th mat-header-cell *matHeaderCellDef>Billable</th>
+          <td mat-cell *matCellDef="let row" class="billable-hours">
+            {{ row.billableHours }}
+          </td>
+        </ng-container>
+
+        <!-- Non-Billable Hours Column -->
+        <ng-container matColumnDef="nonBillableHours">
+          <th mat-header-cell *matHeaderCellDef>Non-Billable</th>
+          <td mat-cell *matCellDef="let row" class="non-billable-hours">
+            {{ row.nonBillableHours }}
+          </td>
+        </ng-container>
+
         <!-- Task Count Column -->
         <ng-container matColumnDef="taskCount">
           <th mat-header-cell *matHeaderCellDef>Tasks</th>
           <td mat-cell *matCellDef="let row">{{ row.taskCount }}</td>
         </ng-container>
 
-        <!-- Avg Hours Per Day Column -->
+        <!-- Avg Hours Per Day Column (Billable only) -->
         <ng-container matColumnDef="avgHoursPerDay">
-          <th mat-header-cell *matHeaderCellDef>Avg/Day</th>
+          <th mat-header-cell *matHeaderCellDef>Avg Billable/Day</th>
           <td mat-cell *matCellDef="let row">{{ row.avgHoursPerDay }}</td>
         </ng-container>
 

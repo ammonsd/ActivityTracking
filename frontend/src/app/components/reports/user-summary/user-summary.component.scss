@@ -38,6 +38,16 @@ mat-card-header {
   td {
     padding: 12px 8px;
   }
+
+  .billable-hours {
+    color: #2e7d32; // Green for billable
+    font-weight: 500;
+  }
+
+  .non-billable-hours {
+    color: #f57c00; // Orange for non-billable
+    font-weight: 500;
+  }
 }
 
 .user-cell {

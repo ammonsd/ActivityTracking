@@ -127,15 +127,12 @@ export class ReportsService {
         const topProject =
           projectCounts.length > 0 ? projectCounts[0].project : 'N/A';
 
-        // Calculate average daily hours (excluding weekends)
-        const daysInMonth = new Date(
-          new Date().getFullYear(),
-          new Date().getMonth() + 1,
-          0
-        ).getDate();
-        const workingDays = Math.floor((daysInMonth / 7) * 5);
-        const avgDaily =
-          workingDays > 0 ? monthHours / workingDays : monthHours;
+        // Calculate average daily hours based on days with actual time entries
+        const uniqueDates = new Set(
+          monthTasks.map((t: TaskActivity) => t.taskDate.split('T')[0])
+        );
+        const daysWithEntries = uniqueDates.size;
+        const avgDaily = daysWithEntries > 0 ? monthHours / daysWithEntries : 0;
 
         // Count unique clients
         const clientCount = new Set(
@@ -568,14 +565,31 @@ export class ReportsService {
           const totalHours = userTasks.reduce((sum, t) => sum + t.hours, 0);
           const taskCount = userTasks.length;
 
-          // Calculate date range for this user
-          const dates = new Set(userTasks.map((t) => t.taskDate));
-          const daysWorked = dates.size;
-          const avgHoursPerDay = daysWorked > 0 ? totalHours / daysWorked : 0;
+          // Separate billable and non-billable hours
+          // Non-billable hours are identified by project = "Non-Billable"
+          const billableHours = userTasks
+            .filter((t) => t.project !== 'Non-Billable')
+            .reduce((sum, t) => sum + t.hours, 0);
+          const nonBillableHours = userTasks
+            .filter((t) => t.project === 'Non-Billable')
+            .reduce((sum, t) => sum + t.hours, 0);
 
-          // Get top client and project
-          const clientHours = this.groupByClient(userTasks);
-          const projectCounts = this.groupByProject(userTasks);
+          // Calculate date range for billable hours only
+          const billableDates = new Set(
+            userTasks
+              .filter((t) => t.project !== 'Non-Billable')
+              .map((t) => t.taskDate)
+          );
+          const daysWorked = billableDates.size;
+          const avgHoursPerDay =
+            daysWorked > 0 ? billableHours / daysWorked : 0;
+
+          // Get top client and project (excluding Non-Billable)
+          const billableTasks = userTasks.filter(
+            (t) => t.project !== 'Non-Billable'
+          );
+          const clientHours = this.groupByClient(billableTasks);
+          const projectCounts = this.groupByProject(billableTasks);
 
           const topClient =
             clientHours.length > 0 ? clientHours[0].client : 'N/A';
@@ -590,6 +604,8 @@ export class ReportsService {
           result.push({
             username,
             totalHours: Math.round(totalHours * 10) / 10,
+            billableHours: Math.round(billableHours * 10) / 10,
+            nonBillableHours: Math.round(nonBillableHours * 10) / 10,
             taskCount,
             avgHoursPerDay: Math.round(avgHoursPerDay * 10) / 10,
             topClient,

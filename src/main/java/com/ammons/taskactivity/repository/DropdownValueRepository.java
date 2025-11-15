@@ -59,7 +59,7 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
     public Integer findMaxDisplayOrderByCategory(@Param("category") String category);
 
     /**
-     * Finds all dropdown values sorted by category, displayOrder, and itemValue
+     * Finds all dropdown values sorted by category, subcategory, displayOrder, and itemValue
      */
-    public List<DropdownValue> findAllByOrderByCategoryAscDisplayOrderAscItemValueAsc();
+    public List<DropdownValue> findAllByOrderByCategoryAscSubcategoryAscDisplayOrderAscItemValueAsc();
 }

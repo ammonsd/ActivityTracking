@@ -79,8 +79,10 @@ export interface DateRangeFilter {
 export interface UserSummaryDto {
   username: string;
   totalHours: number;
+  billableHours: number;
+  nonBillableHours: number;
   taskCount: number;
-  avgHoursPerDay: number;
+  avgHoursPerDay: number; // Average billable hours per day
   topClient: string;
   topProject: string;
   lastActivityDate: string;
