@@ -213,6 +213,12 @@ This document provides a comprehensive summary of all technical features, framew
   - **Role-based data filtering**: ADMIN sees all users, regular users see only their own data
   - Interactive charts with hover tooltips and real-time data
   - Trophy rankings for top 3 performers (🏆 🥈 🥉)
+  - **Billable/Non-Billable Hours Tracking**:
+    - Convention-based tracking using project name ("Non-Billable" project for overhead)
+    - Separate columns for billable and non-billable hours in User Performance Summary
+    - Color-coded display (green for billable, orange for non-billable)
+    - Average billable hours per day calculation
+    - Zero schema changes - client-side filtering in ReportsService
   - Responsive chart layouts with Material Design
 - **Role-based UI** - Different views for ADMIN, USER, and GUEST roles
 - **Material Design** - Professional, modern interface

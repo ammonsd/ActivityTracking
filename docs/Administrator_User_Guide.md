@@ -238,6 +238,9 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **All Categories**: View all dropdown values across all categories
     - **CLIENT**: Manage client list
     - **PROJECT**: Manage project names
+      - **Important**: Create a project named "Non-Billable" for tracking overhead activities
+      - Users should log meetings, training, and administrative tasks to this project
+      - The Reports system uses this project name to distinguish billable from non-billable hours
     - **PHASE**: Manage work phases
     - **Note**: New categories added to the database automatically appear in this list
 
@@ -335,11 +338,21 @@ The User Performance Summary displays a comprehensive view of all users' activit
   - 🥉 Bronze medal for #3 performer
 - **Username**: User's login identifier
 - **Total Hours**: Cumulative hours worked in the selected period
+- **Billable**: Hours worked on billable client projects (excludes Non-Billable project)
+- **Non-Billable**: Hours logged to the "Non-Billable" project (overhead, meetings, training, admin)
 - **Tasks**: Number of task activities submitted
-- **Avg Hours/Day**: Average daily work hours
-- **Top Client**: Client with most hours for this user
-- **Top Project**: Project with most hours for this user
+- **Avg Billable/Day**: Average billable hours per day (calculated only from days with billable work)
+- **Top Client**: Client with most hours for this user (excludes Non-Billable project)
+- **Top Project**: Project with most hours for this user (excludes Non-Billable project)
 - **Last Activity**: Date of most recent task submission
+
+**Billable vs. Non-Billable Tracking:**
+The system distinguishes between billable and non-billable hours using a simple naming convention:
+- **Billable Hours**: All tasks logged to any project EXCEPT "Non-Billable"
+- **Non-Billable Hours**: Tasks logged to the project named "Non-Billable"
+- **Visual Indicators**: Billable hours appear in green, non-billable in orange
+- **Average Calculation**: Avg Billable/Day only includes days where billable work was performed
+- **Top Client/Project**: These fields exclude the Non-Billable project to show actual client work
 
 **Features:**
 - Sortable columns: Click any column header to sort

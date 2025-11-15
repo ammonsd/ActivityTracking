@@ -186,6 +186,8 @@ For security, your session will expire after **30 minutes** of inactivity.
     - **Task Date**: Click the calendar icon to select the date (required)
     - **Client**: Choose the client from the dropdown (required)
     - **Project**: Select the project you worked on (required)
+      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
+      - This helps distinguish billable client work from internal overhead
     - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
     - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
     - **Details**: Describe what you worked on (optional - not needed for tasks like PTO)
@@ -363,11 +365,14 @@ ADMIN users see an additional tab with team performance analytics:
     - 🥉 Bronze medal for #3 performer
   - Metrics displayed:
     - Total hours worked
+    - **Billable hours** (green) - Hours on client projects
+    - **Non-Billable hours** (orange) - Overhead activities logged to "Non-Billable" project
     - Task count
-    - Average hours per day
-    - Top client
-    - Top project
+    - **Average billable hours per day** - Calculated from days with billable work
+    - Top client (excludes Non-Billable project)
+    - Top project (excludes Non-Billable project)
     - Last activity date
+  - **Billable Tracking**: The system distinguishes billable vs. non-billable hours using project name - tasks logged to "Non-Billable" project are tracked separately from client work
 
 - **Hours by User** comparison (bar chart)
   - Visual comparison of hours across all team members
