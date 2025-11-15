@@ -311,3 +311,87 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 - ✅ Cascading filters (subcategory auto-resets when category changes)
 - ✅ Professional styled confirmation modals
 - ✅ Consistent user experience across Spring Boot and Angular interfaces
+
+---
+
+## User Analytics & Performance Monitoring
+
+As an ADMIN user, you have access to comprehensive user analytics through the **Reports** section's **User Analysis** tab.
+
+### Accessing User Analytics
+
+1. Navigate to **Reports** from the main menu
+2. Click the **User Analysis** tab (only visible to ADMIN users)
+3. View team performance metrics and user comparisons
+
+### User Performance Summary Table
+
+The User Performance Summary displays a comprehensive view of all users' activities:
+
+**Columns Displayed:**
+- **Rank**: Position based on total hours worked
+  - 🏆 Gold trophy for #1 performer
+  - 🥈 Silver medal for #2 performer
+  - 🥉 Bronze medal for #3 performer
+- **Username**: User's login identifier
+- **Total Hours**: Cumulative hours worked in the selected period
+- **Tasks**: Number of task activities submitted
+- **Avg Hours/Day**: Average daily work hours
+- **Top Client**: Client with most hours for this user
+- **Top Project**: Project with most hours for this user
+- **Last Activity**: Date of most recent task submission
+
+**Features:**
+- Sortable columns: Click any column header to sort
+- Real-time data: Based on current database records
+- Trophy rankings: Visual recognition for top performers
+- Quick identification of active vs. inactive users
+
+### Hours by User Chart
+
+A bar chart visualization comparing total hours across all team members:
+
+- **Color-coded bars**: Each user has a distinct color
+- **Percentage labels**: Shows each user's share of total team hours
+- **Interactive tooltips**: Hover for exact hours and percentage
+- **Sorted by hours**: Bars ordered from highest to lowest
+
+### Using User Analytics for Management
+
+**Performance Reviews:**
+- Identify top performers with trophy rankings
+- Review average hours per day to assess workload
+- Check last activity date to identify inactive accounts
+
+**Resource Allocation:**
+- See which users are working on which clients/projects
+- Identify users with capacity for additional work
+- Ensure balanced workload distribution across the team
+
+**Client Management:**
+- Understand which team members are most familiar with specific clients
+- Plan resource allocation for client projects
+- Identify expertise distribution across the team
+
+**Activity Monitoring:**
+- Track team activity levels over time
+- Identify users who may need support or have capacity issues
+- Monitor engagement with the time tracking system
+
+### Best Practices
+
+- **Review weekly**: Check User Analysis tab at least once per week to stay informed about team activities
+- **Set expectations**: Use metrics to establish clear performance expectations
+- **Recognize achievement**: Use trophy rankings to acknowledge top performers
+- **Identify trends**: Look for patterns in activity levels and time distribution
+- **Data-driven decisions**: Base resource allocation on actual hours worked, not estimates
+- **Privacy considerations**: Use data responsibly and communicate analytics practices to team members
+
+### Important Notes
+
+- Only ADMIN users can access User Analysis features
+- All data respects user privacy and is for management purposes only
+- Charts reflect all task activities in the database across all users
+- Regular users can only see their own data in other report tabs
+- Data updates in real-time as users submit new tasks
+

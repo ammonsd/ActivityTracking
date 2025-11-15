@@ -314,3 +314,90 @@ If your administrator has enabled "Force Password Update" for your account:
 5. After changing, you'll gain full access to the system
 
 **Note**: This is different from password expiration. Force Password Update is manually set by administrators (typically for new accounts), while password expiration happens automatically after 90 days.
+
+---
+
+## Reports & Analytics
+
+The Reports section provides interactive charts and visualizations to help you analyze your time tracking data.
+
+### Accessing Reports
+
+Navigate to **Reports** from the main menu to view your analytics dashboard.
+
+### Available Reports
+
+**For All Users:**
+
+#### 1. Overview Tab
+Dashboard summary with key metrics:
+- Total hours this month and week
+- Top clients and projects
+- Average hours per day
+- Quick insights into your time allocation
+
+#### 2. Client Analysis Tab
+- **Time distribution by client** (pie chart) - Visual breakdown of time spent per client
+- **Top activities breakdown** - Most time-consuming tasks
+- Client-focused time metrics
+
+#### 3. Project Analysis Tab
+- **Time distribution by project** (bar chart) - Hours worked per project
+- **Phase distribution** (donut chart) - Time spent in different phases (Development, Testing, etc.)
+- Project-level time breakdown with phase details
+
+#### 4. Time Trends Tab
+- **Daily time tracking** (line chart) - Daily hours worked over time
+- **Weekly summary** with trends - Week-by-week comparison
+- **Monthly comparison** (grouped bar chart) - Compare hours across months
+
+**For ADMIN Users Only:**
+
+#### 5. User Analysis Tab
+ADMIN users see an additional tab with team performance analytics:
+
+- **User Performance Summary** table with rankings
+  - Trophy icons for top 3 performers:
+    - 🏆 Gold trophy for #1 performer
+    - 🥈 Silver medal for #2 performer
+    - 🥉 Bronze medal for #3 performer
+  - Metrics displayed:
+    - Total hours worked
+    - Task count
+    - Average hours per day
+    - Top client
+    - Top project
+    - Last activity date
+
+- **Hours by User** comparison (bar chart)
+  - Visual comparison of hours across all team members
+  - Shows percentage of total team hours per user
+  - Color-coded bars for easy visualization
+  - Interactive tooltips with detailed information
+
+### Report Features
+
+- **Interactive Charts**: Hover over chart elements for detailed information and exact values
+- **Real-Time Data**: All reports reflect your current task data from the database
+- **Role-Based Filtering**: 
+  - Regular users (USER, GUEST) see only their own data
+  - ADMIN users see data for all users in the system
+- **Color-Coded Visualizations**: Easy-to-read charts with consistent, professional color schemes
+- **Responsive Design**: Charts adapt to different screen sizes
+
+### Tips for Using Reports
+
+- **Review your Overview tab weekly** to track your time allocation and ensure you're meeting targets
+- **Use Client Analysis** to understand which clients consume most of your time
+- **Check Time Trends** to identify patterns in your daily work hours and adjust your schedule
+- **Monitor Phase Distribution** to ensure balanced time across different work phases
+- **ADMIN users:** Use User Analysis to monitor team performance and identify top contributors
+
+### Understanding Your Data
+
+- All charts are based on your submitted task activities
+- Date ranges default to the current month but can be filtered
+- Hours are displayed with two decimal places (e.g., 8.50 hours)
+- Percentages are calculated based on total hours in the selected period
+- "Unknown" may appear for tasks without a username (legacy data)
+

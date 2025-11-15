@@ -5,6 +5,11 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 ## Features
 
 - ✅ Daily task recording with client/project/phase tracking
+- 📊 Analytics & Reports Dashboard with interactive charts and visualizations
+  - Time distribution by client and project
+  - Daily/weekly/monthly time tracking visualizations
+  - Phase distribution analysis
+  - ADMIN-only user performance analytics
 - 📊 Weekly timesheet view (Monday-Sunday format)
 - 📥 Export filtered tasks and weekly timesheets to CSV format
 - 🔍 Filter and search capabilities
@@ -15,7 +20,7 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 ## Tech Stack
 
 - **Backend:** Java 21, Spring Boot 3.5.6 (MVC + Thymeleaf), Spring Data JPA
-- **Frontend:** Angular 19, Angular Material, TypeScript
+- **Frontend:** Angular 19, Angular Material, TypeScript, Chart.js
 - **Database:** PostgreSQL 15+
 - **API Documentation:** Springdoc OpenAPI 2.6.0 (Swagger UI)
 - **Build:** Maven, npm
