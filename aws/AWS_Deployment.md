@@ -130,11 +130,32 @@ aws secretsmanager create-secret `
     --secret-string file://path/to/your/cloudflare-config.yaml
 ```
 
+**Optional Secrets (for Email Notifications):**
+
+If you want to receive email alerts when user accounts are locked due to failed login attempts:
+
+```powershell
+# Email SMTP credentials (OPTIONAL - only if enabling email notifications)
+aws secretsmanager create-secret `
+    --name taskactivity/email/credentials `
+    --description "SMTP credentials for email notifications" `
+    --secret-string '{\"username\":\"your-email@gmail.com\",\"password\":\"your-app-password\"}' `
+    --region us-east-1
+```
+
+For Gmail setup, you'll need to:
+1. Enable 2-Factor Authentication on your Google account
+2. Generate an App Password at https://myaccount.google.com/security
+3. Use the 16-character app password in the secret above
+
+For detailed email configuration, see [Email Notification Configuration](../localdocs/Email_Notification_Configuration.md).
+
 **Notes:**
 - Replace `YourSecurePassword` and `YourAdminPassword` with strong passwords
 - Replace `your-rds-endpoint` with your actual RDS endpoint (e.g., `taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com`)
 - For Cloudflare tunnel setup details, see [CLOUDFLARE_ON_AWS.md](CLOUDFLARE_ON_AWS.md)
 - The application will work without Cloudflare secrets if you're using ALB or direct access
+- Email notifications are configured in the task definition but require the email credentials secret to function
 
 ### Step 3: Create ECR Repository
 

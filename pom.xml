@@ -134,6 +134,12 @@
             <version>2.7.0</version>
         </dependency>
         
+        <!-- Spring Boot Starter Mail for email notifications -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        
         <!-- JWT dependencies for REST API authentication -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

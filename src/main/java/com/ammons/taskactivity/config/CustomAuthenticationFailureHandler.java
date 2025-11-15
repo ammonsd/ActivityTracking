@@ -2,6 +2,7 @@ package com.ammons.taskactivity.config;
 
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
+import com.ammons.taskactivity.service.EmailService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,12 +41,15 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     private static final String LOGIN_URL = "/login";
 
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Value("${security.login.max-attempts:5}")
     private int maxLoginAttempts;
 
-    public CustomAuthenticationFailureHandler(UserRepository userRepository) {
+    public CustomAuthenticationFailureHandler(UserRepository userRepository,
+            EmailService emailService) {
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -110,6 +114,15 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
                     user.setAccountLocked(true);
                     log.warn("User '{}' account locked after {} failed login attempts", username,
                             attempts);
+
+                    // Send email notification to administrator
+                    try {
+                        emailService.sendAccountLockoutNotification(username, attempts, ipAddress);
+                    } catch (Exception e) {
+                        log.error("Failed to send lockout notification email for user: {}",
+                                username, e);
+                        // Continue processing even if email fails
+                    }
                 } else {
                     log.info("Failed login attempt {} of {} for user '{}'", attempts,
                             maxLoginAttempts, username);
