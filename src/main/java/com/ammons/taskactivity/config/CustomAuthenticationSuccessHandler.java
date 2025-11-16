@@ -46,13 +46,16 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserRepository userRepository;
     private final UserDetailsServiceImpl userDetailsService;
     private final com.ammons.taskactivity.service.UserService userService;
+    private final com.ammons.taskactivity.service.LoginAuditService loginAuditService;
 
     public CustomAuthenticationSuccessHandler(UserRepository userRepository,
             UserDetailsServiceImpl userDetailsService,
-            @Lazy com.ammons.taskactivity.service.UserService userService) {
+            @Lazy com.ammons.taskactivity.service.UserService userService,
+            com.ammons.taskactivity.service.LoginAuditService loginAuditService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.userService = userService;
+        this.loginAuditService = loginAuditService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
         setAlwaysUseDefaultTargetUrl(false);
@@ -84,6 +87,9 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String username = authentication.getName();
         String ipAddress = getClientIpAddress(request);
         log.info("User '{}' successfully authenticated from IP: {}", username, ipAddress);
+
+        // Record successful login attempt
+        loginAuditService.recordLoginAttempt(username, ipAddress, "Web Login", true);
 
         try {
             // Update the last login time for this user

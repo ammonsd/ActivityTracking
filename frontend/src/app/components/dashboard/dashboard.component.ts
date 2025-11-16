@@ -18,6 +18,18 @@ import { AuthService } from '../../services/auth.service';
   ],
   template: `
     <div class="dashboard-container">
+      <!-- Welcome Banner for GUEST users only -->
+      <div class="guest-banner" *ngIf="currentRole === 'GUEST'">
+        <div class="banner-content">
+          <strong>👋 Welcome, Guest!</strong>
+          <span>
+            You can create and edit your own tasks and view the weekly
+            timesheet. Other admin features are visible but read-only so you can
+            explore the full functionality.
+          </span>
+        </div>
+      </div>
+
       <h2>Task Activity Admin Dashboard</h2>
 
       <div class="dashboard-grid">
@@ -95,6 +107,29 @@ import { AuthService } from '../../services/auth.service';
         padding: 20px;
         max-width: 1200px;
         margin: 0 auto;
+      }
+
+      .guest-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        margin: -20px -20px 20px -20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .banner-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .banner-content strong {
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      .banner-content span {
+        font-size: 14px;
       }
 
       h2 {

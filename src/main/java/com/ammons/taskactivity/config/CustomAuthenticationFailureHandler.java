@@ -42,14 +42,17 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final com.ammons.taskactivity.service.LoginAuditService loginAuditService;
 
     @Value("${security.login.max-attempts:5}")
     private int maxLoginAttempts;
 
     public CustomAuthenticationFailureHandler(UserRepository userRepository,
-            EmailService emailService) {
+            EmailService emailService,
+            com.ammons.taskactivity.service.LoginAuditService loginAuditService) {
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.loginAuditService = loginAuditService;
     }
 
     /**
@@ -81,6 +84,11 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String username = request.getParameter("username");
         String ipAddress = getClientIpAddress(request);
         log.warn("Authentication failed for user: '{}' from IP: {}", username, ipAddress);
+
+        // Record failed login attempt
+        if (username != null && !username.isEmpty()) {
+            loginAuditService.recordLoginAttempt(username, ipAddress, "Web Login", false);
+        }
 
         // Check for GUEST user with expired password
         if (exception instanceof GuestPasswordExpiredException) {

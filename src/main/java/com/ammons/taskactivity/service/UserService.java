@@ -31,12 +31,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidationService passwordValidationService;
+    private final LoginAuditService loginAuditService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PasswordValidationService passwordValidationService) {
+            PasswordValidationService passwordValidationService,
+            LoginAuditService loginAuditService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordValidationService = passwordValidationService;
+        this.loginAuditService = loginAuditService;
     }
 
     public List<User> getAllUsers() {
@@ -429,4 +432,18 @@ public class UserService {
 
         logger.info("Successfully unlocked account for user: {}", username);
     }
+
+    /**
+     * Get login audit data for a specific user
+     * 
+     * @param username Username to get audit data for
+     * @param limit Maximum number of records to return
+     * @return List of login audit records
+     */
+    public List<com.ammons.taskactivity.dto.LoginAuditDto> getLoginAudit(String username,
+            int limit) {
+        logger.debug("Retrieving login audit for user: {} (limit: {})", username, limit);
+        return loginAuditService.getLoginAuditByUsername(username, limit);
+    }
 }
+

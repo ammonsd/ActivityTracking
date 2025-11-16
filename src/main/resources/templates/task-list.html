@@ -384,6 +384,24 @@ T<!DOCTYPE html>
                 </div>
             </div>
         </nav>
+        
+        <!-- Welcome Banner for GUEST users only -->
+        <div sec:authorize="hasRole('GUEST')" 
+             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 15px 20px;
+                    margin: 0;
+                    text-align: center;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="max-width: 1400px; margin: 0 auto;">
+                <strong style="font-size: 16px;">👋 Welcome, Guest!</strong>
+                <span style="margin-left: 10px; font-size: 14px;">
+                    You can create and edit your own tasks and view the weekly timesheet. 
+                    Other admin features are visible but read-only so you can explore the full functionality.
+                </span>
+            </div>
+        </div>
+        
         <div class="container">
             <div class="header">
                 <h1>Task Activity List</h1>
@@ -437,6 +455,15 @@ T<!DOCTYPE html>
                         th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
                         th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                         >👥 Manage Users</a
+                    >
+                    <!-- Guest Activity - ADMIN only -->
+                    <a
+                        th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                        th:href="@{/task-activity/manage-users/guest-activity}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        title="Guest Activity Report"
+                        >📊 Guest Activity</a
                     >
                     <!-- Manage Dropdowns - Hidden for USER, disabled for GUEST, active for ADMIN -->
                     <a

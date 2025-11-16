@@ -125,4 +125,26 @@ public class UserRestController {
             return ResponseEntity.ok().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    /**
+     * Get login audit data (ADMIN only) Returns recent login activity for guest users
+     */
+    @GetMapping("/login-audit")
+    public ResponseEntity<ApiResponse<List<com.ammons.taskactivity.dto.LoginAuditDto>>> getLoginAudit(
+            @RequestParam(defaultValue = "guest") String username,
+            @RequestParam(defaultValue = "50") int limit) {
+        logger.debug("REST API: Getting login audit for user: {} (limit: {})", username, limit);
+
+        try {
+            List<com.ammons.taskactivity.dto.LoginAuditDto> auditData =
+                    userService.getLoginAudit(username, limit);
+            return ResponseEntity.ok(ApiResponse
+                    .success("Retrieved " + auditData.size() + " login records", auditData));
+        } catch (Exception e) {
+            logger.error("Error retrieving login audit data", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("Error retrieving login audit: " + e.getMessage()));
+        }
+    }
 }
+
