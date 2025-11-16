@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,8 +38,12 @@ public class LoginAuditService {
      */
     public void recordLoginAttempt(String username, String ipAddress, String location,
             boolean successful) {
+        // Use Eastern Time for consistency across local and AWS deployments
+        LocalDateTime loginTime =
+                ZonedDateTime.now(ZoneId.of("America/New_York")).toLocalDateTime();
+
         LoginAuditDto audit = new LoginAuditDto(idGenerator.getAndIncrement(), username,
-                LocalDateTime.now(), ipAddress, location, successful);
+                loginTime, ipAddress, location, successful);
 
         auditLog.addFirst(audit); // Add to front (most recent first)
 
