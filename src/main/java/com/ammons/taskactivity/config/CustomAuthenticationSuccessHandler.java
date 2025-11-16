@@ -47,15 +47,18 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserDetailsServiceImpl userDetailsService;
     private final com.ammons.taskactivity.service.UserService userService;
     private final com.ammons.taskactivity.service.LoginAuditService loginAuditService;
+    private final com.ammons.taskactivity.service.GeoIpService geoIpService;
 
     public CustomAuthenticationSuccessHandler(UserRepository userRepository,
             UserDetailsServiceImpl userDetailsService,
             @Lazy com.ammons.taskactivity.service.UserService userService,
-            com.ammons.taskactivity.service.LoginAuditService loginAuditService) {
+            com.ammons.taskactivity.service.LoginAuditService loginAuditService,
+            com.ammons.taskactivity.service.GeoIpService geoIpService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginAuditService = loginAuditService;
+        this.geoIpService = geoIpService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
         setAlwaysUseDefaultTargetUrl(false);
@@ -88,8 +91,11 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String ipAddress = getClientIpAddress(request);
         log.info("User '{}' successfully authenticated from IP: {}", username, ipAddress);
 
-        // Record successful login attempt
-        loginAuditService.recordLoginAttempt(username, ipAddress, "Web Login", true);
+        // Lookup geographic location
+        String location = geoIpService.lookupLocation(ipAddress);
+
+        // Record successful login attempt with location
+        loginAuditService.recordLoginAttempt(username, ipAddress, location, true);
 
         try {
             // Update the last login time for this user

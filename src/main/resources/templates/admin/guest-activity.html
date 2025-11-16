@@ -280,7 +280,17 @@
                         `;
 
                         auditData.forEach((audit) => {
-                            const loginDate = new Date(audit.loginTime);
+                            // Parse server's LocalDateTime as local time (not UTC)
+                            // Server sends: "2025-11-16T23:08:00" which is already in server's local time
+                            const dateTimeParts = audit.loginTime.split(/[T\-\:\.]/).map(Number);
+                            const loginDate = new Date(
+                                dateTimeParts[0], // year
+                                dateTimeParts[1] - 1, // month (0-indexed)
+                                dateTimeParts[2], // day
+                                dateTimeParts[3], // hour
+                                dateTimeParts[4], // minute
+                                dateTimeParts[5] || 0 // second
+                            );
                             const formattedDate = loginDate.toLocaleString(
                                 "en-US",
                                 {
@@ -347,7 +357,16 @@
 
                             // Add data rows
                             auditData.forEach((audit) => {
-                                const loginDate = new Date(audit.loginTime);
+                                // Parse server's LocalDateTime as local time (not UTC)
+                                const dateTimeParts = audit.loginTime.split(/[T\-\:\.]/).map(Number);
+                                const loginDate = new Date(
+                                    dateTimeParts[0], // year
+                                    dateTimeParts[1] - 1, // month (0-indexed)
+                                    dateTimeParts[2], // day
+                                    dateTimeParts[3], // hour
+                                    dateTimeParts[4], // minute
+                                    dateTimeParts[5] || 0 // second
+                                );
                                 const formattedDate = loginDate.toLocaleString(
                                     "en-US",
                                     {
@@ -388,35 +407,24 @@
             document
                 .getElementById("copyCsvBtn")
                 .addEventListener("click", function () {
-                    const csvText = document.getElementById("csvOutput").value;
-
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard
-                            .writeText(csvText)
-                            .then(() => {
-                                alert("CSV data copied to clipboard!");
-                            })
-                            .catch(() => {
-                                // Fallback method
-                                fallbackCopyToClipboard(csvText);
-                            });
-                    } else {
-                        // Fallback for older browsers
-                        fallbackCopyToClipboard(csvText);
-                    }
+                    const csvOutput = document.getElementById("csvOutput");
+                    const copyCsvBtn = document.getElementById("copyCsvBtn");
+                    
+                    csvOutput.select();
+                    navigator.clipboard.writeText(csvOutput.value)
+                        .then(() => {
+                            const originalText = copyCsvBtn.textContent;
+                            copyCsvBtn.textContent = "✓ Copied!";
+                            copyCsvBtn.style.backgroundColor = "#28a745";
+                            setTimeout(() => {
+                                copyCsvBtn.textContent = originalText;
+                                copyCsvBtn.style.backgroundColor = "";
+                            }, 2000);
+                        })
+                        .catch((err) => {
+                            alert("Failed to copy to clipboard. Please select and copy manually.");
+                        });
                 });
-
-            // Fallback copy method for older browsers
-            function fallbackCopyToClipboard(text) {
-                const textarea = document.getElementById("csvOutput");
-                textarea.select();
-                try {
-                    document.execCommand("copy");
-                    alert("CSV data copied to clipboard!");
-                } catch (err) {
-                    alert("Failed to copy to clipboard");
-                }
-            }
 
             // Download CSV file
             document
@@ -443,8 +451,6 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
-                    alert("CSV file downloaded!");
                 });
 
             // Close modal buttons

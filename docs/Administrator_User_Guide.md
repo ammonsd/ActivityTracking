@@ -318,6 +318,58 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 
 ---
 
+### Guest Activity Dashboard
+
+Administrators have access to a dedicated dashboard for monitoring GUEST user login activity. This feature helps track who's accessing the system as a guest and provides security visibility.
+
+**Accessing the Dashboard:**
+1. **Navigate**: From any admin page, click **"📊 Guest Activity"** button next to "👥 Manage Users" in the header
+2. **View Statistics**: The dashboard displays key metrics at the top:
+   - **Total Logins**: Count of all GUEST login attempts (successful and failed)
+   - **Unique Locations**: Number of distinct IP addresses that accessed the account
+   - **Last Login**: Most recent successful login timestamp
+   - **Success Rate**: Percentage of successful vs. failed login attempts
+
+**Login Audit Table:**
+- Shows detailed login history with columns:
+  - **Date/Time**: When the login attempt occurred
+  - **IP Address**: Source IP address of the login attempt
+  - **Location**: Geographic information (if available) or source identifier
+  - **Status**: Success (green badge) or Failed (red badge)
+- Sorted by most recent first
+- Automatically updates with new login activity
+
+**Exporting Guest Activity Data:**
+
+Since the login audit data is stored in-memory and resets when the application restarts, administrators can export the data for record-keeping:
+
+1. **Click "📥 Export CSV"**: Opens a modal dialog with CSV data
+2. **Choose Export Method**:
+   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel or other applications
+   - **💾 Download CSV**: Creates a timestamped CSV file (format: `guest_login_audit_YYYY-MM-DD.csv`)
+   - **Close**: Closes the modal without exporting
+3. **CSV Format**: Includes headers and quoted fields:
+   ```
+   Date/Time,IP Address,Location,Status
+   "Nov 16, 2025, 07:28 AM","127.0.0.1","Web Login","Success"
+   ```
+
+**Important Notes:**
+- Login tracking data is stored **in-memory only** and will be cleared when the application restarts or is redeployed
+- Data persists for the duration of the application runtime
+- Export to CSV regularly if you need to maintain historical records
+- Maximum of 1,000 login attempts are retained in memory
+- Only GUEST user logins are tracked on this dashboard
+- Administrators can track their own and other user logins through CloudWatch logs
+
+**Use Cases:**
+- Security auditing: Monitor unusual access patterns or suspicious login attempts
+- Usage tracking: Understand when and from where guests are accessing the system
+- Troubleshooting: Identify failed login attempts and potential access issues
+- Compliance: Maintain records of guest account access for audit purposes
+
+---
+
 ## User Analytics & Performance Monitoring
 
 As an ADMIN user, you have access to comprehensive user analytics through the **Reports** section's **User Analysis** tab.

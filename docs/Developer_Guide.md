@@ -1279,8 +1279,12 @@ public Authentication authenticate(Authentication authentication) {
     return result;
 }
 
-// CustomAuthenticationSuccessHandler.java - Handles regular users
+// CustomAuthenticationSuccessHandler.java - Handles successful logins
 public void onAuthenticationSuccess(...) {
+    // Record successful login attempt for audit tracking
+    String ipAddress = request.getRemoteAddr();
+    loginAuditService.recordLoginAttempt(username, ipAddress, "Web Login", true);
+    
     // GUEST users with expired passwords are blocked at authentication level
     // This only handles USER and ADMIN roles
     if (userService.isPasswordExpired(username)) {
@@ -1296,6 +1300,30 @@ public void onAuthenticationSuccess(...) {
     }
     // ... normal login flow
 }
+
+// CustomAuthenticationFailureHandler.java - Handles failed logins
+public void onAuthenticationFailure(...) {
+    // Record failed login attempt for audit tracking
+    String username = request.getParameter("username");
+    String ipAddress = request.getRemoteAddr();
+    loginAuditService.recordLoginAttempt(username, ipAddress, "Web Login", false);
+    
+    // Check if account is locked and send email notification
+    Optional<User> userOptional = userRepository.findByUsername(username);
+    if (userOptional.isPresent()) {
+        User user = userOptional.get();
+        if (user.isAccountLocked()) {
+            emailService.sendAccountLockoutNotification(
+                username, 
+                user.getFailedLoginAttempts(), 
+                ipAddress,
+                LocalDateTime.now()
+            );
+        }
+    }
+    // ... handle authentication failure
+}
+```
 ```
 
 **GUEST Role Special Handling:**
@@ -2690,6 +2718,130 @@ DELETE /api/dropdowns/{id}
 - **Automatic Ordering**: Display order is automatically assigned when creating new values, sorted by displayOrder then itemValue
 - **Validation**: Backend validates category names and prevents duplicate values within the same category and subcategory combination
 
+### Login Audit API
+
+The Login Audit API provides tracking and reporting of user login attempts. This feature is particularly useful for monitoring guest account access and security auditing.
+
+**Implementation Architecture:**
+- **In-Memory Storage**: Login attempts are stored in a `ConcurrentLinkedDeque` for thread-safe access
+- **Capacity**: Stores up to 1,000 most recent login attempts
+- **Persistence**: Data is retained only during application runtime and is cleared on restart/redeployment
+- **CloudWatch Logging**: All login attempts are logged to CloudWatch for long-term audit trail
+
+#### Get Login Audit History
+
+```http
+GET /api/users/login-audit
+```
+
+**Parameters:**
+
+- `username` (query, optional): Filter by specific username (default: "guest")
+- `limit` (query, optional): Maximum number of records to return (default: 50)
+
+**Description:** Returns login audit history for the specified user, including both successful and failed login attempts.
+
+**Access Control:** Requires ADMIN role
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Login audit retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "username": "guest",
+            "loginTime": "2025-11-16T23:08:00",
+            "ipAddress": "2600:1002:b11e:c306::1",
+            "location": "Web Login",
+            "successful": false
+        },
+        {
+            "id": 2,
+            "username": "guest",
+            "loginTime": "2025-11-16T23:08:15",
+            "ipAddress": "2600:1002:b11e:c306::1",
+            "location": "Web Login",
+            "successful": true
+        }
+    ]
+}
+```
+
+**Implementation Details:**
+
+**LoginAuditService.java**:
+```java
+@Service
+public class LoginAuditService {
+    private final ConcurrentLinkedDeque<LoginAuditDto> auditLog = new ConcurrentLinkedDeque<>();
+    private static final int MAX_ENTRIES = 1000;
+    private final AtomicLong idCounter = new AtomicLong(1);
+    
+    public void recordLoginAttempt(String username, String ipAddress, 
+                                   String location, boolean successful) {
+        LoginAuditDto audit = new LoginAuditDto();
+        audit.setId(idCounter.getAndIncrement());
+        audit.setUsername(username);
+        audit.setLoginTime(LocalDateTime.now());
+        audit.setIpAddress(ipAddress);
+        audit.setLocation(location);
+        audit.setSuccessful(successful);
+        
+        auditLog.addFirst(audit);
+        
+        // Maintain max capacity
+        while (auditLog.size() > MAX_ENTRIES) {
+            auditLog.removeLast();
+        }
+        
+        // Log to CloudWatch
+        logger.info("LOGIN_{}: user='{}', ip='{}', location='{}', timestamp='{}'",
+            successful ? "SUCCESS" : "FAILURE", username, ipAddress, 
+            location, audit.getLoginTime());
+    }
+    
+    public List<LoginAuditDto> getLoginAuditByUsername(String username, int limit) {
+        return auditLog.stream()
+            .filter(audit -> audit.getUsername().equals(username))
+            .limit(limit)
+            .collect(Collectors.toList());
+    }
+}
+```
+
+**Authentication Handler Integration**:
+
+Login attempts are automatically recorded by Spring Security authentication handlers:
+
+- `CustomAuthenticationSuccessHandler` - Records successful logins
+- `CustomAuthenticationFailureHandler` - Records failed login attempts
+
+Both handlers extract the client IP address from the HTTP request and call `LoginAuditService.recordLoginAttempt()` with appropriate success/failure status.
+
+**Frontend Integration:**
+
+The admin interface includes a "Guest Activity" dashboard (`/admin/guest-activity`) that:
+- Displays statistics: Total Logins, Unique Locations, Last Login, Success Rate
+- Shows detailed login audit table with Date/Time, IP Address, Location, Status
+- Provides CSV export with clipboard and download options
+- Uses JavaScript `fetch()` to call the REST API
+- Automatically calculates statistics from the returned data
+
+**Use Cases:**
+- Security monitoring for guest account access
+- Troubleshooting login issues
+- Compliance and audit trail requirements
+- Usage pattern analysis
+
+**Limitations:**
+- Data is not persisted to database (in-memory only)
+- Maximum 1,000 entries retained
+- Cleared on application restart or redeployment
+- Export to CSV recommended for long-term record keeping
+
 ### Web Controller Endpoints
 
 The application provides web-based endpoints for user interaction through Thymeleaf templates.
@@ -2802,6 +2954,44 @@ Date,Client,Project,Phase,Hours,Username,Details
 - Automatically enforces role-based access control
 - Properly escapes CSV fields containing commas, quotes, or newlines
 - Used by the Task List page's CSV export modal for copy/download functionality
+
+#### Guest Activity Dashboard Endpoint
+
+```http
+GET /admin/guest-activity
+```
+
+**Access Control:** Requires ADMIN role
+
+**Response:** Renders `admin/guest-activity.html` template
+
+**Description:** Displays the Guest Activity Dashboard with login audit tracking. This page provides:
+
+- **Real-time Statistics**: Total logins, unique locations, last login time, success rate
+- **Login Audit Table**: Detailed history of guest login attempts with Date/Time, IP Address, Location, and Status
+- **CSV Export Modal**: Modal dialog with options to copy to clipboard or download CSV file
+
+**Frontend Implementation:**
+
+The template uses JavaScript to:
+1. Fetch login audit data from `/api/users/login-audit?username=guest&limit=100`
+2. Populate statistics cards by analyzing the returned data
+3. Render the login audit table with color-coded status badges (green=success, red=failed)
+4. Generate CSV content and provide export options via modal dialog
+
+**CSV Export Features:**
+- Textarea preview of CSV data
+- Copy to Clipboard button (📋) - Uses `navigator.clipboard.writeText()` with fallback
+- Download CSV button (💾) - Creates timestamped file `guest_login_audit_YYYY-MM-DD.csv`
+- Close button and click-outside-modal functionality
+
+**Navigation:**
+
+Accessible via "📊 Guest Activity" button in the header (visible only to ADMIN users), positioned next to "👥 Manage Users" button.
+
+**Security Note:**
+
+The guest activity data is stored in-memory only and will be cleared when the application restarts. Users are encouraged to export to CSV regularly for record-keeping purposes.
 
 #### Task Detail Endpoint
 
