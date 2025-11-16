@@ -40,6 +40,7 @@ This document provides a comprehensive summary of all technical features, framew
 - **spring-boot-starter-security** - Authentication and authorization
 - **spring-boot-starter-actuator** - Application monitoring and health checks
 - **spring-boot-starter-thymeleaf** - Server-side template engine
+- **spring-boot-starter-mail** - Email notification capabilities
 - **spring-boot-starter-test** - Comprehensive testing framework
 - **springdoc-openapi-starter-webmvc-ui** - Swagger/OpenAPI documentation (2.6.0)
 
@@ -65,6 +66,8 @@ This document provides a comprehensive summary of all technical features, framew
 - **Custom access denied handler** for authorization failures
 - **Force password update filter** for administrative password resets
 - **Automatic password expiration** with 90-day policy and advance warnings
+- **Account lockout protection** - automatic lockout after 5 failed login attempts
+- **Email notifications** for security events (account lockouts)
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
@@ -145,6 +148,19 @@ This document provides a comprehensive summary of all technical features, framew
 - Kubernetes secrets support
 - File-based secrets via custom EnvironmentPostProcessor
 - AWS Secrets Manager ready
+
+### Email Notifications
+
+- **Spring Boot Mail** integration with JavaMailSender
+- **Account lockout notifications** sent to administrators
+  - Automatic email when account is locked after failed login attempts
+  - Includes username, failed attempt count, IP address, and timestamp
+  - Configurable SMTP settings (Gmail, custom servers)
+- **Environment-specific configuration** for local and AWS deployments
+- **AWS Secrets Manager integration** for email credentials
+- **Graceful degradation** - application continues if email fails
+- **EmailService** with comprehensive error handling and logging
+- **Unit tested** with 8 comprehensive test cases
 - Zero hardcoded credentials
 
 ---

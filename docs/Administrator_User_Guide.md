@@ -81,6 +81,7 @@ Administrators can create, edit, and delete user accounts:
     - **Account Lock Status**: View if an account is locked due to failed login attempts (🔒 indicator in user list)
     - **Unlock Accounts**: Administrators can unlock locked accounts by unchecking the "Account Locked" checkbox in the edit dialog
     - **Failed Login Attempts**: View the count of failed login attempts in the edit dialog
+    - **Email Notifications**: When an account is locked due to excessive failed login attempts, an email notification is automatically sent to the administrator with details about the lockout (username, number of attempts, IP address, and timestamp)
 6. **Delete Users**: Remove user accounts (with confirmation)
     - **Note**: The Delete button is disabled (grayed out) for:
         - Your own account (cannot delete yourself)
@@ -407,4 +408,45 @@ A bar chart visualization comparing total hours across all team members:
 - Charts reflect all task activities in the database across all users
 - Regular users can only see their own data in other report tabs
 - Data updates in real-time as users submit new tasks
+
+## Security Features
+
+### Account Lockout Policy
+
+The system includes automatic account lockout protection to prevent unauthorized access:
+
+**How It Works:**
+- Users are allowed **5 failed login attempts**
+- After 5 failed attempts, the account is automatically locked
+- The lockout applies to all user roles (GUEST, USER, and ADMIN)
+- Locked accounts cannot log in until unlocked by an administrator
+
+**Administrator Notifications:**
+- When an account is locked, an **email notification is automatically sent** to the administrator
+- The email includes:
+  - Username of the locked account
+  - Number of failed login attempts
+  - IP address of the last failed attempt
+  - Timestamp of the lockout
+- Configure the administrator email address in application.properties: `app.mail.admin-email`
+
+**Unlocking Accounts:**
+1. Navigate to **"👥 Manage Users"**
+2. Identify locked accounts by the 🔒 indicator in the user list
+3. Click **"Edit"** on the locked user
+4. Uncheck the **"Account Locked"** checkbox
+5. Optionally reset the **"Failed Login Attempts"** counter to 0
+6. Click **"Save"**
+7. The user can now log in again
+
+**Best Practices:**
+- Review lockout notification emails promptly to identify potential security threats
+- Investigate suspicious lockout patterns (multiple attempts from same IP, repeated lockouts)
+- Consider resetting the user's password when unlocking if you suspect unauthorized access
+- Educate users about password policies to reduce accidental lockouts
+- Monitor the IP addresses in lockout notifications for unusual geographic locations
+
+**Email Configuration:**
+Email notifications require proper SMTP configuration. See the Developer Guide for details on configuring email settings for local development and AWS deployments.
+
 

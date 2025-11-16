@@ -133,6 +133,28 @@ For security, your session will expire after **30 minutes** of inactivity.
 - You'll see a message: "⚠️ Your session has expired. Please log in again."
 - Simply log in again to continue working
 
+### Account Lockout Policy
+
+To protect your account from unauthorized access, the system automatically locks accounts after **5 failed login attempts**.
+
+**What Happens When Your Account Is Locked:**
+- After 5 incorrect password entries, your account will be locked
+- You will see a message: "Your account has been locked due to too many failed login attempts. Please contact your administrator."
+- You cannot log in until an administrator unlocks your account
+- The administrator receives an automatic email notification about the lockout
+
+**What to Do:**
+1. **Contact your administrator** to unlock your account
+2. The administrator can unlock your account from the User Management page
+3. **Double-check your password** before attempting to log in again
+4. If you've forgotten your password, ask your administrator to reset it
+
+**Tips to Avoid Lockouts:**
+- Keep your password in a secure location
+- Use a password manager if available
+- Type carefully when entering your password
+- If you're unsure of your password, contact your administrator before using all 5 attempts
+
 ### Password Expiration Warnings
 
 **Automatic Expiration**: All passwords expire automatically **90 days** after they are set or changed.

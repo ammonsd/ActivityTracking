@@ -1174,6 +1174,77 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
 
 - `PasswordValidator.java` - Bean validation for DTOs
 
+### Email Configuration
+
+**Overview**: The application includes email notification capabilities for security events like account lockouts. Email functionality is implemented using Spring Boot's JavaMailSender with support for both local development and AWS deployments.
+
+**Key Components:**
+
+1. **EmailService** (`src/main/java/com/ammons/taskactivity/service/EmailService.java`)
+   - Handles sending all email notifications
+   - `sendAccountLockoutNotification(username, failedAttempts, ipAddress)` - Sends lockout alerts
+   - `sendTestEmail()` - For testing email configuration
+   - Graceful error handling - email failures don't break application flow
+   - Comprehensive logging for debugging
+
+2. **Configuration Properties** (`application.properties`)
+   ```properties
+   # Email configuration
+   spring.mail.enabled=${MAIL_ENABLED:false}
+   spring.mail.host=${MAIL_HOST:smtp.gmail.com}
+   spring.mail.port=${MAIL_PORT:587}
+   spring.mail.username=${MAIL_USERNAME:}
+   spring.mail.password=${MAIL_PASSWORD:}
+   spring.mail.properties.mail.smtp.auth=true
+   spring.mail.properties.mail.smtp.starttls.enable=true
+   
+   # Application-specific email settings
+   app.mail.from=${MAIL_FROM:noreply@taskactivity.com}
+   app.mail.admin-email=${ADMIN_EMAIL:admin@taskactivity.com}
+   ```
+
+3. **Local Development** (`.env` file - not committed to git)
+   ```properties
+   MAIL_ENABLED=true
+   MAIL_HOST=smtp.gmail.com
+   MAIL_PORT=587
+   MAIL_USERNAME=your-email@gmail.com
+   MAIL_PASSWORD=your-app-password
+   MAIL_FROM=your-email@gmail.com
+   ADMIN_EMAIL=admin@yourdomain.com
+   ```
+
+4. **AWS Deployment** (AWS Secrets Manager)
+   - Secret name: `taskactivity/email/credentials`
+   - Required keys: `username`, `password`
+   - Environment variables set in task definition for other settings
+   - See `aws/taskactivity-task-definition.json` for configuration
+
+**Gmail Setup for Development:**
+1. Enable 2-factor authentication on your Google account
+2. Generate an App Password: Google Account → Security → 2-Step Verification → App Passwords
+3. Use the 16-character app password (spaces removed) in `MAIL_PASSWORD`
+
+**Testing Email Functionality:**
+```java
+// Run EmailServiceTest.java unit tests
+mvn test -Dtest=EmailServiceTest
+
+// Test in running application (send test email)
+// EmailService.sendTestEmail() can be called from any controller
+```
+
+**Integration with Security:**
+- `CustomAuthenticationFailureHandler` calls `EmailService.sendAccountLockoutNotification()`
+- Email sent automatically when account is locked after 5 failed login attempts
+- Email includes: username, failed attempt count, IP address, timestamp
+- See `localdocs/Email_Notification_Configuration.md` for detailed setup guide
+
+**Error Handling:**
+- Email failures are logged but don't prevent authentication processing
+- Try-catch blocks ensure graceful degradation
+- Log messages at INFO level for successful sends, ERROR level for failures
+
 ### Password Expiration Configuration
 
 **Overview**: The application implements automatic password expiration with a 90-day policy and 7-day advance warnings. Special handling is provided for GUEST users who cannot change their own passwords.
