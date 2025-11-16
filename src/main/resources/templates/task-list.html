@@ -397,7 +397,7 @@ T<!DOCTYPE html>
                 <strong style="font-size: 16px;">👋 Welcome, Guest!</strong>
                 <span style="margin-left: 10px; font-size: 14px;">
                     You can create and edit your own tasks and view the weekly timesheet. 
-                    Other admin features are visible but read-only so you can explore the full functionality.
+                    Other features are visible but read-only to allow exposure to the full application functionality.
                 </span>
             </div>
         </div>
@@ -421,6 +421,7 @@ T<!DOCTYPE html>
                         id="exportCsvBtn"
                         title="Export to CSV"
                         style="margin-right: 10px"
+                        th:disabled="${#authorization.expression('hasRole(''GUEST'')')}"
                     >
                         📋 Export CSV
                     </button>

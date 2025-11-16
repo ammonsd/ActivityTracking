@@ -24,8 +24,8 @@ import { AuthService } from '../../services/auth.service';
           <strong>👋 Welcome, Guest!</strong>
           <span>
             You can create and edit your own tasks and view the weekly
-            timesheet. Other admin features are visible but read-only so you can
-            explore the full functionality.
+            timesheet. Other features are visible but read-only to allow
+            exposure to the full application functionality.
           </span>
         </div>
       </div>
