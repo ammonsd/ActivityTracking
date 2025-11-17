@@ -137,18 +137,44 @@
             <div class="nav-content">
                 <h1>Task Activity Tracker</h1>
                 <div class="user-info">
-                    <span class="welcome-text">
-                        <span th:text="${userDisplayName}">Username</span>
-                    </span>
-                    <form
-                        th:action="@{/logout}"
-                        method="post"
-                        style="margin: 0"
+                    <div
+                        style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 15px;
+                        "
                     >
-                        <button type="submit" class="btn btn-secondary btn-sm">
-                            Logout
-                        </button>
-                    </form>
+                        <span class="welcome-text">
+                            <span th:text="${userDisplayName}">Username</span>
+                        </span>
+                        <form
+                            th:action="@{/logout}"
+                            method="post"
+                            style="margin: 0"
+                        >
+                            <button
+                                type="submit"
+                                class="btn btn-secondary btn-sm"
+                            >
+                                Logout
+                            </button>
+                        </form>
+                        <span
+                            class="current-date"
+                            style="font-size: 14px; white-space: nowrap"
+                        >
+                            <script>
+                                document.write(
+                                    new Date().toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                    })
+                                );
+                            </script>
+                        </span>
+                    </div>
                 </div>
             </div>
         </nav>

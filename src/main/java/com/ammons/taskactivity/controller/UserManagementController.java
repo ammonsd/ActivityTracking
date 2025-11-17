@@ -446,8 +446,9 @@ public class UserManagementController {
      * Display guest activity dashboard (ADMIN only) Shows login audit trail for guest account
      */
     @GetMapping("/guest-activity")
-    public String guestActivity() {
+    public String guestActivity(Model model, Authentication authentication) {
         logger.info("Displaying guest activity dashboard");
+        addUserDisplayInfo(model, authentication);
         return "admin/guest-activity";
     }
 }
