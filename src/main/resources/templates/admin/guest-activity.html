@@ -372,6 +372,10 @@
                 fetch("/api/users/login-audit?username=guest&limit=1000")
                     .then((response) => response.json())
                     .then((apiResponse) => {
+                        // Create CSV header
+                        let csv = "Date/Time,IP Address,Location,Status\n";
+
+                        // Add data rows if available
                         if (
                             apiResponse.success &&
                             apiResponse.data &&
@@ -379,10 +383,6 @@
                         ) {
                             const auditData = apiResponse.data;
 
-                            // Create CSV header
-                            let csv = "Date/Time,IP Address,Location,Status\n";
-
-                            // Add data rows
                             auditData.forEach((audit) => {
                                 // Parse server's LocalDateTime as local time (not UTC)
                                 const dateTimeParts = audit.loginTime.split(/[T\-\:\.]/).map(Number);
@@ -416,14 +416,12 @@
                                 // Escape fields that might contain commas
                                 csv += `"${formattedDate}","${ipAddress}","${location}","${status}"\n`;
                             });
-
-                            // Populate textarea and show modal
-                            document.getElementById("csvOutput").value = csv;
-                            document.getElementById("csvModal").style.display =
-                                "block";
-                        } else {
-                            alert("No audit data available to export");
                         }
+
+                        // Always show modal with CSV data (header only if no rows)
+                        document.getElementById("csvOutput").value = csv;
+                        document.getElementById("csvModal").style.display =
+                            "block";
                     })
                     .catch((error) => {
                         console.error("Error exporting audit data:", error);
