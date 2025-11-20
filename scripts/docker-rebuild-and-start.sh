@@ -136,6 +136,6 @@ if [ "$DOCKER_PROFILE" == "containerized-db" ]; then
     echo "⚠️  Application may still be starting. Check logs:"
     echo "  docker compose logs -f app-with-postgres"
 else
-    # For other profiles, use start-wsl2.sh
-    ./scripts/start-wsl2.sh $DOCKER_PROFILE
+    # For other profiles, use start-docker.sh
+    ./scripts/start-docker.sh $DOCKER_PROFILE
 fi

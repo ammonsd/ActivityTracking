@@ -99,7 +99,7 @@ for i in {1..12}; do
         echo "Stop application:"
         echo "  docker compose --profile \"$DOCKER_PROFILE\" down"
         echo ""
-        docker compose logs -f app
+        read -p "Press Enter to Close Session and Run Docker in Background"
         exit 0
     fi
     echo "Still starting... ($i/12)"
