@@ -93,13 +93,17 @@ for i in {1..12}; do
         echo "Access your application at:"
         echo "  http://localhost:8080"
         echo ""
-        echo "View logs:"
-        echo "  docker compose logs -f app"
-        echo ""
         echo "Stop application:"
         echo "  docker compose --profile \"$DOCKER_PROFILE\" down"
         echo ""
-        read -p "Press Enter to Close Session and Run Docker in Background"
+        echo "========================================="
+        echo "Following application logs..."
+        echo "Press Ctrl+C to stop viewing logs"
+        echo "(Docker will continue running in background)"
+        echo "========================================="
+        echo ""
+        # Follow logs - this keeps the WSL session and Docker stable
+        docker compose logs -f app
         exit 0
     fi
     echo "Still starting... ($i/12)"
