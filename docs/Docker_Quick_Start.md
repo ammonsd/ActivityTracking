@@ -21,7 +21,7 @@ wsl -u root
 ```bash
 # In WSL2
 cd /mnt/c/Users/deana/GitHub/ActivityTracking
-./start-docker.sh
+./docker-deployment.sh
 ```
 
 **Then open browser to:** 
@@ -117,7 +117,7 @@ wsl -u root
 
 | File                    | What It Does                       |
 | ----------------------- | ---------------------------------- |
-| `start-docker.sh`         | Main startup script - **USE THIS** |
+| `docker-deployment.sh`         | Main startup script - **USE THIS** |
 | `test-db-connection.sh` | Test PostgreSQL connectivity       |
 | `check-app-status.sh`   | Diagnose application issues        |
 | `WSL2_DOCKER_GUIDE.md`  | Full documentation                 |
@@ -152,7 +152,7 @@ wsl -u root
 # WSL2
 service docker start
 cd /mnt/c/Users/deana/GitHub/ActivityTracking
-./start-docker.sh
+./docker-deployment.sh
 ```
 
 ### Check Everything
