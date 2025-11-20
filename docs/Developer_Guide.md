@@ -902,7 +902,7 @@ WSL2 requires special networking configuration to access the application from yo
    
    ```bash
    # In WSL2
-   ./scripts/start-wsl2.sh
+   ./scripts/start-docker.sh
    ```
 
 4. **Configure Network Access** (run PowerShell as Administrator)
@@ -6059,7 +6059,7 @@ File logging can be temporarily disabled without code changes using the `ENABLE_
 **To Disable File Logging:**
 
 1. **Using WSL Startup Script** (Easiest)
-   Edit `start-wsl2.sh` and uncomment:
+   Edit `start-docker.sh` and uncomment:
    
    ```bash
    # Change this:
@@ -6074,7 +6074,7 @@ File logging can be temporarily disabled without code changes using the `ENABLE_
    ```bash
    # Before starting the application
    export ENABLE_FILE_LOGGING=false
-   ./start-wsl2.sh host-db
+   ./start-docker.sh host-db
    ```
 
 3. **In application.properties**
