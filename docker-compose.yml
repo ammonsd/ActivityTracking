@@ -59,7 +59,7 @@ services:
             - "host.docker.internal:host-gateway"
         networks:
             - app-network
-        restart: no
+        restart: unless-stopped
 
     # PostgreSQL database container (only for full containerized setup)
     postgres:
