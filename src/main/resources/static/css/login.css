@@ -1,5 +1,25 @@
 /* Login Page Specific Styles */
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 60px; /* Height of footer */
+}
+
 .login-container {
     display: flex;
     justify-content: center;
@@ -72,4 +92,19 @@
     border-radius: 4px;
     margin-bottom: 1rem;
     border: 1px solid #f5c6cb;
+}
+
+/* Footer Styles */
+.footer {
+    background-color: #343a40;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
 }
