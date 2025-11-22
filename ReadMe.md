@@ -65,7 +65,7 @@ Interactive API documentation is available via Swagger UI:
 
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
 - 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking
-- 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features and user management
+- 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, and 12-Factor App compliance
 
 ### Docker & Containerization
 
@@ -89,6 +89,7 @@ Interactive API documentation is available via Swagger UI:
 ### Architecture & Design
 
 - 📊 [Technical Features Summary](docs/Technical_Features_Summary.md) - Comprehensive feature list
+- ⚖️ [Concurrency and Scaling Guide](docs/Concurrency_and_Scaling_Guide.md) - Horizontal scaling, load balancing, and concurrency strategies
 
 ## License
 
