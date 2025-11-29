@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Add Expense</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        <script>
+            // Maintain URL display as /expense
+            document.addEventListener("DOMContentLoaded", function () {
+                if (globalThis.location.pathname !== "/expense") {
+                    globalThis.history.replaceState(null, null, "/expense");
+                }
+            });
+        </script>
+
+        <style>
+            /* Page-specific styles */
+            .btn-info:hover {
+                background-color: #138496;
+            }
+            input:focus,
+            select:focus,
+            textarea:focus {
+                border-color: #007bff;
+                outline: none;
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            }
+            .error {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            /* Hide spinner buttons on amount input */
+            input[type="number"]#amount::-webkit-inner-spin-button,
+            input[type="number"]#amount::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type="number"]#amount {
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
+            .submit-btn {
+                background-color: #007bff;
+                color: white;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+                margin-top: 20px;
+            }
+            .submit-btn:hover {
+                background-color: #0056b3;
+            }
+            .form-row .form-group {
+                flex: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="header">
+                <h1>Add New Expense</h1>
+                <div>
+                    <a
+                        th:href="@{/expenses/weekly-sheet}"
+                        class="btn btn-info"
+                        style="margin-right: 10px"
+                        >📊 Weekly Expense Sheet</a
+                    >
+                    <a th:href="@{/expenses/list}" class="btn btn-secondary"
+                        >Expense List</a
+                    >
+                </div>
+            </div>
+
+            <div class="form-container">
+                <!-- Success Message -->
+                <div
+                    th:if="${successMessage}"
+                    class="success-message"
+                    th:text="${successMessage}"
+                ></div>
+
+                <!-- Error Message -->
+                <div
+                    th:if="${errorMessage}"
+                    class="error-message"
+                    th:text="${errorMessage}"
+                ></div>
+
+                <form
+                    th:action="@{/expense/submit}"
+                    th:object="${expenseDto}"
+                    method="post"
+                    enctype="multipart/form-data"
+                >
+                    <!-- Expense Date -->
+                    <div class="form-row">
+                        <div class="form-group" style="max-width: 250px">
+                            <label for="expenseDate"
+                                >Expense Date
+                                <span class="required">*</span></label
+                            >
+                            <input
+                                type="date"
+                                id="expenseDate"
+                                th:field="*{expenseDate}"
+                                required
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('expenseDate')}"
+                                th:errors="*{expenseDate}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Client -->
+                        <div class="form-group">
+                            <label for="client"
+                                >Client <span class="required">*</span></label
+                            >
+                            <select id="client" th:field="*{client}" required>
+                                <option value="">-- Select Client --</option>
+                                <option
+                                    th:each="client : ${clients}"
+                                    th:value="${client}"
+                                    th:text="${client}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('client')}"
+                                th:errors="*{client}"
+                            ></div>
+                        </div>
+
+                        <!-- Project -->
+                        <div class="form-group">
+                            <label for="project"
+                                >Project <span class="required">*</span></label
+                            >
+                            <select id="project" th:field="*{project}" required>
+                                <option value="">-- Select Project --</option>
+                                <option
+                                    th:each="project : ${projects}"
+                                    th:value="${project}"
+                                    th:text="${project}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('project')}"
+                                th:errors="*{project}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Expense Type -->
+                        <div class="form-group">
+                            <label for="expenseType"
+                                >Expense Type
+                                <span class="required">*</span></label
+                            >
+                            <select
+                                id="expenseType"
+                                th:field="*{expenseType}"
+                                required
+                            >
+                                <option value="">-- Select Type --</option>
+                                <option
+                                    th:each="type : ${expenseTypes}"
+                                    th:value="${type}"
+                                    th:text="${type}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('expenseType')}"
+                                th:errors="*{expenseType}"
+                            ></div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group">
+                            <label for="paymentMethod"
+                                >Payment Method
+                                <span class="required">*</span></label
+                            >
+                            <select
+                                id="paymentMethod"
+                                th:field="*{paymentMethod}"
+                                required
+                            >
+                                <option value="">-- Select Method --</option>
+                                <option
+                                    th:each="method : ${paymentMethods}"
+                                    th:value="${method}"
+                                    th:text="${method}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('paymentMethod')}"
+                                th:errors="*{paymentMethod}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Amount -->
+                        <div class="form-group">
+                            <label for="amount"
+                                >Amount <span class="required">*</span></label
+                            >
+                            <input
+                                type="number"
+                                id="amount"
+                                th:field="*{amount}"
+                                step="0.01"
+                                min="0.01"
+                                placeholder="0.00"
+                                required
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('amount')}"
+                                th:errors="*{amount}"
+                            ></div>
+                        </div>
+
+                        <!-- Currency -->
+                        <div class="form-group">
+                            <label for="currency"
+                                >Currency <span class="required">*</span></label
+                            >
+                            <input
+                                type="text"
+                                id="currency"
+                                th:field="*{currency}"
+                                maxlength="10"
+                                value="USD"
+                                placeholder="USD"
+                                required
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('currency')}"
+                                th:errors="*{currency}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description"
+                            >Description <span class="required">*</span></label
+                        >
+                        <textarea
+                            id="description"
+                            th:field="*{description}"
+                            rows="3"
+                            maxlength="500"
+                            placeholder="Enter expense description..."
+                            required
+                        ></textarea>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('description')}"
+                            th:errors="*{description}"
+                        ></div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Vendor -->
+                        <div class="form-group">
+                            <label for="vendor">Vendor</label>
+                            <input
+                                type="text"
+                                id="vendor"
+                                th:field="*{vendor}"
+                                maxlength="100"
+                                placeholder="Enter vendor name (optional)"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('vendor')}"
+                                th:errors="*{vendor}"
+                            ></div>
+                        </div>
+
+                        <!-- Reference Number -->
+                        <div class="form-group">
+                            <label for="referenceNumber"
+                                >Reference Number</label
+                            >
+                            <input
+                                type="text"
+                                id="referenceNumber"
+                                th:field="*{referenceNumber}"
+                                maxlength="50"
+                                placeholder="Invoice/Receipt # (optional)"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('referenceNumber')}"
+                                th:errors="*{referenceNumber}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Upload -->
+                    <div class="form-group">
+                        <label for="receipt">Receipt (PDF, Image)</label>
+                        <input
+                            type="file"
+                            id="receipt"
+                            name="receipt"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                        />
+                        <small
+                            style="
+                                color: #6c757d;
+                                display: block;
+                                margin-top: 5px;
+                            "
+                        >
+                            Accepted formats: PDF, JPG, PNG (Max 5MB)
+                        </small>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea
+                            id="notes"
+                            th:field="*{notes}"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Any additional notes (optional)..."
+                        ></textarea>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('notes')}"
+                            th:errors="*{notes}"
+                        ></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Add Expense
+                    </button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

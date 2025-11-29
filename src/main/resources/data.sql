@@ -61,6 +61,26 @@ VALUES
   ('EXPENSE', 'EXPENSE_STATUS', 'Resubmitted', 6, true),
   ('EXPENSE', 'EXPENSE_STATUS', 'Reimbursed', 7, true),
   
+  -- EXPENSE -> VENDOR subcategory
+  ('EXPENSE', 'VENDOR', 'Amazon', 1, true),
+  ('EXPENSE', 'VENDOR', 'Delta Airlines', 2, true),
+  ('EXPENSE', 'VENDOR', 'United Airlines', 3, true),
+  ('EXPENSE', 'VENDOR', 'Hilton', 4, true),
+  ('EXPENSE', 'VENDOR', 'Marriott', 5, true),
+  ('EXPENSE', 'VENDOR', 'Uber', 6, true),
+  ('EXPENSE', 'VENDOR', 'Lyft', 7, true),
+  ('EXPENSE', 'VENDOR', 'Enterprise', 8, true),
+  ('EXPENSE', 'VENDOR', 'Hertz', 9, true),
+  ('EXPENSE', 'VENDOR', 'Staples', 10, true),
+  ('EXPENSE', 'VENDOR', 'Office Depot', 11, true),
+  ('EXPENSE', 'VENDOR', 'Other', 12, true),
+  
+  -- EXPENSE -> RECEIPT_STATUS subcategory
+  ('EXPENSE', 'RECEIPT_STATUS', 'No Receipt', 1, true),
+  ('EXPENSE', 'RECEIPT_STATUS', 'Receipt Uploaded', 2, true),
+  ('EXPENSE', 'RECEIPT_STATUS', 'Receipt Pending', 3, true),
+  ('EXPENSE', 'RECEIPT_STATUS', 'Receipt Missing', 4, true),
+  
   -- EXPENSE -> CLIENT subcategory (shares with TASK)
   ('EXPENSE', 'CLIENT', 'Corporate', 1, true),
   
