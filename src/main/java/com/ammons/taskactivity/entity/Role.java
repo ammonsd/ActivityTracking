@@ -7,5 +7,5 @@ package com.ammons.taskactivity.entity;
  * @version 1.0
  */
 public enum Role {
-    ADMIN, USER, GUEST, EXPENSE_APPROVER
+    ADMIN, USER, GUEST, EXPENSE_ADMIN
 }

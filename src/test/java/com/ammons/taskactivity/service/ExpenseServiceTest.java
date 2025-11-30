@@ -301,7 +301,8 @@ class ExpenseServiceTest {
             when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
 
             // When
-            Expense result = expenseService.markAsReimbursed(1L, "admin", "Reimbursed");
+            Expense result = expenseService.markAsReimbursed(1L, "admin", new BigDecimal("100.00"),
+                    "Reimbursed");
 
             // Then
             assertThat(result).isNotNull();
@@ -316,7 +317,8 @@ class ExpenseServiceTest {
             when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
 
             // When/Then
-            assertThatThrownBy(() -> expenseService.markAsReimbursed(1L, "admin", "Reimbursed"))
+            assertThatThrownBy(() -> expenseService.markAsReimbursed(1L, "admin",
+                    new BigDecimal("100.00"), "Reimbursed"))
                     .isInstanceOf(IllegalStateException.class).hasMessageContaining("Approved");
 
             verify(expenseRepository, times(1)).findById(1L);

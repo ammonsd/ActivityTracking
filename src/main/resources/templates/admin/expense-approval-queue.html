@@ -285,7 +285,12 @@
                         <div>
                             <div class="expense-card-title">
                                 Expense #<span th:text="${expense.id}"></span> -
-                                <span th:text="${expense.username}"></span>
+                                <span th:if="${userMap.containsKey(expense.username)}">
+                                    <span th:text="${userMap.get(expense.username).firstname}"></span>
+                                    <span th:text="${userMap.get(expense.username).lastname}"></span>
+                                    (<span th:text="${expense.username}"></span>)
+                                </span>
+                                <span th:unless="${userMap.containsKey(expense.username)}" th:text="${expense.username}"></span>
                             </div>
                             <div
                                 style="
@@ -296,7 +301,7 @@
                             >
                                 Submitted:
                                 <span
-                                    th:text="${#temporals.format(expense.submittedDate, 'MMM dd, yyyy HH:mm')}"
+                                    th:text="${#temporals.format(expense.lastModified, 'MMM dd, yyyy HH:mm')}"
                                 ></span>
                             </div>
                         </div>
@@ -406,13 +411,6 @@
 
                     <!-- Actions -->
                     <div class="expense-actions">
-                        <!-- View Detail -->
-                        <a
-                            th:href="@{'/expenses/detail/' + ${expense.id}}"
-                            class="btn btn-secondary"
-                            >View Full Details</a
-                        >
-
                         <!-- Approve Button -->
                         <button
                             type="button"
@@ -439,7 +437,7 @@
                         style="display: none"
                     >
                         <form
-                            th:action="@{'/expenses/' + ${expense.id} + '/approve'}"
+                            th:action="@{'/expenses/admin/approve/' + ${expense.id}}"
                             method="post"
                         >
                             <label
@@ -454,7 +452,7 @@
                             </label>
                             <textarea
                                 id="approvalNotes"
-                                name="approvalNotes"
+                                name="notes"
                                 placeholder="Add any notes about this approval (optional)..."
                             ></textarea>
                             <div class="form-actions">
@@ -479,7 +477,7 @@
                         style="display: none"
                     >
                         <form
-                            th:action="@{'/expenses/' + ${expense.id} + '/reject'}"
+                            th:action="@{'/expenses/admin/reject/' + ${expense.id}}"
                             method="post"
                         >
                             <label

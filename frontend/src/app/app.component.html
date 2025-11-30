@@ -54,14 +54,13 @@
         <span matListItemLine class="coming-soon-subtitle">Time Analysis • Client Distribution • Trends</span>
       </a>
       <a 
-        *ngIf="currentRole !== 'EXPENSE_APPROVER'"
         mat-list-item 
         href="/task-activity/list">
         <mat-icon matListItemIcon>apps</mat-icon>
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
       <a 
-        *ngIf="currentRole === 'USER' || currentRole === 'ADMIN' || currentRole === 'EXPENSE_APPROVER'"
+        *ngIf="currentRole === 'USER' || currentRole === 'ADMIN' || currentRole === 'EXPENSE_ADMIN'"
         mat-list-item 
         href="/expenses/list">
         <mat-icon matListItemIcon>attach_money</mat-icon>
@@ -74,3 +73,4 @@
     <router-outlet></router-outlet>
   </mat-drawer-content>
 </mat-drawer-container>
+

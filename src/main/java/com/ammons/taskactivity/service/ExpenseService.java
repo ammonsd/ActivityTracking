@@ -9,12 +9,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * ExpenseService - Business logic layer for Expense operations.
@@ -28,6 +36,9 @@ import java.util.Optional;
 @Service
 @Transactional
 public class ExpenseService {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(ExpenseService.class);
 
     // Status constants
     private static final String STATUS_DRAFT = "Draft";
@@ -93,6 +104,68 @@ public class ExpenseService {
             return expenseRepository.save(expense);
         }
         throw new ExpenseNotFoundException(id);
+    }
+
+    /**
+     * Update an existing expense with a new receipt file
+     */
+    public Expense updateExpenseWithReceipt(Long id, ExpenseDto expenseDto,
+            MultipartFile receiptFile) throws IOException {
+        Optional<Expense> existingExpense = expenseRepository.findById(id);
+        if (existingExpense.isEmpty()) {
+            throw new ExpenseNotFoundException(id);
+        }
+
+        Expense expense = existingExpense.get();
+
+        // Save old receipt path before updating entity
+        String oldReceiptPath = expense.getReceiptPath();
+
+        updateEntityFromDto(expense, expenseDto);
+
+        // Handle receipt upload
+        if (receiptFile != null && !receiptFile.isEmpty()) {
+            // Delete old receipt file if it exists
+            if (oldReceiptPath != null && !oldReceiptPath.isEmpty()) {
+                try {
+                    Path oldFilePath = Paths.get(oldReceiptPath);
+                    if (Files.exists(oldFilePath)) {
+                        Files.delete(oldFilePath);
+                        logger.info("Deleted old receipt file: {}", oldReceiptPath);
+                    }
+                } catch (IOException e) {
+                    logger.warn("Failed to delete old receipt file: {}", oldReceiptPath, e);
+                    // Continue with upload even if deletion fails
+                }
+            }
+
+            String uploadDir = "c:\\Task Activity\\Receipts\\";
+            Path uploadPath = Paths.get(uploadDir);
+
+            // Create directory if it doesn't exist
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Generate unique filename
+            String originalFilename = receiptFile.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+            // Save file
+            Path filePath = uploadPath.resolve(uniqueFilename);
+            Files.copy(receiptFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Update expense with receipt info
+            expense.setReceiptPath(uploadDir + uniqueFilename);
+            expense.setReceiptStatus("Uploaded");
+        }
+
+        expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
+        expense.setLastModifiedBy(expenseDto.getUsername());
+        return expenseRepository.save(expense);
     }
 
     /**
@@ -351,6 +424,11 @@ public class ExpenseService {
 
         Expense expense = expenseOpt.get();
 
+        // Prevent users from approving their own expenses
+        if (expense.getUsername().equals(approverUsername)) {
+            throw new IllegalStateException("You cannot approve your own expense");
+        }
+
         // Validate current status allows approval
         if (!STATUS_SUBMITTED.equals(expense.getExpenseStatus())
                 && !STATUS_RESUBMITTED.equals(expense.getExpenseStatus())) {
@@ -379,6 +457,11 @@ public class ExpenseService {
 
         Expense expense = expenseOpt.get();
 
+        // Prevent users from rejecting their own expenses
+        if (expense.getUsername().equals(approverUsername)) {
+            throw new IllegalStateException("You cannot reject your own expense");
+        }
+
         // Validate current status allows rejection
         if (!STATUS_SUBMITTED.equals(expense.getExpenseStatus())
                 && !STATUS_RESUBMITTED.equals(expense.getExpenseStatus())) {
@@ -399,7 +482,8 @@ public class ExpenseService {
     /**
      * Mark expense as reimbursed (admin only)
      */
-    public Expense markAsReimbursed(Long id, String adminUsername, String notes) {
+    public Expense markAsReimbursed(Long id, String adminUsername, BigDecimal reimbursedAmount,
+            String notes) {
         Optional<Expense> expenseOpt = expenseRepository.findById(id);
         if (expenseOpt.isEmpty()) {
             throw new ExpenseNotFoundException(id);
@@ -413,6 +497,8 @@ public class ExpenseService {
         }
 
         expense.setExpenseStatus(STATUS_REIMBURSED);
+        expense.setReimbursedAmount(
+                reimbursedAmount != null ? reimbursedAmount : expense.getAmount());
         expense.setReimbursementDate(LocalDate.now());
         expense.setReimbursementNotes(notes);
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
@@ -477,8 +563,9 @@ public class ExpenseService {
         entity.setPaymentMethod(dto.getPaymentMethod());
         entity.setVendor(dto.getVendor());
         entity.setReferenceNumber(dto.getReferenceNumber());
-        entity.setReceiptPath(dto.getReceiptPath());
-        entity.setReceiptStatus(dto.getReceiptStatus());
+        // Receipt fields are managed separately during file upload
+        // entity.setReceiptPath(dto.getReceiptPath());
+        // entity.setReceiptStatus(dto.getReceiptStatus());
         entity.setExpenseStatus(dto.getExpenseStatus());
         entity.setApprovedBy(dto.getApprovedBy());
         entity.setApprovalDate(dto.getApprovalDate());

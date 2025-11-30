@@ -453,16 +453,20 @@ class ExpenseControllerTest {
         @DisplayName("Should mark expense as reimbursed")
         void shouldMarkExpenseAsReimbursed() throws Exception {
             // Given
-            when(expenseService.markAsReimbursed(1L, "admin", "Reimbursed"))
+            when(expenseService.markAsReimbursed(1L, "admin", new BigDecimal("100.00"),
+                            "Reimbursed"))
                     .thenReturn(testExpense);
 
             // When/Then
             mockMvc.perform(
-                    post("/api/expenses/1/reimburse").with(csrf()).param("notes", "Reimbursed"))
+                            post("/api/expenses/1/reimburse").with(csrf())
+                                            .param("reimbursedAmount", "100.00")
+                                            .param("notes", "Reimbursed"))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.message").value("Expense marked as reimbursed"));
 
-            verify(expenseService, times(1)).markAsReimbursed(1L, "admin", "Reimbursed");
+            verify(expenseService, times(1)).markAsReimbursed(1L, "admin", new BigDecimal("100.00"),
+                            "Reimbursed");
         }
 
         @Test

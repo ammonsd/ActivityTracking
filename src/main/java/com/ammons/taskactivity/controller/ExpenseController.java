@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -333,18 +334,20 @@ public class ExpenseController {
     }
 
     /**
-     * Mark expense as reimbursed (admin only)
+     * Mark expense as reimbursed (admin and expense admin)
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/reimburse")
     public ResponseEntity<ApiResponse<Expense>> markAsReimbursed(@PathVariable Long id,
+                    @RequestParam(required = false) BigDecimal reimbursedAmount,
             @RequestParam(required = false) String notes, Authentication authentication) {
 
         String username = authentication.getName();
         logger.info("Admin {} marking expense {} as reimbursed", username, id);
 
         try {
-            Expense reimbursedExpense = expenseService.markAsReimbursed(id, username, notes);
+                Expense reimbursedExpense = expenseService.markAsReimbursed(id, username,
+                                reimbursedAmount, notes);
             return ResponseEntity
                     .ok(ApiResponse.success("Expense marked as reimbursed", reimbursedExpense));
         } catch (ExpenseNotFoundException e) {

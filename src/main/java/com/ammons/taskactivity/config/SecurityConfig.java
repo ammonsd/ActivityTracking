@@ -110,7 +110,7 @@ public class SecurityConfig {
                                         // info
                                         .requestMatchers("/api/users/me")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
 
                                         // Admin-only API endpoints
                                         .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
@@ -124,23 +124,24 @@ public class SecurityConfig {
                         .permitAll() // API endpoints - require authentication
                                         .requestMatchers(HttpMethod.GET, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
                                         .requestMatchers(HttpMethod.POST, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
                                         .requestMatchers(HttpMethod.PUT, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
                                         .requestMatchers(HttpMethod.DELETE, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
 
                                         // User Management - Admin only
                                         .requestMatchers("/task-activity/manage-users/**")
                         .hasRole(ADMIN_ROLE)
 
-                        // Admin pages
-                        .requestMatchers(ADMIN_PATTERN).hasRole(ADMIN_ROLE)
+                                        // Admin pages - accessible to ADMIN and EXPENSE_ADMIN
+                                        .requestMatchers(ADMIN_PATTERN)
+                                        .hasAnyRole(ADMIN_ROLE, "EXPENSE_ADMIN")
 
                                         // Task Activity screens - accessible to USER, ADMIN, and
                                         // GUEST
@@ -153,7 +154,12 @@ public class SecurityConfig {
                                                         "/task-activity/update/**",
                                                         "/task-activity/delete/**")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_APPROVER")
+                                                        "EXPENSE_ADMIN")
+
+                                        // Expense endpoints - accessible to USER, ADMIN, and
+                                        // EXPENSE_ADMIN
+                                        .requestMatchers("/expenses/**")
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, "EXPENSE_ADMIN")
 
                         // Angular dashboard - requires authentication
                                         // .requestMatchers("/app", "/app/**").authenticated()
@@ -336,3 +342,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

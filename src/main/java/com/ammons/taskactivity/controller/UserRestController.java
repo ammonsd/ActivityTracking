@@ -35,7 +35,7 @@ public class UserRestController {
     /**
      * Get current authenticated user
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_APPROVER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserDto>> getCurrentUser(
             Authentication authentication) {
@@ -147,4 +147,5 @@ public class UserRestController {
         }
     }
 }
+
 

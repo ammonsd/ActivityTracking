@@ -378,7 +378,7 @@
                                     ></td>
                                     <td
                                         class="expense-amount"
-                                        th:text="${expense.currency + ' ' + #numbers.formatDecimal(expense.amount, 1, 2)}"
+                                        th:text="${expense.currency + ' ' + #numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}"
                                     ></td>
                                     <td
                                         class="expense-description"
@@ -390,7 +390,7 @@
                                 <tr class="day-total">
                                     <td colspan="3"></td>
                                     <td
-                                        th:text="${dailyData.currencySymbol + ' ' + #numbers.formatDecimal(dailyData.dayTotal, 1, 2)}"
+                                        th:text="${dailyData.currencySymbol + ' ' + #numbers.formatDecimal(dailyData.dayTotal, 1, 'COMMA', 2, 'POINT')}"
                                     ></td>
                                     <td></td>
                                 </tr>
@@ -405,7 +405,7 @@
                             <td colspan="3"><strong>Total Expenses</strong></td>
                             <td>
                                 <strong
-                                    th:text="${weeklyData.currencySymbol + ' ' + #numbers.formatDecimal(weeklyData.weekTotal, 1, 2)}"
+                                    th:text="${weeklyData.currencySymbol + ' ' + #numbers.formatDecimal(weeklyData.weekTotal, 1, 'COMMA', 2, 'POINT')}"
                                 ></strong>
                             </td>
                             <td></td>

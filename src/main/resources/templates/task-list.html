@@ -433,9 +433,9 @@ T<!DOCTYPE html>
                         style="margin-right: 10px"
                         >📊 Weekly Timesheet</a
                     >
-                    <!-- Expense List - USER, ADMIN, and EXPENSE_APPROVER -->
+                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_APPROVER'')')}"
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
                         th:href="@{/expenses/list}"
                         class="btn btn-info"
                         style="margin-right: 10px"
@@ -697,7 +697,7 @@ T<!DOCTYPE html>
                             <td th:text="${task.phase}"></td>
                             <td
                                 class="task-hours"
-                                th:text="${#numbers.formatDecimal(task.hours, 1, 2)}"
+                                th:text="${#numbers.formatDecimal(task.hours, 1, 'COMMA', 2, 'POINT')}"
                             ></td>
                             <td
                                 class="task-details"
@@ -937,3 +937,4 @@ T<!DOCTYPE html>
         </script>
     </body>
 </html>
+
