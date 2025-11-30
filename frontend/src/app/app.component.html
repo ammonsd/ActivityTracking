@@ -53,9 +53,19 @@
         <span matListItemTitle>Analytics & Reports</span>
         <span matListItemLine class="coming-soon-subtitle">Time Analysis • Client Distribution • Trends</span>
       </a>
-      <a mat-list-item href="/task-activity/list">
+      <a 
+        *ngIf="currentRole !== 'EXPENSE_APPROVER'"
+        mat-list-item 
+        href="/task-activity/list">
         <mat-icon matListItemIcon>apps</mat-icon>
         <span matListItemTitle>Task Activity Tracker</span>
+      </a>
+      <a 
+        *ngIf="currentRole === 'USER' || currentRole === 'ADMIN' || currentRole === 'EXPENSE_APPROVER'"
+        mat-list-item 
+        href="/expenses/list">
+        <mat-icon matListItemIcon>attach_money</mat-icon>
+        <span matListItemTitle>Expense Tracker</span>
       </a>
     </mat-nav-list>
   </mat-drawer>

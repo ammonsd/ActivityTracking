@@ -111,6 +111,40 @@ public class ExpenseViewController {
         return EXPENSE_FORM_VIEW;
     }
 
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
+        addUserInfo(model, authentication);
+
+        Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
+        if (expenseOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, "Expense not found");
+            return REDIRECT_EXPENSE_LIST;
+        }
+
+        Expense expense = expenseOpt.get();
+        boolean isAdmin = isAdmin(authentication);
+
+        if (!isAdmin && !expense.getUsername().equals(authentication.getName())) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "You can only edit your own expenses");
+            return REDIRECT_EXPENSE_LIST;
+        }
+
+        // Only allow editing of Draft expenses
+        if (!"Draft".equalsIgnoreCase(expense.getExpenseStatus())) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Only expenses in Draft status can be edited");
+            return REDIRECT_EXPENSE_LIST;
+        }
+
+        model.addAttribute("expenseDto", convertToDto(expense));
+        model.addAttribute("expenseId", id);
+        model.addAttribute("isEdit", true);
+        addDropdownOptions(model);
+        return EXPENSE_FORM_VIEW;
+    }
+
     @PostMapping("/submit")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
     public String submitForm(@Valid @ModelAttribute ExpenseDto expenseDto,
@@ -172,8 +206,9 @@ public class ExpenseViewController {
         if (bindingResult.hasErrors()) {
             addUserInfo(model, authentication);
             model.addAttribute("expenseId", id);
+            model.addAttribute("isEdit", true);
             addDropdownOptions(model);
-            return EXPENSE_DETAIL_VIEW;
+            return EXPENSE_FORM_VIEW;
         }
 
         try {
@@ -192,17 +227,26 @@ public class ExpenseViewController {
                 return REDIRECT_EXPENSE_LIST;
             }
 
+            // Only allow updating of Draft expenses
+            if (!"Draft".equalsIgnoreCase(existing.getExpenseStatus())) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Only expenses in Draft status can be edited");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
             expenseDto.setUsername(existing.getUsername());
             expenseService.updateExpense(id, expenseDto);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense updated successfully");
-            return "redirect:/expenses/detail/" + id;
+            return REDIRECT_EXPENSE_LIST;
         } catch (Exception e) {
             logger.error("Error updating expense: {}", e.getMessage(), e);
             model.addAttribute(ERROR_MESSAGE_ATTR, "Failed to update expense: " + e.getMessage());
             addUserInfo(model, authentication);
+            model.addAttribute("expenseId", id);
+            model.addAttribute("isEdit", true);
             addDropdownOptions(model);
-            return EXPENSE_DETAIL_VIEW;
+            return EXPENSE_FORM_VIEW;
         }
     }
 
@@ -222,6 +266,13 @@ public class ExpenseViewController {
             if (!isAdmin && !expense.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "You can only delete your own expenses");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            // Only allow deleting of Draft expenses
+            if (!"Draft".equalsIgnoreCase(expense.getExpenseStatus())) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Only expenses in Draft status can be deleted");
                 return REDIRECT_EXPENSE_LIST;
             }
 
@@ -258,6 +309,45 @@ public class ExpenseViewController {
         model.addAttribute("targetDate", targetDate);
 
         return EXPENSE_SHEET_VIEW;
+    }
+
+    @PostMapping("/{id}/submit")
+    public String submitExpenseForApproval(@PathVariable Long id,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
+            if (expenseOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, "Expense not found");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            Expense expense = expenseOpt.get();
+            boolean isAdmin = isAdmin(authentication);
+
+            if (!isAdmin && !expense.getUsername().equals(authentication.getName())) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "You can only submit your own expenses");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            // Only allow submitting Draft or Rejected expenses
+            if (!"Draft".equalsIgnoreCase(expense.getExpenseStatus())
+                    && !"Rejected".equalsIgnoreCase(expense.getExpenseStatus())) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Only Draft or Rejected expenses can be submitted");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            expenseService.submitExpense(id);
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
+                    "Expense submitted for approval");
+            return "redirect:/expenses/detail/" + id;
+        } catch (Exception e) {
+            logger.error("Error submitting expense: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to submit expense: " + e.getMessage());
+            return "redirect:/expenses/detail/" + id;
+        }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_APPROVER')")
@@ -333,10 +423,10 @@ public class ExpenseViewController {
 
     private void addDropdownOptions(Model model) {
         model.addAttribute("clients",
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("EXPENSE", "CLIENT")
+                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "CLIENT")
                         .stream().map(dv -> dv.getItemValue()).toList());
         model.addAttribute("projects",
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("EXPENSE", "PROJECT")
+                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "PROJECT")
                         .stream().map(dv -> dv.getItemValue()).toList());
         model.addAttribute("expenseTypes", dropdownValueService.getActiveExpenseTypes().stream()
                 .map(dv -> dv.getItemValue()).toList());
@@ -344,6 +434,27 @@ public class ExpenseViewController {
                 .map(dv -> dv.getItemValue()).toList());
         model.addAttribute("statuses", dropdownValueService.getActiveExpenseStatuses().stream()
                 .map(dv -> dv.getItemValue()).toList());
+
+        // Add vendors and currencies for form pages (wrapped in try-catch for safety)
+        try {
+            model.addAttribute("vendors",
+                    dropdownValueService
+                            .getActiveValuesByCategoryAndSubcategory("EXPENSE", "VENDOR").stream()
+                            .map(dv -> dv.getItemValue()).toList());
+        } catch (Exception e) {
+            logger.warn("Unable to load vendor dropdown values", e);
+            model.addAttribute("vendors", java.util.Collections.emptyList());
+        }
+
+        try {
+            model.addAttribute("currencies",
+                    dropdownValueService
+                            .getActiveValuesByCategoryAndSubcategory("EXPENSE", "CURRENCY").stream()
+                            .map(dv -> dv.getItemValue()).toList());
+        } catch (Exception e) {
+            logger.warn("Unable to load currency dropdown values", e);
+            model.addAttribute("currencies", java.util.Collections.emptyList());
+        }
     }
 
     private void addFilterAttributes(Model model, String client, String project, String expenseType,

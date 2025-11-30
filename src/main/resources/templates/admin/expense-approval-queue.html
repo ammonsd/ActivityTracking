@@ -301,8 +301,8 @@
                             </div>
                         </div>
                         <span
-                            th:class="'status-badge status-' + ${#strings.toLowerCase(expense.status)}"
-                            th:text="${expense.status}"
+                            th:class="'status-badge status-' + ${#strings.toLowerCase(expense.expenseStatus)}"
+                            th:text="${expense.expenseStatus}"
                         ></span>
                     </div>
 
@@ -394,10 +394,10 @@
                     <!-- Receipt Link -->
                     <div
                         style="margin-top: 15px"
-                        th:if="${expense.receiptFilePath != null and !expense.receiptFilePath.isEmpty()}"
+                        th:if="${expense.receiptPath != null and !expense.receiptPath.isEmpty()}"
                     >
                         <a
-                            th:href="@{'/expense/receipt/' + ${expense.id}}"
+                            th:href="@{'/expenses/receipt/' + ${expense.id}}"
                             target="_blank"
                             class="btn btn-info btn-sm"
                             >📎 View Receipt</a
@@ -408,7 +408,7 @@
                     <div class="expense-actions">
                         <!-- View Detail -->
                         <a
-                            th:href="@{'/expense/detail/' + ${expense.id}}"
+                            th:href="@{'/expenses/detail/' + ${expense.id}}"
                             class="btn btn-secondary"
                             >View Full Details</a
                         >
@@ -439,7 +439,7 @@
                         style="display: none"
                     >
                         <form
-                            th:action="@{'/expense/' + ${expense.id} + '/approve'}"
+                            th:action="@{'/expenses/' + ${expense.id} + '/approve'}"
                             method="post"
                         >
                             <label
@@ -479,7 +479,7 @@
                         style="display: none"
                     >
                         <form
-                            th:action="@{'/expense/' + ${expense.id} + '/reject'}"
+                            th:action="@{'/expenses/' + ${expense.id} + '/reject'}"
                             method="post"
                         >
                             <label

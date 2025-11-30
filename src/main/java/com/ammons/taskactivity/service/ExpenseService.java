@@ -311,6 +311,36 @@ public class ExpenseService {
     }
 
     /**
+     * Submit an expense for approval (changes status from Draft to Submitted)
+     */
+    public Expense submitExpense(Long id) {
+        Optional<Expense> expenseOpt = expenseRepository.findById(id);
+        if (expenseOpt.isEmpty()) {
+            throw new ExpenseNotFoundException(id);
+        }
+
+        Expense expense = expenseOpt.get();
+
+        // Validate current status allows submission
+        if (!STATUS_DRAFT.equals(expense.getExpenseStatus())
+                && !"Rejected".equalsIgnoreCase(expense.getExpenseStatus())) {
+            throw new IllegalStateException("Only Draft or Rejected expenses can be submitted");
+        }
+
+        // Determine if this is initial submission or resubmission
+        if ("Rejected".equalsIgnoreCase(expense.getExpenseStatus())) {
+            expense.setExpenseStatus(STATUS_RESUBMITTED);
+        } else {
+            expense.setExpenseStatus(STATUS_SUBMITTED);
+        }
+
+        expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
+        expense.setLastModifiedBy(expense.getUsername());
+
+        return expenseRepository.save(expense);
+    }
+
+    /**
      * Approve an expense (admin/manager only)
      */
     public Expense approveExpense(Long id, String approverUsername, String approvalNotes) {

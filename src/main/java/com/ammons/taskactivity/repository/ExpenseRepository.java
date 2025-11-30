@@ -58,7 +58,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     List<Expense> findByUsernameAndStatus(@Param("username") String username,
             @Param("status") String status);
 
-    @Query("SELECT e FROM Expense e WHERE e.expenseStatus = 'Pending Approval' "
+    @Query("SELECT e FROM Expense e WHERE e.expenseStatus IN ('Submitted', 'Pending Approval', 'Resubmitted') "
             + "ORDER BY e.expenseDate ASC")
     List<Expense> findPendingApprovals();
 

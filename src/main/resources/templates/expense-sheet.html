@@ -34,14 +34,14 @@
         <link rel="stylesheet" th:href="@{/css/components.css}" />
         <link rel="stylesheet" th:href="@{/css/timesheet.css}" />
         <script>
-            // Maintain URL display as /expense
+            // Maintain URL display as /expenses
             document.addEventListener("DOMContentLoaded", function () {
-                if (window.location.pathname === "/expense/weekly-sheet") {
+                if (window.location.pathname === "/expenses/weekly-sheet") {
                     const currentSearch = window.location.search;
                     window.history.replaceState(
                         null,
                         null,
-                        "/expense" + currentSearch
+                        "/expenses" + currentSearch
                     );
                 }
             });
@@ -479,25 +479,25 @@
                         this.value = mondayStr;
                     }
 
-                    DateUtils.updateUrl(mondayStr, "/expense/weekly-sheet");
+                    DateUtils.updateUrl(mondayStr, "/expenses/weekly-sheet");
                 });
 
                 prevWeekBtn.addEventListener("click", function () {
                     const currentDate = DateUtils.parseDate(dateInput.value);
                     const prevWeek = DateUtils.addDays(currentDate, -7);
                     const prevWeekStr = DateUtils.formatDateForInput(prevWeek);
-                    DateUtils.updateUrl(prevWeekStr, "/expense/weekly-sheet");
+                    DateUtils.updateUrl(prevWeekStr, "/expenses/weekly-sheet");
                 });
 
                 nextWeekBtn.addEventListener("click", function () {
                     const currentDate = DateUtils.parseDate(dateInput.value);
                     const nextWeek = DateUtils.addDays(currentDate, 7);
                     const nextWeekStr = DateUtils.formatDateForInput(nextWeek);
-                    DateUtils.updateUrl(nextWeekStr, "/expense/weekly-sheet");
+                    DateUtils.updateUrl(nextWeekStr, "/expenses/weekly-sheet");
                 });
 
                 currentWeekBtn.addEventListener("click", function () {
-                    DateUtils.updateUrl(null, "/expense/weekly-sheet");
+                    DateUtils.updateUrl(null, "/expenses/weekly-sheet");
                 });
             });
 

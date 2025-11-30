@@ -109,7 +109,8 @@ public class SecurityConfig {
                                         // Allow all authenticated users to access their own user
                                         // info
                                         .requestMatchers("/api/users/me")
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
 
                                         // Admin-only API endpoints
                                         .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
@@ -122,13 +123,17 @@ public class SecurityConfig {
                                                         "/webjars/**")
                         .permitAll() // API endpoints - require authentication
                                         .requestMatchers(HttpMethod.GET, API_PATTERN)
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
                                         .requestMatchers(HttpMethod.POST, API_PATTERN)
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
                                         .requestMatchers(HttpMethod.PUT, API_PATTERN)
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
                                         .requestMatchers(HttpMethod.DELETE, API_PATTERN)
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
 
                                         // User Management - Admin only
                                         .requestMatchers("/task-activity/manage-users/**")
@@ -147,7 +152,8 @@ public class SecurityConfig {
                                                         "/task-activity/submit",
                                                         "/task-activity/update/**",
                                                         "/task-activity/delete/**")
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        "EXPENSE_APPROVER")
 
                         // Angular dashboard - requires authentication
                                         // .requestMatchers("/app", "/app/**").authenticated()

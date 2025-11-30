@@ -7,7 +7,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Add Expense</title>
+        <title th:text="${isEdit ? 'Edit Expense' : 'Add Expense'}">Add Expense</title>
 
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
@@ -124,7 +124,7 @@
         </nav>
         <div class="container">
             <div class="header">
-                <h1>Add New Expense</h1>
+                <h1 th:text="${isEdit ? 'Edit Expense' : 'Add New Expense'}">Add New Expense</h1>
                 <div>
                     <a
                         th:href="@{/expenses/weekly-sheet}"
@@ -154,7 +154,7 @@
                 ></div>
 
                 <form
-                    th:action="@{/expense/submit}"
+                    th:action="${isEdit ? '/expenses/update/' + expenseId : '/expenses/submit'}"
                     th:object="${expenseDto}"
                     method="post"
                     enctype="multipart/form-data"
@@ -301,15 +301,18 @@
                             <label for="currency"
                                 >Currency <span class="required">*</span></label
                             >
-                            <input
-                                type="text"
+                            <select
                                 id="currency"
                                 th:field="*{currency}"
-                                maxlength="10"
-                                value="USD"
-                                placeholder="USD"
                                 required
-                            />
+                            >
+                                <option value="USD" selected>USD</option>
+                                <option
+                                    th:each="curr : ${currencies}"
+                                    th:value="${curr}"
+                                    th:text="${curr}"
+                                ></option>
+                            </select>
                             <div
                                 class="error"
                                 th:if="${#fields.hasErrors('currency')}"
@@ -342,13 +345,14 @@
                         <!-- Vendor -->
                         <div class="form-group">
                             <label for="vendor">Vendor</label>
-                            <input
-                                type="text"
-                                id="vendor"
-                                th:field="*{vendor}"
-                                maxlength="100"
-                                placeholder="Enter vendor name (optional)"
-                            />
+                            <select id="vendor" th:field="*{vendor}">
+                                <option value="">-- Select Vendor (Optional) --</option>
+                                <option
+                                    th:each="vend : ${vendors}"
+                                    th:value="${vend}"
+                                    th:text="${vend}"
+                                ></option>
+                            </select>
                             <div
                                 class="error"
                                 th:if="${#fields.hasErrors('vendor')}"
@@ -414,7 +418,7 @@
                     </div>
 
                     <button type="submit" class="submit-btn">
-                        Add Expense
+                        <span th:text="${isEdit ? 'Update Expense' : 'Add Expense'}">Add Expense</span>
                     </button>
                 </form>
             </div>

@@ -433,9 +433,9 @@ T<!DOCTYPE html>
                         style="margin-right: 10px"
                         >📊 Weekly Timesheet</a
                     >
-                    <!-- Expense List - USER and ADMIN -->
+                    <!-- Expense List - USER, ADMIN, and EXPENSE_APPROVER -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'')')}"
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_APPROVER'')')}"
                         th:href="@{/expenses/list}"
                         class="btn btn-info"
                         style="margin-right: 10px"

@@ -81,6 +81,17 @@ VALUES
   ('EXPENSE', 'RECEIPT_STATUS', 'Receipt Pending', 3, true),
   ('EXPENSE', 'RECEIPT_STATUS', 'Receipt Missing', 4, true),
   
+  -- EXPENSE -> CURRENCY subcategory
+  ('EXPENSE', 'CURRENCY', 'USD', 1, true),
+  ('EXPENSE', 'CURRENCY', 'EUR', 2, true),
+  ('EXPENSE', 'CURRENCY', 'GBP', 3, true),
+  ('EXPENSE', 'CURRENCY', 'CAD', 4, true),
+  ('EXPENSE', 'CURRENCY', 'AUD', 5, true),
+  ('EXPENSE', 'CURRENCY', 'JPY', 6, true),
+  ('EXPENSE', 'CURRENCY', 'CNY', 7, true),
+  ('EXPENSE', 'CURRENCY', 'INR', 8, true),
+  ('EXPENSE', 'CURRENCY', 'MXN', 9, true),
+  
   -- EXPENSE -> CLIENT subcategory (shares with TASK)
   ('EXPENSE', 'CLIENT', 'Corporate', 1, true),
   
