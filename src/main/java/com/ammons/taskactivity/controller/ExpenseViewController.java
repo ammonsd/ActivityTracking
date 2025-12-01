@@ -5,6 +5,7 @@ import com.ammons.taskactivity.entity.Expense;
 import com.ammons.taskactivity.service.ExpenseService;
 import com.ammons.taskactivity.service.DropdownValueService;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.service.ReceiptStorageService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,15 +22,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -70,12 +70,15 @@ public class ExpenseViewController {
     private final ExpenseService expenseService;
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
+    private final ReceiptStorageService storageService;
 
     public ExpenseViewController(ExpenseService expenseService,
-            DropdownValueService dropdownValueService, UserService userService) {
+            DropdownValueService dropdownValueService, UserService userService,
+            ReceiptStorageService storageService) {
         this.expenseService = expenseService;
         this.dropdownValueService = dropdownValueService;
         this.userService = userService;
+        this.storageService = storageService;
     }
 
     @GetMapping
@@ -963,29 +966,18 @@ public class ExpenseViewController {
             }
 
             String receiptPath = expenseOpt.get().getReceiptPath();
-            Path filePath = Paths.get(receiptPath);
 
-            if (!Files.exists(filePath)) {
-                logger.error("Receipt file not found: {}", receiptPath);
-                return ResponseEntity.notFound().build();
-            }
+            // Use storage service to get receipt (works for both local and S3)
+            InputStream receiptStream = storageService.getReceipt(receiptPath);
+            String contentType = storageService.getContentType(receiptPath);
 
-            Resource resource = new UrlResource(filePath.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
-                return ResponseEntity.notFound().build();
-            }
+            // Extract filename from path
+            String filename = receiptPath.substring(receiptPath.lastIndexOf('/') + 1);
 
-            // Determine content type
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            String filename = filePath.getFileName().toString();
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"" + filename + "\"")
-                    .body(resource);
+                    .body(new InputStreamResource(receiptStream));
 
         } catch (IOException e) {
             logger.error("Error retrieving receipt: {}", e.getMessage(), e);
