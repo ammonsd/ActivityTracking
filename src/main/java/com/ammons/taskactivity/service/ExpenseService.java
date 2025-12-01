@@ -44,7 +44,7 @@ public class ExpenseService {
     private static final String STATUS_DRAFT = "Draft";
     private static final String STATUS_SUBMITTED = "Submitted";
     private static final String STATUS_APPROVED = "Approved";
-    private static final String STATUS_REJECTED = "Rejected - Needs Revision";
+    private static final String STATUS_REJECTED = "Rejected";
     private static final String STATUS_RESUBMITTED = "Resubmitted";
     private static final String STATUS_REIMBURSED = "Reimbursed";
 
@@ -64,6 +64,45 @@ public class ExpenseService {
         expense.setCreatedDate(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(expenseDto.getUsername());
+        return expenseRepository.save(expense);
+    }
+
+    /**
+     * Create a new expense with receipt file
+     */
+    public Expense createExpenseWithReceipt(ExpenseDto expenseDto, MultipartFile receiptFile)
+            throws IOException {
+        Expense expense = convertDtoToEntity(expenseDto);
+        expense.setCreatedDate(LocalDateTime.now(ZoneOffset.UTC));
+        expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
+        expense.setLastModifiedBy(expenseDto.getUsername());
+
+        // Handle receipt upload
+        if (receiptFile != null && !receiptFile.isEmpty()) {
+            String uploadDir = "c:\\Task Activity\\Receipts\\";
+            Path uploadPath = Paths.get(uploadDir);
+
+            // Create directory if it doesn't exist
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Generate unique filename
+            String originalFilename = receiptFile.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+            // Save file
+            Path filePath = uploadPath.resolve(uniqueFilename);
+            Files.copy(receiptFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Update expense with receipt info
+            expense.setReceiptPath(uploadDir + uniqueFilename);
+            expense.setReceiptStatus("Uploaded");
+        }
+
         return expenseRepository.save(expense);
     }
 
@@ -165,6 +204,13 @@ public class ExpenseService {
 
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(expenseDto.getUsername());
+        return expenseRepository.save(expense);
+    }
+
+    /**
+     * Save an expense entity directly
+     */
+    public Expense saveExpense(Expense expense) {
         return expenseRepository.save(expense);
     }
 

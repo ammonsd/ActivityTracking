@@ -89,9 +89,10 @@ public class ExpenseViewController {
         addUserInfo(model, authentication);
 
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "expense_date"));
-        boolean isAdmin = isAdmin(authentication);
-        String currentUsername = isAdmin ? null : authentication.getName();
-        String filterUsername = (isAdmin && username != null) ? username : currentUsername;
+        boolean canViewAllExpenses = canApproveExpenses(authentication);
+        String currentUsername = canViewAllExpenses ? null : authentication.getName();
+        String filterUsername =
+                (canViewAllExpenses && username != null) ? username : currentUsername;
 
         com.ammons.taskactivity.dto.ExpenseFilterDto filter =
                 new com.ammons.taskactivity.dto.ExpenseFilterDto(filterUsername, client, project,
@@ -108,7 +109,7 @@ public class ExpenseViewController {
         addFilterAttributes(model, client, project, expenseType, status, username, startDate,
                 endDate);
 
-        if (isAdmin) {
+        if (canViewAllExpenses) {
             model.addAttribute("users", userService.getAllUsers());
         }
 
@@ -128,9 +129,10 @@ public class ExpenseViewController {
                     iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Authentication authentication) {
 
-        boolean isAdmin = isAdmin(authentication);
-        String currentUsername = isAdmin ? null : authentication.getName();
-        String filterUsername = (isAdmin && username != null) ? username : currentUsername;
+        boolean canViewAllExpenses = canApproveExpenses(authentication);
+        String currentUsername = canViewAllExpenses ? null : authentication.getName();
+        String filterUsername =
+                (canViewAllExpenses && username != null) ? username : currentUsername;
 
         com.ammons.taskactivity.dto.ExpenseFilterDto filter =
                 new com.ammons.taskactivity.dto.ExpenseFilterDto(filterUsername, client, project,
@@ -142,7 +144,7 @@ public class ExpenseViewController {
         List<Expense> filteredExpenses = allExpensesPage.getContent();
 
         // Generate CSV
-        return generateCsvFromExpenses(filteredExpenses, isAdmin);
+        return generateCsvFromExpenses(filteredExpenses, canViewAllExpenses);
     }
 
     private String generateCsvFromExpenses(List<Expense> expenses, boolean includeUsername) {
@@ -258,11 +260,60 @@ public class ExpenseViewController {
         return EXPENSE_FORM_VIEW;
     }
 
+    @GetMapping("/clone/{id}")
+    public String cloneExpense(@PathVariable Long id, Model model,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            // Validate ID
+            if (id == null || id <= 0) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Invalid expense ID provided.");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
+            if (expenseOpt.isPresent()) {
+                ExpenseDto dto = convertToDto(expenseOpt.get());
+                // Set today's date as default for cloned expense
+                dto.setExpenseDate(LocalDate.now());
+                // Reset status to Draft for cloned expense
+                dto.setExpenseStatus("Draft");
+                // Clear approval/rejection fields
+                dto.setApprovedBy(null);
+                dto.setApprovalDate(null);
+                dto.setApprovalNotes(null);
+                // Clear reimbursement fields
+                dto.setReimbursedAmount(null);
+                dto.setReimbursementDate(null);
+                dto.setReimbursementNotes(null);
+                // Clear receipt (user needs to upload new one if needed)
+                dto.setReceiptPath(null);
+                dto.setReceiptStatus(null);
+
+                addUserInfo(model, authentication);
+                model.addAttribute("expenseDto", dto);
+                model.addAttribute("isEdit", false);
+                addDropdownOptions(model);
+                return EXPENSE_FORM_VIEW;
+            } else {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Expense not found with ID: " + id);
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to clone expense: " + e.getMessage());
+            return REDIRECT_EXPENSE_LIST;
+        }
+    }
+
     @PostMapping("/submit")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
     public String submitForm(@Valid @ModelAttribute ExpenseDto expenseDto,
-            BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+            BindingResult bindingResult,
+            @RequestParam(value = "receipt", required = false) MultipartFile receipt, Model model,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             addUserInfo(model, authentication);
             model.addAttribute("isEdit", false);
@@ -272,7 +323,23 @@ public class ExpenseViewController {
 
         try {
             expenseDto.setUsername(authentication.getName());
-            expenseService.createExpense(expenseDto);
+
+            // Handle file upload if provided
+            if (receipt != null && !receipt.isEmpty()) {
+                try {
+                    expenseService.createExpenseWithReceipt(expenseDto, receipt);
+                } catch (Exception e) {
+                    logger.error("Error uploading receipt: {}", e.getMessage(), e);
+                    model.addAttribute(ERROR_MESSAGE_ATTR,
+                            "Expense created but receipt upload failed: " + e.getMessage());
+                    addUserInfo(model, authentication);
+                    addDropdownOptions(model);
+                    return EXPENSE_FORM_VIEW;
+                }
+            } else {
+                expenseService.createExpense(expenseDto);
+            }
+
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense created successfully");
             return REDIRECT_EXPENSE_LIST;
@@ -297,9 +364,9 @@ public class ExpenseViewController {
         }
 
         Expense expense = expenseOpt.get();
-        boolean isAdmin = isAdmin(authentication);
+        boolean canViewAllExpenses = canApproveExpenses(authentication);
 
-        if (!isAdmin && !expense.getUsername().equals(authentication.getName())) {
+        if (!canViewAllExpenses && !expense.getUsername().equals(authentication.getName())) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "You can only view your own expenses");
             return REDIRECT_EXPENSE_LIST;
@@ -316,8 +383,7 @@ public class ExpenseViewController {
     public String updateExpense(@PathVariable Long id, @Valid @ModelAttribute ExpenseDto expenseDto,
             BindingResult bindingResult,
             @RequestParam(value = "receipt", required = false) MultipartFile receipt, Model model,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+            RedirectAttributes redirectAttributes, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             addUserInfo(model, authentication);
             model.addAttribute("expenseId", id);
@@ -334,18 +400,19 @@ public class ExpenseViewController {
             }
 
             Expense existing = existingOpt.get();
-            boolean isAdmin = isAdmin(authentication);
+            boolean canEditAllExpenses = canApproveExpenses(authentication);
 
-            if (!isAdmin && !existing.getUsername().equals(authentication.getName())) {
+            if (!canEditAllExpenses && !existing.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "You can only update your own expenses");
                 return REDIRECT_EXPENSE_LIST;
             }
 
-            // Only allow updating of Draft expenses
-            if (!"Draft".equalsIgnoreCase(existing.getExpenseStatus())) {
+            // Only allow updating of Draft or Rejected expenses
+            if (!"Draft".equalsIgnoreCase(existing.getExpenseStatus())
+                    && !"Rejected".equalsIgnoreCase(existing.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                        "Only expenses in Draft status can be edited");
+                        "Only expenses in Draft or Rejected status can be edited");
                 return REDIRECT_EXPENSE_LIST;
             }
 
@@ -390,9 +457,9 @@ public class ExpenseViewController {
             }
 
             Expense expense = expenseOpt.get();
-            boolean isAdmin = isAdmin(authentication);
+            boolean canDeleteAllExpenses = canApproveExpenses(authentication);
 
-            if (!isAdmin && !expense.getUsername().equals(authentication.getName())) {
+            if (!canDeleteAllExpenses && !expense.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "You can only delete your own expenses");
                 return REDIRECT_EXPENSE_LIST;
@@ -414,6 +481,52 @@ public class ExpenseViewController {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to delete expense: " + e.getMessage());
             return REDIRECT_EXPENSE_LIST;
+        }
+    }
+
+    @PostMapping("/{id}/reimburse")
+    public String markAsReimbursed(@PathVariable Long id, @RequestParam BigDecimal reimbursedAmount,
+            @RequestParam(required = false) String reimbursementNotes,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
+            if (expenseOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, "Expense not found");
+                return REDIRECT_EXPENSE_LIST;
+            }
+
+            Expense expense = expenseOpt.get();
+            boolean canReimburse = canApproveExpenses(authentication);
+
+            if (!canReimburse) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Only administrators can mark expenses as reimbursed");
+                return "redirect:/expenses/detail/" + id;
+            }
+
+            // Only allow reimbursement of Approved expenses
+            if (!"Approved".equalsIgnoreCase(expense.getExpenseStatus())) {
+                redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                        "Only Approved expenses can be marked as reimbursed");
+                return "redirect:/expenses/detail/" + id;
+            }
+
+            // Update reimbursement fields
+            expense.setReimbursedAmount(reimbursedAmount);
+            expense.setReimbursementDate(LocalDate.now());
+            expense.setReimbursementNotes(reimbursementNotes);
+            expense.setExpenseStatus("Reimbursed");
+
+            expenseService.saveExpense(expense);
+
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
+                    "Expense marked as reimbursed successfully");
+            return "redirect:/expenses/detail/" + id;
+        } catch (Exception e) {
+            logger.error("Error marking expense as reimbursed: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to mark expense as reimbursed: " + e.getMessage());
+            return "redirect:/expenses/detail/" + id;
         }
     }
 
@@ -696,6 +809,37 @@ public class ExpenseViewController {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to reject expense: " + e.getMessage());
             return "redirect:/expenses/admin/approval-queue";
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @PostMapping("/{id}/approve")
+    public String approveExpenseFromDetail(@PathVariable Long id,
+            @RequestParam(required = false) String notes, RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        try {
+            expenseService.approveExpense(id, authentication.getName(), notes);
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense approved");
+            return "redirect:/expenses/detail/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to approve expense: " + e.getMessage());
+            return "redirect:/expenses/detail/" + id;
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @PostMapping("/{id}/reject")
+    public String rejectExpenseFromDetail(@PathVariable Long id, @RequestParam String notes,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            expenseService.rejectExpense(id, authentication.getName(), notes);
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense rejected");
+            return "redirect:/expenses/detail/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Failed to reject expense: " + e.getMessage());
+            return "redirect:/expenses/detail/" + id;
         }
     }
 

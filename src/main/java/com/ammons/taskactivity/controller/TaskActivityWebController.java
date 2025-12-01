@@ -133,7 +133,7 @@ public class TaskActivityWebController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @PostMapping("/submit")
     public String submitForm(@Valid @ModelAttribute TaskActivityDto taskActivityDto,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes,
@@ -727,3 +727,4 @@ public class TaskActivityWebController {
         return field;
     }
 }
+

@@ -415,7 +415,6 @@
                     >
                     <!-- Task Activity List - Hidden for EXPENSE_ADMIN -->
                     <a
-                        th:if="${!#authorization.expression('hasRole(''EXPENSE_ADMIN'')')}"
                         th:href="@{/task-activity/list}"
                         class="btn btn-success"
                         style="margin-right: 10px"
@@ -432,15 +431,6 @@
                     >
                         📋 Export CSV
                     </button>
-                    <!-- Task Activity List -->
-                    <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
-                        th:href="@{/task-activity/list}"
-                        class="btn btn-info"
-                        style="margin-right: 10px"
-                        title="Task Activity List"
-                        >📝 Task Activity List</a
-                    >
                     <!-- Weekly Expense Sheet -->
                     <a
                         th:href="@{/expenses/weekly-sheet}"
@@ -724,6 +714,13 @@
                                         display: inline-block;
                                     "
                                     >Edit</a
+                                >
+                                <a
+                                    th:href="@{'/expenses/clone/' + ${expense.id}}"
+                                    class="btn btn-info"
+                                    style="margin: 0; margin-right: 1px; display: inline-block"
+                                    title="Clone this expense"
+                                    >Clone</a
                                 >
                                 <button
                                     th:if="${#strings.equalsIgnoreCase(expense.expenseStatus, 'Draft')}"

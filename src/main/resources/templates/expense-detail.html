@@ -201,7 +201,7 @@
             <div class="header">
                 <h1>Expense Details</h1>
                 <a th:href="@{/expenses/list}" class="btn btn-secondary">
-                    Back to Expense List
+                    Expense List
                 </a>
             </div>
 
@@ -241,10 +241,10 @@
             <!-- Rejection Information -->
             <div
                 class="rejection-info"
-                th:if="${expenseDto.expenseStatus == 'Rejected' and expenseDto.rejectionReason != null}"
+                th:if="${expenseDto.expenseStatus == 'Rejected' and expenseDto.approvalNotes != null}"
             >
                 <strong style="color: #dc3545">Rejection Reason:</strong><br />
-                <span th:text="${expenseDto.rejectionReason}"></span>
+                <span th:text="${expenseDto.approvalNotes}"></span>
             </div>
 
             <!-- Receipt Section -->
@@ -565,9 +565,9 @@
                             th:if="${(expenseDto.expenseStatus == 'Submitted' or expenseDto.expenseStatus == 'Resubmitted') and expenseDto.username != username}"
                             type="button"
                             class="btn btn-success"
-                            onclick="approveExpense()"
+                            th:onclick="'showApprovalForm(' + ${expenseId} + ')'"
                         >
-                            Approve
+                            ✓ Approve
                         </button>
 
                         <!-- Reject (Admin/Expense Approver, Submitted/Resubmitted, not own expense) -->
@@ -576,9 +576,9 @@
                             th:if="${(expenseDto.expenseStatus == 'Submitted' or expenseDto.expenseStatus == 'Resubmitted') and expenseDto.username != username}"
                             type="button"
                             class="btn btn-danger"
-                            onclick="rejectExpense()"
+                            th:onclick="'showRejectionForm(' + ${expenseId} + ')'"
                         >
-                            Reject
+                            ✗ Reject
                         </button>
 
                         <!-- Mark as Reimbursed (Admin and Expense Admin only, Approved) -->
@@ -618,25 +618,86 @@
             style="display: none"
         ></form>
 
-        <form
-            id="approveForm"
-            th:action="@{'/expenses/' + ${expenseId} + '/approve'}"
-            method="post"
-            style="display: none"
-        ></form>
-
-        <form
-            id="rejectForm"
-            th:action="@{'/expenses/' + ${expenseId} + '/reject'}"
-            method="post"
-            style="display: none"
+        <!-- Approval Notes Form (Hidden by default) -->
+        <div
+            th:id="'approval-form-' + ${expenseId}"
+            style="display: none; margin-top: 20px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; border: 1px solid #28a745;"
         >
-            <input
-                type="hidden"
-                id="rejectionReasonInput"
-                name="rejectionReason"
-            />
-        </form>
+            <h4 style="color: #28a745; margin-bottom: 15px;">✓ Approve Expense</h4>
+            <form
+                th:action="@{'/expenses/' + ${expenseId} + '/approve'}"
+                method="post"
+            >
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="approvalNotes"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Approval Notes (Optional):
+                    </label>
+                    <textarea
+                        id="approvalNotes"
+                        name="notes"
+                        rows="3"
+                        placeholder="Add any notes about this approval (optional)..."
+                        style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit;"
+                    ></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success">
+                        Confirm Approval
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        th:onclick="'hideApprovalForm(' + ${expenseId} + ')'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Rejection Form (Hidden by default) -->
+        <div
+            th:id="'rejection-form-' + ${expenseId}"
+            style="display: none; margin-top: 20px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; border: 1px solid #dc3545;"
+        >
+            <h4 style="color: #dc3545; margin-bottom: 15px;">✗ Reject Expense</h4>
+            <form
+                th:action="@{'/expenses/' + ${expenseId} + '/reject'}"
+                method="post"
+            >
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="rejectionReason"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Rejection Reason (Required):
+                    </label>
+                    <textarea
+                        id="rejectionReason"
+                        name="notes"
+                        rows="3"
+                        required
+                        placeholder="Please provide a clear reason for rejecting this expense..."
+                        style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit;"
+                    ></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-danger">
+                        Confirm Rejection
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        th:onclick="'hideRejectionForm(' + ${expenseId} + ')'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
 
         <!-- Reimbursement Form (Hidden by default) -->
         <div
@@ -681,7 +742,7 @@
                     </label>
                     <textarea
                         id="reimbursementNotes"
-                        name="notes"
+                        name="reimbursementNotes"
                         placeholder="Add any notes about this reimbursement (optional)..."
                         style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit; resize: vertical;"
                     ></textarea>
@@ -743,19 +804,24 @@
                 ModalUtils.openDeleteModal(formId, message);
             }
 
-            function approveExpense() {
-                if (confirm("Approve this expense?")) {
-                    document.getElementById("approveForm").submit();
-                }
+            function showApprovalForm(expenseId) {
+                document.getElementById('approval-form-' + expenseId).style.display = 'block';
+                document.getElementById('rejection-form-' + expenseId).style.display = 'none';
+                document.getElementById('approval-form-' + expenseId).scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            function rejectExpense() {
-                const reason = prompt("Please enter rejection reason:");
-                if (reason && reason.trim() !== "") {
-                    document.getElementById("rejectionReasonInput").value =
-                        reason;
-                    document.getElementById("rejectForm").submit();
-                }
+            function hideApprovalForm(expenseId) {
+                document.getElementById('approval-form-' + expenseId).style.display = 'none';
+            }
+
+            function showRejectionForm(expenseId) {
+                document.getElementById('rejection-form-' + expenseId).style.display = 'block';
+                document.getElementById('approval-form-' + expenseId).style.display = 'none';
+                document.getElementById('rejection-form-' + expenseId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideRejectionForm(expenseId) {
+                document.getElementById('rejection-form-' + expenseId).style.display = 'none';
             }
 
             function showReimbursementForm(expenseId) {
@@ -770,4 +836,6 @@
         </script>
     </body>
 </html>
+
+
 

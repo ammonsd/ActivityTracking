@@ -50,7 +50,7 @@ public class ReceiptController {
     /**
      * Upload a receipt for an expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @PostMapping("/{expenseId}")
     public ResponseEntity<ApiResponse<String>> uploadReceipt(@PathVariable Long expenseId,
             @RequestParam("file") MultipartFile file, Authentication authentication) {
@@ -116,7 +116,7 @@ public class ReceiptController {
     /**
      * Download a receipt
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/{expenseId}")
     public ResponseEntity<Object> downloadReceipt(@PathVariable Long expenseId,
             Authentication authentication) {
@@ -167,7 +167,7 @@ public class ReceiptController {
     /**
      * Delete a receipt
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
     @DeleteMapping("/{expenseId}")
     public ResponseEntity<ApiResponse<Void>> deleteReceipt(@PathVariable Long expenseId,
             Authentication authentication) {
@@ -259,3 +259,4 @@ public class ReceiptController {
         return dto;
     }
 }
+

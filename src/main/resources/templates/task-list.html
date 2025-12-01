@@ -425,9 +425,9 @@ T<!DOCTYPE html>
                     >
                         📋 Export CSV
                     </button>
-                    <!-- Weekly Timesheet - USER, GUEST, and ADMIN -->
+                    <!-- Weekly Timesheet - USER, GUEST, ADMIN, and EXPENSE_ADMIN -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'')')}"
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
                         th:href="@{/task-activity/weekly-timesheet}"
                         class="btn btn-info"
                         style="margin-right: 10px"
@@ -444,7 +444,7 @@ T<!DOCTYPE html>
                     >
                     <!-- Update Password - Visible for USER and GUEST (disabled for GUEST) -->
                     <a
-                        th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'')) and !hasRole(''ADMIN'')')}"
+                        th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'') or hasRole(''EXPENSE_ADMIN'')) and !hasRole(''ADMIN'')')}"
                         th:href="@{/change-password}"
                         class="btn btn-info"
                         style="margin-right: 10px"
