@@ -57,7 +57,7 @@ This document provides a comprehensive summary of all technical features, framew
 ### Spring Security
 
 - **Form-based authentication** with custom login pages
-- **Role-based access control (RBAC)** - ADMIN, USER and GUEST roles
+- **Role-based access control (RBAC)** - ADMIN, USER, GUEST, and EXPENSE_ADMIN roles
 - **Method-level security** with @PreAuthorize annotations
 - **BCrypt password encoding** for secure password storage
 - **CSRF protection** with CookieCsrfTokenRepository
@@ -71,6 +71,7 @@ This document provides a comprehensive summary of all technical features, framew
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
+  - EXPENSE_ADMIN access to approval queue and reimbursement functions
   - Role-based data filtering (ADMIN sees all users, regular users see only own data)
   - SecurityConfig request matcher ordering for proper API access control
   - Conditional UI rendering with *ngIf directives based on user roles
@@ -685,26 +686,44 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### Business Functionality
 
+**Task Activity Tracking:**
 - Task activity tracking and management
 - Weekly timesheet view with calculations
 - Client, project, and phase categorization
-- Dropdown value management system
-- User management and administration
-- Role-based feature access
+- Task cloning for repetitive entries
 - Search and filtering capabilities
 - Date range queries
+- CSV export for reporting
+
+**Expense Management:**
+- Business expense tracking with client/project association
+- Multi-step approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
+- Receipt upload and storage (local filesystem or AWS S3 ready)
+- Expense approval queue for administrators
+- Role-based expense administration (EXPENSE_ADMIN role)
+- Comprehensive filtering by type, status, payment method, date range
+- Weekly expense sheet view
+- Reimbursement tracking with approval notes
+- CSV export for expense reports
+
+**Administrative Features:**
+- Dropdown value management system
+- User management and administration
+- Role-based feature access (ADMIN, USER, GUEST, EXPENSE_ADMIN)
 - Data aggregation and reporting
 - Interactive API documentation (Swagger UI)
 
 ### User Interface
 
 - Responsive web design
+- Compact CSS Grid layouts for filters
 - Modal-based data entry
 - AJAX form submissions
 - Client-side validation
 - User-friendly error messages
 - Dynamic date calculations
 - Accessible HTML markup
+- Receipt image preview and download
 
 ---
 

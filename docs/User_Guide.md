@@ -307,6 +307,143 @@ Date,Client,Project,Phase,Hours,Task Details,Username
 
 ## Changing Your Password
 
+---
+
+## Expense Tracking
+
+### Expense List
+
+The expense list shows all your recorded expenses with the following information:
+
+-   **Date**: Date of the expense
+-   **Client**: Client associated with the expense
+-   **Project**: Project the expense is related to
+-   **Type**: Category of expense (Travel, Home Office, etc.)
+-   **Amount**: Expense amount with currency
+-   **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
+-   **Receipt**: Indicator if receipt is attached
+-   **Actions**: View, Edit, Submit, Delete buttons
+
+### Filtering Expenses
+
+Use the filter controls at the top of the expense list to find specific expenses:
+
+1. **Client Filter**: Show expenses for a specific client
+2. **Project Filter**: Filter by project name
+3. **Expense Type**: Filter by expense category
+4. **Status**: Filter by workflow status
+5. **Payment Method**: Filter by how you paid
+6. **Start Date / End Date**: Filter by expense date range
+7. **Username** (Admin only): Filter expenses by user
+
+**To Apply Filters:**
+-   Select your desired filter options
+-   Filters apply automatically
+-   Click **"Reset Filters"** to clear all filters
+
+### Creating a New Expense
+
+1. **Access Expense Form**: Click **"💰 Add Expense"** from the navigation
+2. **Fill in Required Fields**:
+    - **Expense Date**: Date you incurred the expense (required)
+    - **Client**: Client associated with this expense (required)
+    - **Project**: Project related to the expense (optional)
+    - **Expense Type**: Category from dropdown (Travel - Airfare, Hotel, Home Office Equipment, etc.) (required)
+    - **Description**: What the expense was for (required)
+    - **Amount**: Cost of the expense (required)
+    - **Currency**: Default is USD (optional)
+    - **Payment Method**: How you paid (Personal Credit Card, Cash, etc.) (required)
+
+3. **Fill in Optional Fields**:
+    - **Vendor**: Name of merchant or vendor
+    - **Reference Number**: Receipt number, confirmation code, or invoice number
+    - **Notes**: Additional information or justification
+
+4. **Upload Receipt** (Recommended):
+    - Click **"Choose File"** next to Receipt
+    - Select an image file (JPG, PNG, PDF)
+    - Receipt is uploaded and attached to the expense
+
+5. **Save as Draft**: Click **"Save Expense"**
+    - Expense is saved with status "Draft"
+    - You can edit it anytime before submitting
+
+### Editing an Expense
+
+1. **Find the Expense**: Locate the expense in your list
+2. **Click "Edit"**: Press the edit button (pencil icon)
+3. **Update Information**: Change any fields as needed
+4. **Save Changes**: Click **"Update Expense"**
+
+**Note:** You can only edit expenses with status "Draft". Once submitted, you cannot edit them.
+
+### Submitting an Expense for Approval
+
+1. **Complete Draft Expense**: Ensure all information is correct and receipt is attached
+2. **Submit**: Click **"Submit for Approval"** button
+3. **Status Change**: Expense status changes to "Submitted"
+4. **Wait for Review**: EXPENSE_ADMIN will review and approve or reject
+
+**Important:** Once submitted, you cannot edit or delete the expense.
+
+### Understanding Expense Status
+
+**Draft**: Initial state after creating an expense
+-   You can edit and delete
+-   Not visible to approvers
+-   Upload receipt before submitting
+
+**Submitted**: Expense is awaiting approval
+-   Cannot edit or delete
+-   Visible in approval queue
+-   Approver will review details and receipt
+
+**Approved**: Expense has been approved
+-   Ready for reimbursement processing
+-   You'll see approval date and approver name
+-   Check approval notes for any comments
+
+**Rejected**: Expense was not approved
+-   Read rejection notes carefully
+-   Make corrections and create new expense
+-   Contact approver if you have questions
+
+**Reimbursed**: Payment has been processed
+-   View reimbursement date and amount
+-   Check reimbursement notes for payment details
+-   Expense workflow is complete
+
+### Viewing Expense Details
+
+1. **Click on Expense**: Click anywhere on the expense row
+2. **View Complete Information**: See all fields, notes, and approval details
+3. **View Receipt**: Click receipt thumbnail to view full-size image
+4. **Download Receipt**: Download receipt for your records
+
+### Weekly Expense Sheet
+
+Similar to the weekly timesheet, the expense sheet shows your expenses for the current week:
+
+1. **Access Expense Sheet**: Click **"📊 Weekly Expense Sheet"** from navigation
+2. **View Current Week**: See all expenses from Monday through Sunday
+3. **See Totals**: View total expenses by day and for the week
+4. **Filter by Client/Project**: Filter to see expenses for specific work
+
+### Exporting Expenses to CSV
+
+Export your filtered expense list for reporting or record-keeping:
+
+1. **Apply Filters** (optional): Filter expenses as needed
+2. **Click Export**: Click **"📋 Export CSV"** button
+3. **Choose Action**:
+    - Copy to Clipboard for pasting into Excel
+    - Download CSV file with intelligent filename
+4. **CSV Includes**: All filtered expenses with complete details
+
+---
+
+## Changing Your Password
+
 Your new password must meet these requirements:
 
 1. ✅ **At least 10 characters long**
