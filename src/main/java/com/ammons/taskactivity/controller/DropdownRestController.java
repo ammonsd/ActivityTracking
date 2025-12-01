@@ -90,6 +90,46 @@ public class DropdownRestController {
     }
 
     /**
+     * Get expense types (from EXPENSE/EXPENSE_TYPE)
+     */
+    @GetMapping("/expense-types")
+    public ResponseEntity<List<DropdownValue>> getExpenseTypes() {
+        logger.debug("REST API: Getting expense types");
+        List<DropdownValue> expenseTypes = dropdownValueService.getActiveExpenseTypes();
+        return ResponseEntity.ok(expenseTypes);
+    }
+
+    /**
+     * Get payment methods (from EXPENSE/PAYMENT_METHOD)
+     */
+    @GetMapping("/payment-methods")
+    public ResponseEntity<List<DropdownValue>> getPaymentMethods() {
+        logger.debug("REST API: Getting payment methods");
+        List<DropdownValue> paymentMethods = dropdownValueService.getActivePaymentMethods();
+        return ResponseEntity.ok(paymentMethods);
+    }
+
+    /**
+     * Get currencies (from EXPENSE/CURRENCY)
+     */
+    @GetMapping("/currencies")
+    public ResponseEntity<List<DropdownValue>> getCurrencies() {
+        logger.debug("REST API: Getting currencies");
+        List<DropdownValue> currencies = dropdownValueService.getActiveCurrencies();
+        return ResponseEntity.ok(currencies);
+    }
+
+    /**
+     * Get vendors (from EXPENSE/VENDOR)
+     */
+    @GetMapping("/vendors")
+    public ResponseEntity<List<DropdownValue>> getVendors() {
+        logger.debug("REST API: Getting vendors");
+        List<DropdownValue> vendors = dropdownValueService.getActiveVendors();
+        return ResponseEntity.ok(vendors);
+    }
+
+    /**
      * Add new dropdown value (ADMIN only)
      */
     @PostMapping

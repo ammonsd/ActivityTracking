@@ -36,6 +36,10 @@ export class DropdownService {
     return this.http.get<DropdownValue[]>(`${this.apiUrl}/currencies`);
   }
 
+  getVendors(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/vendors`);
+  }
+
   getAllCategories(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/categories`);
   }

@@ -33,6 +33,7 @@ public class DropdownValueService {
     public static final String SUBCATEGORY_PAYMENT_METHOD = "PAYMENT_METHOD";
     public static final String SUBCATEGORY_EXPENSE_STATUS = "EXPENSE_STATUS";
     public static final String SUBCATEGORY_VENDOR = "VENDOR";
+    public static final String SUBCATEGORY_CURRENCY = "CURRENCY";
     public static final String SUBCATEGORY_RECEIPT_STATUS = "RECEIPT_STATUS";
 
     /**
@@ -233,6 +234,12 @@ public class DropdownValueService {
     public List<DropdownValue> getActiveVendors() {
         return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
                 CATEGORY_EXPENSE, SUBCATEGORY_VENDOR);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveCurrencies() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_CURRENCY);
     }
 
     @Transactional(readOnly = true)

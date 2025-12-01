@@ -46,6 +46,7 @@ export class ExpenseEditDialogComponent implements OnInit {
   expenseTypes: DropdownValue[] = [];
   paymentMethods: DropdownValue[] = [];
   currencies: DropdownValue[] = [];
+  vendors: DropdownValue[] = [];
   isAddMode: boolean = false;
 
   constructor(
@@ -114,6 +115,11 @@ export class ExpenseEditDialogComponent implements OnInit {
     this.dropdownService.getCurrencies().subscribe({
       next: (data) => (this.currencies = data),
       error: (err) => console.error('Error loading currencies:', err),
+    });
+
+    this.dropdownService.getVendors().subscribe({
+      next: (data) => (this.vendors = data),
+      error: (err) => console.error('Error loading vendors:', err),
     });
   }
 
