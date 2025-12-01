@@ -52,6 +52,62 @@ T<!DOCTYPE html>
             .nav-content {
                 max-width: 1400px;
             }
+            
+            /* Compact header navigation buttons */
+            .header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .header h1 {
+                margin-right: 15px;
+            }
+            
+            .header > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                align-items: center;
+            }
+            
+            .header .btn {
+                margin: 0 !important;
+                padding: 8px 12px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+            
+            /* Compact filter layout for task list */
+            .filters .filter-row {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 10px;
+                align-items: end;
+            }
+            
+            .filters .filter-group {
+                min-width: 0; /* Allow shrinking below 150px default */
+            }
+            
+            .filters .filter-group label {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+            
+            .filters .filter-group input,
+            .filters .filter-group select {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+            
+            /* Buttons container spans remaining space */
+            .filter-actions {
+                display: flex;
+                gap: 8px;
+                align-items: flex-end;
+                grid-column: -1; /* Place at end of grid */
+            }
+            
             .task-row {
                 cursor: pointer;
             }
@@ -219,12 +275,11 @@ T<!DOCTYPE html>
                 .container {
                     overflow-x: visible;
                 }
-                .filter-row {
-                    flex-direction: column;
-                    align-items: stretch;
+                .filters .filter-row {
+                    grid-template-columns: 1fr;
                 }
-                .filter-group {
-                    min-width: auto;
+                .filter-actions {
+                    grid-column: 1;
                 }
                 .header {
                     flex-direction: column;
@@ -410,7 +465,6 @@ T<!DOCTYPE html>
                     <a
                         th:href="@{/app}"
                         class="btn btn-success"
-                        style="margin-right: 10px"
                         title="Angular Admin Dashboard"
                         >📊 Dashboard</a
                     >
@@ -420,7 +474,6 @@ T<!DOCTYPE html>
                         class="btn btn-secondary"
                         id="exportCsvBtn"
                         title="Export to CSV"
-                        style="margin-right: 10px"
                         th:disabled="${#authorization.expression('hasRole(''GUEST'')')}"
                     >
                         📋 Export CSV
@@ -430,7 +483,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
                         th:href="@{/task-activity/weekly-timesheet}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         >📊 Weekly Timesheet</a
                     >
                     <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN -->
@@ -438,7 +490,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
                         th:href="@{/expenses/list}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         title="Expense Tracking"
                         >💰 Expense List</a
                     >
@@ -447,7 +498,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'') or hasRole(''EXPENSE_ADMIN'')) and !hasRole(''ADMIN'')')}"
                         th:href="@{/change-password}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         title="Change Password"
                         th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                         th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
@@ -459,7 +509,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
                         th:href="@{/task-activity/manage-users}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         title="Manage Users"
                         th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                         th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
@@ -471,7 +520,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
                         th:href="@{/task-activity/manage-users/guest-activity}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         title="Guest Activity Report"
                         >📊 Guest Activity</a
                     >
@@ -480,7 +528,6 @@ T<!DOCTYPE html>
                         th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
                         th:href="@{/admin/dropdowns}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         title="Manage Dropdowns"
                         th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                         th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
@@ -589,23 +636,15 @@ T<!DOCTYPE html>
                             />
                         </div>
 
-                        <div
-                            style="
-                                margin-left: auto;
-                                display: flex;
-                                align-items: flex-end;
-                            "
-                        >
-                            <div style="display: flex; gap: 10px">
-                                <button type="submit" class="btn btn-info">
-                                    Filter
-                                </button>
-                                <a
-                                    th:href="@{/task-activity/list}"
-                                    class="btn btn-secondary"
-                                    >Clear</a
-                                >
-                            </div>
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-info">
+                                Filter
+                            </button>
+                            <a
+                                th:href="@{/task-activity/list}"
+                                class="btn btn-secondary"
+                                >Clear</a
+                            >
                         </div>
                     </div>
                 </form>
@@ -937,4 +976,5 @@ T<!DOCTYPE html>
         </script>
     </body>
 </html>
+
 

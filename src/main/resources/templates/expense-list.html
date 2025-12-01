@@ -48,6 +48,38 @@
             .nav-content {
                 max-width: 1600px;
             }
+            
+            /* Compact filter layout for expense list */
+            .filters .filter-row {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 10px;
+                align-items: end;
+            }
+            
+            .filters .filter-group {
+                min-width: 0; /* Allow shrinking below 150px default */
+            }
+            
+            .filters .filter-group label {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+            
+            .filters .filter-group input,
+            .filters .filter-group select {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+            
+            /* Buttons container spans remaining space */
+            .filter-actions {
+                display: flex;
+                gap: 8px;
+                align-items: flex-end;
+                grid-column: -1; /* Place at end of grid */
+            }
+            
             .expense-row {
                 cursor: pointer;
             }
@@ -240,12 +272,11 @@
                 .container {
                     overflow-x: visible;
                 }
-                .filter-row {
-                    flex-direction: column;
-                    align-items: stretch;
+                .filters .filter-row {
+                    grid-template-columns: 1fr;
                 }
-                .filter-group {
-                    min-width: auto;
+                .filter-actions {
+                    grid-column: 1;
                 }
                 .header {
                     flex-direction: column;
@@ -561,23 +592,15 @@
                             />
                         </div>
 
-                        <div
-                            style="
-                                margin-left: auto;
-                                display: flex;
-                                align-items: flex-end;
-                            "
-                        >
-                            <div style="display: flex; gap: 10px">
-                                <button type="submit" class="btn btn-info">
-                                    Filter
-                                </button>
-                                <a
-                                    th:href="@{/expenses/list}"
-                                    class="btn btn-secondary"
-                                    >Clear</a
-                                >
-                            </div>
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-info">
+                                Filter
+                            </button>
+                            <a
+                                th:href="@{/expenses/list}"
+                                class="btn btn-secondary"
+                                >Clear</a
+                            >
                         </div>
                     </div>
                 </form>
