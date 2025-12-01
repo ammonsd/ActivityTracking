@@ -129,9 +129,6 @@
       </div>
 
       <div class="table-actions">
-        <button mat-raised-button color="primary" (click)="addExpense()">
-          <mat-icon>add</mat-icon> Add Expense
-        </button>
         <button mat-raised-button color="accent" (click)="clearFilters()">
           <mat-icon>clear</mat-icon> Clear Filters
         </button>
@@ -244,35 +241,7 @@
           <td mat-cell *matCellDef="let expense">{{ expense.username }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let expense" class="actions-cell">
-            <button
-              mat-icon-button
-              color="primary"
-              (click)="editExpense(expense)"
-              title="Edit Expense"
-            >
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              color="accent"
-              (click)="cloneExpense(expense)"
-              title="Clone Expense"
-            >
-              <mat-icon>content_copy</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              color="warn"
-              (click)="deleteExpense(expense)"
-              title="Delete Expense"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
+
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>

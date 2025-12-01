@@ -101,7 +101,6 @@ export class ExpenseListComponent implements OnInit {
         'amount',
         'expenseStatus',
         'username',
-        'actions',
       ];
     } else {
       this.displayedColumns = [
@@ -112,7 +111,6 @@ export class ExpenseListComponent implements OnInit {
         'description',
         'amount',
         'expenseStatus',
-        'actions',
       ];
     }
 

@@ -299,22 +299,22 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
       }
 
       .filter-section {
-        display: flex;
-        gap: 15px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
         margin-bottom: 20px;
-        align-items: center;
-        flex-wrap: wrap;
+        align-items: end;
       }
 
       .filter-section mat-form-field {
-        min-width: 200px;
+        min-width: 0;
       }
 
       .table-actions {
-        margin-bottom: 20px;
         display: flex;
-        gap: 10px;
-        justify-content: flex-end;
+        gap: 8px;
+        align-items: flex-end;
+        grid-column: -1;
       }
 
       .task-table {
@@ -349,6 +349,14 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 
       .actions-cell {
         white-space: nowrap;
+        text-align: right;
+        padding: 4px 8px !important;
+      }
+
+      .actions-cell button {
+        margin: 0 1px;
+        min-width: 36px;
+        padding: 4px 8px;
       }
 
       mat-icon {

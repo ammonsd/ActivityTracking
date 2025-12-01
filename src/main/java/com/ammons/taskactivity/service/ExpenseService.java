@@ -184,14 +184,29 @@ public class ExpenseService {
     }
 
     /**
-     * Delete an expense
+     * Delete an expense and its associated receipt file
      */
     public void deleteExpense(Long id) {
-        if (expenseRepository.existsById(id)) {
-            expenseRepository.deleteById(id);
-        } else {
+        Optional<Expense> expenseOpt = expenseRepository.findById(id);
+        if (expenseOpt.isEmpty()) {
             throw new ExpenseNotFoundException(id);
         }
+
+        Expense expense = expenseOpt.get();
+
+        // Delete associated receipt file if it exists
+        if (expense.getReceiptPath() != null && !expense.getReceiptPath().isEmpty()) {
+            try {
+                storageService.deleteReceipt(expense.getReceiptPath());
+                logger.info("Deleted receipt file: {}", expense.getReceiptPath());
+            } catch (IOException e) {
+                logger.warn("Failed to delete receipt file: {}", expense.getReceiptPath(), e);
+                // Continue with expense deletion even if receipt file deletion fails
+            }
+        }
+
+        // Delete the expense record
+        expenseRepository.deleteById(id);
     }
 
     // ========== Date-Based Queries ==========
