@@ -30,9 +30,9 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
     public CustomAuthenticationProvider(UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder, UserRepository userRepository) {
-        setUserDetailsService(userDetailsService);
-        setPasswordEncoder(passwordEncoder);
         this.userRepository = userRepository;
+        super.setPasswordEncoder(passwordEncoder);
+        super.setUserDetailsService(userDetailsService);
     }
 
     @Override

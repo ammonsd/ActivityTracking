@@ -1,0 +1,144 @@
+<h2 mat-dialog-title>{{ isAddMode ? "Add Expense" : "Edit Expense" }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="expenseForm">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date</mat-label>
+      <input
+        matInput
+        [matDatepicker]="picker"
+        formControlName="expenseDate"
+        required
+        (click)="picker.open()"
+      />
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="expenseForm.get('expenseDate')?.hasError('required')">
+        Date is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Client</mat-label>
+      <mat-select formControlName="client" required>
+        <mat-option *ngFor="let client of clients" [value]="client.itemValue">
+          {{ client.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="expenseForm.get('client')?.hasError('required')">
+        Client is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Project</mat-label>
+      <mat-select formControlName="project">
+        <mat-option value="">None</mat-option>
+        <mat-option
+          *ngFor="let project of projects"
+          [value]="project.itemValue"
+        >
+          {{ project.itemValue }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Expense Type</mat-label>
+      <mat-select formControlName="expenseType" required>
+        <mat-option *ngFor="let type of expenseTypes" [value]="type.itemValue">
+          {{ type.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="expenseForm.get('expenseType')?.hasError('required')">
+        Expense type is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        rows="2"
+        required
+      ></textarea>
+      <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
+        Description is required
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field-flex">
+        <mat-label>Amount</mat-label>
+        <input
+          matInput
+          type="number"
+          step="0.01"
+          formControlName="amount"
+          required
+        />
+        <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
+          Amount is required
+        </mat-error>
+        <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
+          Minimum $0.01
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-small">
+        <mat-label>Currency</mat-label>
+        <mat-select formControlName="currency" required>
+          <mat-option
+            *ngFor="let currency of currencies"
+            [value]="currency.itemValue"
+          >
+            {{ currency.itemValue }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Payment Method</mat-label>
+      <mat-select formControlName="paymentMethod" required>
+        <mat-option
+          *ngFor="let method of paymentMethods"
+          [value]="method.itemValue"
+        >
+          {{ method.itemValue }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="expenseForm.get('paymentMethod')?.hasError('required')">
+        Payment method is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Vendor</mat-label>
+      <input matInput formControlName="vendor" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reference Number</mat-label>
+      <input matInput formControlName="referenceNumber" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="2"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="!expenseForm.valid"
+  >
+    Save
+  </button>
+</mat-dialog-actions>

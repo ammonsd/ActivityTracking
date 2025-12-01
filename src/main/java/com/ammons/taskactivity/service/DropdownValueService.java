@@ -27,6 +27,14 @@ public class DropdownValueService {
     public static final String SUBCATEGORY_PROJECT = "PROJECT";
     public static final String SUBCATEGORY_PHASE = "PHASE";
 
+    // Expense subcategories
+
+    public static final String SUBCATEGORY_EXPENSE_TYPE = "EXPENSE_TYPE";
+    public static final String SUBCATEGORY_PAYMENT_METHOD = "PAYMENT_METHOD";
+    public static final String SUBCATEGORY_EXPENSE_STATUS = "EXPENSE_STATUS";
+    public static final String SUBCATEGORY_VENDOR = "VENDOR";
+    public static final String SUBCATEGORY_RECEIPT_STATUS = "RECEIPT_STATUS";
+
     /**
      * Repository dependency for data access operations.
      */
@@ -198,5 +206,38 @@ public class DropdownValueService {
     public List<DropdownValue> getActivePhases() {
         return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
                 CATEGORY_TASK, SUBCATEGORY_PHASE);
+    }
+
+    /**
+     * Convenience methods for EXPENSE subcategories
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveExpenseTypes() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_EXPENSE_TYPE);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActivePaymentMethods() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_PAYMENT_METHOD);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveExpenseStatuses() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_EXPENSE_STATUS);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveVendors() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_VENDOR);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveReceiptStatuses() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_RECEIPT_STATUS);
     }
 }

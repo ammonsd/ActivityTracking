@@ -41,6 +41,17 @@ import { AuthService } from '../../services/auth.service';
         </mat-card>
 
         <mat-card
+          *ngIf="currentRole !== 'GUEST'"
+          class="dashboard-card"
+          routerLink="/expenses"
+        >
+          <mat-card-header>
+            <mat-icon>receipt</mat-icon>
+            <mat-card-title>Expenses</mat-card-title>
+          </mat-card-header>
+        </mat-card>
+
+        <mat-card
           *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
           class="dashboard-card"
           [class.disabled]="currentRole === 'GUEST'"

@@ -25,12 +25,12 @@ Both interfaces connect to the same backend and share the same data and authenti
 
 ### User Roles Overview
 
-The system supports three user roles with different permission levels:
+The system supports four user roles with different permission levels:
 
 **GUEST (Read-Only Access)**
 - Can view task list and task details in read-only mode
 - Cannot create, edit, or delete tasks
-- No access to weekly timesheet, user management, or dropdown settings
+- No access to weekly timesheet, expenses, user management, or dropdown settings
 - **Cannot change password** (password changes must be done by an administrator)
 - **Password expiration warnings are suppressed** (GUEST users won't see expiration warnings)
 - **Cannot log in if password has expired** (must contact administrator for password reset)
@@ -41,18 +41,30 @@ The system supports three user roles with different permission levels:
 - Administrators must reset GUEST passwords and update the expiration date when needed
 
 **USER (Standard Access)**
-- Can view, create, edit, and delete their own tasks
-- Access to weekly timesheet and task cloning
+- Can view, create, edit, and delete their own tasks and expenses
+- Access to weekly timesheet and weekly expense sheet
+- Can upload receipts for expenses
+- Can submit expenses for approval
 - Can change their own password
-- Cannot view other users' tasks or access admin features
-- Standard role for team members doing time tracking
+- Cannot view other users' tasks or expenses (except when submitted for approval)
+- Standard role for team members doing time and expense tracking
 
 **ADMIN (Full Access)**
 - All USER permissions plus administrative capabilities
-- Can view and manage all users' tasks
+- Can view and manage all users' tasks and expenses
 - Can create, edit, and delete user accounts
-- Can manage dropdown values (clients, projects, phases)
+- Can manage dropdown values (clients, projects, phases, expense types, payment methods)
 - Can change passwords for any user
+- Has access to all expense approval functions (can also act as EXPENSE_ADMIN)
+
+**EXPENSE_ADMIN (Expense Approval Authority)**
+- All USER permissions for tasks
+- Can view all submitted expenses
+- Can approve or reject expenses
+- Can access expense approval queue
+- Can mark expenses as reimbursed
+- Can view expense approval history and notes
+- Cannot manage users or system settings (unless also has ADMIN role)
 
 ### Managing Users
 
@@ -229,6 +241,93 @@ All action buttons use Angular Material icon buttons with tooltips for better us
 6. **Optional**: Check "Force password update on next login"
 7. **Save**: Click **"Change Password"**
 
+---
+
+## Expense Management Administration
+
+### Managing User Expenses
+
+Administrators with ADMIN or EXPENSE_ADMIN roles can view and manage all user expenses:
+
+1. **Access Expense List**: Click **"💰 Expense List"** from the navigation header
+2. **View All Expenses**: By default, administrators see expenses from all users
+3. **Filter Expenses**: Use comprehensive filtering options:
+    - **User**: Filter by specific username
+    - **Client**: Filter by client name
+    - **Project**: Filter by project name
+    - **Expense Type**: Filter by expense category (Travel, Home Office, etc.)
+    - **Status**: Filter by workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
+    - **Payment Method**: Filter by payment method
+    - **Date Range**: Filter by expense date (Start Date and End Date)
+    - Click **"Apply Filters"** to see filtered results
+    - Click **"Reset Filters"** to clear all filters
+
+4. **Expense Actions**:
+    - **View Details**: Click on any expense to see full details including receipt
+    - **Edit**: Modify expense details (ADMIN only, not available after submission)
+    - **Delete**: Remove expenses (ADMIN only, only for Draft status)
+    - **Export CSV**: Export filtered expense list to CSV for reporting
+
+### Expense Approval Queue
+
+ADMIN and EXPENSE_ADMIN users can access the approval queue to review submitted expenses:
+
+1. **Access Approval Queue**: Click **"✓ Approval Queue"** from the navigation header
+2. **View Submitted Expenses**: See all expenses with status "Submitted" awaiting approval
+3. **Review Expense Details**:
+    - Expense date, client, project, type
+    - Amount and currency
+    - Payment method
+    - Vendor and reference number
+    - Description and notes
+    - Receipt attachment (view/download)
+
+4. **Approve Expense**:
+    - Click **"Approve"** button for the expense
+    - Enter approval notes (optional but recommended)
+    - Expense status changes to "Approved"
+    - User is notified of approval
+    - Expense becomes available for reimbursement processing
+
+5. **Reject Expense**:
+    - Click **"Reject"** button for the expense
+    - Enter rejection reason (required)
+    - Expense status changes to "Rejected"
+    - User can view rejection notes and resubmit after corrections
+
+### Reimbursement Tracking
+
+After expenses are approved, ADMIN and EXPENSE_ADMIN users can track reimbursements:
+
+1. **Access Approved Expenses**: Filter expense list by Status = "Approved"
+2. **Process Reimbursement**:
+    - Click on expense to view details
+    - Click **"Mark as Reimbursed"** button
+    - Enter reimbursement details:
+        - **Reimbursed Amount**: Actual amount paid (may differ from requested amount)
+        - **Reimbursement Date**: Date of payment
+        - **Reimbursement Notes**: Payment method, check number, transaction ID, etc.
+    - Expense status changes to "Reimbursed"
+
+3. **View Reimbursement History**:
+    - Filter expense list by Status = "Reimbursed"
+    - Export to CSV for accounting reconciliation
+    - View complete audit trail: submitted date, approved date, reimbursed date
+
+### Receipt Management
+
+Administrators can view and manage receipt attachments:
+
+1. **View Receipts**: Click on expense to see details, then click receipt thumbnail or "View Receipt"
+2. **Download Receipts**: Download receipt images for archival or printing
+3. **Delete Receipts**: ADMIN users can delete receipt files (use with caution)
+
+**Receipt Storage Options**:
+- **Local Storage**: Receipts stored in `src/main/resources/receipts/` directory
+- **AWS S3 Storage**: (If configured) Receipts stored in S3 bucket for scalability
+
+---
+
 ### Managing Dropdowns
 
 Dropdown management has been consolidated into a single, dynamic interface that supports multiple categories from one screen.
@@ -242,7 +341,12 @@ Dropdown management has been consolidated into a single, dynamic interface that 
       - **Important**: Create a project named "Non-Billable" for tracking overhead activities
       - Users should log meetings, training, and administrative tasks to this project
       - The Reports system uses this project name to distinguish billable from non-billable hours
-    - **PHASE**: Manage work phases
+    - **PHASE**: Manage work phases (with TASK subcategory)
+    - **EXPENSE**: Manage expense-related dropdowns with subcategories:
+        - **EXPENSE_TYPE**: Types of expenses (Travel - Airfare, Hotel, Meals, Home Office Equipment, etc.)
+        - **PAYMENT_METHOD**: Payment methods (Personal Credit Card, Personal Cash, Company Credit Card, Direct Bill)
+        - **RECEIPT_STATUS**: Receipt availability (Attached, Pending, Not Available)
+        - **EXPENSE_STATUS**: Workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
     - **Note**: New categories added to the database automatically appear in this list
 
 3. **Filter by Subcategory** (Optional):

@@ -80,6 +80,10 @@
                 background-color: #6c757d;
                 color: white;
             }
+            .role-EXPENSE_ADMIN {
+                background-color: #ffc107;
+                color: #212529;
+            }
             .status-enabled {
                 color: #28a745;
                 font-weight: bold;
@@ -310,7 +314,7 @@
                             <td th:text="${user.company ?: '-'}">Company Name</td>
                             <td>
                                 <span
-                                    th:class="${'role-badge ' + (user.role.name() == 'ADMIN' ? 'role-admin' : (user.role.name() == 'GUEST' ? 'role-guest' : 'role-user'))}"
+                                    th:class="${'role-badge ' + (user.role.name() == 'ADMIN' ? 'role-admin' : (user.role.name() == 'GUEST' ? 'role-guest' : (user.role.name() == 'EXPENSE_ADMIN' ? 'role-EXPENSE_ADMIN' : 'role-user')))}"
                                     th:text="${user.role.name()}"
                                     >ADMIN</span
                                 >
@@ -434,3 +438,5 @@
         </script>
     </body>
 </html>
+
+

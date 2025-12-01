@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Expense Details</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        <script>
+            // Maintain URL display as /expense
+            document.addEventListener("DOMContentLoaded", function () {
+                if (globalThis.location.pathname !== "/expense") {
+                    globalThis.history.replaceState(null, null, "/expense");
+                }
+            });
+        </script>
+
+        <style>
+            /* Page-specific styles */
+            input:focus,
+            select:focus,
+            textarea:focus {
+                border-color: #007bff;
+                outline: none;
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            }
+            .error {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            /* Hide spinner buttons on amount input */
+            input[type="number"]#amount::-webkit-inner-spin-button,
+            input[type="number"]#amount::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type="number"]#amount {
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+            .btn-success:hover {
+                background-color: #218838;
+            }
+            .btn-warning:hover {
+                background-color: #e0a800;
+            }
+            .btn-danger:hover {
+                background-color: #c82333;
+            }
+            .btn-secondary:hover {
+                background-color: #5a6268;
+            }
+            .form-row .form-group {
+                flex: 1;
+            }
+            /* Limit Date input width */
+            #expenseDate {
+                max-width: 200px;
+            }
+            .button-group {
+                display: flex;
+                gap: 10px;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #dee2e6;
+                flex-wrap: wrap;
+            }
+            .status-info {
+                padding: 15px;
+                background-color: #e9ecef;
+                border-radius: 4px;
+                margin-bottom: 20px;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .status-draft {
+                background-color: #6c757d;
+                color: white;
+            }
+            .status-submitted {
+                background-color: #17a2b8;
+                color: white;
+            }
+            .status-resubmitted {
+                background-color: #ffc107;
+                color: black;
+            }
+            .status-approved {
+                background-color: #28a745;
+                color: white;
+            }
+            .status-rejected {
+                background-color: #dc3545;
+                color: white;
+            }
+            .status-reimbursed {
+                background-color: #007bff;
+                color: white;
+            }
+            .rejection-info {
+                padding: 15px;
+                background-color: #f8d7da;
+                border: 1px solid #dc3545;
+                border-radius: 4px;
+                margin-bottom: 20px;
+            }
+            .receipt-section {
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                margin-bottom: 20px;
+            }
+            /* Custom confirmation modal styles */
+            .modal-content h3 {
+                color: #dc3545;
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+            .modal-content p {
+                margin-bottom: 25px;
+                color: #333;
+            }
+            @media (max-width: 600px) {
+                .button-group {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="header">
+                <h1>Expense Details</h1>
+                <a th:href="@{/expenses/list}" class="btn btn-secondary">
+                    Expense List
+                </a>
+            </div>
+
+            <!-- Success Message -->
+            <div
+                th:if="${successMessage}"
+                class="success-message"
+                th:text="${successMessage}"
+            ></div>
+
+            <!-- Error Message -->
+            <div
+                th:if="${errorMessage}"
+                class="error-message"
+                th:text="${errorMessage}"
+            ></div>
+
+            <!-- Status Information -->
+            <div class="status-info">
+                <strong>Current Status:</strong>
+                <span
+                    th:class="'status-badge status-' + ${#strings.toLowerCase(expenseDto.expenseStatus)}"
+                    th:text="${expenseDto.expenseStatus}"
+                ></span>
+                
+                <span
+                    th:if="${expenseDto.approvalDate != null}"
+                    style="margin-left: 15px"
+                >
+                    Approved:
+                    <span
+                        th:text="${#temporals.format(expenseDto.approvalDate, 'MMM dd, yyyy')}"
+                    ></span>
+                </span>
+            </div>
+
+            <!-- Rejection Information -->
+            <div
+                class="rejection-info"
+                th:if="${expenseDto.expenseStatus == 'Rejected' and expenseDto.approvalNotes != null}"
+            >
+                <strong style="color: #dc3545">Rejection Reason:</strong><br />
+                <span th:text="${expenseDto.approvalNotes}"></span>
+            </div>
+
+            <!-- Receipt Section -->
+            <div
+                class="receipt-section"
+                th:if="${expenseDto.receiptPath != null and !expenseDto.receiptPath.isEmpty()}"
+            >
+                <strong>Receipt:</strong>
+                <a
+                    th:href="@{'/expenses/receipt/' + ${expenseId}}"
+                    target="_blank"
+                    class="btn btn-info btn-sm"
+                    style="margin-left: 10px"
+                    >📎 View Receipt</a
+                >
+            </div>
+
+            <div class="form-container">
+                <form
+                    th:action="@{'/expenses/update/' + ${expenseId}}"
+                    th:object="${expenseDto}"
+                    method="post"
+                    enctype="multipart/form-data"
+                >
+                    <!-- Expense Date -->
+                    <div class="form-group">
+                        <label for="expenseDate"
+                            >Expense Date <span class="required">*</span></label
+                        >
+                        <input
+                            type="date"
+                            id="expenseDate"
+                            name="expenseDate"
+                            th:value="${expenseDto.expenseDate != null ? #temporals.format(expenseDto.expenseDate, 'yyyy-MM-dd') : ''}"
+                            th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                            required
+                        />
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('expenseDate')}"
+                            th:errors="*{expenseDate}"
+                        ></div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Client -->
+                        <div class="form-group">
+                            <label for="client"
+                                >Client <span class="required">*</span></label
+                            >
+                            <select
+                                id="client"
+                                th:field="*{client}"
+                                th:disabled="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            >
+                                <option value="">-- Select Client --</option>
+                                <option
+                                    th:each="client : ${clients}"
+                                    th:value="${client}"
+                                    th:text="${client}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('client')}"
+                                th:errors="*{client}"
+                            ></div>
+                        </div>
+
+                        <!-- Project -->
+                        <div class="form-group">
+                            <label for="project"
+                                >Project <span class="required">*</span></label
+                            >
+                            <select
+                                id="project"
+                                th:field="*{project}"
+                                th:disabled="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            >
+                                <option value="">-- Select Project --</option>
+                                <option
+                                    th:each="project : ${projects}"
+                                    th:value="${project}"
+                                    th:text="${project}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('project')}"
+                                th:errors="*{project}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Expense Type -->
+                        <div class="form-group">
+                            <label for="expenseType"
+                                >Expense Type
+                                <span class="required">*</span></label
+                            >
+                            <select
+                                id="expenseType"
+                                th:field="*{expenseType}"
+                                th:disabled="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            >
+                                <option value="">-- Select Type --</option>
+                                <option
+                                    th:each="type : ${expenseTypes}"
+                                    th:value="${type}"
+                                    th:text="${type}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('expenseType')}"
+                                th:errors="*{expenseType}"
+                            ></div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group">
+                            <label for="paymentMethod"
+                                >Payment Method
+                                <span class="required">*</span></label
+                            >
+                            <select
+                                id="paymentMethod"
+                                th:field="*{paymentMethod}"
+                                th:disabled="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            >
+                                <option value="">-- Select Method --</option>
+                                <option
+                                    th:each="method : ${paymentMethods}"
+                                    th:value="${method}"
+                                    th:text="${method}"
+                                ></option>
+                            </select>
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('paymentMethod')}"
+                                th:errors="*{paymentMethod}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Amount -->
+                        <div class="form-group">
+                            <label for="amount"
+                                >Amount <span class="required">*</span></label
+                            >
+                            <input
+                                type="number"
+                                id="amount"
+                                th:field="*{amount}"
+                                step="0.01"
+                                min="0.01"
+                                placeholder="0.00"
+                                th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('amount')}"
+                                th:errors="*{amount}"
+                            ></div>
+                        </div>
+
+                        <!-- Currency -->
+                        <div class="form-group">
+                            <label for="currency"
+                                >Currency <span class="required">*</span></label
+                            >
+                            <input
+                                type="text"
+                                id="currency"
+                                th:field="*{currency}"
+                                maxlength="10"
+                                th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                                required
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('currency')}"
+                                th:errors="*{currency}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description"
+                            >Description <span class="required">*</span></label
+                        >
+                        <textarea
+                            id="description"
+                            th:field="*{description}"
+                            rows="3"
+                            maxlength="500"
+                            th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                            required
+                        ></textarea>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('description')}"
+                            th:errors="*{description}"
+                        ></div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Vendor -->
+                        <div class="form-group">
+                            <label for="vendor">Vendor</label>
+                            <input
+                                type="text"
+                                id="vendor"
+                                th:field="*{vendor}"
+                                maxlength="100"
+                                th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('vendor')}"
+                                th:errors="*{vendor}"
+                            ></div>
+                        </div>
+
+                        <!-- Reference Number -->
+                        <div class="form-group">
+                            <label for="referenceNumber"
+                                >Reference Number</label
+                            >
+                            <input
+                                type="text"
+                                id="referenceNumber"
+                                th:field="*{referenceNumber}"
+                                maxlength="50"
+                                th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                            />
+                            <div
+                                class="error"
+                                th:if="${#fields.hasErrors('referenceNumber')}"
+                                th:errors="*{referenceNumber}"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Upload (only if Draft or Rejected) -->
+                    <div
+                        class="form-group"
+                        th:if="${expenseDto.expenseStatus == 'Draft' or expenseDto.expenseStatus == 'Rejected'}"
+                    >
+                        <label for="receipt"
+                            >Replace Receipt (PDF, Image)</label
+                        >
+                        <input
+                            type="file"
+                            id="receipt"
+                            name="receipt"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                        />
+                        <small
+                            style="
+                                color: #6c757d;
+                                display: block;
+                                margin-top: 5px;
+                            "
+                        >
+                            Accepted formats: PDF, JPG, PNG (Max 5MB)
+                        </small>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea
+                            id="notes"
+                            th:field="*{notes}"
+                            rows="3"
+                            maxlength="1000"
+                            th:readonly="${expenseDto.expenseStatus != 'Draft' and expenseDto.expenseStatus != 'Rejected'}"
+                        ></textarea>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('notes')}"
+                            th:errors="*{notes}"
+                        ></div>
+                    </div>
+
+                    <div class="button-group">
+                        <!-- Update (Draft or Rejected only) -->
+                        <button
+                            th:if="${expenseDto.expenseStatus == 'Draft' or expenseDto.expenseStatus == 'Rejected'}"
+                            type="submit"
+                            class="btn btn-success"
+                        >
+                            Update Expense
+                        </button>
+
+                        <!-- Submit for Approval (Draft or Rejected only) -->
+                        <button
+                            th:if="${expenseDto.expenseStatus == 'Draft' or expenseDto.expenseStatus == 'Rejected'}"
+                            type="button"
+                            class="btn btn-primary"
+                            onclick="openSubmitModal('submitForm', 'Are you sure you want to submit this expense for approval?')"
+                        >
+                            Submit for Approval
+                        </button>
+
+                        <!-- Approve (Admin/Expense Approver, Submitted/Resubmitted, not own expense) -->
+                        <button
+                            sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
+                            th:if="${(expenseDto.expenseStatus == 'Submitted' or expenseDto.expenseStatus == 'Resubmitted') and expenseDto.username != username}"
+                            type="button"
+                            class="btn btn-success"
+                            th:onclick="'showApprovalForm(' + ${expenseId} + ')'"
+                        >
+                            ✓ Approve
+                        </button>
+
+                        <!-- Reject (Admin/Expense Approver, Submitted/Resubmitted, not own expense) -->
+                        <button
+                            sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
+                            th:if="${(expenseDto.expenseStatus == 'Submitted' or expenseDto.expenseStatus == 'Resubmitted') and expenseDto.username != username}"
+                            type="button"
+                            class="btn btn-danger"
+                            th:onclick="'showRejectionForm(' + ${expenseId} + ')'"
+                        >
+                            ✗ Reject
+                        </button>
+
+                        <!-- Mark as Reimbursed (Admin and Expense Admin only, Approved) -->
+                        <button
+                            sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
+                            th:if="${expenseDto.expenseStatus == 'Approved'}"
+                            type="button"
+                            class="btn btn-primary"
+                            th:onclick="'showReimbursementForm(' + ${expenseId} + ')'"
+                        >
+                            Mark as Reimbursed
+                        </button>
+
+                        <!-- Delete (Draft or Rejected only) -->
+                        <button
+                            th:if="${expenseDto.expenseStatus == 'Draft' or expenseDto.expenseStatus == 'Rejected'}"
+                            type="button"
+                            class="btn btn-danger"
+                            onclick="openDeleteModal('deleteForm', 'Are you sure you want to delete this expense? This action cannot be undone.')"
+                        >
+                            Delete Expense
+                        </button>
+
+                        <a th:href="@{/expenses/list}" class="btn btn-secondary">
+                            ⬅️ Back to List
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Hidden forms for status changes -->
+        <form
+            id="submitForm"
+            th:action="@{'/expenses/' + ${expenseId} + '/submit'}"
+            method="post"
+            style="display: none"
+        ></form>
+
+        <!-- Approval Notes Form (Hidden by default) -->
+        <div
+            th:id="'approval-form-' + ${expenseId}"
+            style="display: none; margin-top: 20px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; border: 1px solid #28a745;"
+        >
+            <h4 style="color: #28a745; margin-bottom: 15px;">✓ Approve Expense</h4>
+            <form
+                th:action="@{'/expenses/' + ${expenseId} + '/approve'}"
+                method="post"
+            >
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="approvalNotes"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Approval Notes (Optional):
+                    </label>
+                    <textarea
+                        id="approvalNotes"
+                        name="notes"
+                        rows="3"
+                        placeholder="Add any notes about this approval (optional)..."
+                        style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit;"
+                    ></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success">
+                        Confirm Approval
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        th:onclick="'hideApprovalForm(' + ${expenseId} + ')'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Rejection Form (Hidden by default) -->
+        <div
+            th:id="'rejection-form-' + ${expenseId}"
+            style="display: none; margin-top: 20px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; border: 1px solid #dc3545;"
+        >
+            <h4 style="color: #dc3545; margin-bottom: 15px;">✗ Reject Expense</h4>
+            <form
+                th:action="@{'/expenses/' + ${expenseId} + '/reject'}"
+                method="post"
+            >
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="rejectionReason"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Rejection Reason (Required):
+                    </label>
+                    <textarea
+                        id="rejectionReason"
+                        name="notes"
+                        rows="3"
+                        required
+                        placeholder="Please provide a clear reason for rejecting this expense..."
+                        style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit;"
+                    ></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-danger">
+                        Confirm Rejection
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        th:onclick="'hideRejectionForm(' + ${expenseId} + ')'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reimbursement Form (Hidden by default) -->
+        <div
+            th:id="'reimbursement-form-' + ${expenseId}"
+            class="reimbursement-form"
+            style="display: none; margin-top: 20px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto;"
+        >
+            <form
+                th:action="@{'/expenses/' + ${expenseId} + '/reimburse'}"
+                method="post"
+            >
+                <h3 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">Reimbursement Details</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="reimbursedAmount"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Reimbursed Amount:
+                    </label>
+                    <input
+                        type="number"
+                        id="reimbursedAmount"
+                        name="reimbursedAmount"
+                        th:value="${expenseDto.amount}"
+                        step="0.01"
+                        min="0"
+                        placeholder="Enter reimbursed amount"
+                        style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;"
+                    />
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">
+                        Original amount: <span th:text="${expenseDto.currency + ' ' + #numbers.formatDecimal(expenseDto.amount, 1, 'COMMA', 2, 'POINT')}"></span>
+                    </small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label
+                        for="reimbursementNotes"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;"
+                    >
+                        Reimbursement Notes (Optional):
+                    </label>
+                    <textarea
+                        id="reimbursementNotes"
+                        name="reimbursementNotes"
+                        placeholder="Add any notes about this reimbursement (optional)..."
+                        style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit; resize: vertical;"
+                    ></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" class="btn btn-success">
+                        Confirm Reimbursement
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        th:onclick="'hideReimbursementForm(' + ${expenseId} + ')'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <form
+            id="deleteForm"
+            th:action="@{'/expenses/delete/' + ${expenseId}}"
+            method="post"
+            style="display: none"
+        ></form>
+
+        <!-- Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h3>Confirm Action</h3>
+                <p id="deleteMessage">
+                    Are you sure you want to perform this action?
+                </p>
+                <div class="modal-buttons">
+                    <button class="btn btn-danger" onclick="confirmDelete()">
+                        Confirm
+                    </button>
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closeDeleteModal()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/modal-utils.js"></script>
+        <script src="/js/form-utils.js"></script>
+        <script>
+            // Initialize auto-grow for textareas
+            document.addEventListener("DOMContentLoaded", function () {
+                FormUtils.initAutoGrowTextarea("description");
+                FormUtils.initAutoGrowTextarea("notes");
+            });
+
+            function openSubmitModal(formId, message) {
+                ModalUtils.openDeleteModal(formId, message);
+            }
+
+            function showApprovalForm(expenseId) {
+                document.getElementById('approval-form-' + expenseId).style.display = 'block';
+                document.getElementById('rejection-form-' + expenseId).style.display = 'none';
+                document.getElementById('approval-form-' + expenseId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideApprovalForm(expenseId) {
+                document.getElementById('approval-form-' + expenseId).style.display = 'none';
+            }
+
+            function showRejectionForm(expenseId) {
+                document.getElementById('rejection-form-' + expenseId).style.display = 'block';
+                document.getElementById('approval-form-' + expenseId).style.display = 'none';
+                document.getElementById('rejection-form-' + expenseId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideRejectionForm(expenseId) {
+                document.getElementById('rejection-form-' + expenseId).style.display = 'none';
+            }
+
+            function showReimbursementForm(expenseId) {
+                document.getElementById('reimbursement-form-' + expenseId).style.display = 'block';
+                // Scroll to the form
+                document.getElementById('reimbursement-form-' + expenseId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideReimbursementForm(expenseId) {
+                document.getElementById('reimbursement-form-' + expenseId).style.display = 'none';
+            }
+        </script>
+    </body>
+</html>
+
+
+

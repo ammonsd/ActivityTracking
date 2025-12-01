@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Weekly Expense Sheet</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+        <link rel="stylesheet" th:href="@{/css/timesheet.css}" />
+        <script>
+            // Maintain URL display as /expenses
+            document.addEventListener("DOMContentLoaded", function () {
+                if (window.location.pathname === "/expenses/weekly-sheet") {
+                    const currentSearch = window.location.search;
+                    window.history.replaceState(
+                        null,
+                        null,
+                        "/expenses" + currentSearch
+                    );
+                }
+            });
+        </script>
+        <style>
+            /* Page-specific styles */
+            .container {
+                max-width: 95% !important;
+            }
+            .nav-content {
+                max-width: 95% !important;
+            }
+            .day-header {
+                background-color: #e9ecef !important;
+                font-weight: bold;
+                color: #495057;
+                border-top: 2px solid #007bff;
+            }
+            .day-total {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                text-align: right;
+                color: #007bff;
+            }
+            .week-total-row {
+                background-color: #007bff;
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .week-total-row td {
+                padding: 15px 12px;
+                border-bottom: none;
+            }
+            .week-total-row td:nth-child(2) {
+                text-align: right;
+            }
+            .expense-amount {
+                text-align: right;
+                font-weight: bold;
+                min-width: 100px;
+            }
+            .expense-client {
+                font-weight: 600;
+                color: #007bff;
+            }
+            .expense-project {
+                color: #6c757d;
+                font-style: italic;
+            }
+            .expense-type {
+                color: #28a745;
+                font-size: 0.9em;
+            }
+            .expense-description {
+                color: #495057;
+                max-width: 400px;
+                word-wrap: break-word;
+            }
+            .no-expenses-day {
+                text-align: center;
+                color: #6c757d;
+                font-style: italic;
+                padding: 20px;
+            }
+            .empty-week {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+                font-style: italic;
+            }
+            .week-nav-btn {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                text-decoration: none;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 32px;
+                transition: background-color 0.3s;
+            }
+            .week-nav-btn:hover {
+                background-color: #0056b3;
+            }
+            .week-nav-btn:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+            }
+            .csv-modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+            .csv-modal-content {
+                background-color: white;
+                margin: 5% auto;
+                padding: 20px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 800px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .csv-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007bff;
+            }
+            .csv-modal-header h2 {
+                margin: 0;
+                color: #007bff;
+            }
+            .csv-close {
+                color: #aaa;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 0;
+                line-height: 1;
+            }
+            .csv-close:hover,
+            .csv-close:focus {
+                color: #000;
+            }
+            .csv-textarea {
+                width: 100%;
+                min-height: 300px;
+                font-family: "Courier New", monospace;
+                font-size: 12px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                resize: vertical;
+            }
+            .csv-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
+            @media (max-width: 768px) {
+                .header {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                .date-selector {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                .week-navigation {
+                    justify-content: center;
+                }
+                .timesheet-table th,
+                .timesheet-table td {
+                    padding: 6px 4px;
+                    font-size: 12px;
+                }
+                .expense-description {
+                    max-width: 200px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h1>Weekly Expense Sheet</h1>
+                    <div class="week-info" th:if="${weeklyData}">
+                        Week of
+                        <span
+                            th:text="${#temporals.format(weeklyData.weekStartDate, 'MMM dd')}"
+                        ></span>
+                        -
+                        <span
+                            th:text="${#temporals.format(weeklyData.weekEndDate, 'MMM dd, yyyy')}"
+                        ></span>
+                    </div>
+                </div>
+                <div>
+                    <a th:href="@{/expenses/list}" class="btn btn-secondary"
+                        >Expense List</a
+                    >
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="exportCsvBtn"
+                        title="Export to CSV"
+                    >
+                        📋 Export CSV
+                    </button>
+                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                        >Add Expense</a
+                    >
+                </div>
+            </div>
+
+            <!-- Date Selector -->
+            <div class="date-selector">
+                <label for="weekStartDate">Week Starting Monday:</label>
+                <input
+                    type="date"
+                    id="weekStartDate"
+                    name="weekStartDate"
+                    th:value="${weeklyData != null ? weeklyData.weekStartDate : ''}"
+                />
+                <div class="week-navigation">
+                    <button
+                        type="button"
+                        class="week-nav-btn"
+                        id="prevWeek"
+                        title="Previous Week"
+                    >
+                        ‹
+                    </button>
+                    <button
+                        type="button"
+                        class="week-nav-btn"
+                        id="nextWeek"
+                        title="Next Week"
+                    >
+                        ›
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="currentWeek"
+                    >
+                        Current Week
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div
+                th:if="${errorMessage}"
+                class="error-message"
+                th:text="${errorMessage}"
+            ></div>
+
+            <!-- Weekly Expense Sheet Table -->
+            <div th:if="${weeklyData}">
+                <table class="timesheet-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 300px">Client</th>
+                            <th style="width: 250px">Project</th>
+                            <th style="width: 150px">Type</th>
+                            <th style="width: 120px">Amount</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop through all days (Monday-Sunday) -->
+                        <th:block th:each="dailyData : ${weeklyData.allDays}">
+                            <!-- Only show days that have expenses -->
+                            <th:block th:if="${dailyData.hasExpenses()}">
+                                <!-- Day Header -->
+                                <tr class="day-header">
+                                    <td colspan="5">
+                                        <span
+                                            th:text="${dailyData.dayName}"
+                                        ></span>
+                                        <span
+                                            th:text="${#temporals.format(dailyData.date, 'MM/dd/yyyy')}"
+                                        ></span>
+                                    </td>
+                                </tr>
+
+                                <!-- Expenses for this day -->
+                                <tr th:each="expense : ${dailyData.expenses}">
+                                    <td
+                                        class="expense-client"
+                                        th:text="${expense.client}"
+                                    ></td>
+                                    <td
+                                        class="expense-project"
+                                        th:text="${expense.project}"
+                                    ></td>
+                                    <td
+                                        class="expense-type"
+                                        th:text="${expense.expenseType}"
+                                    ></td>
+                                    <td
+                                        class="expense-amount"
+                                        th:text="${(expense.currency != 'USD' ? expense.currency + ' ' : '') + #numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}"
+                                    ></td>
+                                    <td
+                                        class="expense-description"
+                                        th:text="${expense.description}"
+                                    ></td>
+                                </tr>
+
+                                <!-- Day Total -->
+                                <tr class="day-total">
+                                    <td colspan="3"></td>
+                                    <td
+                                        th:text="${(dailyData.currencySymbol != 'USD' ? dailyData.currencySymbol + ' ' : '') + #numbers.formatDecimal(dailyData.dayTotal, 1, 'COMMA', 2, 'POINT')}"
+                                    ></td>
+                                    <td></td>
+                                </tr>
+                            </th:block>
+                        </th:block>
+
+                        <!-- Week Total -->
+                        <tr
+                            class="week-total-row"
+                            th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                        >
+                            <td colspan="3"><strong>Total Expenses</strong></td>
+                            <td>
+                                <strong
+                                    th:text="${(weeklyData.currencySymbol != 'USD' ? weeklyData.currencySymbol + ' ' : '') + #numbers.formatDecimal(weeklyData.weekTotal, 1, 'COMMA', 2, 'POINT')}"
+                                ></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty week message -->
+                <div
+                    class="empty-week"
+                    th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                >
+                    No expenses recorded for this week.
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Export Modal -->
+        <div id="csvModal" class="csv-modal">
+            <div class="csv-modal-content">
+                <div class="csv-modal-header">
+                    <h2>Export Weekly Expense Sheet to CSV</h2>
+                    <button class="csv-close" id="csvCloseBtn">&times;</button>
+                </div>
+                <p>Copy the CSV data below:</p>
+                <textarea
+                    id="csvOutput"
+                    class="csv-textarea"
+                    readonly
+                ></textarea>
+                <div class="csv-actions">
+                    <button class="btn btn-primary" id="copyCsvBtn">
+                        📋 Copy to Clipboard
+                    </button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">
+                        💾 Download CSV
+                    </button>
+                    <button class="btn btn-secondary" id="closeCsvBtn">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/date-utils.js"></script>
+        <script>
+            // Initialize date picker
+            function initializeDatePicker() {
+                const dateInput = document.getElementById("weekStartDate");
+                const monday = DateUtils.getCurrentOrUrlMonday("date");
+                dateInput.value = DateUtils.formatDateForInput(monday);
+            }
+
+            // Set up event listeners
+            document.addEventListener("DOMContentLoaded", function () {
+                initializeDatePicker();
+
+                const dateInput = document.getElementById("weekStartDate");
+                const prevWeekBtn = document.getElementById("prevWeek");
+                const nextWeekBtn = document.getElementById("nextWeek");
+                const currentWeekBtn = document.getElementById("currentWeek");
+
+                dateInput.addEventListener("change", function () {
+                    if (!this.value) return;
+
+                    const selectedDate = DateUtils.parseDate(this.value);
+                    const monday = DateUtils.getMondayOfWeek(selectedDate);
+                    const mondayStr = DateUtils.formatDateForInput(monday);
+
+                    if (this.value !== mondayStr) {
+                        this.value = mondayStr;
+                    }
+
+                    DateUtils.updateUrl(mondayStr, "/expenses/weekly-sheet");
+                });
+
+                prevWeekBtn.addEventListener("click", function () {
+                    const currentDate = DateUtils.parseDate(dateInput.value);
+                    const prevWeek = DateUtils.addDays(currentDate, -7);
+                    const prevWeekStr = DateUtils.formatDateForInput(prevWeek);
+                    DateUtils.updateUrl(prevWeekStr, "/expenses/weekly-sheet");
+                });
+
+                nextWeekBtn.addEventListener("click", function () {
+                    const currentDate = DateUtils.parseDate(dateInput.value);
+                    const nextWeek = DateUtils.addDays(currentDate, 7);
+                    const nextWeekStr = DateUtils.formatDateForInput(nextWeek);
+                    DateUtils.updateUrl(nextWeekStr, "/expenses/weekly-sheet");
+                });
+
+                currentWeekBtn.addEventListener("click", function () {
+                    DateUtils.updateUrl(null, "/expenses/weekly-sheet");
+                });
+            });
+
+            // CSV Export Functionality
+            function generateCSV() {
+                const csvRows = [];
+
+                csvRows.push(
+                    "Date,Client,Project,Type,Amount,Description,Username"
+                );
+
+                const table = document.querySelector(".timesheet-table");
+                if (!table) {
+                    return "No data available to export";
+                }
+
+                let currentDate = "";
+
+                const rows = table.querySelectorAll("tbody tr");
+                rows.forEach((row) => {
+                    if (row.classList.contains("day-header")) {
+                        const headerText = row.textContent
+                            .trim()
+                            .replace(/\s+/g, " ");
+                        const dateMatch = headerText.match(
+                            /(\d{2}\/\d{2}\/\d{4})/
+                        );
+                        if (dateMatch) {
+                            currentDate = dateMatch[1];
+                        }
+                    } else if (
+                        row.classList.contains("day-total") ||
+                        row.classList.contains("week-total-row")
+                    ) {
+                        return;
+                    } else {
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 5) {
+                            const client = cells[0].textContent.trim();
+                            const project = cells[1].textContent.trim();
+                            const type = cells[2].textContent.trim();
+                            const amountText = cells[3].textContent.trim();
+                            // Remove commas from amount and treat as string
+                            const amount = amountText.replace(/,/g, '');
+                            const description = cells[4].textContent
+                                .trim()
+                                .replace(/\s+/g, " ");
+
+                            const usernameElement =
+                                document.querySelector(".welcome-text span");
+                            const username = usernameElement
+                                ? usernameElement.textContent.trim()
+                                : "";
+
+                            const escapeCsvField = (field) => {
+                                if (
+                                    field.includes(",") ||
+                                    field.includes('"') ||
+                                    field.includes("\n")
+                                ) {
+                                    return (
+                                        '"' + field.replace(/"/g, '""') + '"'
+                                    );
+                                }
+                                return field;
+                            };
+
+                            csvRows.push(
+                                [
+                                    currentDate,
+                                    escapeCsvField(client),
+                                    escapeCsvField(project),
+                                    escapeCsvField(type),
+                                    '"' + amount + '"',
+                                    escapeCsvField(description),
+                                    escapeCsvField(username),
+                                ].join(",")
+                            );
+                        }
+                    }
+                });
+
+                return csvRows.join("\n");
+            }
+
+            // CSV Modal functionality
+            document.addEventListener("DOMContentLoaded", function () {
+                const modal = document.getElementById("csvModal");
+                const exportBtn = document.getElementById("exportCsvBtn");
+                const closeBtn = document.getElementById("csvCloseBtn");
+                const closeCsvBtn = document.getElementById("closeCsvBtn");
+                const copyCsvBtn = document.getElementById("copyCsvBtn");
+                const downloadCsvBtn =
+                    document.getElementById("downloadCsvBtn");
+                const csvOutput = document.getElementById("csvOutput");
+
+                if (exportBtn) {
+                    exportBtn.addEventListener("click", function () {
+                        const csv = generateCSV();
+                        csvOutput.value = csv;
+                        modal.style.display = "block";
+                    });
+                }
+
+                const closeModal = () => {
+                    modal.style.display = "none";
+                };
+
+                if (closeBtn) closeBtn.addEventListener("click", closeModal);
+                if (closeCsvBtn)
+                    closeCsvBtn.addEventListener("click", closeModal);
+
+                window.addEventListener("click", function (event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                if (copyCsvBtn) {
+                    copyCsvBtn.addEventListener("click", function () {
+                        csvOutput.select();
+                        navigator.clipboard
+                            .writeText(csvOutput.value)
+                            .then(() => {
+                                const originalText = copyCsvBtn.textContent;
+                                copyCsvBtn.textContent = "✓ Copied!";
+                                copyCsvBtn.style.backgroundColor = "#28a745";
+                                setTimeout(() => {
+                                    copyCsvBtn.textContent = originalText;
+                                    copyCsvBtn.style.backgroundColor = "";
+                                }, 2000);
+                            })
+                            .catch((err) => {
+                                alert(
+                                    "Failed to copy to clipboard. Please select and copy manually."
+                                );
+                            });
+                    });
+                }
+
+                if (downloadCsvBtn) {
+                    downloadCsvBtn.addEventListener("click", function () {
+                        const csv = csvOutput.value;
+                        const blob = new Blob([csv], {
+                            type: "text/csv;charset=utf-8;",
+                        });
+                        const link = document.createElement("a");
+                        const url = URL.createObjectURL(blob);
+
+                        let filename = "ExpenseSheet.csv";
+
+                        const weekStartElement = document.querySelector(
+                            ".week-info span:first-of-type"
+                        );
+                        const weekEndElement = document.querySelector(
+                            ".week-info span:last-of-type"
+                        );
+
+                        if (weekStartElement && weekEndElement) {
+                            const startText =
+                                weekStartElement.textContent.trim();
+                            const endText = weekEndElement.textContent.trim();
+
+                            const yearMatch = endText.match(/\d{4}/);
+                            const year = yearMatch
+                                ? yearMatch[0]
+                                : new Date().getFullYear();
+
+                            const monthMap = {
+                                Jan: "01",
+                                Feb: "02",
+                                Mar: "03",
+                                Apr: "04",
+                                May: "05",
+                                Jun: "06",
+                                Jul: "07",
+                                Aug: "08",
+                                Sep: "09",
+                                Oct: "10",
+                                Nov: "11",
+                                Dec: "12",
+                            };
+
+                            const startParts = startText.match(/(\w+)\s+(\d+)/);
+                            if (startParts) {
+                                const startMonth = monthMap[startParts[1]];
+                                const startDay = startParts[2].padStart(2, "0");
+                                const startDate =
+                                    startMonth + "/" + startDay + "/" + year;
+
+                                const endParts = endText.match(/(\w+)\s+(\d+)/);
+                                if (endParts) {
+                                    const endMonth = monthMap[endParts[1]];
+                                    const endDay = endParts[2].padStart(2, "0");
+                                    const endDate =
+                                        endMonth + "/" + endDay + "/" + year;
+
+                                    filename =
+                                        "ExpenseSheet_Week_of_" +
+                                        startDate.replace(/\//g, "-") +
+                                        "_to_" +
+                                        endDate.replace(/\//g, "-") +
+                                        ".csv";
+                                }
+                            }
+                        }
+
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", filename);
+                        link.style.visibility = "hidden";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

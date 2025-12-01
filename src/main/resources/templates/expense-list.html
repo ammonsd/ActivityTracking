@@ -1,4 +1,4 @@
-T<!DOCTYPE html>
+<!DOCTYPE html>
 <html
     lang="en"
     xmlns:th="http://www.thymeleaf.org"
@@ -7,7 +7,7 @@ T<!DOCTYPE html>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Task Activity List</title>
+        <title>Expense List</title>
 
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
@@ -33,51 +33,23 @@ T<!DOCTYPE html>
         <link rel="stylesheet" th:href="@{/css/base.css}" />
         <link rel="stylesheet" th:href="@{/css/components.css}" />
         <script>
-            // Maintain URL display as /task-activity
+            // Maintain URL display as /expense
             document.addEventListener("DOMContentLoaded", function () {
-                if (globalThis.location.pathname !== "/task-activity") {
-                    globalThis.history.replaceState(
-                        null,
-                        null,
-                        "/task-activity"
-                    );
+                if (globalThis.location.pathname !== "/expense") {
+                    globalThis.history.replaceState(null, null, "/expense");
                 }
             });
         </script>
         <style>
             /* Page-specific styles */
             .container {
-                max-width: 1400px;
+                max-width: 1600px;
             }
             .nav-content {
-                max-width: 1400px;
+                max-width: 1600px;
             }
             
-            /* Compact header navigation buttons */
-            .header {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            
-            .header h1 {
-                margin-right: 15px;
-            }
-            
-            .header > div {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                align-items: center;
-            }
-            
-            .header .btn {
-                margin: 0 !important;
-                padding: 8px 12px;
-                font-size: 14px;
-                white-space: nowrap;
-            }
-            
-            /* Compact filter layout for task list */
+            /* Compact filter layout for expense list */
             .filters .filter-row {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -108,24 +80,52 @@ T<!DOCTYPE html>
                 grid-column: -1; /* Place at end of grid */
             }
             
-            .task-row {
+            .expense-row {
                 cursor: pointer;
             }
-            .task-date {
+            .expense-date {
                 white-space: nowrap;
             }
-            .task-hours {
+            .expense-amount {
                 text-align: right;
                 font-weight: bold;
             }
-            .task-details {
-                max-width: 300px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+            .expense-status {
+                text-align: center;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            .status-draft {
+                background-color: #6c757d;
+                color: white;
+            }
+            .status-submitted {
+                background-color: #17a2b8;
+                color: white;
+            }
+            .status-resubmitted {
+                background-color: #ffc107;
+                color: black;
+            }
+            .status-approved {
+                background-color: #28a745;
+                color: white;
+            }
+            .status-rejected {
+                background-color: #dc3545;
+                color: white;
+            }
+            .status-reimbursed {
+                background-color: #007bff;
+                color: white;
             }
             .actions-column {
-                white-space: nowrap;
+                whitespace: nowrap;
                 text-align: right;
                 padding-right: 2px;
             }
@@ -135,7 +135,7 @@ T<!DOCTYPE html>
             .actions-column .btn:first-child {
                 margin-right: 1px;
             }
-            .no-tasks {
+            .no-expenses {
                 text-align: center;
                 padding: 40px;
                 color: #6c757d;
@@ -243,16 +243,14 @@ T<!DOCTYPE html>
                 justify-content: flex-end;
             }
 
-            /* Common table styles for all screen sizes - must come BEFORE media queries */
-            /* Left-align all table headers */
+            /* Common table styles */
             table th {
                 text-align: left;
             }
-            /* Hours column alignment - header left, data right */
-            table th.hours-header {
+            table th.amount-header {
                 text-align: left;
             }
-            table td.task-hours {
+            table td.expense-amount {
                 text-align: right;
                 padding-right: 10px;
             }
@@ -269,9 +267,8 @@ T<!DOCTYPE html>
                 border-bottom: 1px solid #b8daff;
             }
 
-            /* MOBILE STYLES - Max width 768px */
+            /* MOBILE STYLES */
             @media (max-width: 768px) {
-                /* Allow container to show horizontal overflow on mobile */
                 .container {
                     overflow-x: visible;
                 }
@@ -286,29 +283,22 @@ T<!DOCTYPE html>
                     gap: 10px;
                     text-align: center;
                 }
-                /* Make table container scrollable horizontally on mobile */
                 .table-container {
                     overflow-x: auto;
                     -webkit-overflow-scrolling: touch;
                 }
-                /* Remove fixed width constraints on mobile to allow natural table sizing */
                 table {
                     table-layout: auto;
-                    min-width: 800px; /* Ensures table is wide enough to show all columns */
+                    min-width: 900px;
                 }
                 th,
                 td {
                     padding: 8px 6px;
                     font-size: 13px;
                 }
-                .task-details {
-                    max-width: 200px;
-                    min-width: 150px;
-                }
                 .actions-column {
                     padding-right: 8px;
                 }
-                /* Ensure action buttons are visible and properly sized */
                 table td.actions-column a.btn {
                     padding: 6px 10px;
                     font-size: 13px;
@@ -318,20 +308,17 @@ T<!DOCTYPE html>
                 table td.actions-column a.btn:first-child {
                     margin-right: 1px;
                 }
-                /* Show scroll hint on mobile */
                 .scroll-hint {
                     display: block;
                 }
             }
 
-            /* DESKTOP/TABLET STYLES - Min width 769px */
+            /* DESKTOP STYLES */
             @media (min-width: 769px) {
-                /* Force actions column styling */
                 table {
                     width: 100%;
                     table-layout: fixed;
                 }
-                /* Fixed column widths to prevent Phase expansion when Username is hidden */
                 table th:nth-child(1),
                 table td:nth-child(1) {
                     width: 110px;
@@ -346,21 +333,27 @@ T<!DOCTYPE html>
                 } /* Project */
                 table th:nth-child(4),
                 table td:nth-child(4) {
-                    width: 160px;
-                } /* Phase */
+                    width: 140px;
+                } /* Type */
                 table th:nth-child(5),
                 table td:nth-child(5) {
+                    width: 120px;
+                } /* Amount */
+                table th:nth-child(6),
+                table td:nth-child(6) {
+                    width: 120px;
+                } /* Status */
+                table th:nth-child(7),
+                table td:nth-child(7) {
                     width: 80px;
-                } /* Hours */
-                /* Details column gets remaining space */
-                /* Username column - fixed width and alignment */
+                    text-align: center;
+                } /* Receipt */
                 table th.username-header,
                 table td.username-column {
                     width: 120px;
                     text-align: left;
                     padding-left: 10px;
                 }
-                /* Actions column styling */
                 table th:last-child,
                 table td.actions-column {
                     width: 140px;
@@ -369,7 +362,6 @@ T<!DOCTYPE html>
                     padding-right: 0;
                     padding-left: 0;
                 }
-                /* Desktop-specific button styling */
                 table td.actions-column a.btn {
                     margin: 0;
                     display: inline-block;
@@ -439,34 +431,26 @@ T<!DOCTYPE html>
                 </div>
             </div>
         </nav>
-        
-        <!-- Welcome Banner for GUEST users only -->
-        <div sec:authorize="hasRole('GUEST')" 
-             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 15px 20px;
-                    margin: 0;
-                    text-align: center;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="max-width: 1400px; margin: 0 auto;">
-                <strong style="font-size: 16px;">👋 Welcome, Guest!</strong>
-                <span style="margin-left: 10px; font-size: 14px;">
-                    You can create and edit your own tasks and view the weekly timesheet. 
-                    Other features are visible but read-only to allow exposure to the full application functionality.
-                </span>
-            </div>
-        </div>
-        
+
         <div class="container">
             <div class="header">
-                <h1>Task Activity List</h1>
+                <h1>Expense List</h1>
                 <div>
                     <!-- Angular Dashboard - Visible for all -->
                     <a
                         th:href="@{/app}"
                         class="btn btn-success"
+                        style="margin-right: 10px"
                         title="Angular Admin Dashboard"
                         >📊 Dashboard</a
+                    >
+                    <!-- Task Activity List - Hidden for EXPENSE_ADMIN -->
+                    <a
+                        th:href="@{/task-activity/list}"
+                        class="btn btn-success"
+                        style="margin-right: 10px"
+                        title="Task Activity List"
+                        >📋 Task Activity List</a
                     >
                     <!-- Export CSV Button -->
                     <button
@@ -474,69 +458,28 @@ T<!DOCTYPE html>
                         class="btn btn-secondary"
                         id="exportCsvBtn"
                         title="Export to CSV"
-                        th:disabled="${#authorization.expression('hasRole(''GUEST'')')}"
+                        style="margin-right: 10px"
                     >
                         📋 Export CSV
                     </button>
-                    <!-- Weekly Timesheet - USER, GUEST, ADMIN, and EXPENSE_ADMIN -->
+                    <!-- Weekly Expense Sheet -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
-                        th:href="@{/task-activity/weekly-timesheet}"
+                        th:href="@{/expenses/weekly-sheet}"
                         class="btn btn-info"
-                        >📊 Weekly Timesheet</a
+                        style="margin-right: 10px"
+                        >📊 Weekly Expense Sheet</a
                     >
-                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN -->
+                    <!-- Approval Queue - Admin and Expense Approver -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
-                        th:href="@{/expenses/list}"
-                        class="btn btn-info"
-                        title="Expense Tracking"
-                        >💰 Expense List</a
+                        sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
+                        th:href="@{/expenses/admin/approval-queue}"
+                        class="btn btn-warning"
+                        style="margin-right: 10px"
+                        >✓ Approval Queue</a
                     >
-                    <!-- Update Password - Visible for USER and GUEST (disabled for GUEST) -->
-                    <a
-                        th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'') or hasRole(''EXPENSE_ADMIN'')) and !hasRole(''ADMIN'')')}"
-                        th:href="@{/change-password}"
-                        class="btn btn-info"
-                        title="Change Password"
-                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >🔒 Update Password</a
-                    >
-                    <!-- Manage Users - Hidden for USER, disabled for GUEST, active for ADMIN -->
-                    <a
-                        th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
-                        th:href="@{/task-activity/manage-users}"
-                        class="btn btn-info"
-                        title="Manage Users"
-                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >👥 Manage Users</a
-                    >
-                    <!-- Guest Activity - ADMIN only -->
-                    <a
-                        th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
-                        th:href="@{/task-activity/manage-users/guest-activity}"
-                        class="btn btn-info"
-                        title="Guest Activity Report"
-                        >📊 Guest Activity</a
-                    >
-                    <!-- Manage Dropdowns - Hidden for USER, disabled for GUEST, active for ADMIN -->
-                    <a
-                        th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
-                        th:href="@{/admin/dropdowns}"
-                        class="btn btn-info"
-                        title="Manage Dropdowns"
-                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >🔧 Manage Dropdowns</a
-                    >
-                    <!-- Add New Task - All authenticated users -->
-                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
-                        >➕ Add New Task</a
+                    <!-- Add New Expense -->
+                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                        >➕ Add New Expense</a
                     >
                 </div>
             </div>
@@ -558,7 +501,7 @@ T<!DOCTYPE html>
                 class="filters"
                 style="padding-left: 15px; padding-right: 15px"
             >
-                <form th:action="@{/task-activity/list}" method="get">
+                <form th:action="@{/expenses/list}" method="get">
                     <div class="filter-row">
                         <div class="filter-group">
                             <label for="client">Client</label>
@@ -587,22 +530,35 @@ T<!DOCTYPE html>
                         </div>
 
                         <div class="filter-group">
-                            <label for="phase">Phase</label>
-                            <select id="phase" name="phase">
-                                <option value="">All Phases</option>
+                            <label for="expenseType">Type</label>
+                            <select id="expenseType" name="expenseType">
+                                <option value="">All Types</option>
                                 <option
-                                    th:each="phase : ${phases}"
-                                    th:value="${phase}"
-                                    th:text="${phase}"
-                                    th:selected="${phase == selectedPhase}"
+                                    th:each="type : ${expenseTypes}"
+                                    th:value="${type}"
+                                    th:text="${type}"
+                                    th:selected="${type == selectedExpenseType}"
                                 ></option>
                             </select>
                         </div>
 
-                        <!-- Username Filter - Admin only -->
+                        <div class="filter-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option
+                                    th:each="stat : ${statuses}"
+                                    th:value="${stat}"
+                                    th:text="${stat}"
+                                    th:selected="${stat == selectedStatus}"
+                                ></option>
+                            </select>
+                        </div>
+
+                        <!-- Username Filter - Admin and Expense Admin -->
                         <div
                             class="filter-group"
-                            th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                            sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
                         >
                             <label for="username">User</label>
                             <select id="username" name="username">
@@ -641,7 +597,7 @@ T<!DOCTYPE html>
                                 Filter
                             </button>
                             <a
-                                th:href="@{/task-activity/list}"
+                                th:href="@{/expenses/list}"
                                 class="btn btn-secondary"
                                 >Clear</a
                             >
@@ -655,7 +611,7 @@ T<!DOCTYPE html>
                 <!-- First page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=0, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/expenses/list(page=0, client=${selectedClient}, project=${selectedProject}, expenseType=${selectedExpenseType}, status=${selectedStatus}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == 0} ? 'return false;' : null"
                 >
@@ -665,24 +621,24 @@ T<!DOCTYPE html>
                 <!-- Previous page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/expenses/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, expenseType=${selectedExpenseType}, status=${selectedStatus}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${!hasPrevious} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasPrevious} ? 'return false;' : null"
                 >
                     &laquo;
                 </a>
 
-                <!-- Entry range info - Always shown -->
+                <!-- Entry range info -->
                 <span class="pagination-info">
                     <span th:text="${startEntry}">1</span> to
                     <span th:text="${endEntry}">20</span> of
-                    <span th:text="${totalElements}">7957</span>
+                    <span th:text="${totalElements}">100</span>
                 </span>
 
                 <!-- Next page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/expenses/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, expenseType=${selectedExpenseType}, status=${selectedStatus}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${!hasNext} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasNext} ? 'return false;' : null"
                 >
@@ -692,7 +648,7 @@ T<!DOCTYPE html>
                 <!-- Last page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/expenses/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, expenseType=${selectedExpenseType}, status=${selectedStatus}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
                     th:class="${currentPage == totalPages - 1} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == totalPages - 1} ? 'return false;' : null"
                 >
@@ -701,24 +657,25 @@ T<!DOCTYPE html>
             </div>
 
             <!-- Mobile Scroll Hint -->
-            <div class="scroll-hint" th:if="${not #lists.isEmpty(tasks)}">
+            <div class="scroll-hint" th:if="${not #lists.isEmpty(expenses)}">
                 ← Swipe left to see all columns →
             </div>
 
-            <!-- Task Table -->
+            <!-- Expense Table -->
             <div class="table-container">
-                <table th:if="${not #lists.isEmpty(tasks)}">
+                <table th:if="${not #lists.isEmpty(expenses)}">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Client</th>
                             <th>Project</th>
-                            <th>Phase</th>
-                            <th class="hours-header">Hours</th>
-                            <th>Details</th>
+                            <th>Type</th>
+                            <th class="amount-header">Amount</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
                             <th
                                 class="username-header"
-                                th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                                sec:authorize="hasRole('ADMIN')"
                             >
                                 Username
                             </th>
@@ -726,27 +683,42 @@ T<!DOCTYPE html>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="task : ${tasks}" class="task-row">
+                        <tr th:each="expense : ${expenses}" class="expense-row">
                             <td
-                                class="task-date"
-                                th:text="${#temporals.format(task.taskDate, 'MMM dd, yyyy')}"
+                                class="expense-date"
+                                th:text="${#temporals.format(expense.expenseDate, 'MMM dd, yyyy')}"
                             ></td>
-                            <td th:text="${task.client}"></td>
-                            <td th:text="${task.project}"></td>
-                            <td th:text="${task.phase}"></td>
+                            <td th:text="${expense.client}"></td>
+                            <td th:text="${expense.project}"></td>
+                            <td th:text="${expense.expenseType}"></td>
                             <td
-                                class="task-hours"
-                                th:text="${#numbers.formatDecimal(task.hours, 1, 'COMMA', 2, 'POINT')}"
+                                class="expense-amount"
+                                th:text="${expense.currency + ' ' + #numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}"
                             ></td>
-                            <td
-                                class="task-details"
-                                th:text="${task.details}"
-                                th:title="${task.details}"
-                            ></td>
+                            <td class="expense-status">
+                                <span
+                                    th:class="'status-badge status-' + ${#strings.toLowerCase(expense.expenseStatus)}"
+                                    th:text="${expense.expenseStatus}"
+                                ></span>
+                            </td>
+                            <td style="text-align: center">
+                                <a
+                                    th:if="${expense.receiptPath != null and !expense.receiptPath.isEmpty()}"
+                                    th:href="@{'/expenses/receipt/' + ${expense.id}}"
+                                    target="_blank"
+                                    title="View Receipt"
+                                    >📎</a
+                                >
+                                <span
+                                    th:if="${expense.receiptPath == null or expense.receiptPath.isEmpty()}"
+                                    style="color: #ccc"
+                                    >-</span
+                                >
+                            </td>
                             <td
                                 class="username-column"
-                                th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
-                                th:text="${task.username}"
+                                sec:authorize="hasRole('ADMIN')"
+                                th:text="${expense.username}"
                             ></td>
                             <td
                                 class="actions-column"
@@ -756,9 +728,8 @@ T<!DOCTYPE html>
                                     padding: 0;
                                 "
                             >
-                                <!-- All authenticated users see Edit and Clone buttons -->
                                 <a
-                                    th:href="@{'/task-activity/detail/' + ${task.id}}"
+                                    th:href="@{'/expenses/detail/' + ${expense.id}}"
                                     class="btn btn-info"
                                     style="
                                         margin: 0;
@@ -768,21 +739,38 @@ T<!DOCTYPE html>
                                     >Edit</a
                                 >
                                 <a
-                                    th:href="@{'/task-activity/clone/' + ${task.id}}"
+                                    th:href="@{'/expenses/clone/' + ${expense.id}}"
                                     class="btn btn-info"
-                                    style="margin: 0; display: inline-block"
-                                    title="Clone this task"
+                                    style="margin: 0; margin-right: 1px; display: inline-block"
+                                    title="Clone this expense"
                                     >Clone</a
                                 >
+                                <button
+                                    th:if="${#strings.equalsIgnoreCase(expense.expenseStatus, 'Draft')}"
+                                    type="button"
+                                    class="btn btn-danger"
+                                    style="margin: 0; margin-left: 1px; display: inline-block;"
+                                    th:onclick="|openDeleteModal('deleteForm-${expense.id}', 'Are you sure you want to delete this expense? This action cannot be undone.')|"
+                                >
+                                    Delete
+                                </button>
+                                <form
+                                    th:if="${#strings.equalsIgnoreCase(expense.expenseStatus, 'Draft')}"
+                                    th:id="'deleteForm-' + ${expense.id}"
+                                    th:action="@{'/expenses/delete/' + ${expense.id}}"
+                                    method="post"
+                                    style="display: none;"
+                                >
+                                </form>
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <div th:if="${#lists.isEmpty(tasks)}" class="no-tasks">
-                    <p>No tasks found matching the current filters.</p>
-                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
-                        >Add Your First Task</a
+                <div th:if="${#lists.isEmpty(expenses)}" class="no-expenses">
+                    <p>No expenses found matching the current filters.</p>
+                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                        >Add Your First Expense</a
                     >
                 </div>
             </div>
@@ -792,7 +780,7 @@ T<!DOCTYPE html>
         <div id="csvModal" class="csv-modal">
             <div class="csv-modal-content">
                 <div class="csv-modal-header">
-                    <h2>Export Task Activity List to CSV</h2>
+                    <h2>Export Expense List to CSV</h2>
                     <button class="csv-close" id="csvCloseBtn">&times;</button>
                 </div>
                 <p>Copy the CSV data below (filtered entries only):</p>
@@ -818,26 +806,27 @@ T<!DOCTYPE html>
         <script>
             // CSV Export Functionality
             function generateCSV() {
-                // Get current filter values directly from form inputs
                 const exportParams = new URLSearchParams();
 
                 const client = document.getElementById("client")?.value;
                 const project = document.getElementById("project")?.value;
-                const phase = document.getElementById("phase")?.value;
+                const expenseType =
+                    document.getElementById("expenseType")?.value;
+                const status = document.getElementById("status")?.value;
                 const username = document.getElementById("username")?.value;
                 const startDate = document.getElementById("startDate")?.value;
                 const endDate = document.getElementById("endDate")?.value;
 
                 if (client) exportParams.set("client", client);
                 if (project) exportParams.set("project", project);
-                if (phase) exportParams.set("phase", phase);
+                if (expenseType) exportParams.set("expenseType", expenseType);
+                if (status) exportParams.set("status", status);
                 if (username) exportParams.set("username", username);
                 if (startDate) exportParams.set("startDate", startDate);
                 if (endDate) exportParams.set("endDate", endDate);
 
-                // Fetch CSV data from server (all filtered entries)
                 const exportUrl =
-                    "/task-activity/list/export-csv?" + exportParams.toString();
+                    "/expenses/list/export-csv?" + exportParams.toString();
 
                 return fetch(exportUrl)
                     .then((response) => response.text())
@@ -858,21 +847,17 @@ T<!DOCTYPE html>
                     document.getElementById("downloadCsvBtn");
                 const csvOutput = document.getElementById("csvOutput");
 
-                // Open modal and generate CSV
                 if (exportBtn) {
                     exportBtn.addEventListener("click", function () {
-                        // Show loading message
                         csvOutput.value = "Loading data...";
                         modal.style.display = "block";
 
-                        // Fetch CSV data asynchronously
                         generateCSV().then((csv) => {
                             csvOutput.value = csv;
                         });
                     });
                 }
 
-                // Close modal handlers
                 const closeModal = () => {
                     modal.style.display = "none";
                 };
@@ -881,14 +866,12 @@ T<!DOCTYPE html>
                 if (closeCsvBtn)
                     closeCsvBtn.addEventListener("click", closeModal);
 
-                // Close when clicking outside modal
                 window.addEventListener("click", function (event) {
                     if (event.target === modal) {
                         closeModal();
                     }
                 });
 
-                // Copy to clipboard
                 if (copyCsvBtn) {
                     copyCsvBtn.addEventListener("click", function () {
                         csvOutput.select();
@@ -911,7 +894,6 @@ T<!DOCTYPE html>
                     });
                 }
 
-                // Download CSV
                 if (downloadCsvBtn) {
                     downloadCsvBtn.addEventListener("click", function () {
                         const csv = csvOutput.value;
@@ -921,16 +903,14 @@ T<!DOCTYPE html>
                         const link = document.createElement("a");
                         const url = URL.createObjectURL(blob);
 
-                        // Generate filename with filter info
-                        let filename = "TaskActivity";
+                        let filename = "Expenses";
 
-                        // Add filter info to filename if applicable
                         const urlParams = new URLSearchParams(
                             window.location.search
                         );
                         const client = urlParams.get("client");
                         const project = urlParams.get("project");
-                        const phase = urlParams.get("phase");
+                        const expenseType = urlParams.get("expenseType");
                         const startDate = urlParams.get("startDate");
                         const endDate = urlParams.get("endDate");
 
@@ -940,9 +920,9 @@ T<!DOCTYPE html>
                         if (project)
                             filename +=
                                 "_" + project.replace(/[^a-zA-Z0-9]/g, "_");
-                        if (phase)
+                        if (expenseType)
                             filename +=
-                                "_" + phase.replace(/[^a-zA-Z0-9]/g, "_");
+                                "_" + expenseType.replace(/[^a-zA-Z0-9]/g, "_");
                         if (startDate && endDate) {
                             filename +=
                                 "_" +
@@ -956,7 +936,6 @@ T<!DOCTYPE html>
                             filename += "_to_" + endDate.replace(/\//g, "-");
                         }
 
-                        // Add timestamp
                         const now = new Date();
                         const timestamp =
                             now.getFullYear() +
@@ -974,7 +953,34 @@ T<!DOCTYPE html>
                 }
             });
         </script>
+        
+        <!-- Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h3>Confirm Action</h3>
+                <p id="deleteMessage">
+                    Are you sure you want to perform this action?
+                </p>
+                <div class="modal-buttons">
+                    <button class="btn btn-danger" onclick="confirmDelete()">
+                        Confirm
+                    </button>
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closeDeleteModal()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <script src="/js/modal-utils.js"></script>
+        <script>
+            function openDeleteModal(formId, message) {
+                ModalUtils.openDeleteModal(formId, message);
+            }
+        </script>
     </body>
 </html>
-
 
