@@ -24,8 +24,10 @@ FROM eclipse-temurin:21-jre-jammy
 # Install PostgreSQL client, cloudflared, and setup directories in one layer
 RUN apt-get update && \
     apt-get install -y postgresql-client curl && \
-    # Install cloudflared
-    curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && \
+    # Install cloudflared with retry and increased timeout
+    curl -L --retry 3 --retry-delay 2 --connect-timeout 30 --max-time 600 \
+        https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+        -o /usr/local/bin/cloudflared && \
     chmod +x /usr/local/bin/cloudflared && \
     # Create non-root user
     groupadd -r appuser && useradd -r -g appuser appuser && \
