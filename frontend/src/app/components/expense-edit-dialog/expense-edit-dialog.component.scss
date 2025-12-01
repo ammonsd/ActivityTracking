@@ -1,0 +1,36 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.form-field-flex {
+  flex: 1;
+}
+
+.form-field-small {
+  width: 150px;
+}
+
+:host ::ng-deep mat-dialog-content {
+  min-width: 500px;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 8px 24px 16px 24px !important;
+}
+
+// Hide default number input spinner arrows
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}

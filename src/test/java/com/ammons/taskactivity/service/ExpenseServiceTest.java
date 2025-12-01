@@ -143,7 +143,7 @@ class ExpenseServiceTest {
 
             // Then
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(testExpense);
+            assertThat(result).contains(testExpense);
             verify(expenseRepository, times(1)).findById(1L);
         }
 
@@ -400,8 +400,8 @@ class ExpenseServiceTest {
             // Given
             Pageable pageable = PageRequest.of(0, 20);
             Page<Expense> page = new PageImpl<>(Arrays.asList(testExpense));
-            when(expenseRepository.findByFilters(anyString(), anyString(), anyString(), anyString(),
-                    anyString(), anyString(), any(), any(), any(Pageable.class))).thenReturn(page);
+            when(expenseRepository.findByFilters(any(), any(), any(), any(), any(), any(), any(),
+                    any(), any(Pageable.class))).thenReturn(page);
 
             // When
             ExpenseFilterDto filter = new ExpenseFilterDto("testuser", "Test Client", null, null,
@@ -410,8 +410,8 @@ class ExpenseServiceTest {
 
             // Then
             assertThat(result.getContent()).hasSize(1);
-            verify(expenseRepository, times(1)).findByFilters(anyString(), anyString(), anyString(),
-                    anyString(), anyString(), anyString(), any(), any(), any(Pageable.class));
+            verify(expenseRepository, times(1)).findByFilters(any(), any(), any(), any(), any(),
+                    any(), any(), any(), any(Pageable.class));
         }
 
         @Test

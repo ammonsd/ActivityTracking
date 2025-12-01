@@ -24,6 +24,18 @@ export class DropdownService {
     return this.http.get<DropdownValue[]>(`${this.apiUrl}/phases`);
   }
 
+  getExpenseTypes(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/expense-types`);
+  }
+
+  getPaymentMethods(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/payment-methods`);
+  }
+
+  getCurrencies(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/currencies`);
+  }
+
   getAllCategories(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/categories`);
   }

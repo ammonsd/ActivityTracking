@@ -48,6 +48,10 @@
         <mat-icon matListItemIcon>list</mat-icon>
         <span matListItemTitle>Dropdowns</span>
       </a>
+      <a mat-list-item routerLink="/expenses" routerLinkActive="active" *ngIf="currentRole !== 'GUEST'">
+        <mat-icon matListItemIcon>receipt</mat-icon>
+        <span matListItemTitle>Expenses</span>
+      </a>
       <a mat-list-item routerLink="/reports" routerLinkActive="active">
         <mat-icon matListItemIcon>analytics</mat-icon>
         <span matListItemTitle>Analytics & Reports</span>
@@ -60,7 +64,7 @@
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
       <a 
-        *ngIf="currentRole === 'USER' || currentRole === 'ADMIN' || currentRole === 'EXPENSE_ADMIN'"
+        *ngIf="currentRole !== 'GUEST'"
         mat-list-item 
         href="/expenses/list">
         <mat-icon matListItemIcon>attach_money</mat-icon>

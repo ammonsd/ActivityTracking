@@ -39,6 +39,9 @@ public class SecurityConfig {
     private static final String API_PATTERN = "/api/**";
     private static final String LOGIN_URL = "/login";
     private static final String LOGOUT_URL = "/logout";
+
+    // Role Constants
+    private static final String ROLE_EXPENSE_ADMIN = "EXPENSE_ADMIN";
     private static final String ADMIN_PATTERN = "/admin/**";
     private static final String ADMIN_ROLE = "ADMIN";
     private static final String USER_ROLE = "USER";
@@ -110,7 +113,7 @@ public class SecurityConfig {
                                         // info
                                         .requestMatchers("/api/users/me")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
 
                                         // Admin-only API endpoints
                                         .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
@@ -124,16 +127,16 @@ public class SecurityConfig {
                         .permitAll() // API endpoints - require authentication
                                         .requestMatchers(HttpMethod.GET, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
                                         .requestMatchers(HttpMethod.POST, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
                                         .requestMatchers(HttpMethod.PUT, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
                                         .requestMatchers(HttpMethod.DELETE, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
 
                                         // User Management - Admin only
                                         .requestMatchers("/task-activity/manage-users/**")
@@ -141,7 +144,7 @@ public class SecurityConfig {
 
                                         // Admin pages - accessible to ADMIN and EXPENSE_ADMIN
                                         .requestMatchers(ADMIN_PATTERN)
-                                        .hasAnyRole(ADMIN_ROLE, "EXPENSE_ADMIN")
+                                        .hasAnyRole(ADMIN_ROLE, ROLE_EXPENSE_ADMIN)
 
                                         // Task Activity screens - accessible to USER, ADMIN, and
                                         // GUEST
@@ -154,12 +157,12 @@ public class SecurityConfig {
                                                         "/task-activity/update/**",
                                                         "/task-activity/delete/**")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                        "EXPENSE_ADMIN")
+                                                        ROLE_EXPENSE_ADMIN)
 
                                         // Expense endpoints - accessible to USER, ADMIN, and
                                         // EXPENSE_ADMIN
                                         .requestMatchers("/expenses/**")
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, "EXPENSE_ADMIN")
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, ROLE_EXPENSE_ADMIN)
 
                         // Angular dashboard - requires authentication
                                         // .requestMatchers("/app", "/app/**").authenticated()
@@ -342,4 +345,5 @@ public class SecurityConfig {
         return source;
     }
 }
+
 

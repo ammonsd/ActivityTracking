@@ -524,10 +524,10 @@
                             </select>
                         </div>
 
-                        <!-- Username Filter - Admin only -->
+                        <!-- Username Filter - Admin and Expense Admin -->
                         <div
                             class="filter-group"
-                            sec:authorize="hasRole('ADMIN')"
+                            sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
                         >
                             <label for="username">User</label>
                             <select id="username" name="username">

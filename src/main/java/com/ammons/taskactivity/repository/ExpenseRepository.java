@@ -117,4 +117,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("status") String status, @Param("paymentMethod") String paymentMethod,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
             Pageable pageable);
+
+    // Get distinct usernames who have expenses
+    @Query("SELECT DISTINCT e.username FROM Expense e ORDER BY e.username")
+    List<String> findDistinctUsernames();
 }

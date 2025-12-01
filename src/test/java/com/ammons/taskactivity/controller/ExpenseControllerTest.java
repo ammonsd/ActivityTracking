@@ -2,7 +2,6 @@ package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.dto.ExpenseDto;
 import com.ammons.taskactivity.entity.Expense;
-import com.ammons.taskactivity.exception.ExpenseNotFoundException;
 import com.ammons.taskactivity.repository.ExpenseRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.service.ExpenseService;

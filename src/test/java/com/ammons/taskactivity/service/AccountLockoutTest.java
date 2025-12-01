@@ -10,11 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for account lockout functionality Tests failed login attempt tracking and account
@@ -28,8 +24,6 @@ class AccountLockoutTest {
 
     @Mock
     private UserRepository userRepository;
-
-    private UserService userService;
 
     private User testUser;
 
@@ -51,8 +45,6 @@ class AccountLockoutTest {
         // Arrange
         testUser.setAccountLocked(true);
         testUser.setFailedLoginAttempts(5);
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Note: We don't need to create a full UserService with all dependencies
         // for this test since unlockAccount is a simple method

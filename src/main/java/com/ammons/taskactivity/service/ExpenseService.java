@@ -398,6 +398,15 @@ public class ExpenseService {
                 filter.getPaymentMethod(), filter.getStartDate(), filter.getEndDate(), pageable);
     }
 
+    /**
+     * Get all distinct usernames who have expenses.
+     *
+     * @return List of usernames
+     */
+    public List<String> getUsernamesWithExpenses() {
+        return expenseRepository.findDistinctUsernames();
+    }
+
     // ========== Status Management ==========
 
     /**

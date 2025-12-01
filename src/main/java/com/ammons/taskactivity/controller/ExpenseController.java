@@ -41,6 +41,7 @@ public class ExpenseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpenseController.class);
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String EXPENSE_NOT_FOUND = "Expense not found";
 
     private final ExpenseService expenseService;
 
@@ -53,7 +54,7 @@ public class ExpenseController {
     /**
      * Create a new expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<Expense>> createExpense(
             @Valid @RequestBody ExpenseDto expenseDto, Authentication authentication) {
@@ -76,7 +77,7 @@ public class ExpenseController {
      * Get all expenses with pagination and filtering - ADMIN: sees all expenses - USER/GUEST: sees
      * only their own expenses
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Expense>>> getAllExpenses(
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
@@ -89,21 +90,33 @@ public class ExpenseController {
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                    @RequestParam(required = false) String username,
             Authentication authentication) {
 
-        String username = authentication.getName();
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN));
+            String authenticatedUsername = authentication.getName();
+            boolean isAdminOrExpenseAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN)
+                                            || auth.getAuthority().equals("ROLE_EXPENSE_ADMIN"));
 
         logger.info(
-                "User {} requesting expenses (admin={}, filters: client={}, project={}, type={}, status={})",
-                username, isAdmin, client, project, expenseType, status);
+                        "User {} requesting expenses (admin={}, filters: client={}, project={}, type={}, status={}, username={})",
+                        authenticatedUsername, isAdminOrExpenseAdmin, client, project, expenseType,
+                        status, username);
 
         // Create pageable with sorting (newest first)
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "expenseDate"));
+        // Use database column name for native query
+        Pageable pageable =
+                        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "expense_date"));
 
-        // Non-admins can only see their own expenses
-        String filterUsername = isAdmin ? null : username;
+        // Determine the username filter:
+        // - For ADMIN/EXPENSE_ADMIN: use provided username filter (can be null to see all)
+        // - For non-admins: always filter to their own username
+        String filterUsername;
+        if (isAdminOrExpenseAdmin) {
+                filterUsername = username; // Can be null to see all users
+        } else {
+                filterUsername = authenticatedUsername; // Always filter to own expenses
+        }
 
         // Build filter DTO
         ExpenseFilterDto filter = new ExpenseFilterDto(filterUsername, client, project, expenseType,
@@ -118,7 +131,7 @@ public class ExpenseController {
      * Get a single expense by ID - Users can only get their own expenses - Admins can get any
      * expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Expense>> getExpenseById(@PathVariable Long id,
             Authentication authentication) {
@@ -131,7 +144,7 @@ public class ExpenseController {
 
         if (expense.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Expense not found", null));
+                            .body(ApiResponse.error(EXPENSE_NOT_FOUND, null));
         }
 
         // Verify ownership unless admin
@@ -149,7 +162,7 @@ public class ExpenseController {
     /**
      * Get expenses for the current week (convenience endpoint)
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/current-week")
     public ResponseEntity<ApiResponse<List<Expense>>> getCurrentWeekExpenses(
             Authentication authentication) {
@@ -171,7 +184,7 @@ public class ExpenseController {
      * Update an existing expense - Users can only update their own expenses - Users cannot modify
      * approval/reimbursement fields - Admins can update any expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Expense>> updateExpense(@PathVariable Long id,
             @Valid @RequestBody ExpenseDto expenseDto, Authentication authentication) {
@@ -186,7 +199,7 @@ public class ExpenseController {
         Optional<Expense> existingExpense = expenseService.getExpenseById(id);
         if (existingExpense.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Expense not found", null));
+                            .body(ApiResponse.error(EXPENSE_NOT_FOUND, null));
         }
 
         // Verify ownership unless admin
@@ -230,7 +243,7 @@ public class ExpenseController {
     /**
      * Delete an expense - Users can only delete their own expenses - Admins can delete any expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteExpense(@PathVariable Long id,
             Authentication authentication) {
@@ -245,7 +258,7 @@ public class ExpenseController {
         Optional<Expense> expense = expenseService.getExpenseById(id);
         if (expense.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Expense not found", null));
+                            .body(ApiResponse.error(EXPENSE_NOT_FOUND, null));
         }
 
         // Verify ownership unless admin
@@ -266,7 +279,7 @@ public class ExpenseController {
     /**
      * Submit expense for approval
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/submit")
     public ResponseEntity<ApiResponse<Expense>> submitForApproval(@PathVariable Long id,
             Authentication authentication) {
@@ -290,7 +303,7 @@ public class ExpenseController {
     /**
      * Approve an expense (admin only)
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Expense>> approveExpense(@PathVariable Long id,
             @RequestParam(required = false) String notes, Authentication authentication) {
@@ -313,7 +326,7 @@ public class ExpenseController {
     /**
      * Reject an expense (admin only)
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/reject")
     public ResponseEntity<ApiResponse<Expense>> rejectExpense(@PathVariable Long id,
             @RequestParam String notes, Authentication authentication) {
@@ -362,7 +375,7 @@ public class ExpenseController {
     /**
      * Get pending approval queue (admin only)
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @GetMapping("/pending-approvals")
     public ResponseEntity<ApiResponse<List<Expense>>> getPendingApprovals() {
 
@@ -378,7 +391,7 @@ public class ExpenseController {
     /**
      * Get total expenses for user in date range
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/total")
     public ResponseEntity<ApiResponse<Double>> getTotalExpenses(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -395,7 +408,7 @@ public class ExpenseController {
     /**
      * Get total expenses by status for user
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/total-by-status")
     public ResponseEntity<ApiResponse<Double>> getTotalByStatus(@RequestParam String status,
             Authentication authentication) {
@@ -406,3 +419,5 @@ public class ExpenseController {
         return ResponseEntity.ok(ApiResponse.success("Total expenses by status calculated", total));
     }
 }
+
+
