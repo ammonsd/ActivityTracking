@@ -13,16 +13,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * ExpenseService - Business logic layer for Expense operations.
@@ -49,9 +44,12 @@ public class ExpenseService {
     private static final String STATUS_REIMBURSED = "Reimbursed";
 
     private final ExpenseRepository expenseRepository;
+    private final ReceiptStorageService storageService;
 
-    public ExpenseService(ExpenseRepository expenseRepository) {
+    public ExpenseService(ExpenseRepository expenseRepository,
+            ReceiptStorageService storageService) {
         this.expenseRepository = expenseRepository;
+        this.storageService = storageService;
     }
 
     // ========== CRUD Operations ==========
@@ -77,33 +75,22 @@ public class ExpenseService {
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(expenseDto.getUsername());
 
+        // Save the expense first to get an ID
+        expense = expenseRepository.save(expense);
+
         // Handle receipt upload
         if (receiptFile != null && !receiptFile.isEmpty()) {
-            String uploadDir = "c:\\Task Activity\\Receipts\\";
-            Path uploadPath = Paths.get(uploadDir);
-
-            // Create directory if it doesn't exist
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // Generate unique filename
-            String originalFilename = receiptFile.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : "";
-            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-
-            // Save file
-            Path filePath = uploadPath.resolve(uniqueFilename);
-            Files.copy(receiptFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            // Store receipt using the configured storage service (S3 or local)
+            String receiptPath = storageService.storeReceipt(receiptFile, expense.getUsername(),
+                    expense.getId());
 
             // Update expense with receipt info
-            expense.setReceiptPath(uploadDir + uniqueFilename);
-            expense.setReceiptStatus("Uploaded");
+            expense.setReceiptPath(receiptPath);
+            expense.setReceiptStatus("Receipt Attached");
+            expense = expenseRepository.save(expense);
         }
 
-        return expenseRepository.save(expense);
+        return expense;
     }
 
     /**
@@ -167,39 +154,21 @@ public class ExpenseService {
             // Delete old receipt file if it exists
             if (oldReceiptPath != null && !oldReceiptPath.isEmpty()) {
                 try {
-                    Path oldFilePath = Paths.get(oldReceiptPath);
-                    if (Files.exists(oldFilePath)) {
-                        Files.delete(oldFilePath);
-                        logger.info("Deleted old receipt file: {}", oldReceiptPath);
-                    }
+                    storageService.deleteReceipt(oldReceiptPath);
+                    logger.info("Deleted old receipt file: {}", oldReceiptPath);
                 } catch (IOException e) {
                     logger.warn("Failed to delete old receipt file: {}", oldReceiptPath, e);
                     // Continue with upload even if deletion fails
                 }
             }
 
-            String uploadDir = "c:\\Task Activity\\Receipts\\";
-            Path uploadPath = Paths.get(uploadDir);
-
-            // Create directory if it doesn't exist
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // Generate unique filename
-            String originalFilename = receiptFile.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : "";
-            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-
-            // Save file
-            Path filePath = uploadPath.resolve(uniqueFilename);
-            Files.copy(receiptFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            // Store receipt using the configured storage service (S3 or local)
+            String receiptPath =
+                    storageService.storeReceipt(receiptFile, expense.getUsername(), id);
 
             // Update expense with receipt info
-            expense.setReceiptPath(uploadDir + uniqueFilename);
-            expense.setReceiptStatus("Uploaded");
+            expense.setReceiptPath(receiptPath);
+            expense.setReceiptStatus("Receipt Attached");
         }
 
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
