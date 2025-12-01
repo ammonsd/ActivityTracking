@@ -1,9 +1,10 @@
-# Task Activity Tracking
+# Task Activity Tracking & Expense Management
 
-A time tracking web application built with Spring Boot and PostgreSQL for recording and managing task hours by client, project, and phase.
+A comprehensive web application built with Spring Boot, Angular, and PostgreSQL for tracking billable hours and managing business expenses. Designed for consultants, contractors, and teams who need professional time tracking with integrated expense management and receipt storage.
 
 ## Features
 
+### Time Tracking
 - ✅ Daily task recording with client/project/phase tracking
 - 📊 Analytics & Reports Dashboard with interactive charts and visualizations
   - Time distribution by client and project
@@ -13,7 +14,25 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 - 📊 Weekly timesheet view (Monday-Sunday format)
 - 📥 Export filtered tasks and weekly timesheets to CSV format
 - 🔍 Filter and search capabilities
-- 🎯 Dynamic dropdown management for clients, projects, and phases
+
+### Expense Management
+- 💰 Travel and business expense tracking with receipt management
+- 📸 Receipt upload/download (JPEG, PNG, PDF) with AWS S3 or local storage
+- 💳 Payment method and vendor tracking
+- 📋 Expense categorization by type (travel, meals, office supplies, etc.)
+- ✅ Multi-stage approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
+- 👔 Role-based access control:
+  - **USER/GUEST**: Create, view, and submit own expenses
+  - **EXPENSE_ADMIN**: Approve/reject expenses and mark as reimbursed
+  - **ADMIN**: Full expense management and approval authority
+- 📊 Expense filtering by client, project, type, status, and date range
+- 💵 Automatic expense totals and status tracking
+- 🔔 Pending approval queue for administrators
+- 🔒 Users can only modify Draft, Submitted, or Resubmitted status
+- 🚫 Non-admins cannot modify approval/reimbursement fields
+
+### General Features
+- 🎯 Dynamic dropdown management for clients, projects, phases, and expense types
 - ✔️ Data validation and error handling
 - 📚 Comprehensive API documentation (Swagger/OpenAPI)
 
@@ -22,6 +41,7 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 - **Backend:** Java 21, Spring Boot 3.5.6 (MVC + Thymeleaf), Spring Data JPA
 - **Frontend:** Angular 19, Angular Material, TypeScript, Chart.js
 - **Database:** PostgreSQL 15+
+- **Storage:** AWS S3 (production) / Local file system (development) for receipt storage
 - **API Documentation:** Springdoc OpenAPI 2.6.0 (Swagger UI)
 - **Build:** Maven, npm
 - **Testing:** JUnit 5, Testcontainers, Karma/Jasmine
@@ -34,6 +54,25 @@ A time tracking web application built with Spring Boot and PostgreSQL for record
 - Java 21+
 - Maven 3.9+
 - PostgreSQL 15+ (or Docker)
+
+### Database Setup
+
+The application automatically creates tables and populates initial data on startup. The database includes:
+
+**Tables:**
+- `users` - User accounts and authentication
+- `taskactivity` - Time tracking records
+- `dropdownvalues` - Dynamic dropdown values for clients, projects, phases, and expense types
+- `expenses` - Expense records with approval workflow
+
+**Initial Data:**
+- Default admin user (username: `admin`, password: `admin123`)
+- Sample clients, projects, and phases
+- Expense types (travel, meals, office supplies, etc.)
+- Expense statuses (Draft, Submitted, Approved, Rejected, Reimbursed)
+- Payment methods and receipt statuses
+
+⚠️ **Security:** Change the default admin password immediately after first login!
 
 ### Run Locally
 
@@ -51,6 +90,32 @@ docker-compose --profile host-db up -d
 
 Access the application at **http://localhost:8080**
 
+### Configuration
+
+#### Receipt Storage Configuration
+
+The application supports two storage backends for expense receipts:
+
+**Local File Storage (Development):**
+```properties
+# In application.properties or application-local.properties
+storage.type=local
+storage.local.base-path=./receipts
+```
+
+**AWS S3 Storage (Production):**
+```properties
+# In application.properties or application-aws.properties
+storage.type=s3
+storage.s3.bucket-name=your-bucket-name
+storage.s3.region=us-east-1
+```
+
+For AWS deployment, ensure:
+- S3 bucket is created with appropriate permissions
+- ECS task role has S3 read/write permissions
+- See [AWS Deployment Guide](aws/AWS_Deployment.md) for complete setup
+
 ### API Documentation
 
 Interactive API documentation is available via Swagger UI:
@@ -59,13 +124,28 @@ Interactive API documentation is available via Swagger UI:
 
 📘 **[Swagger API Guide](docs/Swagger_API_Guide.md)** - Complete guide for using the REST API with JWT authentication
 
+#### Key API Endpoints
+
+**Time Tracking:**
+- `/api/task-activities` - Task CRUD operations, filtering, and reports
+- `/api/dropdowns` - Client, project, and phase management
+
+**Expense Management:**
+- `/api/expenses` - Expense CRUD operations, filtering, and status management
+- `/api/expenses/{id}/submit` - Submit expense for approval
+- `/api/expenses/{id}/approve` - Approve expense (Admin/Expense Admin only)
+- `/api/expenses/{id}/reject` - Reject expense (Admin/Expense Admin only)
+- `/api/expenses/{id}/reimburse` - Mark as reimbursed (Admin/Expense Admin only)
+- `/api/expenses/pending-approvals` - View pending approval queue
+- `/api/receipts/{expenseId}` - Upload, download, and delete receipts
+
 ## Documentation
 
 ### Core Guides
 
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
-- 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking
-- 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, and 12-Factor App compliance
+- 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking and expense management
+- 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, expense approvals, and 12-Factor App compliance
 
 ### Docker & Containerization
 
