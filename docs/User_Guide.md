@@ -1,20 +1,28 @@
-# Task Activity Management System - User Guide
+# Task Activity & Expense Management System - User Guide
 
 ## Welcome
 
-Welcome to the Task Activity Management System! This application helps you track time spent on various tasks and projects. Whether you're logging daily work activities or reviewing your weekly timesheet, this guide will help you make the most of the system.
+Welcome to the Task Activity & Expense Management System! This comprehensive application helps you track both time spent on tasks and project-related expenses. Whether you're logging daily work activities, reviewing your weekly timesheet, submitting expenses for reimbursement, or managing expense approvals, this guide will help you make the most of the system.
+
+**Key Features:**
+- **Task Activity Tracking**: Log time spent on client projects and tasks with detailed phase tracking
+- **Expense Management**: Record and submit business expenses with receipt attachments
+- **Approval Workflows**: Submit expenses for review and track their approval status
+- **Weekly Views**: View consolidated weekly timesheets and expense sheets
+- **Reporting & Analytics**: Interactive charts and dashboards for analyzing your time and expenses
+- **CSV Export**: Export task lists, timesheets, and expense reports for external use
 
 ## Task Activity List
 
 Tasks are displayed in a table with the following columns:
 
--   **Date**: When the task was performed
--   **Client**: The client the work was done for
--   **Project**: The specific project
--   **Phase**: The work phase (Development, Testing, etc.)
--   **Hours**: Time spent on the task
--   **Details**: Description of work performed
--   **Actions**: Edit, Delete, and Clone buttons
+- **Date**: When the task was performed
+- **Client**: The client the work was done for
+- **Project**: The specific project
+- **Phase**: The work phase (Development, Testing, etc.)
+- **Hours**: Time spent on the task
+- **Details**: Description of work performed
+- **Actions**: Edit, Delete, and Clone buttons
 
 ### Filtering Tasks
 
@@ -29,9 +37,9 @@ Use the filter controls at the top of the task list to narrow down your view:
 
 **To Apply Filters:**
 
--   Select your desired filter options
--   Click **"Filter"** button
--   To reset: Click **"Clear"** button
+- Select your desired filter options
+- Click **"Filter"** button
+- To reset: Click **"Clear"** button
 
 ### Exporting Task List to CSV
 
@@ -43,17 +51,17 @@ You can export your filtered task list to CSV format for reporting or import int
 2. **Click Export Button**: Click **"📋 Export CSV"** in the header
 3. **Wait for Data**: The system will fetch ALL filtered tasks (not just the current page)
 4. **Choose Action**:
-    - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
-    - **💾 Download CSV**: Downloads a CSV file with an intelligent filename
-    - **Close**: Close the export window
+   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **💾 Download CSV**: Downloads a CSV file with an intelligent filename
+   - **Close**: Close the export window
 
 **CSV Export Features:**
 
--   **Exports ALL filtered tasks** - not limited to the 20 visible on the current page
--   If there are 270 filtered tasks, all 270 will be included in the CSV
--   Filename includes active filters and timestamp
--   Example filename: `TaskActivity_Acme_Corp_Website_20251101.csv`
--   For admins: Includes username column in export
+- **Exports ALL filtered tasks** - not limited to the 20 visible on the current page
+- If there are 270 filtered tasks, all 270 will be included in the CSV
+- Filename includes active filters and timestamp
+- Example filename: `TaskActivity_Acme_Corp_Website_20251101.csv`
+- For admins: Includes username column in export
 
 **CSV Format:**
 
@@ -72,6 +80,7 @@ Date,Client,Project,Phase,Hours,Details
 The system has three user roles with different levels of access:
 
 **GUEST (Read-Only Access)**
+
 - ✅ View task list
 - ✅ View task details
 - ❌ Cannot create, edit, or delete tasks
@@ -80,6 +89,7 @@ The system has three user roles with different levels of access:
 - ❌ No access to user management or dropdown settings
 
 **USER (Standard Access)**
+
 - ✅ View, create, edit, and delete your own tasks
 - ✅ Access weekly timesheet
 - ✅ Clone tasks
@@ -88,13 +98,26 @@ The system has three user roles with different levels of access:
 - ❌ Cannot view other users' tasks
 - ❌ No access to user management or dropdown settings
 
+**EXPENSE_ADMIN (Expense Approver)**
+
+- ✅ All USER permissions for tasks
+- ✅ View and manage all users' expenses
+- ✅ Filter expenses by any username
+- ✅ Access expense approval queue
+- ✅ Approve or reject expense submissions
+- ✅ Process reimbursements
+- ❌ No access to task management for other users
+- ❌ No access to user management or dropdown settings
+
 **ADMIN (Full Access)**
+
 - ✅ All USER permissions
 - ✅ View and manage all users' tasks
 - ✅ Filter tasks by any username
 - ✅ Create, edit, and delete user accounts
 - ✅ Manage dropdown values (clients, projects, phases)
 - ✅ Change other users' passwords
+- ✅ All EXPENSE_ADMIN permissions for expenses
 
 **Note:** Contact your administrator if you need different access permissions.
 
@@ -129,6 +152,7 @@ Some new accounts are set up to require a password change on first login:
 For security, your session will expire after **30 minutes** of inactivity.
 
 **What Happens:**
+
 - After 30 minutes without activity, your session expires
 - You'll see a message: "⚠️ Your session has expired. Please log in again."
 - Simply log in again to continue working
@@ -138,18 +162,21 @@ For security, your session will expire after **30 minutes** of inactivity.
 To protect your account from unauthorized access, the system automatically locks accounts after **5 failed login attempts**.
 
 **What Happens When Your Account Is Locked:**
+
 - After 5 incorrect password entries, your account will be locked
 - You will see a message: "Your account has been locked due to too many failed login attempts. Please contact your administrator."
 - You cannot log in until an administrator unlocks your account
 - The administrator receives an automatic email notification about the lockout
 
 **What to Do:**
+
 1. **Contact your administrator** to unlock your account
 2. The administrator can unlock your account from the User Management page
 3. **Double-check your password** before attempting to log in again
 4. If you've forgotten your password, ask your administrator to reset it
 
 **Tips to Avoid Lockouts:**
+
 - Keep your password in a secure location
 - Use a password manager if available
 - Type carefully when entering your password
@@ -190,6 +217,7 @@ To protect your account from unauthorized access, the system automatically locks
 4. An administrator must reset the GUEST user's password
 
 **Tips:**
+
 - Save your work regularly
 - The system will show a clear message when your session expires
 - All your data is saved automatically when you create or edit tasks
@@ -199,25 +227,25 @@ To protect your account from unauthorized access, the system automatically locks
 ### Adding a New Task
 
 1. **Access Task Entry Form**
-
-    - After logging in, you'll see the task entry form
-    - Or click **"Add New Task"** from any page
+   
+   - After logging in, you'll see the task entry form
+   - Or click **"Add New Task"** from any page
 
 2. **Fill in Task Details**
-
-    - **Task Date**: Click the calendar icon to select the date (required)
-    - **Client**: Choose the client from the dropdown (required)
-    - **Project**: Select the project you worked on (required)
-      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
-      - This helps distinguish billable client work from internal overhead
-    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
-    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
-    - **Details**: Describe what you worked on (optional - not needed for tasks like PTO)
+   
+   - **Task Date**: Click the calendar icon to select the date (required)
+   - **Client**: Choose the client from the dropdown (required)
+   - **Project**: Select the project you worked on (required)
+     - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
+     - This helps distinguish billable client work from internal overhead
+   - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
+   - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
+   - **Details**: Describe what you worked on (optional - not needed for tasks like PTO)
 
 3. **Save Your Task**
-
-    - Click **"Save Task Activity"**
-    - The form does not clear, allowing easier entries for the same date
+   
+   - Click **"Save Task Activity"**
+   - The form does not clear, allowing easier entries for the same date
 
 ### Editing a Task
 
@@ -258,11 +286,11 @@ The weekly timesheet gives you a comprehensive view of your time across an entir
 
 The timesheet displays:
 
--   **Week Range**: Start and end dates of the displayed week
--   **Daily Columns**: Monday through Sunday
--   **Your Tasks**: All tasks for that week, grouped by day
--   **Daily Totals**: Hours worked each day
--   **Weekly Total**: Total hours for the entire week
+- **Week Range**: Start and end dates of the displayed week
+- **Daily Columns**: Monday through Sunday
+- **Your Tasks**: All tasks for that week, grouped by day
+- **Daily Totals**: Hours worked each day
+- **Weekly Total**: Total hours for the entire week
 
 ### Navigating Weeks
 
@@ -281,21 +309,21 @@ You can export your weekly timesheet data to CSV format for easy sharing or impo
 1. **Navigate to Week**: Display the week you want to export
 2. **Click Export Button**: Click **"📋 Export CSV"** in the header
 3. **Choose Action**:
-    - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
-    - **💾 Download CSV**: Downloads a file named `Timesheet_Week_of_MM-DD-YYYY_to_MM-DD-YYYY.csv`
-    - **Close**: Close the export window
+   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **💾 Download CSV**: Downloads a file named `Timesheet_Week_of_MM-DD-YYYY_to_MM-DD-YYYY.csv`
+   - **Close**: Close the export window
 
 **CSV Format:**
 
 The exported data includes:
 
--   Date (MM/DD/YYYY)
--   Client name
--   Project name
--   Phase
--   Hours worked
--   Task details
--   Username
+- Date (MM/DD/YYYY)
+- Client name
+- Project name
+- Phase
+- Hours worked
+- Task details
+- Username
 
 **Example CSV Output:**
 
@@ -315,14 +343,14 @@ Date,Client,Project,Phase,Hours,Task Details,Username
 
 The expense list shows all your recorded expenses with the following information:
 
--   **Date**: Date of the expense
--   **Client**: Client associated with the expense
--   **Project**: Project the expense is related to
--   **Type**: Category of expense (Travel, Home Office, etc.)
--   **Amount**: Expense amount with currency
--   **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
--   **Receipt**: Indicator if receipt is attached
--   **Actions**: View, Edit, Submit, Delete buttons
+- **Date**: Date of the expense
+- **Client**: Client associated with the expense
+- **Project**: Project the expense is related to
+- **Type**: Category of expense (Travel, Home Office, etc.)
+- **Amount**: Expense amount with currency
+- **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
+- **Receipt**: Indicator if receipt is attached
+- **Actions**: View, Edit, Submit, Delete buttons
 
 ### Filtering Expenses
 
@@ -337,36 +365,42 @@ Use the filter controls at the top of the expense list to find specific expenses
 7. **Username** (Admin only): Filter expenses by user
 
 **To Apply Filters:**
--   Select your desired filter options
--   Filters apply automatically
--   Click **"Reset Filters"** to clear all filters
+
+- Select your desired filter options
+- Filters apply automatically
+- Click **"Reset Filters"** to clear all filters
 
 ### Creating a New Expense
 
 1. **Access Expense Form**: Click **"💰 Add Expense"** from the navigation
+
 2. **Fill in Required Fields**:
-    - **Expense Date**: Date you incurred the expense (required)
-    - **Client**: Client associated with this expense (required)
-    - **Project**: Project related to the expense (optional)
-    - **Expense Type**: Category from dropdown (Travel - Airfare, Hotel, Home Office Equipment, etc.) (required)
-    - **Description**: What the expense was for (required)
-    - **Amount**: Cost of the expense (required)
-    - **Currency**: Default is USD (optional)
-    - **Payment Method**: How you paid (Personal Credit Card, Cash, etc.) (required)
+   
+   - **Expense Date**: Date you incurred the expense (required)
+   - **Client**: Client associated with this expense (required)
+   - **Project**: Project related to the expense (optional)
+   - **Expense Type**: Category from dropdown (Travel - Airfare, Hotel, Home Office Equipment, etc.) (required)
+   - **Description**: What the expense was for (required)
+   - **Amount**: Cost of the expense (required)
+   - **Currency**: Default is USD (optional)
+   - **Payment Method**: How you paid (Personal Credit Card, Cash, etc.) (required)
 
 3. **Fill in Optional Fields**:
-    - **Vendor**: Name of merchant or vendor
-    - **Reference Number**: Receipt number, confirmation code, or invoice number
-    - **Notes**: Additional information or justification
+   
+   - **Vendor**: Name of merchant or vendor
+   - **Reference Number**: Receipt number, confirmation code, or invoice number
+   - **Notes**: Additional information or justification
 
 4. **Upload Receipt** (Recommended):
-    - Click **"Choose File"** next to Receipt
-    - Select an image file (JPG, PNG, PDF)
-    - Receipt is uploaded and attached to the expense
+   
+   - Click **"Choose File"** next to Receipt
+   - Select an image file (JPG, PNG, PDF)
+   - Receipt is uploaded and attached to the expense
 
 5. **Save as Draft**: Click **"Save Expense"**
-    - Expense is saved with status "Draft"
-    - You can edit it anytime before submitting
+   
+   - Expense is saved with status "Draft"
+   - You can edit it anytime before submitting
 
 ### Editing an Expense
 
@@ -389,29 +423,34 @@ Use the filter controls at the top of the expense list to find specific expenses
 ### Understanding Expense Status
 
 **Draft**: Initial state after creating an expense
--   You can edit and delete
--   Not visible to approvers
--   Upload receipt before submitting
+
+- You can edit and delete
+- Not visible to approvers
+- Upload receipt before submitting
 
 **Submitted**: Expense is awaiting approval
--   Cannot edit or delete
--   Visible in approval queue
--   Approver will review details and receipt
+
+- Cannot edit or delete
+- Visible in approval queue
+- Approver will review details and receipt
 
 **Approved**: Expense has been approved
--   Ready for reimbursement processing
--   You'll see approval date and approver name
--   Check approval notes for any comments
+
+- Ready for reimbursement processing
+- You'll see approval date and approver name
+- Check approval notes for any comments
 
 **Rejected**: Expense was not approved
--   Read rejection notes carefully
--   Make corrections and create new expense
--   Contact approver if you have questions
+
+- Read rejection notes carefully
+- Make corrections and create new expense
+- Contact approver if you have questions
 
 **Reimbursed**: Payment has been processed
--   View reimbursement date and amount
--   Check reimbursement notes for payment details
--   Expense workflow is complete
+
+- View reimbursement date and amount
+- Check reimbursement notes for payment details
+- Expense workflow is complete
 
 ### Viewing Expense Details
 
@@ -436,8 +475,8 @@ Export your filtered expense list for reporting or record-keeping:
 1. **Apply Filters** (optional): Filter expenses as needed
 2. **Click Export**: Click **"📋 Export CSV"** button
 3. **Choose Action**:
-    - Copy to Clipboard for pasting into Excel
-    - Download CSV file with intelligent filename
+   - Copy to Clipboard for pasting into Excel
+   - Download CSV file with intelligent filename
 4. **CSV Includes**: All filtered expenses with complete details
 
 ---
@@ -459,8 +498,8 @@ Your new password must meet these requirements:
 4. **Enter New Password**: Type your new password (must meet requirements)
 5. **Confirm New Password**: Retype your new password exactly
 6. **Show Passwords (Optional)**:
-    - Click the eye icon (👁️) next to each field to view what you're typing
-    - Or check "Show passwords" to reveal all password fields
+   - Click the eye icon (👁️) next to each field to view what you're typing
+   - Or check "Show passwords" to reveal all password fields
 7. **Submit**: Click **"Change Password"**
 8. **Success**: You'll be redirected with a confirmation message
 
@@ -491,23 +530,28 @@ Navigate to **Reports** from the main menu to view your analytics dashboard.
 **For All Users:**
 
 #### 1. Overview Tab
+
 Dashboard summary with key metrics:
+
 - Total hours this month and week
 - Top clients and projects
 - Average hours per day
 - Quick insights into your time allocation
 
 #### 2. Client Analysis Tab
+
 - **Time distribution by client** (pie chart) - Visual breakdown of time spent per client
 - **Top activities breakdown** - Most time-consuming tasks
 - Client-focused time metrics
 
 #### 3. Project Analysis Tab
+
 - **Time distribution by project** (bar chart) - Hours worked per project
 - **Phase distribution** (donut chart) - Time spent in different phases (Development, Testing, etc.)
 - Project-level time breakdown with phase details
 
 #### 4. Time Trends Tab
+
 - **Daily time tracking** (line chart) - Daily hours worked over time
 - **Weekly summary** with trends - Week-by-week comparison
 - **Monthly comparison** (grouped bar chart) - Compare hours across months
@@ -515,9 +559,11 @@ Dashboard summary with key metrics:
 **For ADMIN Users Only:**
 
 #### 5. User Analysis Tab
+
 ADMIN users see an additional tab with team performance analytics:
 
 - **User Performance Summary** table with rankings
+  
   - Trophy icons for top 3 performers:
     - 🏆 Gold trophy for #1 performer
     - 🥈 Silver medal for #2 performer
@@ -534,6 +580,7 @@ ADMIN users see an additional tab with team performance analytics:
   - **Billable Tracking**: The system distinguishes billable vs. non-billable hours using project name - tasks logged to "Non-Billable" project are tracked separately from client work
 
 - **Hours by User** comparison (bar chart)
+  
   - Visual comparison of hours across all team members
   - Shows percentage of total team hours per user
   - Color-coded bars for easy visualization
@@ -564,4 +611,3 @@ ADMIN users see an additional tab with team performance analytics:
 - Hours are displayed with two decimal places (e.g., 8.50 hours)
 - Percentages are calculated based on total hours in the selected period
 - "Unknown" may appear for tasks without a username (legacy data)
-
