@@ -730,13 +730,14 @@
                             >
                                 <a
                                     th:href="@{'/expenses/detail/' + ${expense.id}}"
-                                    class="btn btn-info"
+                                    th:class="${editableExpenses[expense.id]} ? 'btn btn-info' : 'btn btn-secondary'"
                                     style="
                                         margin: 0;
                                         margin-right: 1px;
                                         display: inline-block;
                                     "
-                                    >Edit</a
+                                    th:text="${editableExpenses[expense.id]} ? 'Edit' : 'View'"
+                                >Edit</a
                                 >
                                 <a
                                     th:href="@{'/expenses/clone/' + ${expense.id}}"

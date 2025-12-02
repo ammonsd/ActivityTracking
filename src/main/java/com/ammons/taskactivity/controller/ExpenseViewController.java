@@ -120,7 +120,14 @@ public class ExpenseViewController {
 
         Page<Expense> expensesPage = expenseService.getExpensesByFilters(filter, pageable);
 
+        // Create a map to track which expenses can be edited
+        java.util.Map<Long, Boolean> editableExpenses = new java.util.HashMap<>();
+        for (Expense expense : expensesPage.getContent()) {
+            editableExpenses.put(expense.getId(), canEditExpense(expense, authentication));
+        }
+
         model.addAttribute("expenses", expensesPage.getContent());
+        model.addAttribute("editableExpenses", editableExpenses);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", expensesPage.getTotalPages());
         model.addAttribute("totalItems", expensesPage.getTotalElements());
@@ -904,6 +911,27 @@ public class ExpenseViewController {
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")
                         || auth.getAuthority().equals("ROLE_EXPENSE_ADMIN"));
+    }
+
+    /**
+     * Determines if a user can edit a specific expense. Rules: - Regular users (USER role) can only
+     * edit their own expenses in Draft or Rejected status - ADMIN/EXPENSE_ADMIN can edit any
+     * expense, but cannot edit Reimbursed expenses
+     */
+    private boolean canEditExpense(Expense expense, Authentication authentication) {
+        String status = expense.getExpenseStatus();
+        boolean canEditAllExpenses = canApproveExpenses(authentication);
+        boolean isOwnExpense = expense.getUsername().equals(authentication.getName());
+
+        // ADMIN/EXPENSE_ADMIN: Can edit any expense except Reimbursed
+        if (canEditAllExpenses) {
+            return !"Reimbursed".equalsIgnoreCase(status);
+        }
+
+        // Regular USER: Can only edit their own Draft or Rejected expenses
+        boolean isEditableStatus =
+                STATUS_DRAFT.equalsIgnoreCase(status) || "Rejected".equalsIgnoreCase(status);
+        return isOwnExpense && isEditableStatus;
     }
 
     private void addDropdownOptions(Model model) {
