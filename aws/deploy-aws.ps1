@@ -22,14 +22,21 @@
 #   6. Wait for the new task to become healthy and stable
 #
 # Usage:
-#   .\aws\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache]
+#   .\aws\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests]
 #   
 # Examples:
 #   .\aws\deploy-aws.ps1 -Environment dev
-#   .\aws\deploy-aws.ps1 -Environment production
+#   .\aws\deploy-aws.ps1 -Environment production -RunTests
 #   .\aws\deploy-aws.ps1 -NoCache
 #   .\aws\deploy-aws.ps1 -Status
 #   .\aws\deploy-aws.ps1 -Rollback
+#
+# Parameters:
+#   -Environment  : Target environment (default: dev)
+#   -RunTests     : Run all Maven tests before building (default: skips tests)
+#   -NoCache      : Build Docker image without cache
+#   -Status       : Check current deployment status
+#   -Rollback     : Rollback to previous task definition
 #
 # Author: Dean Ammons
 # Date: October 2025
@@ -46,7 +53,10 @@ param(
     [switch]$Status,
     
     [Parameter(Mandatory=$false)]
-    [switch]$NoCache
+    [switch]$NoCache,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$RunTests
 )
 
 # Stop on errors
@@ -191,7 +201,23 @@ function Build-AndPushImage {
     
     # Build the application
     Write-Info "Building Spring Boot application with Maven..."
-    & .\mvnw.cmd clean package -DskipTests
+    
+    if ($RunTests) {
+        Write-Info "Running all tests before build (this may take several minutes)..."
+        & .\mvnw.cmd clean test
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Tests failed - aborting deployment"
+            exit 1
+        }
+        
+        Write-Success "All tests passed"
+        Write-Info "Building package..."
+        & .\mvnw.cmd package -DskipTests
+    } else {
+        Write-Info "Skipping tests (use -RunTests to enable)"
+        & .\mvnw.cmd clean package -DskipTests
+    }
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Maven build failed"

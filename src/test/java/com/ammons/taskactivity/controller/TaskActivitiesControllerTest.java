@@ -1,11 +1,14 @@
 package com.ammons.taskactivity.controller;
 
+import com.ammons.taskactivity.config.TestSecurityConfig;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
+import com.ammons.taskactivity.security.JwtUtil;
+import com.ammons.taskactivity.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -42,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Dean Ammons
  */
 @WebMvcTest(TaskActivitiesController.class)
+@Import(TestSecurityConfig.class)
 @DisplayName("TaskActivitiesController Tests")
 class TaskActivitiesControllerTest {
 

@@ -1,17 +1,21 @@
 package com.ammons.taskactivity.controller;
 
+import com.ammons.taskactivity.config.TestSecurityConfig;
 import com.ammons.taskactivity.entity.Role;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
+import com.ammons.taskactivity.security.JwtUtil;
+import com.ammons.taskactivity.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Dean Ammons
  */
 @WebMvcTest(UserManagementController.class)
+@Import(TestSecurityConfig.class)
 @DisplayName("UserManagementController Tests")
 class UserManagementControllerTest {
 
@@ -53,6 +58,12 @@ class UserManagementControllerTest {
 
     @MockitoBean
     private TaskActivityRepository taskActivityRepository;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private User testUser;
 

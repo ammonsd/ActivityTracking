@@ -244,13 +244,32 @@ chmod +x aws/deploy-aws.sh
 
 This will:
 
-1. Build the Spring Boot application
+1. Build the Spring Boot application (skipping tests by default)
 2. Create Docker image
 3. Push to Amazon ECR
 4. Register new ECS task definition
 5. Update ECS service with new task
 6. Wait for deployment to complete
 7. Display deployment status
+
+### Deploy with Tests (QA/Production)
+
+Use the `-RunTests` flag to run all tests before building and deploying. This is recommended for QA and production deployments to ensure code quality:
+
+```powershell
+# Deploy to production with full test validation
+.\aws\deploy-aws.ps1 -Environment production -RunTests
+```
+
+**Behavior:**
+- Runs all 131 unit tests before building
+- Aborts deployment if any tests fail
+- Increases deployment time by ~2-3 minutes
+- Recommended for QA and production environments
+
+**Without `-RunTests` flag:**
+- Tests are skipped for faster deployment
+- Suitable for development and quick iterations
 
 ### Deploy with No Cache
 
@@ -261,6 +280,9 @@ Use the `-NoCache` flag to force a complete rebuild without using Docker cache. 
 
 ```powershell
 .\aws\deploy-aws.ps1 -NoCache
+
+# Can be combined with -RunTests
+.\aws\deploy-aws.ps1 -Environment production -RunTests -NoCache
 ```
 
 **Note:** Building without cache takes longer but ensures all changes are picked up.

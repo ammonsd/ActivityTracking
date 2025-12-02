@@ -183,14 +183,14 @@ class ExpenseServiceTest {
         @DisplayName("Should delete expense successfully")
         void shouldDeleteExpenseSuccessfully() {
             // Given
-            when(expenseRepository.existsById(1L)).thenReturn(true);
+            when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
             doNothing().when(expenseRepository).deleteById(1L);
 
             // When
             expenseService.deleteExpense(1L);
 
             // Then
-            verify(expenseRepository, times(1)).existsById(1L);
+            verify(expenseRepository, times(1)).findById(1L);
             verify(expenseRepository, times(1)).deleteById(1L);
         }
 
@@ -198,13 +198,13 @@ class ExpenseServiceTest {
         @DisplayName("Should throw exception when deleting non-existent expense")
         void shouldThrowExceptionWhenDeletingNonExistentExpense() {
             // Given
-            when(expenseRepository.existsById(999L)).thenReturn(false);
+            when(expenseRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When/Then
             assertThatThrownBy(() -> expenseService.deleteExpense(999L))
                     .isInstanceOf(ExpenseNotFoundException.class).hasMessageContaining("999");
 
-            verify(expenseRepository, times(1)).existsById(999L);
+            verify(expenseRepository, times(1)).findById(999L);
             verify(expenseRepository, never()).deleteById(anyLong());
         }
     }

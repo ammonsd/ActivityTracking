@@ -5,11 +5,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +27,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @version 1.0
  */
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"})
 @DisplayName("ExpenseRepository Tests")
 class ExpenseRepositoryTest {
 
@@ -212,9 +217,10 @@ class ExpenseRepositoryTest {
         // When
         List<Expense> expenses = expenseRepository.findPendingApprovals();
 
-        // Then
-        assertThat(expenses).hasSize(1);
-        assertThat(expenses.get(0).getExpenseStatus()).isEqualTo("Pending Approval");
+        // Then - Should find both 'Submitted' (from setUp) and 'Pending Approval' (just created)
+        assertThat(expenses).hasSize(2);
+        assertThat(expenses).extracting(Expense::getExpenseStatus)
+                .containsExactlyInAnyOrder("Submitted", "Pending Approval");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.ammons.taskactivity.controller;
 
+import com.ammons.taskactivity.config.TestSecurityConfig;
 import com.ammons.taskactivity.entity.Role;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.UserService;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Dean Ammons
  */
 @WebMvcTest(PasswordChangeController.class)
+@Import(TestSecurityConfig.class)
 @DisplayName("PasswordChangeController Tests")
 class PasswordChangeControllerTest {
 
@@ -47,6 +50,12 @@ class PasswordChangeControllerTest {
 
     @MockitoBean
     private TaskActivityRepository taskActivityRepository;
+
+    @MockitoBean
+    private com.ammons.taskactivity.security.JwtUtil jwtUtil;
+
+    @MockitoBean
+    private com.ammons.taskactivity.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private User testUser;
     private MockHttpSession session;

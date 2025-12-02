@@ -1,9 +1,12 @@
 package com.ammons.taskactivity.controller;
 
+import com.ammons.taskactivity.config.TestSecurityConfig;
 import com.ammons.taskactivity.dto.ExpenseDto;
 import com.ammons.taskactivity.entity.Expense;
 import com.ammons.taskactivity.repository.ExpenseRepository;
 import com.ammons.taskactivity.repository.UserRepository;
+import com.ammons.taskactivity.security.JwtAuthenticationFilter;
+import com.ammons.taskactivity.security.JwtUtil;
 import com.ammons.taskactivity.service.ExpenseService;
 import com.ammons.taskactivity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
@@ -42,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @version 1.0
  */
 @WebMvcTest(ExpenseController.class)
+@Import(TestSecurityConfig.class)
 @DisplayName("ExpenseController Tests")
 class ExpenseControllerTest {
 
@@ -62,6 +67,12 @@ class ExpenseControllerTest {
 
     @MockitoBean
     private ExpenseRepository expenseRepository;
+
+    @MockitoBean
+    private com.ammons.taskactivity.security.JwtUtil jwtUtil;
+
+    @MockitoBean
+    private com.ammons.taskactivity.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private Expense testExpense;
     private ExpenseDto testExpenseDto;
