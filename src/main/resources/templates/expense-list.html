@@ -675,7 +675,7 @@
                             <th>Receipt</th>
                             <th
                                 class="username-header"
-                                sec:authorize="hasRole('ADMIN')"
+                                sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
                             >
                                 Username
                             </th>
@@ -717,7 +717,7 @@
                             </td>
                             <td
                                 class="username-column"
-                                sec:authorize="hasRole('ADMIN')"
+                                sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
                                 th:text="${expense.username}"
                             ></td>
                             <td
