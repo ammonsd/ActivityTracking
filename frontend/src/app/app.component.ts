@@ -81,4 +81,9 @@ export class AppComponent {
     // Navigate to logout endpoint (now accepts GET)
     globalThis.location.href = '/logout';
   }
+
+  navigateExternal(event: Event, url: string): void {
+    event.preventDefault();
+    globalThis.location.href = url;
+  }
 }

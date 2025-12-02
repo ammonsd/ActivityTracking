@@ -66,15 +66,24 @@
       </a>
       <a 
         mat-list-item 
-        href="/task-activity/list">
+        href="/task-activity/list"
+        (click)="navigateExternal($event, '/task-activity/list')">
         <mat-icon matListItemIcon>apps</mat-icon>
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
       <a 
+        *ngIf="currentRole !== 'GUEST'"
         mat-list-item 
-        [href]="currentRole === 'GUEST' ? null : '/expenses/list'"
-        [class.disabled]="currentRole === 'GUEST'"
-        (click)="currentRole === 'GUEST' && $event.preventDefault()">
+        href="/expenses/list"
+        (click)="navigateExternal($event, '/expenses/list')">
+        <mat-icon matListItemIcon>attach_money</mat-icon>
+        <span matListItemTitle>Expense Tracker</span>
+      </a>
+      <a 
+        *ngIf="currentRole === 'GUEST'"
+        mat-list-item
+        class="disabled"
+        (click)="$event.preventDefault()">
         <mat-icon matListItemIcon>attach_money</mat-icon>
         <span matListItemTitle>Expense Tracker</span>
       </a>
