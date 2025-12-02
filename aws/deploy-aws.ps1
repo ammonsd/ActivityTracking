@@ -381,26 +381,100 @@ function Get-DeploymentStatus {
     Write-Host "Cluster:         $ECS_CLUSTER"
     Write-Host "Service:         $ECS_SERVICE"
     Write-Host "Task Definition: $taskDef"
-    Write-Host "Image:           ${ECR_REPOSITORY}:${IMAGE_TAG}"
     Write-Host "Running Tasks:   $runningCount/$desiredCount"
-    Write-Host "===========================================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Get ALB endpoint
-    Write-Info "Getting Application Load Balancer endpoint..."
+    # Get running task details
+    $taskArns = aws ecs list-tasks `
+        --cluster $ECS_CLUSTER `
+        --service-name $ECS_SERVICE `
+        --desired-status RUNNING `
+        --query 'taskArns[0]' `
+        --output text
+    
+    if ($taskArns -and $taskArns -ne "None") {
+        $taskDetails = aws ecs describe-tasks `
+            --cluster $ECS_CLUSTER `
+            --tasks $taskArns `
+            --output json | ConvertFrom-Json
+        
+        # Get the container image being used
+        $containerImage = $taskDetails.tasks[0].containers[0].image
+        Write-Host "Running Image:   $containerImage"
+    }
+    
+    Write-Host ""
+    
+    # Try to get ALB endpoint first
+    $albDns = $null
     try {
+        $ErrorActionPreference = "SilentlyContinue"
         $albDns = aws elbv2 describe-load-balancers `
             --names "$APP_NAME-alb" `
             --query 'LoadBalancers[0].DNSName' `
-            --output text 2>$null
+            --output text 2>&1
+        $ErrorActionPreference = "Stop"
         
-        if ($albDns -and $albDns -ne "None") {
-            Write-Success "Application URL: https://$albDns"
-            Write-Info "Health Check: https://$albDns/actuator/health"
+        # Check if result is valid (not an error message)
+        if ($albDns -match "error|exception|not found" -or [string]::IsNullOrWhiteSpace($albDns) -or $albDns -eq "None") {
+            $albDns = $null
         }
-    } catch {
-        Write-Info "ALB not configured or not found"
     }
+    catch {
+        $albDns = $null
+    }
+    
+    if ($albDns) {
+        Write-Success "Application URL:    http://$albDns"
+        Write-Info "Health Check:       http://$albDns/actuator/health"
+    }
+    else {
+        # No ALB, try to get task public IP
+        if ($taskArns -and $taskArns -ne "None") {
+            # Get ENI attachment
+            $eniId = $taskDetails.tasks[0].attachments | 
+                Where-Object { $_.type -eq "ElasticNetworkInterface" } | 
+                Select-Object -First 1 -ExpandProperty details | 
+                Where-Object { $_.name -eq "networkInterfaceId" } | 
+                Select-Object -First 1 -ExpandProperty value
+            
+            if ($eniId) {
+                try {
+                    $ErrorActionPreference = "SilentlyContinue"
+                    $publicIp = aws ec2 describe-network-interfaces `
+                        --network-interface-ids $eniId `
+                        --query 'NetworkInterfaces[0].Association.PublicIp' `
+                        --output text 2>&1
+                    $ErrorActionPreference = "Stop"
+                    
+                    # Check if result is valid
+                    if ($publicIp -match "error|exception" -or [string]::IsNullOrWhiteSpace($publicIp) -or $publicIp -eq "None") {
+                        $publicIp = $null
+                    }
+                }
+                catch {
+                    $publicIp = $null
+                }
+                
+                if ($publicIp) {
+                    Write-Success "Application URL:    http://${publicIp}:8080"
+                    Write-Info "Health Check:       http://${publicIp}:8080/actuator/health"
+                }
+                else {
+                    Write-Warning "No public IP found for task. Check security group and task configuration."
+                }
+            }
+            else {
+                Write-Warning "No network interface found for task."
+            }
+        }
+        else {
+            Write-Warning "No running tasks found. Cannot determine application URL."
+        }
+    }
+    
+    Write-Host "===========================================================================================" -ForegroundColor Cyan
+    Write-Host ""
 }
 
 function Invoke-Rollback {

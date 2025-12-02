@@ -1,0 +1,20 @@
+{
+    "Rules": [
+        {
+            "Id": "ArchiveOldReceipts",
+            "Status": "Enabled",
+            "Filter": {
+                "Prefix": ""
+            },
+            "Transitions": [
+                {
+                    "Days": 180,
+                    "StorageClass": "GLACIER"
+                }
+            ],
+            "Expiration": {
+                "Days": 2555
+            }
+        }
+    ]
+}

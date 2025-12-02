@@ -76,6 +76,9 @@ Before deploying to AWS, ensure you have:
 4. **AWS Resources Created**:
     - ECR repository: `taskactivity`
     - RDS PostgreSQL instance
+    - S3 buckets:
+        - `taskactivity-receipts-prod` (expense receipt storage)
+        - `taskactivity-logs-archive` (CloudWatch log exports)
     - Secrets in AWS Secrets Manager:
         - `taskactivity/database/credentials` (username, password, jdbcUrl)
         - `taskactivity/admin/credentials` (admin password)
@@ -157,13 +160,41 @@ For detailed email configuration, see [Email Notification Configuration](../loca
 - The application will work without Cloudflare secrets if you're using ALB or direct access
 - Email notifications are configured in the task definition but require the email credentials secret to function
 
-### Step 3: Create ECR Repository
+### Step 3: Create S3 Buckets
+
+**Receipt Storage Bucket:**
+
+```powershell
+# Create S3 bucket for expense receipts
+aws s3api create-bucket --bucket taskactivity-receipts-prod --region us-east-1
+
+# Enable server-side encryption
+aws s3api put-bucket-encryption --bucket taskactivity-receipts-prod --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+# Block all public access (security best practice)
+aws s3api put-public-access-block --bucket taskactivity-receipts-prod --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
+# Optional: Add lifecycle policy for cost optimization (archive receipts after 180 days)
+aws s3api put-bucket-lifecycle-configuration --bucket taskactivity-receipts-prod --lifecycle-configuration file://aws/s3-receipts-lifecycle-policy.json
+```
+
+**Verify buckets created:**
+
+```powershell
+aws s3 ls | findstr taskactivity
+```
+
+You should see both:
+- `taskactivity-logs-archive`
+- `taskactivity-receipts-prod`
+
+### Step 4: Create ECR Repository
 
 ```powershell
 aws ecr create-repository --repository-name taskactivity --region us-east-1
 ```
 
-### Step 3.1: Configure ECR Lifecycle Policy (Recommended)
+### Step 4.1: Configure ECR Lifecycle Policy (Recommended)
 
 **Apply automated image cleanup to reduce storage costs:**
 
@@ -183,7 +214,7 @@ This lifecycle policy will:
 aws ecr get-lifecycle-policy --repository-name taskactivity
 ```
 
-### Step 4: Deploy
+### Step 5: Deploy
 
 **Important:** Run the deployment script from the project root directory (not from the aws folder).
 
@@ -262,10 +293,16 @@ The following environment variables are configured in the task definition:
 ### Application Configuration
 
 -   `SPRING_PROFILES_ACTIVE=aws` - Activates AWS profile
--   `AWS_REGION` - AWS region for Secrets Manager
+-   `AWS_REGION` - AWS region for Secrets Manager and S3
 -   `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins
 -   `LOG_LEVEL` - Application logging level (INFO, DEBUG, etc.)
 -   `SECURITY_LOG_LEVEL` - Security logging level
+
+### Storage Configuration
+
+-   `STORAGE_TYPE=s3` - Use S3 for receipt storage (AWS profile default)
+-   `STORAGE_S3_BUCKET=taskactivity-receipts-prod` - S3 bucket for receipts
+-   `STORAGE_S3_REGION=us-east-1` - S3 bucket region
 
 ### Database Configuration (from Secrets Manager)
 
@@ -290,10 +327,22 @@ The application uses `application-aws.properties` which includes:
 
 -   PostgreSQL RDS configuration
 -   AWS Secrets Manager integration
+-   S3 storage for expense receipts
 -   CloudWatch logging
 -   Health check endpoints for ALB
 -   Optimized connection pooling
 -   Production security settings
+
+### Receipt Storage Architecture
+
+The application uses a storage service abstraction:
+
+-   **Development:** `LocalFileStorageService` - Stores files locally
+-   **Production (AWS):** `S3StorageService` - Stores files in S3
+-   **Configuration:** Automatically switches based on `SPRING_PROFILES_ACTIVE`
+-   **File Organization:** `username/YYYY/MM/receipt_id_uuid.ext`
+-   **Database:** Stores relative paths for portability
+-   **IAM:** Uses ECS task role (no access keys needed)
 
 ## Monitoring
 

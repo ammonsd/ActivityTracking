@@ -279,20 +279,32 @@ You should see at least 2 images:
 -   **Trusted entities:** ecs-tasks.amazonaws.com
 -   **Permissions policies:**
     -   TaskActivitySecretsManagerPolicy (Custom)
+    -   TaskActivityS3ReceiptsPolicy (Custom)
 
 ### Policies
 
 **Navigate to:** IAM → Policies → Customer managed
 
-**Your Custom Policy:**
+**Your Custom Policies:**
 
--   **Name:** TaskActivitySecretsManagerPolicy
+**1. TaskActivitySecretsManagerPolicy**
+
 -   **ARN:** arn:aws:iam::378010131175:policy/TaskActivitySecretsManagerPolicy
 
 #### What to Check:
 
 -   Allows `secretsmanager:GetSecretValue` and `secretsmanager:DescribeSecret`
 -   For resources: `arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/*`
+
+**2. TaskActivityS3ReceiptsPolicy**
+
+-   **ARN:** arn:aws:iam::378010131175:policy/TaskActivityS3ReceiptsPolicy
+
+#### What to Check:
+
+-   Allows `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, `s3:ListBucket`
+-   For resources: `arn:aws:s3:::taskactivity-receipts-prod/*`
+-   Required for expense receipt uploads and downloads
 
 ---
 
@@ -453,7 +465,69 @@ After Lambda automation is running, you should see:
 
 ---
 
-## 9. ⚡ Lambda (Log Export Automation)
+## 9. 📦 S3 (Receipt Storage)
+
+**Navigate to:** Services → S3 → Buckets
+
+### What to Check:
+
+**Your Bucket:**
+
+-   **Name:** taskactivity-receipts-prod
+-   **Region:** us-east-1
+-   **Purpose:** Production receipt file storage for expense tracking
+
+### Things to Look At:
+
+1. **Objects Tab**
+
+    - Folder structure: `username/YYYY/MM/`
+    - Receipt files: `receipt_<id>_<uuid>.<ext>`
+    - Example: `ammonsd/2025/12/receipt_7_a1b2c3d4.pdf`
+
+2. **Properties Tab**
+
+    - Bucket Versioning: Disabled
+    - Server-side encryption: Enabled
+    - Default encryption: Amazon S3 managed keys (SSE-S3)
+
+3. **Permissions Tab**
+    - Bucket policy allows ECS task role
+    - IAM role `ecsTaskRole` has read/write access
+    - No public access (all access blocked)
+
+4. **Management Tab**
+    - **Lifecycle rules:** Optimize storage costs
+        - Rule: Archive old receipts (optional)
+        - Transition to Glacier: After 180 days
+        - Expiration: After 7 years (regulatory compliance)
+
+### Quick Actions:
+
+-   📥 Download receipts for backup
+-   🔍 Search for specific user receipts
+-   💰 Review storage costs by folder
+-   🗑️ Delete orphaned files (if needed)
+
+### Expected Contents:
+
+After expense submissions with receipts:
+
+-   User folders: `ammonsd/`, `johndoe/`, etc.
+-   Year/month organization: `2025/12/`, `2025/11/`, etc.
+-   Receipt files with unique IDs and extensions
+-   Database stores relative paths: `username/YYYY/MM/receipt_id_uuid.ext`
+
+### Security:
+
+-   ✓ No public access - Only ECS tasks can read/write
+-   ✓ Encryption at rest - SSE-S3
+-   ✓ Organized structure - Easy audit and compliance
+-   ✓ IAM role-based access - No access keys needed
+
+---
+
+## 10. ⚡ Lambda (Log Export Automation)
 
 **Navigate to:** Services → Lambda → Functions
 
@@ -519,7 +593,7 @@ After Lambda automation is running, you should see:
 
 ---
 
-## 10. ⏰ EventBridge (Scheduler)
+## 11. ⏰ EventBridge (Scheduler)
 
 **Navigate to:** Services → Amazon EventBridge → Scheduler → Schedules
 
@@ -572,7 +646,7 @@ Note: If you created the schedule using the new Scheduler interface, it will app
 
 ---
 
-## 11. �💰 Billing & Cost Explorer
+## 12. 💰 Billing & Cost Explorer
 
 **Navigate to:** Account menu (top right) → Billing Dashboard
 
@@ -615,7 +689,7 @@ Note: If you created the schedule using the new Scheduler interface, it will app
 
 ---
 
-## 12. 🎯 Quick Health Check Checklist
+## 13. 🎯 Quick Health Check Checklist
 
 ### Before Deployment:
 
@@ -626,6 +700,7 @@ Note: If you created the schedule using the new Scheduler interface, it will app
 -   [ ] IAM roles exist with correct permissions
 -   [ ] Security groups configured properly
 -   [ ] S3 bucket exists: **taskactivity-logs-archive**
+-   [ ] S3 bucket exists: **taskactivity-receipts-prod**
 -   [ ] Lambda function deployed: **TaskActivityLogExporter**
 -   [ ] EventBridge schedule configured: **TaskActivityDailyLogExport**
 
@@ -694,6 +769,12 @@ https://console.aws.amazon.com/scheduler/home?region=us-east-1#schedules/default
 
 ```
 https://s3.console.aws.amazon.com/s3/buckets/taskactivity-logs-archive?region=us-east-1&tab=objects
+```
+
+### S3 Bucket (Receipt Storage):
+
+```
+https://s3.console.aws.amazon.com/s3/buckets/taskactivity-receipts-prod?region=us-east-1&tab=objects
 ```
 
 ---
