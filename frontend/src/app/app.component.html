@@ -31,9 +31,10 @@
       <a
         *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
         mat-list-item
-        routerLink="/users"
+        [routerLink]="currentRole === 'GUEST' ? null : '/users'"
         routerLinkActive="active"
         [class.disabled]="currentRole === 'GUEST'"
+        (click)="currentRole === 'GUEST' && $event.preventDefault()"
       >
         <mat-icon matListItemIcon>people</mat-icon>
         <span matListItemTitle>Users</span>
@@ -41,14 +42,20 @@
       <a
         *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
         mat-list-item
-        routerLink="/dropdowns"
+        [routerLink]="currentRole === 'GUEST' ? null : '/dropdowns'"
         routerLinkActive="active"
         [class.disabled]="currentRole === 'GUEST'"
+        (click)="currentRole === 'GUEST' && $event.preventDefault()"
       >
         <mat-icon matListItemIcon>list</mat-icon>
         <span matListItemTitle>Dropdowns</span>
       </a>
-      <a mat-list-item routerLink="/expenses" routerLinkActive="active" *ngIf="currentRole !== 'GUEST'">
+      <a 
+        mat-list-item 
+        [routerLink]="currentRole === 'GUEST' ? null : '/expenses'" 
+        routerLinkActive="active"
+        [class.disabled]="currentRole === 'GUEST'"
+        (click)="currentRole === 'GUEST' && $event.preventDefault()">
         <mat-icon matListItemIcon>receipt</mat-icon>
         <span matListItemTitle>Expenses</span>
       </a>
@@ -64,9 +71,10 @@
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
       <a 
-        *ngIf="currentRole !== 'GUEST'"
         mat-list-item 
-        href="/expenses/list">
+        [href]="currentRole === 'GUEST' ? null : '/expenses/list'"
+        [class.disabled]="currentRole === 'GUEST'"
+        (click)="currentRole === 'GUEST' && $event.preventDefault()">
         <mat-icon matListItemIcon>attach_money</mat-icon>
         <span matListItemTitle>Expense Tracker</span>
       </a>

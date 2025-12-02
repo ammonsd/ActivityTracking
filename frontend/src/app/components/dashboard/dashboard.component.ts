@@ -24,13 +24,14 @@ import { AuthService } from '../../services/auth.service';
           <strong>👋 Welcome, Guest!</strong>
           <span>
             You can create and edit your own tasks and view the weekly
-            timesheet. Other features are visible but read-only to allow
-            exposure to the full application functionality.
+            timesheet. Other features (expenses, users, dropdowns) are visible
+            but read-only to allow exposure to the full application
+            functionality.
           </span>
         </div>
       </div>
 
-      <h2>Task Activity Admin Dashboard</h2>
+      <h2>Admin Dashboard</h2>
 
       <div class="dashboard-grid">
         <mat-card class="dashboard-card" routerLink="/tasks">
@@ -41,8 +42,8 @@ import { AuthService } from '../../services/auth.service';
         </mat-card>
 
         <mat-card
-          *ngIf="currentRole !== 'GUEST'"
           class="dashboard-card"
+          [class.disabled]="currentRole === 'GUEST'"
           routerLink="/expenses"
         >
           <mat-card-header>

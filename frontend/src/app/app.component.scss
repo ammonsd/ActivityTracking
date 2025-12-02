@@ -59,8 +59,8 @@ mat-icon[matListItemIcon] {
 
 .disabled {
   opacity: 0.5;
-  pointer-events: none;
-  cursor: not-allowed;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
 }
 
 .coming-soon-subtitle {

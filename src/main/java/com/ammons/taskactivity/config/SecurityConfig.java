@@ -159,10 +159,11 @@ public class SecurityConfig {
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                         ROLE_EXPENSE_ADMIN)
 
-                                        // Expense endpoints - accessible to USER, ADMIN, and
-                                        // EXPENSE_ADMIN
+                                        // Expense endpoints - accessible to USER, ADMIN, GUEST,
+                                        // and EXPENSE_ADMIN
                                         .requestMatchers("/expenses/**")
-                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, ROLE_EXPENSE_ADMIN)
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
+                                                        ROLE_EXPENSE_ADMIN)
 
                         // Angular dashboard - requires authentication
                                         // .requestMatchers("/app", "/app/**").authenticated()

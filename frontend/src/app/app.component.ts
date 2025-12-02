@@ -32,7 +32,7 @@ import { AuthService } from './services/auth.service';
 export class AppComponent {
   @ViewChild('drawer') drawer?: MatDrawer;
 
-  title = 'Task Activity Admin Dashboard';
+  title = 'Admin Dashboard';
   isAuthenticated$;
   currentUser = '';
   currentRole = '';
