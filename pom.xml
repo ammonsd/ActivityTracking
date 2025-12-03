@@ -31,7 +31,19 @@
 	<properties>
 		<java.version>21</java.version>
 		<skip.frontend.build>false</skip.frontend.build>
+		<aws.sdk.version>2.21.0</aws.sdk.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws.sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
         <!-- Spring Boot Starter Web -->
         <dependency>
@@ -162,7 +174,12 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.20.26</version>
+		</dependency>
+		
+		<!-- AWS SES SDK for email notifications -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ses</artifactId>
 		</dependency>
 	</dependencies>
 

@@ -57,20 +57,16 @@
                     "value": "true"
                 },
                 {
-                    "name": "MAIL_HOST",
-                    "value": "smtp.gmail.com"
-                },
-                {
-                    "name": "MAIL_PORT",
-                    "value": "587"
+                    "name": "MAIL_USE_AWS_SDK",
+                    "value": "true"
                 },
                 {
                     "name": "MAIL_FROM",
-                    "value": "deanammons@gmail.com"
+                    "value": "noreply@taskactivitytracker.com"
                 },
                 {
                     "name": "ADMIN_EMAIL",
-                    "value": "3783a389b4e645a99f84af59f0e2a59d@domainsbyproxy.com"
+                    "value": "deanammons@gmail.com"
                 }
             ],
             "secrets": [
@@ -97,14 +93,6 @@
                 {
                     "name": "CLOUDFLARE_TUNNEL_CONFIG",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/cloudflare/config"
-                },
-                {
-                    "name": "MAIL_USERNAME",
-                    "valueFrom": "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/email/credentials:username::"
-                },
-                {
-                    "name": "MAIL_PASSWORD",
-                    "valueFrom": "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/email/credentials:password::"
                 }
             ],
             "logConfiguration": {

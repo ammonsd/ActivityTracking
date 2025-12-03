@@ -82,17 +82,11 @@
         {
             "Sid": "IAMPassRole",
             "Effect": "Allow",
-            "Action": [
-                "iam:PassRole",
-                "iam:GetRole",
-                "iam:ListRoles"
-            ],
+            "Action": ["iam:PassRole", "iam:GetRole", "iam:ListRoles"],
             "Resource": "*",
             "Condition": {
                 "StringEquals": {
-                    "iam:PassedToService": [
-                        "ecs-tasks.amazonaws.com"
-                    ]
+                    "iam:PassedToService": ["ecs-tasks.amazonaws.com"]
                 }
             }
         },
@@ -122,9 +116,7 @@
         {
             "Sid": "STSAccess",
             "Effect": "Allow",
-            "Action": [
-                "sts:GetCallerIdentity"
-            ],
+            "Action": ["sts:GetCallerIdentity"],
             "Resource": "*"
         },
         {
@@ -135,6 +127,26 @@
                 "route53:GetHostedZone",
                 "route53:ListResourceRecordSets",
                 "route53:ChangeResourceRecordSets"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SESAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ses:GetSendQuota",
+                "ses:GetIdentityVerificationAttributes",
+                "ses:VerifyEmailIdentity",
+                "ses:VerifyDomainIdentity",
+                "ses:VerifyDomainDkim",
+                "ses:ListIdentities",
+                "ses:DeleteIdentity",
+                "ses:GetIdentityDkimAttributes",
+                "ses:SetIdentityDkimEnabled",
+                "ses:SendEmail",
+                "ses:SendRawEmail",
+                "sesv2:GetAccount",
+                "sesv2:PutAccountDetails"
             ],
             "Resource": "*"
         }

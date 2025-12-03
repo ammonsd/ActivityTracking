@@ -1,0 +1,33 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "SecretsManagerAccess",
+            "Effect": "Allow",
+            "Action": ["secretsmanager:GetSecretValue"],
+            "Resource": [
+                "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/*"
+            ]
+        },
+        {
+            "Sid": "SESAccess",
+            "Effect": "Allow",
+            "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3ReceiptsAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::taskactivity-receipts",
+                "arn:aws:s3:::taskactivity-receipts/*"
+            ]
+        }
+    ]
+}

@@ -7,6 +7,10 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ses.SesClient;
+import software.amazon.awssdk.services.ses.model.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,8 +26,19 @@ import java.time.format.DateTimeFormatter;
  * <li>Administrative notifications</li>
  * </ul>
  * 
+ * <p>
+ * Supports two methods for sending emails:
+ * <ul>
+ * <li><b>SMTP</b> - Traditional SMTP using JavaMailSender (requires username/password)</li>
+ * <li><b>AWS SDK</b> - AWS SES SDK using IAM role credentials (no username/password needed)</li>
+ * </ul>
+ * 
+ * <p>
+ * The AWS SDK method is recommended for AWS deployments (ECS/EC2) as it uses IAM role credentials
+ * automatically, eliminating the need to manage SMTP credentials.
+ * 
  * @author Dean Ammons
- * @version 1.0
+ * @version 2.0
  */
 @Service
 public class EmailService {
@@ -33,9 +48,16 @@ public class EmailService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final JavaMailSender mailSender;
+    private SesClient sesClient;
 
     @Value("${spring.mail.enabled:false}")
     private boolean mailEnabled;
+
+    @Value("${spring.mail.use-aws-sdk:false}")
+    private boolean useAwsSdk;
+
+    @Value("${aws.region:us-east-1}")
+    private String awsRegion;
 
     @Value("${app.mail.from:noreply@taskactivity.com}")
     private String fromAddress;
@@ -48,6 +70,24 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
+        initializeSesClient();
+    }
+
+    /**
+     * Initialize AWS SES client if AWS SDK method is enabled. Uses DefaultCredentialsProvider which
+     * automatically uses ECS task role credentials.
+     */
+    private void initializeSesClient() {
+        if (useAwsSdk) {
+            try {
+                sesClient = SesClient.builder().region(Region.of(awsRegion))
+                        .credentialsProvider(DefaultCredentialsProvider.create()).build();
+                logger.info("AWS SES client initialized for region: {}", awsRegion);
+            } catch (Exception e) {
+                logger.error("Failed to initialize AWS SES client", e);
+                sesClient = null;
+            }
+        }
     }
 
     /**
@@ -76,22 +116,64 @@ public class EmailService {
             return;
         }
 
+        String subject = String.format("[%s] Account Locked: %s", appName, username);
+        String body = buildLockoutEmailBody(username, failedAttempts, ipAddress);
+
+        if (useAwsSdk && sesClient != null) {
+            sendEmailViaAwsSdk(adminEmail, subject, body);
+        } else {
+            sendEmailViaSmtp(adminEmail, subject, body);
+        }
+    }
+
+    /**
+     * Send email using AWS SES SDK. Uses IAM role credentials (no username/password needed).
+     * 
+     * @param to recipient email address
+     * @param subject email subject
+     * @param body email body text
+     */
+    private void sendEmailViaAwsSdk(String to, String subject, String body) {
+        try {
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .destination(Destination.builder().toAddresses(to).build())
+                    .message(Message.builder()
+                            .subject(Content.builder().data(subject).charset("UTF-8").build())
+                            .body(Body.builder()
+                                    .text(Content.builder().data(body).charset("UTF-8").build())
+                                    .build())
+                            .build())
+                    .source(fromAddress).build();
+
+            SendEmailResponse response = sesClient.sendEmail(request);
+            logger.info("Email sent successfully via AWS SES. MessageId: {}", response.messageId());
+
+        } catch (Exception e) {
+            logger.error("Failed to send email via AWS SES to: {}", to, e);
+            // Don't throw exception - email failure should not prevent login processing
+        }
+    }
+
+    /**
+     * Send email using traditional SMTP. Requires SMTP username/password configuration.
+     * 
+     * @param to recipient email address
+     * @param subject email subject
+     * @param body email body text
+     */
+    private void sendEmailViaSmtp(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);
-            message.setTo(adminEmail);
-            message.setSubject(String.format("[%s] Account Locked: %s", appName, username));
-
-            String body = buildLockoutEmailBody(username, failedAttempts, ipAddress);
+            message.setTo(to);
+            message.setSubject(subject);
             message.setText(body);
 
             mailSender.send(message);
-            logger.info("Account lockout notification email sent successfully for user: {}",
-                    username);
+            logger.info("Email sent successfully via SMTP to: {}", to);
 
         } catch (MailException e) {
-            logger.error("Failed to send account lockout notification email for user: {}", username,
-                    e);
+            logger.error("Failed to send email via SMTP to: {}", to, e);
             // Don't throw exception - email failure should not prevent login processing
         }
     }
@@ -148,19 +230,23 @@ public class EmailService {
             return false;
         }
 
+        String method = useAwsSdk ? "AWS SES SDK" : "SMTP";
+        String subject = String.format("[%s] Test Email", appName);
+        String body = String.format(
+                "This is a test email to verify email configuration is working correctly.\n\n"
+                        + "Email method: %s\n" + "From: %s\n" + "To: %s\n" + "AWS Region: %s\n"
+                        + "Timestamp: %s",
+                method, fromAddress, adminEmail, awsRegion,
+                LocalDateTime.now().format(DATE_FORMATTER));
+
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
-            message.setTo(adminEmail);
-            message.setSubject(String.format("[%s] Test Email", appName));
-            message.setText(
-                    "This is a test email to verify email configuration is working correctly.");
-
-            mailSender.send(message);
-            logger.info("Test email sent successfully to: {}", adminEmail);
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(adminEmail, subject, body);
+            } else {
+                sendEmailViaSmtp(adminEmail, subject, body);
+            }
             return true;
-
-        } catch (MailException e) {
+        } catch (Exception e) {
             logger.error("Failed to send test email", e);
             return false;
         }

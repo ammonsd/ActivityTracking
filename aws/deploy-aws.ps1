@@ -56,7 +56,13 @@ param(
     [switch]$NoCache,
     
     [Parameter(Mandatory=$false)]
-    [switch]$RunTests
+    [switch]$RunTests,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$EnableEmail,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$UseAwsSdk
 )
 
 # Stop on errors
@@ -540,6 +546,12 @@ Write-Host "Application: Task Activity Management" -ForegroundColor Cyan
 Write-Host "Environment: $Environment" -ForegroundColor Cyan
 Write-Host "AWS Region:  $AWS_REGION" -ForegroundColor Cyan
 Write-Host "AWS Account: $AWS_ACCOUNT_ID" -ForegroundColor Cyan
+if ($EnableEmail) {
+    $emailMethod = if ($UseAwsSdk) { "AWS SES SDK (IAM Role)" } else { "SMTP" }
+    Write-Host "Email:       Enabled ($emailMethod)" -ForegroundColor Green
+} else {
+    Write-Host "Email:       Disabled" -ForegroundColor Yellow
+}
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host ""
 
