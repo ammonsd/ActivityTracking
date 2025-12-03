@@ -100,25 +100,30 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Record successful login attempt with location
         loginAuditService.recordLoginAttempt(username, ipAddress, location, true);
 
-        // Send email notification if GUEST user logs in
-        if ("GUEST".equalsIgnoreCase(username)) {
-            try {
-                emailService.sendGuestLoginNotification(ipAddress, location);
-                log.info("Guest login notification email sent for IP: {}, Location: {}", ipAddress,
-                        location);
-            } catch (Exception e) {
-                log.error("Failed to send guest login notification email", e);
-                // Continue processing even if email fails
-            }
-        }
-
         try {
             // Update the last login time for this user
             userDetailsService.updateLastLoginTime(username);
 
             Optional<User> userOptional = userRepository.findByUsername(username);
+
+            // Send email notification if GUEST role user logs in
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
+                if (user.getRole() == com.ammons.taskactivity.entity.Role.GUEST) {
+                    try {
+                        String fullName = user.getFirstname() != null && user.getLastname() != null
+                                ? user.getFirstname() + " " + user.getLastname()
+                                : null;
+                        emailService.sendGuestLoginNotification(username, fullName, ipAddress,
+                                location);
+                        log.info(
+                                "Guest login notification email sent for user: {}, IP: {}, Location: {}",
+                                username, ipAddress, location);
+                    } catch (Exception e) {
+                        log.error("Failed to send guest login notification email", e);
+                        // Continue processing even if email fails
+                    }
+                }
 
                 // Reset failed login attempts on successful login
                 if (user.getFailedLoginAttempts() > 0) {

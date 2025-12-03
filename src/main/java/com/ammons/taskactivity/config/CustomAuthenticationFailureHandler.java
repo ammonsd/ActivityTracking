@@ -131,7 +131,11 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
                     // Send email notification to administrator
                     try {
-                        emailService.sendAccountLockoutNotification(username, attempts, ipAddress);
+                        String fullName = user.getFirstname() != null && user.getLastname() != null
+                                ? user.getFirstname() + " " + user.getLastname()
+                                : null;
+                        emailService.sendAccountLockoutNotification(username, fullName, attempts,
+                                ipAddress);
                     } catch (Exception e) {
                         log.error("Failed to send lockout notification email for user: {}",
                                 username, e);

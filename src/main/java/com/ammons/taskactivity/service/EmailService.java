@@ -106,10 +106,11 @@ public class EmailService {
      * </ul>
      * 
      * @param username the username of the locked account
+     * @param fullName the full name of the user (optional, can be null)
      * @param failedAttempts the number of failed login attempts
      * @param ipAddress the IP address of the last failed login attempt
      */
-    public void sendAccountLockoutNotification(String username, int failedAttempts,
+    public void sendAccountLockoutNotification(String username, String fullName, int failedAttempts,
             String ipAddress) {
         if (!mailEnabled) {
             logger.info(
@@ -119,7 +120,7 @@ public class EmailService {
         }
 
         String subject = String.format("[%s] Account Locked: %s", appName, username);
-        String body = buildLockoutEmailBody(username, failedAttempts, ipAddress);
+        String body = buildLockoutEmailBody(username, fullName, failedAttempts, ipAddress);
 
         if (useAwsSdk && sesClient != null) {
             sendEmailViaAwsSdk(adminEmail, subject, body);
@@ -181,12 +182,15 @@ public class EmailService {
     }
 
     /**
-     * Send notification when GUEST user logs in.
+     * Send notification when GUEST role user logs in.
      * 
+     * @param username the username of the GUEST user
+     * @param fullName the full name of the user (optional, can be null)
      * @param ipAddress the IP address of the login
      * @param location the geographic location of the login
      */
-    public void sendGuestLoginNotification(String ipAddress, String location) {
+    public void sendGuestLoginNotification(String username, String fullName, String ipAddress,
+            String location) {
         if (!mailEnabled) {
             logger.info(
                     "Email notifications are disabled. Would have sent GUEST login notification");
@@ -194,7 +198,7 @@ public class EmailService {
         }
 
         String subject = String.format("[%s] GUEST User Login", appName);
-        String body = buildGuestLoginEmailBody(ipAddress, location);
+        String body = buildGuestLoginEmailBody(username, fullName, ipAddress, location);
 
         if (useAwsSdk && sesClient != null) {
             sendEmailViaAwsSdk(adminEmail, subject, body);
@@ -206,29 +210,38 @@ public class EmailService {
     /**
      * Builds the email body for guest login notifications.
      * 
+     * @param username the username of the GUEST user
+     * @param fullName the full name of the user (optional, can be null)
      * @param ipAddress the IP address of the login
      * @param location the geographic location of the login
      * @return formatted email body text
      */
-    private String buildGuestLoginEmailBody(String ipAddress, String location) {
+    private String buildGuestLoginEmailBody(String username, String fullName, String ipAddress,
+            String location) {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder details = new StringBuilder();
+        if (fullName != null) {
+            details.append(String.format("Name:               %s%n", fullName));
+        }
+        details.append(String.format("Username:           %s", username));
 
         return String.format("""
                 GUEST USER LOGIN NOTIFICATION
 
-                The GUEST user has logged into the system.
+                A user with GUEST role has logged into the system.
 
                 Details:
                 ----------------------------------------
-                Username: GUEST
-                Login Timestamp: %s
-                IP Address: %s
-                Location: %s
+                %s
+                Login Timestamp:    %s
+                IP Address:         %s
+                Location:           %s
                 ----------------------------------------
 
                 This is an automated notification from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, timestamp, ipAddress != null ? ipAddress : "Unknown",
+                """, details.toString(), timestamp, ipAddress != null ? ipAddress : "Unknown",
                 location != null ? location : "Unknown", appName);
     }
 
@@ -236,12 +249,20 @@ public class EmailService {
      * Builds the email body for account lockout notifications.
      * 
      * @param username the username of the locked account
+     * @param fullName the full name of the user (optional, can be null)
      * @param failedAttempts the number of failed login attempts
      * @param ipAddress the IP address of the last failed login attempt
      * @return formatted email body text
      */
-    private String buildLockoutEmailBody(String username, int failedAttempts, String ipAddress) {
+    private String buildLockoutEmailBody(String username, String fullName, int failedAttempts,
+            String ipAddress) {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder details = new StringBuilder();
+        if (fullName != null) {
+            details.append(String.format("Name:               %s%n", fullName));
+        }
+        details.append(String.format("Username:           %s", username));
 
         return String.format("""
                 ACCOUNT LOCKOUT ALERT
@@ -250,10 +271,10 @@ public class EmailService {
 
                 Details:
                 ----------------------------------------
-                Username: %s
-                Failed Login Attempts: %d
-                Lockout Timestamp: %s
-                IP Address: %s
+                %s
+                Failed Attempts:    %d
+                Lockout Timestamp:  %s
+                IP Address:         %s
                 ----------------------------------------
 
                 Action Required:
@@ -269,8 +290,8 @@ public class EmailService {
 
                 This is an automated message from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, username, failedAttempts, timestamp, ipAddress != null ? ipAddress : "Unknown",
-                appName, username, appName);
+                """, details.toString(), failedAttempts, timestamp,
+                ipAddress != null ? ipAddress : "Unknown", appName, username, appName);
     }
 
     /**
@@ -307,3 +328,4 @@ public class EmailService {
         }
     }
 }
+

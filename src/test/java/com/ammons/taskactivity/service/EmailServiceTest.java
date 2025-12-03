@@ -59,7 +59,8 @@ class EmailServiceTest {
         doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act
-        emailService.sendAccountLockoutNotification(TEST_USERNAME, TEST_FAILED_ATTEMPTS, TEST_IP);
+        emailService.sendAccountLockoutNotification(TEST_USERNAME, null, TEST_FAILED_ATTEMPTS,
+                TEST_IP);
 
         // Assert
         verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -86,7 +87,8 @@ class EmailServiceTest {
         ReflectionTestUtils.setField(emailService, "mailEnabled", false);
 
         // Act
-        emailService.sendAccountLockoutNotification(TEST_USERNAME, TEST_FAILED_ATTEMPTS, TEST_IP);
+        emailService.sendAccountLockoutNotification(TEST_USERNAME, null, TEST_FAILED_ATTEMPTS,
+                TEST_IP);
 
         // Assert
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
@@ -101,7 +103,8 @@ class EmailServiceTest {
         doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act
-        emailService.sendAccountLockoutNotification(TEST_USERNAME, TEST_FAILED_ATTEMPTS, null);
+        emailService.sendAccountLockoutNotification(TEST_USERNAME, null, TEST_FAILED_ATTEMPTS,
+                null);
 
         // Assert
         verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -119,7 +122,7 @@ class EmailServiceTest {
                 .send(any(SimpleMailMessage.class));
 
         // Act & Assert - Should not throw exception
-        assertDoesNotThrow(() -> emailService.sendAccountLockoutNotification(TEST_USERNAME,
+        assertDoesNotThrow(() -> emailService.sendAccountLockoutNotification(TEST_USERNAME, null,
                 TEST_FAILED_ATTEMPTS, TEST_IP));
 
         verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
@@ -185,7 +188,8 @@ class EmailServiceTest {
         doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act
-        emailService.sendAccountLockoutNotification(TEST_USERNAME, TEST_FAILED_ATTEMPTS, TEST_IP);
+        emailService.sendAccountLockoutNotification(TEST_USERNAME, null, TEST_FAILED_ATTEMPTS,
+                TEST_IP);
 
         // Assert
         verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -199,3 +203,4 @@ class EmailServiceTest {
         assertTrue(body.contains("Account is locked"));
     }
 }
+
