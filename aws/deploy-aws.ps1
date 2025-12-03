@@ -477,6 +477,27 @@ function Get-DeploymentStatus {
         # Get the container image being used
         $containerImage = $taskDetails.tasks[0].containers[0].image
         Write-Host "Running Image:   $containerImage"
+        
+        # Check email configuration from running task definition
+        $currentTaskDefArn = $taskDetails.tasks[0].taskDefinitionArn
+        $taskDefDetails = aws ecs describe-task-definition `
+            --task-definition $currentTaskDefArn `
+            --output json | ConvertFrom-Json
+        
+        $envVars = $taskDefDetails.taskDefinition.containerDefinitions[0].environment
+        $mailEnabled = ($envVars | Where-Object { $_.name -eq "MAIL_ENABLED" }).value
+        $useAwsSdk = ($envVars | Where-Object { $_.name -eq "MAIL_USE_AWS_SDK" }).value
+        $mailFrom = ($envVars | Where-Object { $_.name -eq "MAIL_FROM" }).value
+        
+        if ($mailEnabled -eq "true") {
+            $emailMethod = if ($useAwsSdk -eq "true") { "AWS SES SDK (IAM Role)" } else { "SMTP" }
+            Write-Host "Email Status:    Enabled ($emailMethod)" -ForegroundColor Green
+            if ($mailFrom) {
+                Write-Host "  From Address:  $mailFrom" -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "Email Status:    Disabled" -ForegroundColor Yellow
+        }
     }
     
     Write-Host ""
@@ -584,6 +605,12 @@ function Invoke-Rollback {
 # Main Execution
 # ========================================
 
+# Handle switches
+if ($Status) {
+    Get-DeploymentStatus
+    exit 0
+}
+
 Write-Host ""
 Write-Host "===================  AWS Deployment  ===================" -ForegroundColor Cyan
 Write-Host "Application: Task Activity Management" -ForegroundColor Cyan
@@ -598,12 +625,6 @@ if ($EnableEmail) {
 }
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host ""
-
-# Handle switches
-if ($Status) {
-    Get-DeploymentStatus
-    exit 0
-}
 
 if ($Rollback) {
     Invoke-Rollback
