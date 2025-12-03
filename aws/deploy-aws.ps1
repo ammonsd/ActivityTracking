@@ -1,16 +1,16 @@
 ###############################################################################
-# AWS Deployment Powershell script for Task Activity application
+# AWS ECS Fargate Deployment Script
 # 
-# This script automates deployment of application to AWS using ECS Fargate.
+# This script automates deployment of containerized applications to AWS using ECS Fargate.
 #
 # Prerequisites:
 # • AWS CLI installed and configured with IAM user credentials (do NOT use the root account)
-#	   Note: IAM user must have been assigned the policy "TaskActivityDeveloperPolicy" 
-#            See ../aws/IAM_User_Setup.md for setup instructions
-# • Appropriate AWS IAM permissions (see ./aws/taskactivity-developer-policy.json)
-# • ECR repository created (taskactivity)
-# • RDS PostgreSQL database created and initialized with schema
-# • Secrets stored in AWS Secrets Manager (taskactivity/database)
+#	   Note: IAM user must have appropriate ECS, ECR, and related service permissions
+#            Consult your project's IAM setup documentation for details
+# • Appropriate AWS IAM permissions for ECS, ECR, and related services
+# • ECR repository created for your application
+# • RDS database created and initialized (if applicable)
+# • Application secrets stored in AWS Secrets Manager
 #
 # Deployment Process:
 # The script performs the following steps:
@@ -22,14 +22,14 @@
 #   6. Wait for the new task to become healthy and stable
 #
 # Usage:
-#   .\aws\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests]
+#   .\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests]
 #   
 # Examples:
-#   .\aws\deploy-aws.ps1 -Environment dev
-#   .\aws\deploy-aws.ps1 -Environment production -RunTests
-#   .\aws\deploy-aws.ps1 -NoCache
-#   .\aws\deploy-aws.ps1 -Status
-#   .\aws\deploy-aws.ps1 -Rollback
+#   .\deploy-aws.ps1 -Environment dev
+#   .\deploy-aws.ps1 -Environment production -RunTests
+#   .\deploy-aws.ps1 -NoCache
+#   .\deploy-aws.ps1 -Status
+#   .\deploy-aws.ps1 -Rollback
 #
 # Parameters:
 #   -Environment  : Target environment (default: dev)
@@ -38,8 +38,6 @@
 #   -Status       : Check current deployment status
 #   -Rollback     : Rollback to previous task definition
 #
-# Author: Dean Ammons
-# Date: October 2025
 ###############################################################################
 
 param(
@@ -322,6 +320,7 @@ function Build-AndPushImage {
 function Update-TaskDefinition {
     Write-Info "Updating ECS task definition..."
     
+    # Task definition file should match your application name
     $TASK_DEF_FILE = "aws\taskactivity-task-definition.json"
     
     if (-not (Test-Path $TASK_DEF_FILE)) {
@@ -613,7 +612,7 @@ if ($Status) {
 
 Write-Host ""
 Write-Host "===================  AWS Deployment  ===================" -ForegroundColor Cyan
-Write-Host "Application: Task Activity Management" -ForegroundColor Cyan
+Write-Host "Application: $APP_NAME" -ForegroundColor Cyan
 Write-Host "Environment: $Environment" -ForegroundColor Cyan
 Write-Host "AWS Region:  $AWS_REGION" -ForegroundColor Cyan
 Write-Host "AWS Account: $AWS_ACCOUNT_ID" -ForegroundColor Cyan
