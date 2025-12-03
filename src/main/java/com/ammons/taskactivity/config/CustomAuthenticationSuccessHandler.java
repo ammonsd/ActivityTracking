@@ -48,17 +48,20 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final com.ammons.taskactivity.service.UserService userService;
     private final com.ammons.taskactivity.service.LoginAuditService loginAuditService;
     private final com.ammons.taskactivity.service.GeoIpService geoIpService;
+    private final com.ammons.taskactivity.service.EmailService emailService;
 
     public CustomAuthenticationSuccessHandler(UserRepository userRepository,
             UserDetailsServiceImpl userDetailsService,
             @Lazy com.ammons.taskactivity.service.UserService userService,
             com.ammons.taskactivity.service.LoginAuditService loginAuditService,
-            com.ammons.taskactivity.service.GeoIpService geoIpService) {
+            com.ammons.taskactivity.service.GeoIpService geoIpService,
+            com.ammons.taskactivity.service.EmailService emailService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginAuditService = loginAuditService;
         this.geoIpService = geoIpService;
+        this.emailService = emailService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
         setAlwaysUseDefaultTargetUrl(false);
@@ -96,6 +99,18 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // Record successful login attempt with location
         loginAuditService.recordLoginAttempt(username, ipAddress, location, true);
+
+        // Send email notification if GUEST user logs in
+        if ("GUEST".equalsIgnoreCase(username)) {
+            try {
+                emailService.sendGuestLoginNotification(ipAddress, location);
+                log.info("Guest login notification email sent for IP: {}, Location: {}", ipAddress,
+                        location);
+            } catch (Exception e) {
+                log.error("Failed to send guest login notification email", e);
+                // Continue processing even if email fails
+            }
+        }
 
         try {
             // Update the last login time for this user

@@ -181,6 +181,58 @@ public class EmailService {
     }
 
     /**
+     * Send notification when GUEST user logs in.
+     * 
+     * @param ipAddress the IP address of the login
+     * @param location the geographic location of the login
+     */
+    public void sendGuestLoginNotification(String ipAddress, String location) {
+        if (!mailEnabled) {
+            logger.info(
+                    "Email notifications are disabled. Would have sent GUEST login notification");
+            return;
+        }
+
+        String subject = String.format("[%s] GUEST User Login", appName);
+        String body = buildGuestLoginEmailBody(ipAddress, location);
+
+        if (useAwsSdk && sesClient != null) {
+            sendEmailViaAwsSdk(adminEmail, subject, body);
+        } else {
+            sendEmailViaSmtp(adminEmail, subject, body);
+        }
+    }
+
+    /**
+     * Builds the email body for guest login notifications.
+     * 
+     * @param ipAddress the IP address of the login
+     * @param location the geographic location of the login
+     * @return formatted email body text
+     */
+    private String buildGuestLoginEmailBody(String ipAddress, String location) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        return String.format("""
+                GUEST USER LOGIN NOTIFICATION
+
+                The GUEST user has logged into the system.
+
+                Details:
+                ----------------------------------------
+                Username: GUEST
+                Login Timestamp: %s
+                IP Address: %s
+                Location: %s
+                ----------------------------------------
+
+                This is an automated notification from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
+                """, timestamp, ipAddress != null ? ipAddress : "Unknown",
+                location != null ? location : "Unknown", appName);
+    }
+
+    /**
      * Builds the email body for account lockout notifications.
      * 
      * @param username the username of the locked account
@@ -216,6 +268,7 @@ public class EmailService {
                 5. Save changes
 
                 This is an automated message from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
                 """, username, failedAttempts, timestamp, ipAddress != null ? ipAddress : "Unknown",
                 appName, username, appName);
     }
