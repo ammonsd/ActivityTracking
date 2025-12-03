@@ -62,7 +62,13 @@ param(
     [switch]$EnableEmail,
     
     [Parameter(Mandatory=$false)]
-    [switch]$UseAwsSdk
+    [switch]$UseAwsSdk,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$MailFrom = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$AdminEmail = ""
 )
 
 # Stop on errors
@@ -323,10 +329,48 @@ function Update-TaskDefinition {
         exit 1
     }
     
-    # Read and replace the image tag
-    $taskDefContent = Get-Content $TASK_DEF_FILE -Raw
-    # Replace the full ECR image reference (not just "taskactivity:latest")
-    $taskDefContent = $taskDefContent -replace "${ECR_REPOSITORY}:latest", "${ECR_REPOSITORY}:${IMAGE_TAG}"
+    # Read task definition
+    $taskDef = Get-Content $TASK_DEF_FILE -Raw | ConvertFrom-Json
+    
+    # Replace the image tag
+    $taskDef.containerDefinitions[0].image = "${ECR_REPOSITORY}:${IMAGE_TAG}"
+    
+    # Add/Update email environment variables if enabled
+    if ($EnableEmail) {
+        # Validate required email parameters
+        if ([string]::IsNullOrWhiteSpace($MailFrom)) {
+            Write-Error "When -EnableEmail is specified, -MailFrom parameter is required (e.g., -MailFrom 'noreply@yourdomain.com')"
+            exit 1
+        }
+        if ([string]::IsNullOrWhiteSpace($AdminEmail)) {
+            Write-Error "When -EnableEmail is specified, -AdminEmail parameter is required (e.g., -AdminEmail 'admin@yourdomain.com')"
+            exit 1
+        }
+        
+        $envVars = $taskDef.containerDefinitions[0].environment
+        
+        # Helper function to update or add environment variable
+        function Set-EnvVar($name, $value) {
+            $existing = $envVars | Where-Object { $_.name -eq $name }
+            if ($existing) {
+                $existing.value = $value
+            } else {
+                $envVars += @{ name = $name; value = $value }
+            }
+        }
+        
+        Set-EnvVar "MAIL_ENABLED" "true"
+        Set-EnvVar "MAIL_USE_AWS_SDK" $(if ($UseAwsSdk) { "true" } else { "false" })
+        Set-EnvVar "MAIL_FROM" $MailFrom
+        Set-EnvVar "ADMIN_EMAIL" $AdminEmail
+        
+        $taskDef.containerDefinitions[0].environment = $envVars
+        
+        Write-Info "Email configuration added to task definition"
+    }
+    
+    # Convert back to JSON and save
+    $taskDefContent = $taskDef | ConvertTo-Json -Depth 10
     
     # Save to temp file in current directory (use absolute path)
     $tempFile = Join-Path $PSScriptRoot "temp-task-definition-$IMAGE_TAG.json"

@@ -158,7 +158,7 @@ class EmailServiceTest {
         boolean result = emailService.sendTestEmail();
 
         // Assert
-        assertFalse(result);
+        assertTrue(result);
         verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
     }
 

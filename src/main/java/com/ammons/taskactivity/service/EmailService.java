@@ -1,5 +1,6 @@
 package com.ammons.taskactivity.service;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,13 +71,14 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        initializeSesClient();
     }
 
     /**
      * Initialize AWS SES client if AWS SDK method is enabled. Uses DefaultCredentialsProvider which
-     * automatically uses ECS task role credentials.
+     * automatically uses ECS task role credentials. Called after dependency injection is complete
+     * to ensure @Value fields are populated.
      */
+    @PostConstruct
     private void initializeSesClient() {
         if (useAwsSdk) {
             try {

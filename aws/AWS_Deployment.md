@@ -135,10 +135,55 @@ aws secretsmanager create-secret `
 
 **Optional Secrets (for Email Notifications):**
 
-If you want to receive email alerts when user accounts are locked due to failed login attempts:
+The application supports email notifications for security events (account lockouts). Email can be configured using either SMTP (development) or AWS SES (production).
+
+**Option 1: AWS SES (Recommended for Production)**
+
+AWS SES provides reliable, scalable email delivery without requiring SMTP credentials. Configuration is done via environment variables in the task definition:
+
+```json
+"environment": [
+    {"name": "MAIL_ENABLED", "value": "true"},
+    {"name": "MAIL_USE_AWS_SDK", "value": "true"},
+    {"name": "MAIL_FROM", "value": "noreply@taskactivitytracker.com"},
+    {"name": "ADMIN_EMAIL", "value": "admin@yourdomain.com"}
+]
+```
+
+**AWS SES Requirements:**
+1. Verify your sending domain in AWS SES console
+2. Add DNS records (DKIM, SPF, DMARC) to your DNS provider (e.g., Cloudflare)
+3. Request production access (sandbox mode only allows verified recipients)
+4. Add SES permissions to ECS task role:
+
+```json
+{
+    "Effect": "Allow",
+    "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+    ],
+    "Resource": "*"
+}
+```
+
+**Deployment with AWS SES:**
+
+Use the enhanced deployment script to configure email:
 
 ```powershell
-# Email SMTP credentials (OPTIONAL - only if enabling email notifications)
+# Deploy with AWS SES email enabled
+.\aws\deploy-aws.ps1 -EnableEmail -UseAwsSdk `
+  -MailFrom "noreply@taskactivitytracker.com" `
+  -AdminEmail "admin@yourdomain.com"
+```
+
+**Option 2: SMTP (Development/Testing)**
+
+For development or if you prefer SMTP:
+
+```powershell
+# Email SMTP credentials (OPTIONAL - only if using SMTP instead of AWS SES)
 aws secretsmanager create-secret `
     --name taskactivity/email/credentials `
     --description "SMTP credentials for email notifications" `
@@ -146,12 +191,28 @@ aws secretsmanager create-secret `
     --region us-east-1
 ```
 
-For Gmail setup, you'll need to:
+For Gmail setup:
 1. Enable 2-Factor Authentication on your Google account
 2. Generate an App Password at https://myaccount.google.com/security
 3. Use the 16-character app password in the secret above
 
-For detailed email configuration, see [Email Notification Configuration](../localdocs/Email_Notification_Configuration.md).
+**Email Documentation:**
+- **[AWS SES Setup Guide](AWS_SES_Setup_Guide.md)** - Complete AWS SES configuration walkthrough
+- **[Email Notification Configuration](../localdocs/Email_Notification_Configuration.md)** - General email setup
+- **[IAM Permissions Reference](IAM_Permissions_Reference.md)** - Required IAM policies for SES
+
+**Testing Email:**
+
+```powershell
+# Monitor email activity in CloudWatch logs
+aws logs tail /ecs/taskactivity --filter-pattern "AWS SES" --follow --region us-east-1
+
+# Expected logs:
+# - "AWS SES client initialized for region: us-east-1"
+# - "Email sent successfully via AWS SES. MessageId: [id]"
+```
+
+**Cost:** AWS SES is $0.10 per 1,000 emails (first 62,000/month free with EC2/ECS).
 
 **Notes:**
 - Replace `YourSecurePassword` and `YourAdminPassword` with strong passwords
@@ -404,6 +465,12 @@ aws logs filter-log-events --log-group-name /ecs/taskactivity --filter-pattern "
 
 # Verify Cloudflare tunnel is running (if enabled)
 aws logs filter-log-events --log-group-name /ecs/taskactivity --filter-pattern "cloudflared" --region us-east-1
+
+# Monitor email activity (AWS SES)
+aws logs filter-log-events --log-group-name /ecs/taskactivity --filter-pattern "AWS SES" --region us-east-1
+
+# Check for email failures
+aws logs filter-log-events --log-group-name /ecs/taskactivity --filter-pattern "Error sending email" --region us-east-1
 ```
 
 **Cloudflare Tunnel Verification:**

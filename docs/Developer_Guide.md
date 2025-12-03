@@ -1245,6 +1245,112 @@ mvn test -Dtest=EmailServiceTest
 - Try-catch blocks ensure graceful degradation
 - Log messages at INFO level for successful sends, ERROR level for failures
 
+### AWS SES Configuration
+
+**Overview**: For production AWS deployments, the application integrates with Amazon Simple Email Service (SES) for sending email notifications. This provides reliable, scalable email delivery with production-level features.
+
+**Key Components:**
+
+1. **EmailService** (`src/main/java/com/ammons/taskactivity/service/EmailService.java`)
+   - Dual-mode support: SMTP (development) or AWS SDK (production)
+   - `@Value("${mail.use-aws-sdk:false}")` - Enables AWS SDK mode
+   - Automatic AWS SDK client initialization when enabled
+   - Region configuration via `AWS_REGION` environment variable
+
+2. **AWS Configuration** (`application-aws.properties`)
+   ```properties
+   # Email configuration (AWS SES)
+   mail.enabled=${MAIL_ENABLED:true}
+   mail.use-aws-sdk=${MAIL_USE_AWS_SDK:true}
+   mail.from=${MAIL_FROM:noreply@yourdomain.com}
+   app.mail.admin-email=${ADMIN_EMAIL:admin@yourdomain.com}
+   
+   # AWS SES region
+   cloud.aws.region.static=${AWS_REGION:us-east-1}
+   ```
+
+3. **Task Definition Configuration** (`aws/taskactivity-task-definition.json`)
+   ```json
+   "environment": [
+       {"name": "MAIL_ENABLED", "value": "true"},
+       {"name": "MAIL_USE_AWS_SDK", "value": "true"},
+       {"name": "MAIL_FROM", "value": "noreply@taskactivitytracker.com"},
+       {"name": "ADMIN_EMAIL", "value": "admin@yourdomain.com"},
+       {"name": "AWS_REGION", "value": "us-east-1"}
+   ]
+   ```
+
+4. **IAM Permissions** (ECS Task Role)
+   ```json
+   {
+       "Effect": "Allow",
+       "Action": [
+           "ses:SendEmail",
+           "ses:SendRawEmail"
+       ],
+       "Resource": "*"
+   }
+   ```
+
+**AWS SES Setup Requirements:**
+
+1. **Domain Verification:**
+   - Verify your sending domain in AWS SES console
+   - Add required DNS records (DKIM, SPF, DMARC)
+   - See `aws/AWS_SES_Setup_Guide.md` for detailed steps
+
+2. **Production Access:**
+   - By default, SES accounts are in sandbox mode (can only send to verified addresses)
+   - Request production access via AWS console to send to any email address
+   - Approval typically takes 24 hours
+
+3. **Email Addresses:**
+   - `MAIL_FROM`: Must be from verified domain (e.g., noreply@taskactivitytracker.com)
+   - `ADMIN_EMAIL`: Recipient address for security notifications
+
+**Deployment Script Integration:**
+
+Use the enhanced `deploy-aws.ps1` script to configure email during deployment:
+
+```powershell
+# Deploy with email enabled
+.\aws\deploy-aws.ps1 -EnableEmail -UseAwsSdk `
+  -MailFrom "noreply@yourdomain.com" `
+  -AdminEmail "admin@yourdomain.com"
+
+# Deploy without email (default)
+.\aws\deploy-aws.ps1
+```
+
+**Script Parameters:**
+- `-EnableEmail` (switch): Enables email functionality
+- `-UseAwsSdk` (switch): Uses AWS SES instead of SMTP
+- `-MailFrom` (required with -EnableEmail): Sender email address
+- `-AdminEmail` (required with -EnableEmail): Admin notification email
+
+**Email Functionality:**
+- Account lockout notifications after 5 failed login attempts
+- Email includes: username, failed attempt count, IP address, timestamp
+- Sends via AWS SES in production, SMTP in development
+- Graceful fallback if email fails (doesn't break authentication)
+
+**Testing:**
+
+```powershell
+# Check CloudWatch logs for email activity
+aws logs tail /ecs/taskactivity --filter-pattern "AWS SES" --follow --region us-east-1
+
+# Expected log entries:
+# - "AWS SES client initialized for region: us-east-1"
+# - "Email sent successfully via AWS SES. MessageId: [id]"
+```
+
+**Cost:** AWS SES pricing is $0.10 per 1,000 emails sent (first 62,000/month free with EC2/ECS).
+
+**Documentation:**
+- **[AWS SES Setup Guide](../aws/AWS_SES_Setup_Guide.md)** - Complete SES configuration walkthrough
+- **[IAM Permissions Reference](../aws/IAM_Permissions_Reference.md)** - Required IAM policies
+
 ### Password Expiration Configuration
 
 **Overview**: The application implements automatic password expiration with a 90-day policy and 7-day advance warnings. Special handling is provided for GUEST users who cannot change their own passwords.
