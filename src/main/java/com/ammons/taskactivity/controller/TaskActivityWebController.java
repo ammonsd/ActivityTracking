@@ -412,6 +412,10 @@ public class TaskActivityWebController {
             model.addAttribute(USERNAME_ATTR, username);
             model.addAttribute(AUTHORITIES_ATTR, authentication.getAuthorities());
 
+            // Check if user has email for expense access
+            boolean hasEmail = userService.userHasEmail(username);
+            model.addAttribute("userHasEmail", hasEmail);
+
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {
                 String firstname = user.getFirstname() != null ? user.getFirstname() : "";

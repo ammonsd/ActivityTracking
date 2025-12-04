@@ -99,16 +99,23 @@ public class UserService {
 
     public User createUser(String username, String password, Role role,
             boolean forcePasswordUpdate) {
-        return createUser(username, null, null, null, password, role, forcePasswordUpdate);
+        return createUser(username, null, null, null, null, password, role, forcePasswordUpdate);
     }
 
     public User createUser(String username, String firstname, String lastname, String password,
             Role role, boolean forcePasswordUpdate) {
-        return createUser(username, firstname, lastname, null, password, role, forcePasswordUpdate);
+        return createUser(username, firstname, lastname, null, null, password, role,
+                forcePasswordUpdate);
     }
 
     public User createUser(String username, String firstname, String lastname, String company,
             String password, Role role, boolean forcePasswordUpdate) {
+        return createUser(username, firstname, lastname, company, null, password, role,
+                forcePasswordUpdate);
+    }
+
+    public User createUser(String username, String firstname, String lastname, String company,
+            String email, String password, Role role, boolean forcePasswordUpdate) {
         logger.info("Attempting to create new user: {}", username);
 
         // Input validation
@@ -144,6 +151,7 @@ public class UserService {
         user.setFirstname(firstname);
         user.setLastname(lastname);
         user.setCompany(company);
+        user.setEmail(email);
         user.setForcePasswordUpdate(forcePasswordUpdate);
         User savedUser = userRepository.save(user);
 
@@ -431,6 +439,27 @@ public class UserService {
         userRepository.save(user);
 
         logger.info("Successfully unlocked account for user: {}", username);
+    }
+
+    /**
+     * Check if a user has a valid email address on file. This is used to determine if a user can
+     * access expense management features, which require email for notifications.
+     * 
+     * @param username the username to check
+     * @return true if the user has a non-empty email address, false otherwise
+     */
+    public boolean userHasEmail(String username) {
+        if (!StringUtils.hasText(username)) {
+            return false;
+        }
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            return false;
+        }
+
+        User user = userOptional.get();
+        return StringUtils.hasText(user.getEmail());
     }
 
     /**

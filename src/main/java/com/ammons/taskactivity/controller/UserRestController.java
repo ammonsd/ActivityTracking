@@ -45,7 +45,7 @@ public class UserRestController {
                 .map(user -> {
                     CurrentUserDto dto = new CurrentUserDto(user.getId(), user.getUsername(),
                             user.getFirstname(), user.getLastname(), user.getCompany(),
-                            user.getRole(), user.isEnabled());
+                            user.getEmail(), user.getRole(), user.isEnabled());
 
                     // Add password expiration warning if applicable
                     if (userService.isPasswordExpiringSoon(username)) {

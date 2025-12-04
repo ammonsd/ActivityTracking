@@ -35,7 +35,7 @@ import { User } from '../../models/task-activity.model';
 })
 export class UserEditDialogComponent {
   userForm: FormGroup;
-  roles = ['GUEST', 'USER', 'ADMIN'];
+  roles = ['GUEST', 'USER', 'ADMIN', 'EXPENSE_ADMIN'];
 
   constructor(
     private readonly fb: FormBuilder,
@@ -45,7 +45,8 @@ export class UserEditDialogComponent {
     this.userForm = this.fb.group({
       firstname: [data.user.firstname],
       lastname: [data.user.lastname, Validators.required],
-      company: [data.user.company, Validators.required],
+      company: [data.user.company],
+      email: [data.user.email, [Validators.email, Validators.maxLength(100)]],
       role: [data.user.role, Validators.required],
       enabled: [data.user.enabled],
       forcePasswordUpdate: [data.user.forcePasswordUpdate],

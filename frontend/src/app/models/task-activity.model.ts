@@ -15,6 +15,7 @@ export interface User {
   firstname: string;
   lastname: string;
   company: string;
+  email?: string;
   role: string;
   enabled: boolean;
   forcePasswordUpdate?: boolean;

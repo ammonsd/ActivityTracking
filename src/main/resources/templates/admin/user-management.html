@@ -21,6 +21,9 @@
         
         <style>
             /* Page-specific styles */
+            .container {
+                max-width: 1600px;
+            }
             .btn-primary:hover {
                 background-color: #0056b3;
             }
@@ -301,6 +304,7 @@
                         <tr>
                             <th>Username</th>
                             <th>Company</th>
+                            <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th>Created Date <span style="font-size: 0.85em; font-weight: normal;">(Local)</span></th>
@@ -312,6 +316,9 @@
                         <tr th:each="user : ${users}">
                             <td th:text="${user.username}">admin</td>
                             <td th:text="${user.company ?: '-'}">Company Name</td>
+                            <td th:text="${user.email != null && !#strings.isEmpty(user.email) ? user.email : '-'}"
+                                th:style="${user.email == null || #strings.isEmpty(user.email) ? 'color: #dc3545; font-style: italic;' : ''}"
+                            >user@example.com</td>
                             <td>
                                 <span
                                     th:class="${'role-badge ' + (user.role.name() == 'ADMIN' ? 'role-admin' : (user.role.name() == 'GUEST' ? 'role-guest' : (user.role.name() == 'EXPENSE_ADMIN' ? 'role-EXPENSE_ADMIN' : 'role-user')))}"

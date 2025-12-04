@@ -84,6 +84,16 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                 <td mat-cell *matCellDef="let user">{{ user.company }}</td>
               </ng-container>
 
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let user">
+                  <span *ngIf="user.email" [title]="user.email">{{
+                    user.email
+                  }}</span>
+                  <span *ngIf="!user.email" class="no-email">No email</span>
+                </td>
+              </ng-container>
+
               <ng-container matColumnDef="role">
                 <th mat-header-cell *matHeaderCellDef>Role</th>
                 <td mat-cell *matCellDef="let user">
@@ -258,6 +268,12 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
         color: #4caf50;
         font-size: 12px;
       }
+
+      .no-email {
+        color: #ff9800;
+        font-style: italic;
+        font-size: 12px;
+      }
     `,
   ],
 })
@@ -268,6 +284,7 @@ export class UserListComponent implements OnInit {
     'firstname',
     'lastname',
     'company',
+    'email',
     'role',
     'enabled',
     'accountLocked',

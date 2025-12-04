@@ -63,6 +63,8 @@ public class ExpenseViewController {
     // Common messages
     private static final String EXPENSE_NOT_FOUND = "Expense not found";
     private static final String STATUS_DRAFT = "Draft";
+    private static final String EMAIL_REQUIRED_MESSAGE =
+            "Email address is required to access expense features. Please update your profile with a valid email address.";
 
     // Redirect paths
     private static final String REDIRECT_EXPENSE_DETAIL = "redirect:/expenses/detail/";
@@ -81,6 +83,17 @@ public class ExpenseViewController {
         this.storageService = storageService;
     }
 
+    /**
+     * Helper method to check if user has email for expense operations
+     */
+    private void validateUserHasEmail(String username, RedirectAttributes redirectAttributes) {
+        if (!userService.userHasEmail(username)) {
+            logger.warn("User {} attempted to access expense feature without email", username);
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EMAIL_REQUIRED_MESSAGE);
+            throw new IllegalStateException(EMAIL_REQUIRED_MESSAGE);
+        }
+    }
+
     @GetMapping
     public String showMain(Authentication authentication) {
         return REDIRECT_EXPENSE_LIST;
@@ -97,7 +110,7 @@ public class ExpenseViewController {
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") int page, Model model,
-            Authentication authentication) {
+            Authentication authentication, RedirectAttributes redirectAttributes) {
 
         addUserInfo(model, authentication);
 
@@ -255,7 +268,9 @@ public class ExpenseViewController {
     }
 
     @GetMapping("/add")
-    public String showForm(Model model, Authentication authentication) {
+    public String showForm(Model model, Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        validateUserHasEmail(authentication.getName(), redirectAttributes);
         addUserInfo(model, authentication);
         ExpenseDto expenseDto = new ExpenseDto();
         expenseDto.setExpenseDate(LocalDate.now());
@@ -540,32 +555,28 @@ public class ExpenseViewController {
             if (!canReimburse) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only administrators can mark expenses as reimbursed");
-                return REDIRECT_EXPENSE_DETAIL + id;
+                return REDIRECT_APPROVAL_QUEUE;
             }
 
             // Only allow reimbursement of Approved expenses
             if (!"Approved".equalsIgnoreCase(expense.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only Approved expenses can be marked as reimbursed");
-                return REDIRECT_EXPENSE_DETAIL + id;
+                return REDIRECT_APPROVAL_QUEUE;
             }
 
-            // Update reimbursement fields
-            expense.setReimbursedAmount(reimbursedAmount);
-            expense.setReimbursementDate(LocalDate.now());
-            expense.setReimbursementNotes(reimbursementNotes);
-            expense.setExpenseStatus("Reimbursed");
-
-            expenseService.saveExpense(expense);
+            // Call service method to update and send notification
+            expenseService.markAsReimbursed(id, authentication.getName(), reimbursedAmount,
+                    reimbursementNotes);
 
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense marked as reimbursed successfully");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             logger.error("Error marking expense as reimbursed: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to mark expense as reimbursed: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
@@ -779,12 +790,12 @@ public class ExpenseViewController {
             expenseService.submitExpense(id);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense submitted for approval");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_EXPENSE_LIST;
         } catch (Exception e) {
             logger.error("Error submitting expense: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to submit expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_EXPENSE_LIST;
         }
     }
 
@@ -859,11 +870,11 @@ public class ExpenseViewController {
         try {
             expenseService.approveExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense approved");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to approve expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
@@ -874,11 +885,11 @@ public class ExpenseViewController {
         try {
             expenseService.rejectExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense rejected");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to reject expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
@@ -889,6 +900,10 @@ public class ExpenseViewController {
             model.addAttribute("username", username);
             model.addAttribute("isAdmin", isAdmin(authentication));
             model.addAttribute("canApproveExpenses", canApproveExpenses(authentication));
+
+            // Check if user has email for expense access
+            boolean hasEmail = userService.userHasEmail(username);
+            model.addAttribute("userHasEmail", hasEmail);
 
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {

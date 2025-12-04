@@ -42,11 +42,41 @@ public class ExpenseController {
     private static final Logger logger = LoggerFactory.getLogger(ExpenseController.class);
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String EXPENSE_NOT_FOUND = "Expense not found";
+    private static final String EMAIL_REQUIRED_MESSAGE =
+                    "Email address is required to access expense features. Please update your profile with a valid email address.";
 
     private final ExpenseService expenseService;
+    private final com.ammons.taskactivity.service.UserService userService;
 
-    public ExpenseController(ExpenseService expenseService) {
+    public ExpenseController(ExpenseService expenseService,
+                    com.ammons.taskactivity.service.UserService userService) {
         this.expenseService = expenseService;
+        this.userService = userService;
+}
+
+/**
+ * Helper method to check if user has email for expense operations
+ */
+private void validateUserHasEmail(String username) {
+        if (!userService.userHasEmail(username)) {
+                logger.warn("User {} attempted to access expense feature without email", username);
+                throw new IllegalStateException(EMAIL_REQUIRED_MESSAGE);
+        }
+}
+
+/**
+ * Check if current user can access expense features
+ */
+@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+@GetMapping("/can-access")
+public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication authentication) {
+        String username = authentication.getName();
+        boolean hasEmail = userService.userHasEmail(username);
+
+        String message = hasEmail ? "User can access expense features"
+                        : "Email address required to access expense features";
+
+        return ResponseEntity.ok(ApiResponse.success(message, hasEmail));
     }
 
     // ========== CREATE ==========
@@ -61,6 +91,9 @@ public class ExpenseController {
 
         String username = authentication.getName();
         logger.info("User {} creating expense", username);
+
+        // Check if user has email address
+        validateUserHasEmail(username);
 
         // Set the username from the authenticated user (security measure)
         expenseDto.setUsername(username);
@@ -94,6 +127,8 @@ public class ExpenseController {
             Authentication authentication) {
 
             String authenticatedUsername = authentication.getName();
+            validateUserHasEmail(authenticatedUsername);
+
             boolean isAdminOrExpenseAdmin = authentication.getAuthorities().stream()
                             .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN)
                                             || auth.getAuthority().equals("ROLE_EXPENSE_ADMIN"));

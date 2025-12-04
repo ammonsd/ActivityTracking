@@ -144,8 +144,9 @@ public class UserManagementController {
         try {
             User newUser = userService.createUser(userCreateDto.getUsername(),
                     userCreateDto.getFirstname(), userCreateDto.getLastname(),
-                    userCreateDto.getCompany(), userCreateDto.getPassword(),
-                    userCreateDto.getRole(), userCreateDto.isForcePasswordUpdate());
+                    userCreateDto.getCompany(), userCreateDto.getEmail(),
+                    userCreateDto.getPassword(), userCreateDto.getRole(),
+                    userCreateDto.isForcePasswordUpdate());
             logger.info("Admin {} successfully created user: {}", authentication.getName(),
                     newUser.getUsername());
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
@@ -181,6 +182,7 @@ public class UserManagementController {
         userEditDto.setFirstname(user.getFirstname());
         userEditDto.setLastname(user.getLastname());
         userEditDto.setCompany(user.getCompany());
+        userEditDto.setEmail(user.getEmail());
         userEditDto.setAccountLocked(user.isAccountLocked());
         userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
 
@@ -219,6 +221,7 @@ public class UserManagementController {
             user.setFirstname(userEditDto.getFirstname());
             user.setLastname(userEditDto.getLastname());
             user.setCompany(userEditDto.getCompany());
+            user.setEmail(userEditDto.getEmail());
             user.setRole(userEditDto.getRole());
             user.setEnabled(userEditDto.isEnabled());
             user.setForcePasswordUpdate(userEditDto.isForcePasswordUpdate());
@@ -412,7 +415,8 @@ public class UserManagementController {
         StringBuilder csv = new StringBuilder();
 
         // Header
-        csv.append("Username,First Name,Last Name,Company,Role,Enabled,Force Password Update\n");
+        csv.append(
+                "Username,First Name,Last Name,Company,Email,Role,Enabled,Force Password Update\n");
 
         // Data rows
         for (User user : users) {
@@ -423,6 +427,7 @@ public class UserManagementController {
                     .append(",");
             csv.append(escapeCsvField(user.getCompany() != null ? user.getCompany() : ""))
                     .append(",");
+            csv.append(escapeCsvField(user.getEmail() != null ? user.getEmail() : "")).append(",");
             csv.append(user.getRole()).append(",");
             csv.append(user.isEnabled()).append(",");
             csv.append(user.isForcePasswordUpdate());

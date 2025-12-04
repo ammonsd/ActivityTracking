@@ -14,6 +14,7 @@ public class CurrentUserDto {
     private String firstname;
     private String lastname;
     private String company;
+    private String email;
     private Role role;
     private boolean enabled;
     private String passwordExpiringWarning;
@@ -22,12 +23,13 @@ public class CurrentUserDto {
     public CurrentUserDto() {}
 
     public CurrentUserDto(Long id, String username, String firstname, String lastname,
-            String company, Role role, boolean enabled) {
+            String company, String email, Role role, boolean enabled) {
         this.id = id;
         this.username = username;
         this.firstname = firstname;
         this.lastname = lastname;
         this.company = company;
+        this.email = email;
         this.role = role;
         this.enabled = enabled;
     }
@@ -71,6 +73,14 @@ public class CurrentUserDto {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Role getRole() {

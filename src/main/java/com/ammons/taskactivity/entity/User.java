@@ -39,6 +39,9 @@ public class User {
     @Column(name = "userrole", nullable = false, length = 20)
     private Role role = Role.USER;
 
+    @Column(name = "email", length = 100)
+    private String email;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -183,6 +186,14 @@ public class User {
 
     public void setAccountLocked(boolean accountLocked) {
         this.accountLocked = accountLocked;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
