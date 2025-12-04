@@ -286,14 +286,40 @@ ADMIN and EXPENSE_ADMIN users can access the approval queue to review submitted 
     - Click **"Approve"** button for the expense
     - Enter approval notes (optional but recommended)
     - Expense status changes to "Approved"
-    - User is notified of approval
+    - User is automatically notified via email
     - Expense becomes available for reimbursement processing
+    - You are returned to the Expense Approval Queue
 
 5. **Reject Expense**:
     - Click **"Reject"** button for the expense
     - Enter rejection reason (required)
     - Expense status changes to "Rejected"
-    - User can view rejection notes and resubmit after corrections
+    - User is automatically notified via email with rejection notes
+    - You are returned to the Expense Approval Queue
+
+### Email Notifications for Status Changes
+
+When you approve, reject, or reimburse an expense, the system automatically sends an email notification to the expense owner.
+
+**Email Content**:
+- User's full name
+- Expense description  
+- Amount and currency
+- New status (Approved/Rejected/Reimbursed)
+- Your full name as the processor
+- Date and time of the action
+- Any notes you entered
+
+**Status-Specific Messages**:
+- **Approved**: "Your expense has been approved and is ready for reimbursement processing."
+- **Rejected**: "Your expense has been rejected. Please review the notes below for details."
+- **Reimbursed**: "Your expense has been reimbursed. The payment should be reflected in your account soon."
+
+**Important**:
+- Users without an email address cannot access expense features
+- Email field is required in user profiles for expense access
+- The system displays the processor's full name in emails (not username)
+- Email notifications are automatic and cannot be disabled
 
 ### Reimbursement Tracking
 
@@ -308,11 +334,20 @@ After expenses are approved, ADMIN and EXPENSE_ADMIN users can track reimburseme
         - **Reimbursement Date**: Date of payment
         - **Reimbursement Notes**: Payment method, check number, transaction ID, etc.
     - Expense status changes to "Reimbursed"
+    - User is automatically notified via email
+    - You are returned to the Expense Approval Queue
 
 3. **View Reimbursement History**:
     - Filter expense list by Status = "Reimbursed"
     - Export to CSV for accounting reconciliation
     - View complete audit trail: submitted date, approved date, reimbursed date
+
+**Email Requirement for Expense Access**:
+- Users must have a valid email address to access expense features
+- When creating or editing users, ensure email field is populated for expense access
+- Users without email will not see expense tracking options (similar to GUEST users)
+- Email validation ensures proper format (username@domain.com)
+- Maximum email length: 100 characters
 
 ### Receipt Management
 

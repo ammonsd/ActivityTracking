@@ -109,6 +109,16 @@ The system has three user roles with different levels of access:
 - ❌ No access to task management for other users
 - ❌ No access to user management or dropdown settings
 
+**Email Requirement for Expense Access**
+
+All users (except GUEST) must have a valid email address configured in their profile to access expense features. Without an email:
+- ❌ Expense tracking buttons and links are hidden
+- ❌ Cannot create, view, or manage expenses
+- ❌ Cannot submit expenses for approval
+- ✅ Can still access all task activity features
+
+**To enable expense access**: Contact your administrator to add an email address to your user profile.
+
 **ADMIN (Full Access)**
 
 - ✅ All USER permissions
@@ -417,8 +427,26 @@ Use the filter controls at the top of the expense list to find specific expenses
 2. **Submit**: Click **"Submit for Approval"** button
 3. **Status Change**: Expense status changes to "Submitted"
 4. **Wait for Review**: EXPENSE_ADMIN will review and approve or reject
+5. **Email Notification**: You'll receive an email when your expense is approved, rejected, or reimbursed
 
 **Important:** Once submitted, you cannot edit or delete the expense.
+
+**Email Notifications**
+
+After submitting an expense, you'll receive automatic email notifications at each status change:
+- **Approved**: Notifies you the expense is ready for reimbursement processing
+- **Rejected**: Includes reviewer notes explaining the rejection
+- **Reimbursed**: Confirms payment has been processed
+
+Each email includes:
+- Your full name
+- Expense description
+- Amount and currency
+- New status
+- Processor's full name (who approved/rejected/reimbursed)
+- Date and time
+
+**Note**: Emails are sent to the address in your user profile. Ensure your email is current.
 
 ### Understanding Expense Status
 

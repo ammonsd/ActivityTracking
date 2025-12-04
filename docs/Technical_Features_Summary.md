@@ -67,7 +67,8 @@ This document provides a comprehensive summary of all technical features, framew
 - **Force password update filter** for administrative password resets
 - **Automatic password expiration** with 90-day policy and advance warnings
 - **Account lockout protection** - automatic lockout after 5 failed login attempts
-- **Email notifications** for security events (account lockouts)
+- **Email notifications** for security events (account lockouts) and expense status changes
+- **Email-based authorization** - users must have valid email address to access expense features
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
@@ -99,6 +100,17 @@ This document provides a comprehensive summary of all technical features, framew
 - **Health check endpoints** for monitoring
 - **Application metrics** and monitoring capabilities
 - **Production-ready features** for operational visibility
+
+### Email Notification System
+
+- **Email requirement for expense access** - users must have valid email to access expense features
+- **Automatic status notifications** - emails sent when expenses are approved, rejected, or reimbursed
+- **Status-specific messaging** - custom email content based on status change type
+- **Processor identification** - displays full name of approver/reimbursor in emails
+- **Email validation** - @Email annotation on User entity and DTOs
+- **Authorization checks** - UserService.userHasEmail() validates access to expense features
+- **UI access control** - expense buttons/links hidden for users without email addresses
+- **AWS SES integration** - production email delivery via Amazon Simple Email Service
 
 ---
 
