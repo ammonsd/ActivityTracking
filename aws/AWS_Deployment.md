@@ -561,6 +561,53 @@ aws ecs describe-services `
 
 ## Troubleshooting
 
+### Changes Not Appearing After Deployment
+
+**Problem:** After deploying new code, users still see the old version of the application. This is often caused by Cloudflare CDN caching static files (JavaScript, CSS) even after successful deployment.
+
+**Solution: Enable Cloudflare Development Mode**
+
+1. Login to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Select your domain (e.g., `taskactivitytracker.com`)
+3. Navigate to: **Caching → Configuration**
+4. Find the "Development Mode" section
+5. Toggle the switch to **ON**
+6. Wait 30 seconds for the changes to propagate globally
+
+**Testing the deployment:**
+1. Open a **new incognito/private browser window** (Ctrl+Shift+N)
+2. Navigate to your application
+3. Open Browser DevTools (F12) → Network tab
+4. Verify new JavaScript files are loading (check filename hashes)
+5. Test the functionality that was changed
+
+**⚠️ IMPORTANT: Disable Development Mode After Testing**
+
+Once you've verified your deployment works correctly:
+1. Return to Cloudflare Dashboard → Caching → Configuration
+2. Toggle Development Mode back to **OFF**
+
+**Why this is important:**
+- Development Mode bypasses ALL Cloudflare caching
+- This increases origin server load and bandwidth usage
+- Page load times will be slower for users
+- CDN costs may increase with cache bypass
+
+Development Mode automatically expires after 3 hours, but it's best practice to disable it manually as soon as testing is complete.
+
+**Alternative: Purge Specific Files (For Production)**
+
+If you need to clear cache for production deployments without affecting all users:
+
+1. Navigate to: Caching → Configuration → Purge Cache
+2. Select **Custom Purge**
+3. Enter the specific URLs that changed:
+   - `https://yourdomain.com/app/main-*.js`
+   - `https://yourdomain.com/app/styles-*.css`
+4. Click **Purge**
+
+This method is more efficient than Development Mode and only clears specific cached files.
+
 ### Tasks Won't Start
 
 1. Check CloudWatch logs: `aws logs tail /ecs/taskactivity --follow`

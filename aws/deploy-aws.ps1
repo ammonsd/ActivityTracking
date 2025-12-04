@@ -14,12 +14,15 @@
 #
 # Deployment Process:
 # The script performs the following steps:
-#   1. Build the Spring Boot JAR with Maven (includes Angular production build)
-#   2. Build the Angular application with production configuration
-#   3. Create the Docker image with multi-stage build
-#   4. Push the Docker image to AWS ECR (Elastic Container Registry)
-#   5. Update the ECS service with new task definition
-#   6. Wait for the new task to become healthy and stable
+#   1. Clean old Angular builds from source tree (prevents duplicate files in JAR)
+#   2. Kill any stuck Node.js processes
+#   3. Clean Angular build cache
+#   4. Prune Docker build cache (WSL2 only)
+#   5. Build the Spring Boot JAR with Maven (includes Angular production build)
+#   6. Build the Docker image with multi-stage build
+#   7. Push the Docker image to AWS ECR (Elastic Container Registry)
+#   8. Update the ECS service with new task definition
+#   9. Wait for the new task to become healthy and stable
 #
 # Usage:
 #   .\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests]
@@ -194,6 +197,24 @@ function Test-Prerequisites {
 function Build-AndPushImage {
     Write-Info "Building Docker image..."
     
+    # Remove old Angular builds from source tree to prevent duplicate files in JAR
+    Write-Info "Cleaning old Angular builds from source tree..."
+    $sourceStaticAppPath = Join-Path $PWD "src\main\resources\static\app"
+    if (Test-Path $sourceStaticAppPath) {
+        try {
+            Remove-Item -Recurse -Force $sourceStaticAppPath -ErrorAction Stop
+            Write-Info "Removed old Angular files from src/main/resources/static/app"
+        } catch {
+            Write-Error "Failed to delete old Angular builds from $sourceStaticAppPath. Error: $_"
+            Write-Error "These files should not be committed to source control."
+            exit 1
+        }
+    }
+    
+    # Kill any stuck Node.js processes that might interfere with the build
+    Write-Info "Checking for stuck Node.js processes..."
+    taskkill /F /IM node.exe >$null 2>&1
+    
     # Clean Angular build cache to prevent LMDB "Not enough space" errors
     Write-Info "Cleaning Angular build cache..."
     $angularCachePath = Join-Path $PWD "frontend\.angular"
@@ -207,6 +228,13 @@ function Build-AndPushImage {
     if (Test-Path $nodeModulesCachePath) {
         Remove-Item -Recurse -Force $nodeModulesCachePath -ErrorAction SilentlyContinue
         Write-Info "Node modules cache cleaned"
+    }
+    
+    # Clean Docker build cache if using WSL2 Docker (prevents disk space issues)
+    if ($script:useWSLDocker) {
+        Write-Info "Pruning Docker build cache in WSL2..."
+        wsl -u root bash -c "docker builder prune -af" 2>$null | Out-Null
+        Write-Info "Docker build cache pruned"
     }
     
     # Build the application
