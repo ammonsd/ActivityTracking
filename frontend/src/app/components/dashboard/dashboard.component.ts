@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ExpenseService } from '../../services/expense.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +43,7 @@ import { AuthService } from '../../services/auth.service';
         </mat-card>
 
         <mat-card
+          *ngIf="canAccessExpenses"
           class="dashboard-card"
           [class.disabled]="currentRole === 'GUEST'"
           routerLink="/expenses"
@@ -208,13 +210,29 @@ import { AuthService } from '../../services/auth.service';
 })
 export class DashboardComponent implements OnInit {
   currentRole = '';
+  canAccessExpenses = false;
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly expenseService: ExpenseService
+  ) {}
 
   ngOnInit(): void {
     console.log('Dashboard component initialized');
     this.currentRole = this.authService.getCurrentRole();
     console.log('Dashboard - Current role:', this.currentRole);
+
+    // Check if user can access expenses
+    this.expenseService.canAccessExpenses().subscribe({
+      next: (response) => {
+        this.canAccessExpenses = response.data || false;
+        console.log('Dashboard - Can access expenses:', this.canAccessExpenses);
+      },
+      error: (err) => {
+        console.error('Dashboard - Error checking expense access:', err);
+        this.canAccessExpenses = false;
+      },
+    });
 
     // Subscribe to role changes
     this.authService.userRole$.subscribe({

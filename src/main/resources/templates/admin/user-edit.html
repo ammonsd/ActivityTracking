@@ -200,6 +200,27 @@
                         ></div>
                     </div>
 
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            th:field="*{email}"
+                            placeholder="Enter email address (optional)"
+                            maxlength="100"
+                            style="height: 40px; width: 100%;"
+                        />
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('email')}"
+                            th:errors="*{email}"
+                        ></div>
+                        <div class="password-help" style="font-size: 11px; color: #999;">
+                            Required for expense management features
+                        </div>
+                    </div>
+
                     <div class="form-row">
                         <!-- Role -->
                         <div class="form-group">

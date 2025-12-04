@@ -63,4 +63,8 @@ export class ExpenseService {
   getCurrentWeekExpenses(): Observable<ApiResponse<Expense[]>> {
     return this.http.get<ApiResponse<Expense[]>>(`${this.apiUrl}/current-week`);
   }
+
+  canAccessExpenses(): Observable<ApiResponse<boolean>> {
+    return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/can-access`);
+  }
 }

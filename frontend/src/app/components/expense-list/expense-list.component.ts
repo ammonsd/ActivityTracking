@@ -47,6 +47,7 @@ export class ExpenseListComponent implements OnInit {
   currentUser = '';
   currentRole = '';
   currentDate = new Date();
+  canAccessExpenses = true;
 
   // Pagination properties
   currentPage = 0;
@@ -89,6 +90,20 @@ export class ExpenseListComponent implements OnInit {
     this.currentUser = this.authService.getCurrentUsername();
     this.currentRole = this.authService.getCurrentRole();
 
+    // Check if user has email for expense access
+    this.expenseService.canAccessExpenses().subscribe({
+      next: (response) => {
+        this.canAccessExpenses = response.data || false;
+        if (this.canAccessExpenses) {
+          this.loadExpenses();
+        }
+      },
+      error: (err) => {
+        console.error('Error checking expense access:', err);
+        this.canAccessExpenses = false;
+      },
+    });
+
     // Set displayed columns based on role
     // ADMIN and EXPENSE_ADMIN see username column, others don't
     if (this.currentRole === 'ADMIN' || this.currentRole === 'EXPENSE_ADMIN') {
@@ -113,8 +128,6 @@ export class ExpenseListComponent implements OnInit {
         'expenseStatus',
       ];
     }
-
-    this.loadExpenses();
   }
 
   loadExpenses(): void {

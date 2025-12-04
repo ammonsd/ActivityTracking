@@ -485,9 +485,9 @@ T<!DOCTYPE html>
                         class="btn btn-info"
                         >📊 Weekly Timesheet</a
                     >
-                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN -->
+                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN with email -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')') and userHasEmail}"
                         th:href="@{/expenses/list}"
                         class="btn btn-info"
                         title="Expense Tracking"

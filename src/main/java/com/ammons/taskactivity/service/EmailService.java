@@ -327,5 +327,114 @@ public class EmailService {
             return false;
         }
     }
+
+    /**
+     * Send expense status change notification to user.
+     * 
+     * @param userEmail the email address of the expense owner
+     * @param username the username of the expense owner
+     * @param fullName the full name of the user (optional)
+     * @param expenseId the ID of the expense
+     * @param expenseDescription brief description of the expense
+     * @param amount the expense amount
+     * @param currency the currency code (e.g., USD)
+     * @param newStatus the new status (Approved, Rejected, Reimbursed)
+     * @param notes any notes from the approver/processor
+     * @param processedBy username of who processed the expense
+     */
+    public void sendExpenseStatusNotification(String userEmail, String username, String fullName,
+            Long expenseId, String expenseDescription, String amount, String currency,
+            String newStatus, String notes, String processedBy) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping expense status notification");
+            return;
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            logger.warn("Cannot send expense notification - user {} has no email address",
+                    username);
+            return;
+        }
+
+        String subject = String.format("[%s] Expense %s - %s", appName, newStatus, expenseId);
+        String body = buildExpenseStatusEmailBody(username, fullName, expenseId, expenseDescription,
+                amount, currency, newStatus, notes, processedBy);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(userEmail, subject, body);
+            } else {
+                sendEmailViaSmtp(userEmail, subject, body);
+            }
+            logger.info("Expense status notification sent to {} for expense ID: {}", userEmail,
+                    expenseId);
+        } catch (Exception e) {
+            logger.error("Failed to send expense status notification to {}: {}", userEmail,
+                    e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Builds the email body for expense status notifications.
+     */
+    private String buildExpenseStatusEmailBody(String username, String fullName, Long expenseId,
+            String expenseDescription, String amount, String currency, String newStatus,
+            String notes, String processedBy) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder details = new StringBuilder();
+        if (fullName != null) {
+            details.append(String.format("User:               %s%n", fullName));
+        }
+        details.append(String.format("Username:           %s%n", username));
+        details.append(String.format("Expense ID:         %s%n", expenseId));
+        details.append(String.format("Description:        %s%n", expenseDescription));
+        details.append(String.format("Amount:             %s %s%n", amount, currency));
+        details.append(String.format("New Status:         %s%n", newStatus));
+        if (processedBy != null) {
+            details.append(String.format("Processed By:       %s%n", processedBy));
+        }
+        details.append(String.format("Date:               %s", timestamp));
+
+        StringBuilder notesSection = new StringBuilder();
+        if (notes != null && !notes.trim().isEmpty()) {
+            notesSection.append("\n\nNotes:\n");
+            notesSection.append("----------------------------------------\n");
+            notesSection.append(notes);
+            notesSection.append("\n----------------------------------------");
+        }
+
+        String statusMessage;
+        switch (newStatus.toUpperCase()) {
+            case "APPROVED":
+                statusMessage =
+                        "Your expense has been approved and is ready for reimbursement processing.";
+                break;
+            case "REJECTED":
+                statusMessage =
+                        "Your expense has been rejected. Please review the notes below for details.";
+                break;
+            case "REIMBURSED":
+                statusMessage =
+                        "Your expense has been reimbursed. The payment should be reflected in your account soon.";
+                break;
+            default:
+                statusMessage = "Your expense status has been updated.";
+        }
+
+        return String.format("""
+                EXPENSE STATUS UPDATE
+
+                %s
+
+                Expense Details:
+                ----------------------------------------
+                %s
+                ----------------------------------------%s
+
+                This is an automated notification from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
+                """, statusMessage, details.toString(), notesSection.toString(), appName);
+    }
 }
 

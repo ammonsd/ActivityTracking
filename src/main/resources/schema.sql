@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     company  VARCHAR(100),
     userpassword VARCHAR(255) NOT NULL,
     userrole VARCHAR(20) NOT NULL DEFAULT 'USER',
+    email VARCHAR(100),
     enabled BOOLEAN NOT NULL DEFAULT true,
     forcepasswordupdate BOOLEAN NOT NULL DEFAULT true,
     expiration_date DATE NULL,
