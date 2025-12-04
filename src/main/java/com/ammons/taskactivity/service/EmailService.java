@@ -386,8 +386,6 @@ public class EmailService {
         if (fullName != null) {
             details.append(String.format("User:               %s%n", fullName));
         }
-        details.append(String.format("Username:           %s%n", username));
-        details.append(String.format("Expense ID:         %s%n", expenseId));
         details.append(String.format("Description:        %s%n", expenseDescription));
         details.append(String.format("Amount:             %s %s%n", amount, currency));
         details.append(String.format("New Status:         %s%n", newStatus));

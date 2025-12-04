@@ -3,6 +3,7 @@ package com.ammons.taskactivity.service;
 import com.ammons.taskactivity.dto.ExpenseDto;
 import com.ammons.taskactivity.dto.ExpenseFilterDto;
 import com.ammons.taskactivity.entity.Expense;
+import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.exception.ExpenseNotFoundException;
 import com.ammons.taskactivity.repository.ExpenseRepository;
 import org.springframework.data.domain.Page;
@@ -45,11 +46,16 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final ReceiptStorageService storageService;
+    private final UserService userService;
+    private final EmailService emailService;
 
     public ExpenseService(ExpenseRepository expenseRepository,
-            ReceiptStorageService storageService) {
+            ReceiptStorageService storageService, UserService userService,
+            EmailService emailService) {
         this.expenseRepository = expenseRepository;
         this.storageService = storageService;
+        this.userService = userService;
+        this.emailService = emailService;
     }
 
     // ========== CRUD Operations ==========
@@ -482,7 +488,47 @@ public class ExpenseService {
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(approverUsername);
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // Send email notification to expense owner
+        try {
+            Optional<User> userOpt = userService.getUserByUsername(expense.getUsername());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    String fullName = (user.getFirstname() != null ? user.getFirstname() : "") + " "
+                            + (user.getLastname() != null ? user.getLastname() : "");
+                    fullName = fullName.trim();
+
+                    // Get processor's full name
+                    String processedByName = approverUsername;
+                    Optional<User> processorOpt = userService.getUserByUsername(approverUsername);
+                    if (processorOpt.isPresent()) {
+                        User processor = processorOpt.get();
+                        String processorFullName =
+                                (processor.getFirstname() != null ? processor.getFirstname() : "")
+                                        + " "
+                                        + (processor.getLastname() != null ? processor.getLastname()
+                                                : "");
+                        processorFullName = processorFullName.trim();
+                        if (!processorFullName.isEmpty()) {
+                            processedByName = processorFullName;
+                        }
+                    }
+
+                    emailService.sendExpenseStatusNotification(user.getEmail(), user.getUsername(),
+                            fullName, savedExpense.getId(), savedExpense.getDescription(),
+                            savedExpense.getAmount().toString(), savedExpense.getCurrency(),
+                            "Approved", approvalNotes, processedByName);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send approval email notification for expense {}: {}",
+                    savedExpense.getId(), e.getMessage());
+            // Don't fail the approval if email fails
+        }
+
+        return savedExpense;
     }
 
     /**
@@ -515,7 +561,47 @@ public class ExpenseService {
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(approverUsername);
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // Send email notification to expense owner
+        try {
+            Optional<User> userOpt = userService.getUserByUsername(expense.getUsername());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    String fullName = (user.getFirstname() != null ? user.getFirstname() : "") + " "
+                            + (user.getLastname() != null ? user.getLastname() : "");
+                    fullName = fullName.trim();
+
+                    // Get processor's full name
+                    String processedByName = approverUsername;
+                    Optional<User> processorOpt = userService.getUserByUsername(approverUsername);
+                    if (processorOpt.isPresent()) {
+                        User processor = processorOpt.get();
+                        String processorFullName =
+                                (processor.getFirstname() != null ? processor.getFirstname() : "")
+                                        + " "
+                                        + (processor.getLastname() != null ? processor.getLastname()
+                                                : "");
+                        processorFullName = processorFullName.trim();
+                        if (!processorFullName.isEmpty()) {
+                            processedByName = processorFullName;
+                        }
+                    }
+
+                    emailService.sendExpenseStatusNotification(user.getEmail(), user.getUsername(),
+                            fullName, savedExpense.getId(), savedExpense.getDescription(),
+                            savedExpense.getAmount().toString(), savedExpense.getCurrency(),
+                            "Rejected", rejectionNotes, processedByName);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send rejection email notification for expense {}: {}",
+                    savedExpense.getId(), e.getMessage());
+            // Don't fail the rejection if email fails
+        }
+
+        return savedExpense;
     }
 
     /**
@@ -543,7 +629,51 @@ public class ExpenseService {
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(adminUsername);
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // Send email notification to expense owner
+        try {
+            Optional<User> userOpt = userService.getUserByUsername(expense.getUsername());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    String fullName = (user.getFirstname() != null ? user.getFirstname() : "") + " "
+                            + (user.getLastname() != null ? user.getLastname() : "");
+                    fullName = fullName.trim();
+
+                    // Get processor's full name
+                    String processedByName = adminUsername;
+                    Optional<User> processorOpt = userService.getUserByUsername(adminUsername);
+                    if (processorOpt.isPresent()) {
+                        User processor = processorOpt.get();
+                        String processorFullName =
+                                (processor.getFirstname() != null ? processor.getFirstname() : "")
+                                        + " "
+                                        + (processor.getLastname() != null ? processor.getLastname()
+                                                : "");
+                        processorFullName = processorFullName.trim();
+                        if (!processorFullName.isEmpty()) {
+                            processedByName = processorFullName;
+                        }
+                    }
+
+                    BigDecimal finalAmount =
+                            expense.getReimbursedAmount() != null ? expense.getReimbursedAmount()
+                                    : expense.getAmount();
+
+                    emailService.sendExpenseStatusNotification(user.getEmail(), user.getUsername(),
+                            fullName, savedExpense.getId(), savedExpense.getDescription(),
+                            finalAmount.toString(), savedExpense.getCurrency(), "Reimbursed", notes,
+                            processedByName);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send reimbursement email notification for expense {}: {}",
+                    savedExpense.getId(), e.getMessage());
+            // Don't fail the reimbursement if email fails
+        }
+
+        return savedExpense;
     }
 
     // ========== Utility Methods ==========

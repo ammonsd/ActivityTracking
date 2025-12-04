@@ -555,32 +555,28 @@ public class ExpenseViewController {
             if (!canReimburse) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only administrators can mark expenses as reimbursed");
-                return REDIRECT_EXPENSE_DETAIL + id;
+                return REDIRECT_APPROVAL_QUEUE;
             }
 
             // Only allow reimbursement of Approved expenses
             if (!"Approved".equalsIgnoreCase(expense.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only Approved expenses can be marked as reimbursed");
-                return REDIRECT_EXPENSE_DETAIL + id;
+                return REDIRECT_APPROVAL_QUEUE;
             }
 
-            // Update reimbursement fields
-            expense.setReimbursedAmount(reimbursedAmount);
-            expense.setReimbursementDate(LocalDate.now());
-            expense.setReimbursementNotes(reimbursementNotes);
-            expense.setExpenseStatus("Reimbursed");
-
-            expenseService.saveExpense(expense);
+            // Call service method to update and send notification
+            expenseService.markAsReimbursed(id, authentication.getName(), reimbursedAmount,
+                    reimbursementNotes);
 
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense marked as reimbursed successfully");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             logger.error("Error marking expense as reimbursed: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to mark expense as reimbursed: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
@@ -794,12 +790,12 @@ public class ExpenseViewController {
             expenseService.submitExpense(id);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense submitted for approval");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_EXPENSE_LIST;
         } catch (Exception e) {
             logger.error("Error submitting expense: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to submit expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_EXPENSE_LIST;
         }
     }
 
@@ -874,11 +870,11 @@ public class ExpenseViewController {
         try {
             expenseService.approveExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense approved");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to approve expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
@@ -889,11 +885,11 @@ public class ExpenseViewController {
         try {
             expenseService.rejectExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense rejected");
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to reject expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_DETAIL + id;
+            return REDIRECT_APPROVAL_QUEUE;
         }
     }
 
