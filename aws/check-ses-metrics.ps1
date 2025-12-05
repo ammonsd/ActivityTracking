@@ -209,7 +209,6 @@ if ($totalSent -gt 0) {
     }
 } else {
     Write-Warning "No emails sent in the last hour"
-    Write-Host "Try triggering an email from your application (password reset, new user, etc.)" -ForegroundColor Gray
 }
 
 Write-Host ""
@@ -255,27 +254,4 @@ if ($stats -and $stats.SendDataPoints -and $stats.SendDataPoints.Count -gt 0) {
 }
 
 Write-Host ""
-
-# 4. Show helpful links
-Write-Host "==========================================================================" -ForegroundColor Cyan
-Write-Host "Useful Commands:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "View CloudWatch Metrics in Console:" -ForegroundColor Cyan
-Write-Host "  https://console.aws.amazon.com/cloudwatch/home?region=$Region#metricsV2:graph=~();namespace=~'AWS*2fSES" -ForegroundColor Gray
-Write-Host ""
-Write-Host "View Application Logs (email events):" -ForegroundColor Cyan
-Write-Host "  aws logs tail /ecs/taskactivity --filter-pattern `"email`" --follow --region $Region" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Query specific metric data (last 1 hour):" -ForegroundColor Cyan
-Write-Host "  aws cloudwatch get-metric-statistics ``" -ForegroundColor Gray
-Write-Host "    --namespace AWS/SES ``" -ForegroundColor Gray
-Write-Host "    --metric-name Send ``" -ForegroundColor Gray
-Write-Host "    --dimensions Name=ses:configuration-set,Value=$ConfigSetName ``" -ForegroundColor Gray
-Write-Host "    --start-time (Get-Date).AddHours(-1).ToString('yyyy-MM-ddTHH:mm:ss') ``" -ForegroundColor Gray
-Write-Host "    --end-time (Get-Date).ToString('yyyy-MM-ddTHH:mm:ss') ``" -ForegroundColor Gray
-Write-Host "    --period 3600 ``" -ForegroundColor Gray
-Write-Host "    --statistics Sum ``" -ForegroundColor Gray
-Write-Host "    --region $Region" -ForegroundColor Gray
-Write-Host ""
-Write-Host "==========================================================================" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "========================  SES Configuration & Metrics Check Complete  ========================" -ForegroundColor Cyan
