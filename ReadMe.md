@@ -31,7 +31,6 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - **ADMIN**: Full expense management and approval authority
 - 📊 Expense filtering by client, project, type, status, and date range
 - 💵 Automatic expense totals and status tracking
-- 🔔 Pending approval queue for administrators
 - 🔒 Users can only modify Draft, Submitted, or Resubmitted status
 - 🚫 Non-admins cannot modify approval/reimbursement fields
 
@@ -140,7 +139,7 @@ Interactive API documentation is available via Swagger UI:
 - `/api/expenses/{id}/approve` - Approve expense (Admin/Expense Admin only)
 - `/api/expenses/{id}/reject` - Reject expense (Admin/Expense Admin only)
 - `/api/expenses/{id}/reimburse` - Mark as reimbursed (Admin/Expense Admin only)
-- `/api/expenses/pending-approvals` - View pending approval queue
+- `/api/expenses/pending-approvals` - View pending expenses for approval
 - `/api/receipts/{expenseId}` - Upload, download, and delete receipts
 
 ## Documentation

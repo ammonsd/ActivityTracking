@@ -756,9 +756,17 @@ T<!DOCTYPE html>
                                     padding: 0;
                                 "
                             >
-                                <!-- All authenticated users see Edit and Clone buttons -->
+                                <!-- Show Edit and Clone buttons only for user's own tasks -->
                                 <a
-                                    th:href="@{'/task-activity/detail/' + ${task.id}}"
+                                    th:if="${task.username == username}"
+                                    th:href="@{'/task-activity/detail/' + ${task.id}(
+                                        client=${selectedClient},
+                                        project=${selectedProject},
+                                        phase=${selectedPhase},
+                                        username=${selectedUsername},
+                                        startDate=${startDate},
+                                        endDate=${endDate}
+                                    )}"
                                     class="btn btn-info"
                                     style="
                                         margin: 0;
@@ -768,11 +776,37 @@ T<!DOCTYPE html>
                                     >Edit</a
                                 >
                                 <a
-                                    th:href="@{'/task-activity/clone/' + ${task.id}}"
+                                    th:if="${task.username == username}"
+                                    th:href="@{'/task-activity/clone/' + ${task.id}(
+                                        client=${selectedClient},
+                                        project=${selectedProject},
+                                        phase=${selectedPhase},
+                                        username=${selectedUsername},
+                                        startDate=${startDate},
+                                        endDate=${endDate}
+                                    )}"
                                     class="btn btn-info"
                                     style="margin: 0; display: inline-block"
                                     title="Clone this task"
                                     >Clone</a
+                                >
+                                <!-- Show View button only for other users' tasks (ADMIN viewing others) -->
+                                <a
+                                    th:if="${task.username != username}"
+                                    th:href="@{'/task-activity/detail/' + ${task.id}(
+                                        client=${selectedClient},
+                                        project=${selectedProject},
+                                        phase=${selectedPhase},
+                                        username=${selectedUsername},
+                                        startDate=${startDate},
+                                        endDate=${endDate}
+                                    )}"
+                                    class="btn btn-secondary"
+                                    style="
+                                        margin: 0;
+                                        display: inline-block;
+                                    "
+                                    >View</a
                                 >
                             </td>
                         </tr>

@@ -472,14 +472,6 @@
                         style="margin-right: 10px"
                         >📊 Weekly Expense Sheet</a
                     >
-                    <!-- Approval Queue - Admin and Expense Approver -->
-                    <a
-                        sec:authorize="hasAnyRole('ADMIN', 'EXPENSE_ADMIN')"
-                        th:href="@{/expenses/admin/approval-queue}"
-                        class="btn btn-warning"
-                        style="margin-right: 10px"
-                        >✓ Approval Queue</a
-                    >
                     <!-- Add New Expense - Hide for GUEST users and users without email -->
                     <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
                         >➕ Add New Expense</a
@@ -732,7 +724,15 @@
                                 "
                             >
                                 <a
-                                    th:href="@{'/expenses/detail/' + ${expense.id}}"
+                                    th:href="@{'/expenses/detail/' + ${expense.id}(
+                                        client=${selectedClient},
+                                        project=${selectedProject},
+                                        expenseType=${selectedExpenseType},
+                                        status=${selectedStatus},
+                                        username=${selectedUsername},
+                                        startDate=${selectedStartDate},
+                                        endDate=${selectedEndDate}
+                                    )}"
                                     th:class="${editableExpenses[expense.id]} ? 'btn btn-info' : 'btn btn-secondary'"
                                     style="
                                         margin: 0;
@@ -743,6 +743,7 @@
                                 >Edit</a
                                 >
                                 <a
+                                    th:if="${expense.username == username}"
                                     th:href="@{'/expenses/clone/' + ${expense.id}}"
                                     class="btn btn-info"
                                     style="margin: 0; margin-right: 1px; display: inline-block"

@@ -168,7 +168,14 @@
         <div class="container">
             <div class="header">
                 <h1>Task Activity Details</h1>
-                <a th:href="@{/task-activity/list}" class="btn btn-secondary">
+                <a th:href="@{/task-activity/list(
+                    client=${selectedClient},
+                    project=${selectedProject},
+                    phase=${selectedPhase},
+                    username=${selectedUsername},
+                    startDate=${startDate},
+                    endDate=${endDate}
+                )}" class="btn btn-secondary">
                     <span
                         th:if="${#authorization.expression('hasRole(''GUEST'')')}"
                         >Back to List</span
@@ -328,6 +335,14 @@
                         ></div>
                     </div>
 
+                    <!-- Hidden filter fields to preserve filters -->
+                    <input type="hidden" name="client" th:value="${selectedClient}" />
+                    <input type="hidden" name="project" th:value="${selectedProject}" />
+                    <input type="hidden" name="phase" th:value="${selectedPhase}" />
+                    <input type="hidden" name="username" th:value="${selectedUsername}" />
+                    <input type="hidden" name="startDate" th:value="${startDate}" />
+                    <input type="hidden" name="endDate" th:value="${endDate}" />
+
                     <div class="button-group">
                         <!-- All authenticated users can update and delete -->
                         <button type="submit" class="btn btn-success">
@@ -341,7 +356,14 @@
                             Delete Task Activity
                         </button>
                         <a
-                            th:href="@{/task-activity/list}"
+                            th:href="@{/task-activity/list(
+                                client=${selectedClient},
+                                project=${selectedProject},
+                                phase=${selectedPhase},
+                                username=${selectedUsername},
+                                startDate=${startDate},
+                                endDate=${endDate}
+                            )}"
                             class="btn btn-secondary"
                         >
                             <span
@@ -364,7 +386,15 @@
             th:action="@{'/task-activity/delete/' + ${taskId}}"
             method="post"
             style="display: none"
-        ></form>
+        >
+            <!-- Hidden filter fields to preserve filters -->
+            <input type="hidden" name="client" th:value="${selectedClient}" />
+            <input type="hidden" name="project" th:value="${selectedProject}" />
+            <input type="hidden" name="phase" th:value="${selectedPhase}" />
+            <input type="hidden" name="username" th:value="${selectedUsername}" />
+            <input type="hidden" name="startDate" th:value="${startDate}" />
+            <input type="hidden" name="endDate" th:value="${endDate}" />
+        </form>
 
         <!-- Confirmation Modal -->
         <div id="deleteModal" class="modal">

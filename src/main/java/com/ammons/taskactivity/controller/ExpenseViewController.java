@@ -407,14 +407,24 @@ public class ExpenseViewController {
     }
 
     @GetMapping("/detail/{id}")
-    public String showExpenseDetail(@PathVariable Long id, Model model,
-            RedirectAttributes redirectAttributes, Authentication authentication) {
+    public String showExpenseDetail(@PathVariable Long id,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         addUserInfo(model, authentication);
 
         Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
         if (expenseOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EXPENSE_NOT_FOUND);
-            return REDIRECT_EXPENSE_LIST;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
 
         Expense expense = expenseOpt.get();
@@ -423,21 +433,36 @@ public class ExpenseViewController {
         if (!canViewAllExpenses && !expense.getUsername().equals(authentication.getName())) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "You can only view your own expenses");
-            return REDIRECT_EXPENSE_LIST;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
 
         model.addAttribute("expense", expense);
         model.addAttribute(EXPENSE_DTO_ATTR, convertToDto(expense));
         model.addAttribute(EXPENSE_ID_ATTR, id);
         addDropdownOptions(model);
+
+        // Pass filter parameters to the detail view so they can be used when going back
+        addFilterAttributes(model, client, project, expenseType, status, username, startDate,
+                endDate);
+
         return EXPENSE_DETAIL_VIEW;
     }
 
     @PostMapping("/update/{id}")
     public String updateExpense(@PathVariable Long id, @Valid @ModelAttribute ExpenseDto expenseDto,
             BindingResult bindingResult,
-            @RequestParam(value = "receipt", required = false) MultipartFile receipt, Model model,
-            RedirectAttributes redirectAttributes, Authentication authentication) {
+            @RequestParam(value = "receipt", required = false) MultipartFile receipt,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             addUserInfo(model, authentication);
             model.addAttribute(EXPENSE_ID_ATTR, id);
@@ -450,7 +475,8 @@ public class ExpenseViewController {
             Optional<Expense> existingOpt = expenseService.getExpenseById(id);
             if (existingOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EXPENSE_NOT_FOUND);
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             Expense existing = existingOpt.get();
@@ -459,7 +485,8 @@ public class ExpenseViewController {
             if (!canEditAllExpenses && !existing.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "You can only update your own expenses");
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             // Only allow updating of Draft or Rejected expenses
@@ -467,7 +494,8 @@ public class ExpenseViewController {
                     && !"Rejected".equalsIgnoreCase(existing.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only expenses in Draft or Rejected status can be edited");
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             expenseDto.setUsername(existing.getUsername());
@@ -480,7 +508,8 @@ public class ExpenseViewController {
                     logger.error("Error uploading receipt: {}", e.getMessage(), e);
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Expense updated but receipt upload failed: " + e.getMessage());
-                    return REDIRECT_EXPENSE_LIST;
+                    return buildFilteredRedirect(client, project, expenseType, status, username,
+                            startDate, endDate);
                 }
             } else {
                 expenseService.updateExpense(id, expenseDto);
@@ -488,7 +517,8 @@ public class ExpenseViewController {
 
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense updated successfully");
-            return REDIRECT_EXPENSE_LIST;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         } catch (Exception e) {
             logger.error("Error updating expense: {}", e.getMessage(), e);
             model.addAttribute(ERROR_MESSAGE_ATTR, "Failed to update expense: " + e.getMessage());
@@ -501,13 +531,23 @@ public class ExpenseViewController {
     }
 
     @PostMapping("/delete/{id}")
-    public String deleteExpense(@PathVariable Long id, RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+    public String deleteExpense(@PathVariable Long id,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
             if (expenseOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EXPENSE_NOT_FOUND);
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             Expense expense = expenseOpt.get();
@@ -516,37 +556,51 @@ public class ExpenseViewController {
             if (!canDeleteAllExpenses && !expense.getUsername().equals(authentication.getName())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "You can only delete your own expenses");
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             // Only allow deleting of Draft expenses
             if (!STATUS_DRAFT.equalsIgnoreCase(expense.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only expenses in Draft status can be deleted");
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             expenseService.deleteExpense(id);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense deleted successfully");
-            return REDIRECT_EXPENSE_LIST;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         } catch (Exception e) {
             logger.error("Error deleting expense: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to delete expense: " + e.getMessage());
-            return REDIRECT_EXPENSE_LIST;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
     }
 
     @PostMapping("/{id}/reimburse")
     public String markAsReimbursed(@PathVariable Long id, @RequestParam BigDecimal reimbursedAmount,
             @RequestParam(required = false) String reimbursementNotes,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             Optional<Expense> expenseOpt = expenseService.getExpenseById(id);
             if (expenseOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EXPENSE_NOT_FOUND);
-                return REDIRECT_EXPENSE_LIST;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             Expense expense = expenseOpt.get();
@@ -555,14 +609,16 @@ public class ExpenseViewController {
             if (!canReimburse) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only administrators can mark expenses as reimbursed");
-                return REDIRECT_APPROVAL_QUEUE;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             // Only allow reimbursement of Approved expenses
             if (!"Approved".equalsIgnoreCase(expense.getExpenseStatus())) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Only Approved expenses can be marked as reimbursed");
-                return REDIRECT_APPROVAL_QUEUE;
+                return buildFilteredRedirect(client, project, expenseType, status, username,
+                        startDate, endDate);
             }
 
             // Call service method to update and send notification
@@ -571,12 +627,14 @@ public class ExpenseViewController {
 
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Expense marked as reimbursed successfully");
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         } catch (Exception e) {
             logger.error("Error marking expense as reimbursed: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to mark expense as reimbursed: " + e.getMessage());
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
     }
 
@@ -839,11 +897,11 @@ public class ExpenseViewController {
         try {
             expenseService.approveExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense approved");
-            return REDIRECT_APPROVAL_QUEUE;
+            return REDIRECT_EXPENSE_LIST;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to approve expense: " + e.getMessage());
-            return REDIRECT_APPROVAL_QUEUE;
+            return REDIRECT_EXPENSE_LIST;
         }
     }
 
@@ -854,42 +912,65 @@ public class ExpenseViewController {
         try {
             expenseService.rejectExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense rejected");
-            return REDIRECT_APPROVAL_QUEUE;
+            return REDIRECT_EXPENSE_LIST;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to reject expense: " + e.getMessage());
-            return REDIRECT_APPROVAL_QUEUE;
+            return REDIRECT_EXPENSE_LIST;
         }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/approve")
     public String approveExpenseFromDetail(@PathVariable Long id,
-            @RequestParam(required = false) String notes, RedirectAttributes redirectAttributes,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            RedirectAttributes redirectAttributes,
             Authentication authentication) {
         try {
             expenseService.approveExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense approved");
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to approve expense: " + e.getMessage());
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
     @PostMapping("/{id}/reject")
     public String rejectExpenseFromDetail(@PathVariable Long id, @RequestParam String notes,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String expenseType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             expenseService.rejectExpense(id, authentication.getName(), notes);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Expense rejected");
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to reject expense: " + e.getMessage());
-            return REDIRECT_APPROVAL_QUEUE;
+            return buildFilteredRedirect(client, project, expenseType, status, username, startDate,
+                    endDate);
         }
     }
 
@@ -1037,6 +1118,43 @@ public class ExpenseViewController {
     /**
      * Helper method to convert empty strings to null for SQL filtering
      */
+    /**
+     * Build a redirect URL to expense list with filter parameters preserved
+     */
+    private String buildFilteredRedirect(String client, String project, String expenseType,
+            String status, String username, LocalDate startDate, LocalDate endDate) {
+        StringBuilder redirect = new StringBuilder("redirect:/expenses/list");
+        List<String> params = new ArrayList<>();
+
+        if (client != null && !client.isEmpty()) {
+            params.add("client=" + client);
+        }
+        if (project != null && !project.isEmpty()) {
+            params.add("project=" + project);
+        }
+        if (expenseType != null && !expenseType.isEmpty()) {
+            params.add("expenseType=" + expenseType);
+        }
+        if (status != null && !status.isEmpty()) {
+            params.add("status=" + status);
+        }
+        if (username != null && !username.isEmpty()) {
+            params.add("username=" + username);
+        }
+        if (startDate != null) {
+            params.add("startDate=" + startDate.toString());
+        }
+        if (endDate != null) {
+            params.add("endDate=" + endDate.toString());
+        }
+
+        if (!params.isEmpty()) {
+            redirect.append("?").append(String.join("&", params));
+        }
+
+        return redirect.toString();
+    }
+
     private String emptyToNull(String value) {
         return (value == null || value.trim().isEmpty()) ? null : value;
     }

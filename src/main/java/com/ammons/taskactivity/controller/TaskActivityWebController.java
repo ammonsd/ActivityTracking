@@ -100,14 +100,21 @@ public class TaskActivityWebController {
     }
 
     @GetMapping("/clone/{id}")
-    public String cloneTask(@PathVariable Long id, Model model,
-            RedirectAttributes redirectAttributes, Authentication authentication) {
+    public String cloneTask(@PathVariable Long id, @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             // Validate ID
             if (id == null || id <= 0) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Invalid task ID provided.");
-                return REDIRECT_TASK_LIST;
+                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
             }
 
             Optional<TaskActivity> taskActivity = taskActivityService.getTaskActivityById(id);
@@ -119,11 +126,12 @@ public class TaskActivityWebController {
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
                 addDropdownOptions(model);
+                addFilterAttributes(model, client, project, phase, username, startDate, endDate);
                 return TASK_ACTIVITY_FORM_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Task not found with ID: " + id);
-                return REDIRECT_TASK_LIST;
+                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
             }
 
         } catch (Exception e) {
@@ -262,14 +270,22 @@ public class TaskActivityWebController {
     }
 
     @GetMapping("/detail/{id}")
-    public String showTaskDetail(@PathVariable Long id, Model model,
-            RedirectAttributes redirectAttributes, Authentication authentication) {
+    public String showTaskDetail(@PathVariable Long id,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             // Validate ID
             if (id == null || id <= 0) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Invalid task ID provided.");
-                return REDIRECT_TASK_LIST;
+                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
             }
 
             Optional<TaskActivity> taskActivity = taskActivityService.getTaskActivityById(id);
@@ -277,11 +293,12 @@ public class TaskActivityWebController {
                 // Security check: verify task belongs to logged-in user (unless admin)
                 boolean isUserAdmin = isAdmin(authentication);
                 if (!isUserAdmin) {
-                    String username = getUsername(authentication);
-                    if (!taskActivity.get().getUsername().equals(username)) {
+                    String currentUsername = getUsername(authentication);
+                    if (!taskActivity.get().getUsername().equals(currentUsername)) {
                         redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                                 "Access denied: You can only view your own tasks.");
-                        return REDIRECT_TASK_LIST;
+                        return buildFilteredRedirect(client, project, phase, username, startDate,
+                                endDate);
                     }
                 }
 
@@ -290,11 +307,12 @@ public class TaskActivityWebController {
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
                 model.addAttribute(TASK_ID_ATTR, id);
                 addDropdownOptions(model);
+                addFilterAttributes(model, client, project, phase, username, startDate, endDate);
                 return TASK_DETAIL_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Task not found with ID: " + id);
-                return REDIRECT_TASK_LIST;
+                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
             }
         } catch (NumberFormatException e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -317,6 +335,14 @@ public class TaskActivityWebController {
     @PostMapping("/update/{id}")
     public String updateTask(@PathVariable Long id,
             @Valid @ModelAttribute TaskActivityDto taskActivityDto, BindingResult bindingResult,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
 
         if (bindingResult.hasErrors()) {
@@ -329,20 +355,21 @@ public class TaskActivityWebController {
             // Security check: verify task belongs to logged-in user before updating (unless admin)
             boolean isUserAdmin = isAdmin(authentication);
             if (!isUserAdmin) {
-                String username = getUsername(authentication);
+                String currentUsername = getUsername(authentication);
                 Optional<TaskActivity> existingTask = taskActivityService.getTaskActivityById(id);
                 if (existingTask.isPresent()
-                        && !existingTask.get().getUsername().equals(username)) {
+                        && !existingTask.get().getUsername().equals(currentUsername)) {
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Access denied: You can only update your own tasks.");
-                    return REDIRECT_TASK_LIST;
+                    return buildFilteredRedirect(client, project, phase, username, startDate,
+                            endDate);
                 }
             }
 
             taskActivityService.updateTaskActivity(id, taskActivityDto);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity updated successfully!");
-            return REDIRECT_TASK_LIST;
+            return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
 
         } catch (Exception e) {
             model.addAttribute(ERROR_MESSAGE_ATTR,
@@ -354,26 +381,34 @@ public class TaskActivityWebController {
     }
 
     @PostMapping("/delete/{id}")
-    public String deleteTask(@PathVariable Long id, RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+    public String deleteTask(@PathVariable Long id, @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             // Security check: verify task belongs to logged-in user before deleting (unless admin)
             boolean isUserAdmin = isAdmin(authentication);
             if (!isUserAdmin) {
-                String username = getUsername(authentication);
+                String currentUsername = getUsername(authentication);
                 Optional<TaskActivity> existingTask = taskActivityService.getTaskActivityById(id);
                 if (existingTask.isPresent()
-                        && !existingTask.get().getUsername().equals(username)) {
+                        && !existingTask.get().getUsername().equals(currentUsername)) {
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Access denied: You can only delete your own tasks.");
-                    return REDIRECT_TASK_LIST;
+                    return buildFilteredRedirect(client, project, phase, username, startDate,
+                            endDate);
                 }
             }
 
             taskActivityService.deleteTaskActivity(id);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity deleted successfully!");
-            return REDIRECT_TASK_LIST;
+            return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -718,6 +753,40 @@ public class TaskActivityWebController {
         } catch (Exception e) {
             return dateStr;
         }
+    }
+
+    /**
+     * Build a redirect URL to task list with filter parameters preserved
+     */
+    private String buildFilteredRedirect(String client, String project, String phase,
+            String username, LocalDate startDate, LocalDate endDate) {
+        StringBuilder redirect = new StringBuilder("redirect:/task-activity/list");
+        java.util.List<String> params = new java.util.ArrayList<>();
+
+        if (client != null && !client.isEmpty()) {
+            params.add("client=" + client);
+        }
+        if (project != null && !project.isEmpty()) {
+            params.add("project=" + project);
+        }
+        if (phase != null && !phase.isEmpty()) {
+            params.add("phase=" + phase);
+        }
+        if (username != null && !username.isEmpty()) {
+            params.add("username=" + username);
+        }
+        if (startDate != null) {
+            params.add("startDate=" + startDate.toString());
+        }
+        if (endDate != null) {
+            params.add("endDate=" + endDate.toString());
+        }
+
+        if (!params.isEmpty()) {
+            redirect.append("?").append(String.join("&", params));
+        }
+
+        return redirect.toString();
     }
 
     private String escapeCsvField(String field) {

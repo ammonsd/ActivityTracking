@@ -103,8 +103,7 @@ The system has three user roles with different levels of access:
 - ✅ All USER permissions for tasks
 - ✅ View and manage all users' expenses
 - ✅ Filter expenses by any username
-- ✅ Access expense approval queue
-- ✅ Approve or reject expense submissions
+- ✅ Approve or reject expense submissions from expense detail page
 - ✅ Process reimbursements
 - ❌ No access to task management for other users
 - ❌ No access to user management or dropdown settings
@@ -459,7 +458,7 @@ Each email includes:
 **Submitted**: Expense is awaiting approval
 
 - Cannot edit or delete
-- Visible in approval queue
+- Visible to approvers in expense list (filtered by status)
 - Approver will review details and receipt
 
 **Approved**: Expense has been approved

@@ -72,7 +72,7 @@ This document provides a comprehensive summary of all technical features, framew
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
-  - EXPENSE_ADMIN access to approval queue and reimbursement functions
+  - EXPENSE_ADMIN access to expense approval and reimbursement functions
   - Role-based data filtering (ADMIN sees all users, regular users see only own data)
   - SecurityConfig request matcher ordering for proper API access control
   - Conditional UI rendering with *ngIf directives based on user roles
@@ -711,7 +711,6 @@ This document provides a comprehensive summary of all technical features, framew
 - Business expense tracking with client/project association
 - Multi-step approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
 - Receipt upload and storage (local filesystem or AWS S3 ready)
-- Expense approval queue for administrators
 - Role-based expense administration (EXPENSE_ADMIN role)
 - Comprehensive filtering by type, status, payment method, date range
 - Weekly expense sheet view

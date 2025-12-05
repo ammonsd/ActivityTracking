@@ -200,7 +200,15 @@
         <div class="container">
             <div class="header">
                 <h1>Expense Details</h1>
-                <a th:href="@{/expenses/list}" class="btn btn-secondary">
+                <a th:href="@{/expenses/list(
+                        client=${selectedClient},
+                        project=${selectedProject},
+                        expenseType=${selectedExpenseType},
+                        status=${selectedStatus},
+                        username=${selectedUsername},
+                        startDate=${selectedStartDate},
+                        endDate=${selectedEndDate}
+                    )}" class="btn btn-secondary">
                     Expense List
                 </a>
             </div>
@@ -269,6 +277,15 @@
                     method="post"
                     enctype="multipart/form-data"
                 >
+                    <!-- Hidden fields to preserve filter parameters -->
+                    <input type="hidden" name="client" th:value="${selectedClient}" />
+                    <input type="hidden" name="project" th:value="${selectedProject}" />
+                    <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
+                    <input type="hidden" name="status" th:value="${selectedStatus}" />
+                    <input type="hidden" name="username" th:value="${selectedUsername}" />
+                    <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
+                    <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+                    
                     <!-- Expense Date -->
                     <div class="form-group">
                         <label for="expenseDate"
@@ -602,7 +619,15 @@
                             Delete Expense
                         </button>
 
-                        <a th:href="@{/expenses/list}" class="btn btn-secondary">
+                        <a th:href="@{/expenses/list(
+                                client=${selectedClient},
+                                project=${selectedProject},
+                                expenseType=${selectedExpenseType},
+                                status=${selectedStatus},
+                                username=${selectedUsername},
+                                startDate=${selectedStartDate},
+                                endDate=${selectedEndDate}
+                            )}" class="btn btn-secondary">
                             ⬅️ Back to List
                         </a>
                     </div>
@@ -628,6 +653,15 @@
                 th:action="@{'/expenses/' + ${expenseId} + '/approve'}"
                 method="post"
             >
+                <!-- Hidden fields to preserve filter parameters -->
+                <input type="hidden" name="client" th:value="${selectedClient}" />
+                <input type="hidden" name="project" th:value="${selectedProject}" />
+                <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
+                <input type="hidden" name="status" th:value="${selectedStatus}" />
+                <input type="hidden" name="username" th:value="${selectedUsername}" />
+                <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
+                <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+                
                 <div style="margin-bottom: 15px;">
                     <label
                         for="approvalNotes"
@@ -668,6 +702,15 @@
                 th:action="@{'/expenses/' + ${expenseId} + '/reject'}"
                 method="post"
             >
+                <!-- Hidden fields to preserve filter parameters -->
+                <input type="hidden" name="client" th:value="${selectedClient}" />
+                <input type="hidden" name="project" th:value="${selectedProject}" />
+                <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
+                <input type="hidden" name="status" th:value="${selectedStatus}" />
+                <input type="hidden" name="username" th:value="${selectedUsername}" />
+                <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
+                <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+                
                 <div style="margin-bottom: 15px;">
                     <label
                         for="rejectionReason"
@@ -709,6 +752,15 @@
                 th:action="@{'/expenses/' + ${expenseId} + '/reimburse'}"
                 method="post"
             >
+                <!-- Hidden fields to preserve filter parameters -->
+                <input type="hidden" name="client" th:value="${selectedClient}" />
+                <input type="hidden" name="project" th:value="${selectedProject}" />
+                <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
+                <input type="hidden" name="status" th:value="${selectedStatus}" />
+                <input type="hidden" name="username" th:value="${selectedUsername}" />
+                <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
+                <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+                
                 <h3 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">Reimbursement Details</h3>
                 
                 <div style="margin-bottom: 15px;">
@@ -768,7 +820,16 @@
             th:action="@{'/expenses/delete/' + ${expenseId}}"
             method="post"
             style="display: none"
-        ></form>
+        >
+            <!-- Hidden fields to preserve filter parameters -->
+            <input type="hidden" name="client" th:value="${selectedClient}" />
+            <input type="hidden" name="project" th:value="${selectedProject}" />
+            <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
+            <input type="hidden" name="status" th:value="${selectedStatus}" />
+            <input type="hidden" name="username" th:value="${selectedUsername}" />
+            <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
+            <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+        </form>
 
         <!-- Confirmation Modal -->
         <div id="deleteModal" class="modal">

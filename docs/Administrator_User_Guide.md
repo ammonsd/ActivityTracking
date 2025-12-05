@@ -60,8 +60,7 @@ The system supports four user roles with different permission levels:
 **EXPENSE_ADMIN (Expense Approval Authority)**
 - All USER permissions for tasks
 - Can view all submitted expenses
-- Can approve or reject expenses
-- Can access expense approval queue
+- Can approve or reject expenses from expense detail page
 - Can mark expenses as reimbursed
 - Can view expense approval history and notes
 - Cannot manage users or system settings (unless also has ADMIN role)
@@ -268,34 +267,36 @@ Administrators with ADMIN or EXPENSE_ADMIN roles can view and manage all user ex
     - **Delete**: Remove expenses (ADMIN only, only for Draft status)
     - **Export CSV**: Export filtered expense list to CSV for reporting
 
-### Expense Approval Queue
+### Expense Approval Process
 
-ADMIN and EXPENSE_ADMIN users can access the approval queue to review submitted expenses:
+ADMIN and EXPENSE_ADMIN users can review and approve submitted expenses:
 
-1. **Access Approval Queue**: Click **"✓ Approval Queue"** from the navigation header
-2. **View Submitted Expenses**: See all expenses with status "Submitted" awaiting approval
+1. **Access Expense List**: Navigate to the expense list from the navigation header
+2. **Filter for Pending Approvals**: Use the Status filter to select "Submitted" to see expenses awaiting approval
 3. **Review Expense Details**:
-    - Expense date, client, project, type
-    - Amount and currency
-    - Payment method
-    - Vendor and reference number
-    - Description and notes
-    - Receipt attachment (view/download)
+    - Click **"Edit"** or **"View"** button on any expense to see full details
+    - Review expense date, client, project, type
+    - Verify amount and currency
+    - Check payment method, vendor, and reference number
+    - Read description and notes
+    - View/download receipt attachment
 
 4. **Approve Expense**:
-    - Click **"Approve"** button for the expense
+    - From the expense detail page, click **"Approve"** button
     - Enter approval notes (optional but recommended)
     - Expense status changes to "Approved"
     - User is automatically notified via email
     - Expense becomes available for reimbursement processing
-    - You are returned to the Expense Approval Queue
+    - You are returned to the expense list with filters preserved
 
 5. **Reject Expense**:
-    - Click **"Reject"** button for the expense
+    - From the expense detail page, click **"Reject"** button
     - Enter rejection reason (required)
     - Expense status changes to "Rejected"
     - User is automatically notified via email with rejection notes
-    - You are returned to the Expense Approval Queue
+    - You are returned to the expense list with filters preserved
+
+**Tip**: After applying filters (e.g., Status = Submitted), the filter values are preserved when you edit an expense and return to the list, making it efficient to process multiple expenses in sequence.
 
 ### Email Notifications for Status Changes
 
@@ -335,7 +336,7 @@ After expenses are approved, ADMIN and EXPENSE_ADMIN users can track reimburseme
         - **Reimbursement Notes**: Payment method, check number, transaction ID, etc.
     - Expense status changes to "Reimbursed"
     - User is automatically notified via email
-    - You are returned to the Expense Approval Queue
+    - You are returned to the expense list
 
 3. **View Reimbursement History**:
     - Filter expense list by Status = "Reimbursed"
