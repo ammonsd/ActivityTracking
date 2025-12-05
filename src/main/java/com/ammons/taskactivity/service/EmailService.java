@@ -409,7 +409,7 @@ public class EmailService {
                 break;
             case "REJECTED":
                 statusMessage =
-                        "Your expense has been rejected. Please review the notes below for details.";
+                        "Your expense has been rejected. Please review the notes below for details. Once the issue has been resolved, resubmit the expense for approval.";
                 break;
             case "REIMBURSED":
                 statusMessage =
