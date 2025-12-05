@@ -25,7 +25,7 @@
 #   9. Wait for the new task to become healthy and stable
 #
 # Usage:
-#   .\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests]
+#   .\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests] [-SkipEnvFile]
 #   
 # Examples:
 #   .\deploy-aws.ps1 -Environment dev
@@ -33,6 +33,7 @@
 #   .\deploy-aws.ps1 -NoCache
 #   .\deploy-aws.ps1 -Status
 #   .\deploy-aws.ps1 -Rollback
+#   .\deploy-aws.ps1 -EnableEmail -MailFrom "noreply@example.com" -AdminEmail "admin@example.com" -SkipEnvFile
 #
 # Parameters:
 #   -Environment  : Target environment (default: dev)
@@ -40,6 +41,11 @@
 #   -NoCache      : Build Docker image without cache
 #   -Status       : Check current deployment status
 #   -Rollback     : Rollback to previous task definition
+#   -EnableEmail  : Enable email notifications (requires -MailFrom and -AdminEmail)
+#   -UseAwsSdk    : Use AWS SES SDK instead of SMTP (only applies when -EnableEmail is set)
+#   -MailFrom     : Email address to send from (defaults to MAIL_FROM env var)
+#   -AdminEmail   : Administrator email address (defaults to ADMIN_EMAIL env var)
+#   -SkipEnvFile  : Skip loading environment variables from .env file
 #
 ###############################################################################
 
