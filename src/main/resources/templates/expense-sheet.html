@@ -276,7 +276,9 @@
                     <a th:href="@{/expenses/list}" class="btn btn-secondary"
                         >Expense List</a
                     >
+                    <!-- Export CSV Button - Hide for GUEST users and users without email -->
                     <button
+                        th:if="${!isGuest and userHasEmail}"
                         type="button"
                         class="btn btn-secondary"
                         id="exportCsvBtn"
@@ -284,7 +286,8 @@
                     >
                         📋 Export CSV
                     </button>
-                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                    <!-- Add Expense Button - Hide for GUEST users and users without email -->
+                    <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
                         >Add Expense</a
                     >
                 </div>

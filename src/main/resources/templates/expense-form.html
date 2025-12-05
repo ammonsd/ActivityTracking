@@ -126,7 +126,9 @@
             <div class="header">
                 <h1 th:text="${isEdit ? 'Edit Expense' : 'Add New Expense'}">Add New Expense</h1>
                 <div>
+                    <!-- Weekly Expense Sheet - Hide for GUEST users and users without email -->
                     <a
+                        th:if="${!isGuest and userHasEmail}"
                         th:href="@{/expenses/weekly-sheet}"
                         class="btn btn-info"
                         style="margin-right: 10px"
@@ -417,7 +419,8 @@
                         ></div>
                     </div>
 
-                    <button type="submit" class="submit-btn">
+                    <!-- Submit button - Hide for GUEST users and users without email -->
+                    <button th:if="${!isGuest and userHasEmail}" type="submit" class="submit-btn">
                         <span th:text="${isEdit ? 'Update Expense' : 'Add Expense'}">Add Expense</span>
                     </button>
                 </form>

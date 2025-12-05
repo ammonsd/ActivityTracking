@@ -226,9 +226,8 @@ public class EmailService {
         }
         details.append(String.format("Username:           %s", username));
 
-        return String.format("""
-                GUEST USER LOGIN NOTIFICATION
-
+        return String
+                .format("""
                 A user with GUEST role has logged into the system.
 
                 Details:

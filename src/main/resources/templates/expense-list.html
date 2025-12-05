@@ -453,8 +453,9 @@
                         title="Task Activity List"
                         >📋 Task Activity List</a
                     >
-                    <!-- Export CSV Button -->
+                    <!-- Export CSV Button - Hide for GUEST users and users without email -->
                     <button
+                        th:if="${!isGuest and userHasEmail}"
                         type="button"
                         class="btn btn-secondary"
                         id="exportCsvBtn"
@@ -463,8 +464,9 @@
                     >
                         📋 Export CSV
                     </button>
-                    <!-- Weekly Expense Sheet -->
+                    <!-- Weekly Expense Sheet - Hide for GUEST users and users without email -->
                     <a
+                        th:if="${!isGuest and userHasEmail}"
                         th:href="@{/expenses/weekly-sheet}"
                         class="btn btn-info"
                         style="margin-right: 10px"
@@ -478,8 +480,8 @@
                         style="margin-right: 10px"
                         >✓ Approval Queue</a
                     >
-                    <!-- Add New Expense -->
-                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                    <!-- Add New Expense - Hide for GUEST users and users without email -->
+                    <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
                         >➕ Add New Expense</a
                     >
                 </div>
@@ -771,7 +773,8 @@
 
                 <div th:if="${#lists.isEmpty(expenses)}" class="no-expenses">
                     <p>No expenses found matching the current filters.</p>
-                    <a th:href="@{/expenses/add}" class="btn btn-primary"
+                    <!-- Add Your First Expense - Hide for GUEST users and users without email -->
+                    <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
                         >Add Your First Expense</a
                     >
                 </div>

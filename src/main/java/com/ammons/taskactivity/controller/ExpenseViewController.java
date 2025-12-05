@@ -900,6 +900,7 @@ public class ExpenseViewController {
             model.addAttribute("username", username);
             model.addAttribute("isAdmin", isAdmin(authentication));
             model.addAttribute("canApproveExpenses", canApproveExpenses(authentication));
+            model.addAttribute("isGuest", isGuest(authentication));
 
             // Check if user has email for expense access
             boolean hasEmail = userService.userHasEmail(username);
@@ -926,6 +927,11 @@ public class ExpenseViewController {
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")
                         || auth.getAuthority().equals("ROLE_EXPENSE_ADMIN"));
+    }
+
+    private boolean isGuest(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"));
     }
 
     /**
