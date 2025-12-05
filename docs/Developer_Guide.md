@@ -1191,6 +1191,7 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
    ```properties
    # Email configuration
    spring.mail.enabled=${MAIL_ENABLED:false}
+   spring.mail.use-aws-sdk=${MAIL_USE_AWS_SDK:false}
    spring.mail.host=${MAIL_HOST:smtp.gmail.com}
    spring.mail.port=${MAIL_PORT:587}
    spring.mail.username=${MAIL_USERNAME:}
@@ -1203,9 +1204,30 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
    app.mail.admin-email=${ADMIN_EMAIL:admin@taskactivity.com}
    ```
 
-3. **Local Development** (`.env` file - not committed to git)
+   **Email Configuration Options:**
+   
+   | MAIL_ENABLED | MAIL_USE_AWS_SDK | Result |
+   |--------------|------------------|--------|
+   | `false` | `false` | ❌ No emails sent (disabled) |
+   | `true` | `false` | ✅ Emails sent via **SMTP** (Gmail, etc.) |
+   | `false` | `true` | ❌ No emails sent (MAIL_ENABLED takes precedence) |
+   | `true` | `true` | ✅ Emails sent via **AWS SES SDK** (IAM role, no SMTP credentials needed) |
+
+   **💡 Developer Testing Tip:**
+   If you don't have access to an SMTP server (Gmail, etc.) but have AWS credentials, you can test email functionality locally using AWS SES:
    ```properties
    MAIL_ENABLED=true
+   MAIL_USE_AWS_SDK=true
+   MAIL_FROM=verified-sender@yourdomain.com  # Must be verified in AWS SES
+   ADMIN_EMAIL=your-email@example.com
+   AWS_REGION=us-east-1
+   ```
+   This uses your local AWS credentials (from `~/.aws/credentials`) to send emails via AWS SES SDK, eliminating the need for SMTP configuration during development.
+
+3. **Local Development with SMTP** (`.env.local` file - not committed to git)
+   ```properties
+   MAIL_ENABLED=true
+   MAIL_USE_AWS_SDK=false
    MAIL_HOST=smtp.gmail.com
    MAIL_PORT=587
    MAIL_USERNAME=your-email@gmail.com
@@ -1214,11 +1236,11 @@ public static final String PASSWORD_SPECIAL_CHAR_MSG = "Password must contain at
    ADMIN_EMAIL=admin@yourdomain.com
    ```
 
-4. **AWS Deployment** (AWS Secrets Manager)
-   - Secret name: `taskactivity/email/credentials`
-   - Required keys: `username`, `password`
-   - Environment variables set in task definition for other settings
+4. **AWS Deployment with AWS SES** (AWS Secrets Manager + Environment Variables)
+   - Secret name: `taskactivity/email/credentials` (only needed for SMTP mode)
+   - Environment variables set in task definition for AWS SES SDK mode
    - See `aws/taskactivity-task-definition.json` for configuration
+   - **AWS SES SDK mode (`MAIL_USE_AWS_SDK=true`)**: Uses ECS task IAM role, no username/password needed
 
 **Gmail Setup for Development:**
 1. Enable 2-factor authentication on your Google account
