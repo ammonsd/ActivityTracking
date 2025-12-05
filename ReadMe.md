@@ -21,6 +21,10 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 💳 Payment method and vendor tracking
 - 📋 Expense categorization by type (travel, meals, office supplies, etc.)
 - ✅ Multi-stage approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
+- 📧 **Email notifications for expense status changes** (AWS SES integration):
+  - Automatic notifications when expense status changes (submitted, approved, rejected, reimbursed)
+  - Includes expense details, status change reason, and approval notes
+  - Requires user email address configured in profile
 - 👔 Role-based access control:
   - **USER/GUEST**: Create, view, and submit own expenses
   - **EXPENSE_ADMIN**: Approve/reject expenses and mark as reimbursed
