@@ -169,10 +169,19 @@ AWS SES provides reliable, scalable email delivery without requiring SMTP creden
 
 **Deployment with AWS SES:**
 
-Use the enhanced deployment script to configure email:
+Configure email settings in your `.env` file (recommended) or pass as CLI parameters:
 
 ```powershell
-# Deploy with AWS SES email enabled
+# Method 1: Using .env file (recommended)
+# Create .env file in project root with:
+# MAIL_ENABLED=true
+# MAIL_USE_AWS_SDK=true
+# MAIL_FROM=noreply@taskactivitytracker.com
+# ADMIN_EMAIL=admin@yourdomain.com
+
+.\aws\deploy-aws.ps1
+
+# Method 2: Using CLI parameters (overrides .env)
 .\aws\deploy-aws.ps1 -EnableEmail -UseAwsSdk `
   -MailFrom "noreply@taskactivitytracker.com" `
   -AdminEmail "admin@yourdomain.com"
@@ -211,6 +220,34 @@ aws logs tail /ecs/taskactivity --filter-pattern "AWS SES" --follow --region us-
 # - "AWS SES client initialized for region: us-east-1"
 # - "Email sent successfully via AWS SES. MessageId: [id]"
 ```
+
+**Tracking Sent Emails:**
+
+AWS SES doesn't have a "Sent" folder like Gmail, but you can track emails using:
+
+1. **CloudWatch Logs** (already configured) - View all sent emails:
+   ```powershell
+   aws logs tail /ecs/taskactivity --filter-pattern "email" --follow --region us-east-1
+   ```
+
+2. **SES Configuration Set** (optional) - Track delivery status, bounces, complaints:
+   ```powershell
+   # Run the setup script to enable detailed tracking
+   .\aws\setup-ses-tracking.ps1
+   
+   # Then uncomment in application-aws.properties:
+   # spring.mail.properties.mail.ses.configuration-set=taskactivity-emails
+   
+   # View metrics in CloudWatch Console or via CLI:
+   aws cloudwatch list-metrics --namespace AWS/SES --region us-east-1
+   ```
+
+3. **SES Sending Statistics** - View aggregate metrics:
+   ```powershell
+   aws ses get-send-statistics --region us-east-1
+   ```
+
+For detailed email tracking setup, see the `setup-ses-tracking.ps1` script in the `aws/` folder.
 
 **Cost:** AWS SES is $0.10 per 1,000 emails (first 62,000/month free with EC2/ECS).
 
@@ -295,6 +332,46 @@ chmod +x aws/deploy-aws.sh
 ```
 
 ## Deployment Script Features
+
+### Environment Variables Configuration (.env)
+
+**Recommended:** Store deployment configuration in a `.env` file in the project root. This keeps sensitive information out of version control and command history.
+
+**Create `.env` file:**
+
+```bash
+# Email Configuration
+MAIL_ENABLED=true
+MAIL_USE_AWS_SDK=true
+MAIL_FROM=noreply@taskactivitytracker.com
+ADMIN_EMAIL=admin@yourdomain.com
+```
+
+The deployment script automatically loads these variables at startup using `scripts/set-env-values.ps1`.
+
+**Benefits:**
+- ✅ Secure: `.env` is in `.gitignore` (never committed)
+- ✅ Convenient: No need to type email parameters on every deployment
+- ✅ Flexible: CLI parameters can still override `.env` values
+
+**Usage examples:**
+
+```powershell
+# Uses values from .env file
+.\aws\deploy-aws.ps1
+
+# Override specific values from command line
+.\aws\deploy-aws.ps1 -MailFrom "different@email.com"
+
+# Skip .env file entirely
+.\aws\deploy-aws.ps1 -SkipEnvFile -EnableEmail -MailFrom "..." -AdminEmail "..."
+```
+
+**Supported environment variables:**
+- `MAIL_ENABLED` - Set to `true` to enable email notifications
+- `MAIL_USE_AWS_SDK` - Set to `true` to use AWS SES SDK (recommended)
+- `MAIL_FROM` - Email sender address (must be verified in AWS SES)
+- `ADMIN_EMAIL` - Admin email address for notifications
 
 ### Deploy New Version
 

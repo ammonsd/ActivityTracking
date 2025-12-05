@@ -145,8 +145,26 @@
                 "ses:SetIdentityDkimEnabled",
                 "ses:SendEmail",
                 "ses:SendRawEmail",
-                "sesv2:GetAccount",
-                "sesv2:PutAccountDetails"
+                "ses:CreateConfigurationSet",
+                "ses:DeleteConfigurationSet",
+                "ses:DescribeConfigurationSet",
+                "ses:ListConfigurationSets",
+                "ses:PutConfigurationSetDeliveryOptions",
+                "ses:CreateConfigurationSetEventDestination",
+                "ses:UpdateConfigurationSetEventDestination",
+                "ses:DeleteConfigurationSetEventDestination",
+                "ses:DescribeConfigurationSet"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchMetricsAccess",
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:PutMetricData",
+                "cloudwatch:GetMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics"
             ],
             "Resource": "*"
         }

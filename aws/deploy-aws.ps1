@@ -69,7 +69,10 @@ param(
     [string]$MailFrom = "",
     
     [Parameter(Mandatory=$false)]
-    [string]$AdminEmail = ""
+    [string]$AdminEmail = "",
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$SkipEnvFile
 )
 
 # Stop on errors
@@ -95,6 +98,60 @@ if (-not $Status) {
     Write-Host "Logging to: $logFile" -ForegroundColor Cyan
     Write-Host ""
 }
+
+# ========================================
+# Load Environment Variables from .env
+# ========================================
+
+if (-not $SkipEnvFile) {
+    $envFilePath = Join-Path $PSScriptRoot "..\.env"
+    $setEnvScript = Join-Path $PSScriptRoot "..\scripts\set-env-values.ps1"
+    
+    if (Test-Path $setEnvScript) {
+        Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
+        # Capture output and write to both console and transcript
+        $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+        $envOutput | ForEach-Object { Write-Host $_ }
+        Write-Host ""
+    } else {
+        Write-Warning "set-env-values.ps1 not found. Environment variables will not be loaded."
+    }
+}
+
+# ========================================
+# Apply Environment Variable Defaults
+# ========================================
+
+# Email parameters: Use CLI params if provided, otherwise fall back to environment variables
+if ([string]::IsNullOrWhiteSpace($MailFrom)) {
+    $MailFrom = $env:MAIL_FROM
+    if (-not [string]::IsNullOrWhiteSpace($MailFrom)) {
+        Write-Host "Using MAIL_FROM from environment: $MailFrom" -ForegroundColor Gray
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($AdminEmail)) {
+    $AdminEmail = $env:ADMIN_EMAIL
+    if (-not [string]::IsNullOrWhiteSpace($AdminEmail)) {
+        Write-Host "Using ADMIN_EMAIL from environment: $AdminEmail" -ForegroundColor Gray
+    }
+}
+
+# EnableEmail switch: Check if MAIL_ENABLED environment variable is set to "true"
+# Note: We check $PSBoundParameters to see if the switch was explicitly provided by the user
+if (-not $PSBoundParameters.ContainsKey('EnableEmail') -and $env:MAIL_ENABLED -eq "true") {
+    $EnableEmail = $true
+    Write-Host "Email enabled via MAIL_ENABLED environment variable" -ForegroundColor Gray
+}
+
+# UseAwsSdk switch: Check if MAIL_USE_AWS_SDK environment variable is set to "true"
+# Note: We check $PSBoundParameters to see if the switch was explicitly provided by the user
+if (-not $PSBoundParameters.ContainsKey('UseAwsSdk') -and $env:MAIL_USE_AWS_SDK -eq "true") {
+    $UseAwsSdk = $true
+    Write-Host "Using AWS SES SDK via MAIL_USE_AWS_SDK environment variable" -ForegroundColor Gray
+}
+
+Write-Host ""
 
 # ========================================
 # Configuration Variables
