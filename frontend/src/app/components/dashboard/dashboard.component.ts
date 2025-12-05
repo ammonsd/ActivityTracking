@@ -43,7 +43,7 @@ import { ExpenseService } from '../../services/expense.service';
         </mat-card>
 
         <mat-card
-          *ngIf="canAccessExpenses"
+          *ngIf="canAccessExpenses || currentRole === 'GUEST'"
           class="dashboard-card"
           [class.disabled]="currentRole === 'GUEST'"
           routerLink="/expenses"

@@ -51,7 +51,7 @@
         <span matListItemTitle>Dropdowns</span>
       </a>
       <a 
-        *ngIf="canAccessExpenses"
+        *ngIf="canAccessExpenses || currentRole === 'GUEST'"
         mat-list-item 
         [routerLink]="currentRole === 'GUEST' ? null : '/expenses'" 
         routerLinkActive="active"
@@ -73,18 +73,11 @@
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
       <a 
-        *ngIf="currentRole !== 'GUEST' && canAccessExpenses"
+        *ngIf="canAccessExpenses || currentRole === 'GUEST'"
         mat-list-item 
-        href="/expenses/list"
-        (click)="navigateExternal($event, '/expenses/list')">
-        <mat-icon matListItemIcon>attach_money</mat-icon>
-        <span matListItemTitle>Expense Tracker</span>
-      </a>
-      <a 
-        *ngIf="currentRole === 'GUEST' && canAccessExpenses"
-        mat-list-item
-        class="disabled"
-        (click)="$event.preventDefault()">
+        [href]="currentRole === 'GUEST' ? null : '/expenses/list'"
+        [class.disabled]="currentRole === 'GUEST'"
+        (click)="currentRole === 'GUEST' ? $event.preventDefault() : navigateExternal($event, '/expenses/list')">
         <mat-icon matListItemIcon>attach_money</mat-icon>
         <span matListItemTitle>Expense Tracker</span>
       </a>
