@@ -618,18 +618,6 @@
                         >
                             Delete Expense
                         </button>
-
-                        <a th:href="@{/expenses/list(
-                                client=${selectedClient},
-                                project=${selectedProject},
-                                expenseType=${selectedExpenseType},
-                                status=${selectedStatus},
-                                username=${selectedUsername},
-                                startDate=${selectedStartDate},
-                                endDate=${selectedEndDate}
-                            )}" class="btn btn-secondary">
-                            ⬅️ Back to List
-                        </a>
                     </div>
                 </form>
             </div>
