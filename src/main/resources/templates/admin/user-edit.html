@@ -391,7 +391,7 @@
                     </div>
 
                     <div style="margin-top: 30px">
-                        <button type="submit" class="submit-btn" th:text="${isOwnProfile} ? 'Update Profile' : 'Update User'">
+                        <button type="submit" class="btn btn-primary">
                             Update User
                         </button>
                         <a
@@ -400,12 +400,6 @@
                             class="btn btn-info"
                             style="padding: 12px 30px; text-decoration: none;"
                             >🔒 Update Password</a
-                        >
-                        <a
-                            th:unless="${isOwnProfile}"
-                            th:href="@{/task-activity/manage-users}"
-                            class="btn btn-secondary"
-                            >Cancel</a
                         >
                     </div>
                 </form>
