@@ -210,14 +210,16 @@
                     <!-- Task Date -->
                     <div class="form-group">
                         <label for="taskDate"
-                            >Task Date <span class="required">*</span></label
+                            >Task Date <span class="required" th:unless="${isReadOnly}">*</span></label
                         >
                         <input
                             type="date"
                             id="taskDate"
                             name="taskDate"
                             th:value="${taskActivityDto.taskDate != null ? #temporals.format(taskActivityDto.taskDate, 'yyyy-MM-dd') : ''}"
-                            required
+                            th:required="${!isReadOnly}"
+                            th:readonly="${isReadOnly}"
+                            th:disabled="${isReadOnly}"
                         />
                         <div
                             class="error"
@@ -230,9 +232,9 @@
                         <!-- Client -->
                         <div class="form-group">
                             <label for="client"
-                                >Client <span class="required">*</span></label
+                                >Client <span class="required" th:unless="${isReadOnly}">*</span></label
                             >
-                            <select id="client" th:field="*{client}" required>
+                            <select id="client" th:field="*{client}" th:required="${!isReadOnly}" th:disabled="${isReadOnly}">
                                 <option value="">-- Select Client --</option>
                                 <option
                                     th:each="client : ${clients}"
@@ -250,9 +252,9 @@
                         <!-- Project -->
                         <div class="form-group">
                             <label for="project"
-                                >Project <span class="required">*</span></label
+                                >Project <span class="required" th:unless="${isReadOnly}">*</span></label
                             >
-                            <select id="project" th:field="*{project}" required>
+                            <select id="project" th:field="*{project}" th:required="${!isReadOnly}" th:disabled="${isReadOnly}">
                                 <option value="">-- Select Project --</option>
                                 <option
                                     th:each="project : ${projects}"
@@ -272,9 +274,9 @@
                         <!-- Phase -->
                         <div class="form-group">
                             <label for="phase"
-                                >Phase <span class="required">*</span></label
+                                >Phase <span class="required" th:unless="${isReadOnly}">*</span></label
                             >
-                            <select id="phase" th:field="*{phase}" required>
+                            <select id="phase" th:field="*{phase}" th:required="${!isReadOnly}" th:disabled="${isReadOnly}">
                                 <option value="">-- Select Phase --</option>
                                 <option
                                     th:each="phase : ${phases}"
@@ -292,7 +294,7 @@
                         <!-- Hours -->
                         <div class="form-group">
                             <label for="hours"
-                                >Hours <span class="required">*</span></label
+                                >Hours <span class="required" th:unless="${isReadOnly}">*</span></label
                             >
                             <div class="input-with-buttons">
                                 <input
@@ -303,9 +305,11 @@
                                     min="0.25"
                                     max="24.00"
                                     placeholder="0.00"
-                                    required
+                                    th:required="${!isReadOnly}"
+                                    th:readonly="${isReadOnly}"
+                                    th:disabled="${isReadOnly}"
                                 />
-                                <div class="stepper-buttons">
+                                <div class="stepper-buttons" th:unless="${isReadOnly}">
                                     <button type="button" class="stepper-btn" onclick="incrementHours()" title="Add 15 minutes (0.25 hours)">▲</button>
                                     <button type="button" class="stepper-btn" onclick="decrementHours()" title="Subtract 15 minutes (0.25 hours)">▼</button>
                                 </div>
@@ -327,6 +331,8 @@
                             rows="4"
                             maxlength="255"
                             placeholder="Enter task details (optional)..."
+                            th:readonly="${isReadOnly}"
+                            th:disabled="${isReadOnly}"
                         ></textarea>
                         <div
                             class="error"
@@ -343,8 +349,8 @@
                     <input type="hidden" name="startDate" th:value="${startDate}" />
                     <input type="hidden" name="endDate" th:value="${endDate}" />
 
-                    <div class="button-group">
-                        <!-- All authenticated users can update and delete -->
+                    <div class="button-group" th:unless="${isReadOnly}">
+                        <!-- Show action buttons only when not in read-only mode -->
                         <button type="submit" class="btn btn-success">
                             Update Task Activity
                         </button>
@@ -355,26 +361,6 @@
                         >
                             Delete Task Activity
                         </button>
-                        <a
-                            th:href="@{/task-activity/list(
-                                client=${selectedClient},
-                                project=${selectedProject},
-                                phase=${selectedPhase},
-                                username=${selectedUsername},
-                                startDate=${startDate},
-                                endDate=${endDate}
-                            )}"
-                            class="btn btn-secondary"
-                        >
-                            <span
-                                th:if="${#authorization.expression('hasRole(''GUEST'')')}"
-                                >Back to List</span
-                            >
-                            <span
-                                th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'')')}"
-                                >Cancel</span
-                            >
-                        </a>
                     </div>
                 </form>
             </div>

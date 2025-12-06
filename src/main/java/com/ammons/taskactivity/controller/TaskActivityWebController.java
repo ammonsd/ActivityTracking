@@ -306,6 +306,12 @@ public class TaskActivityWebController {
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
                 model.addAttribute(TASK_ID_ATTR, id);
+
+                // Check if this is a read-only view (admin viewing another user's task)
+                String currentUsername = getUsername(authentication);
+                boolean isReadOnly = !taskActivity.get().getUsername().equals(currentUsername);
+                model.addAttribute("isReadOnly", isReadOnly);
+
                 addDropdownOptions(model);
                 addFilterAttributes(model, client, project, phase, username, startDate, endDate);
                 return TASK_DETAIL_VIEW;
