@@ -107,22 +107,80 @@
 
         <div class="container">
             <div class="header">
-                <h1>✏️ Edit User</h1>
+                <h1 th:text="${isOwnProfile} ? '👤 My Profile' : '✏️ Edit User'">Edit User</h1>
                 <div>
                     <a
+                        th:if="${!isOwnProfile}"
                         th:href="@{/task-activity/manage-users}"
                         class="btn btn-secondary"
                         >User Management</a
                     >
+                    <a
+                        th:if="${isOwnProfile}"
+                        th:href="@{/task-activity/list}"
+                        class="btn btn-secondary"
+                        >Task Activity List</a
+                    >
                 </div>
+            </div>
+
+            <!-- Success Message -->
+            <div
+                th:if="${successMessage}"
+                class="alert alert-success"
+                style="
+                    background-color: #d4edda;
+                    border: 1px solid #c3e6cb;
+                    color: #155724;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                "
+            >
+                <span style="font-size: 20px; margin-right: 10px;">✅</span>
+                <span th:text="${successMessage}">Profile updated successfully</span>
+            </div>
+
+            <!-- Error Message -->
+            <div
+                th:if="${errorMessage}"
+                class="alert alert-danger"
+                style="
+                    background-color: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    color: #721c24;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                "
+            >
+                <span style="font-size: 20px; margin-right: 10px;">❌</span>
+                <span th:text="${errorMessage}">An error occurred</span>
             </div>
 
             <div class="form-container">
                 <form
-                    th:action="@{/task-activity/manage-users/edit/{id}(id=${userEditDto.id})}"
+                    th:action="${isOwnProfile} ? @{/profile/edit} : @{/task-activity/manage-users/edit/{id}(id=${userEditDto.id})}"
                     th:object="${userEditDto}"
                     method="post"
                 >
+                    <!-- Hidden ID field -->
+                    <input type="hidden" th:field="*{id}" />
+                    
+                    <!-- Hidden fields for own profile - these should not be editable by regular users -->
+                    <th:block th:if="${isOwnProfile}">
+                        <input type="hidden" th:field="*{username}" />
+                        <input type="hidden" th:field="*{role}" />
+                        <input type="hidden" th:field="*{enabled}" />
+                        <input type="hidden" th:field="*{forcePasswordUpdate}" />
+                        <input type="hidden" th:field="*{accountLocked}" />
+                        <input type="hidden" th:field="*{failedLoginAttempts}" />
+                    </th:block>
+                    
                     <!-- Username (Read-only) -->
                     <div class="form-group">
                         <label for="username"
@@ -221,8 +279,8 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <!-- Role -->
+                    <div class="form-row" th:unless="${isOwnProfile}">
+                        <!-- Role - ADMIN only -->
                         <div class="form-group">
                             <label for="role"
                                 >Role <span class="required">*</span></label
@@ -242,7 +300,7 @@
                             ></div>
                         </div>
 
-                        <!-- Enabled Status -->
+                        <!-- Enabled Status - ADMIN only -->
                         <div class="form-group">
                             <span
                                 style="
@@ -268,8 +326,8 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <!-- Force Password Update -->
+                    <div class="form-row" th:unless="${isOwnProfile}">
+                        <!-- Force Password Update - ADMIN only -->
                         <div class="form-group">
                             <span
                                 style="
@@ -333,10 +391,18 @@
                     </div>
 
                     <div style="margin-top: 30px">
-                        <button type="submit" class="submit-btn">
+                        <button type="submit" class="submit-btn" th:text="${isOwnProfile} ? 'Update Profile' : 'Update User'">
                             Update User
                         </button>
                         <a
+                            th:if="${isOwnProfile}"
+                            th:href="@{/change-password}"
+                            class="btn btn-info"
+                            style="padding: 12px 30px; text-decoration: none;"
+                            >🔒 Update Password</a
+                        >
+                        <a
+                            th:unless="${isOwnProfile}"
                             th:href="@{/task-activity/manage-users}"
                             class="btn btn-secondary"
                             >Cancel</a

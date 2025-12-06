@@ -67,6 +67,17 @@ import { ExpenseService } from '../../services/expense.service';
         </mat-card>
 
         <mat-card
+          *ngIf="currentRole !== 'GUEST'"
+          class="dashboard-card"
+          routerLink="/profile"
+        >
+          <mat-card-header>
+            <mat-icon>account_circle</mat-icon>
+            <mat-card-title>My Profile</mat-card-title>
+          </mat-card-header>
+        </mat-card>
+
+        <mat-card
           *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
           class="dashboard-card"
           [class.disabled]="currentRole === 'GUEST'"

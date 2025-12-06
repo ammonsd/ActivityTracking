@@ -5,6 +5,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 ## Features
 
 ### Time Tracking
+
 - ✅ Daily task recording with client/project/phase tracking
 - 📊 Analytics & Reports Dashboard with interactive charts and visualizations
   - Time distribution by client and project
@@ -16,6 +17,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 🔍 Filter and search capabilities
 
 ### Expense Management
+
 - 💰 Travel and business expense tracking with receipt management
 - 📸 Receipt upload/download (JPEG, PNG, PDF) with AWS S3 or local storage
 - 💳 Payment method and vendor tracking
@@ -35,6 +37,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 🚫 Non-admins cannot modify approval/reimbursement fields
 
 ### General Features
+
 - 🎯 Dynamic dropdown management for clients, projects, phases, and expense types
 - ✔️ Data validation and error handling
 - 📚 Comprehensive API documentation (Swagger/OpenAPI)
@@ -63,12 +66,14 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 The application automatically creates tables and populates initial data on startup. The database includes:
 
 **Tables:**
+
 - `users` - User accounts and authentication
 - `taskactivity` - Time tracking records
 - `dropdownvalues` - Dynamic dropdown values for clients, projects, phases, and expense types
 - `expenses` - Expense records with approval workflow
 
 **Initial Data:**
+
 - Default admin user (username: `admin`, password: `admin123`)
 - Sample clients, projects, and phases
 - Expense types (travel, meals, office supplies, etc.)
@@ -100,6 +105,7 @@ Access the application at **http://localhost:8080**
 The application supports two storage backends for expense receipts:
 
 **Local File Storage (Development):**
+
 ```properties
 # In application.properties or application-local.properties
 storage.type=local
@@ -107,6 +113,7 @@ storage.local.base-path=./receipts
 ```
 
 **AWS S3 Storage (Production):**
+
 ```properties
 # In application.properties or application-aws.properties
 storage.type=s3
@@ -115,6 +122,7 @@ storage.s3.region=us-east-1
 ```
 
 For AWS deployment, ensure:
+
 - S3 bucket is created with appropriate permissions
 - ECS task role has S3 read/write permissions
 - See [AWS Deployment Guide](aws/AWS_Deployment.md) for complete setup
@@ -122,6 +130,7 @@ For AWS deployment, ensure:
 ### API Documentation
 
 Interactive API documentation is available via Swagger UI:
+
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
 
@@ -130,10 +139,12 @@ Interactive API documentation is available via Swagger UI:
 #### Key API Endpoints
 
 **Time Tracking:**
+
 - `/api/task-activities` - Task CRUD operations, filtering, and reports
 - `/api/dropdowns` - Client, project, and phase management
 
 **Expense Management:**
+
 - `/api/expenses` - Expense CRUD operations, filtering, and status management
 - `/api/expenses/{id}/submit` - Submit expense for approval
 - `/api/expenses/{id}/approve` - Approve expense (Admin/Expense Admin only)
@@ -177,3 +188,5 @@ Interactive API documentation is available via Swagger UI:
 ## License
 
 This project is for personal/educational use.
+
+© 2025-2026 | Dean Ammons

@@ -40,6 +40,15 @@
         <span matListItemTitle>Users</span>
       </a>
       <a
+        *ngIf="currentRole !== 'GUEST'"
+        mat-list-item
+        routerLink="/profile"
+        routerLinkActive="active"
+      >
+        <mat-icon matListItemIcon>account_circle</mat-icon>
+        <span matListItemTitle>My Profile</span>
+      </a>
+      <a
         *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
         mat-list-item
         [routerLink]="currentRole === 'GUEST' ? null : '/dropdowns'"

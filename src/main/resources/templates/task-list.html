@@ -493,27 +493,14 @@ T<!DOCTYPE html>
                         title="Expense Tracking"
                         >💰 Expense List</a
                     >
-                    <!-- Update Password - Visible for USER and GUEST (disabled for GUEST) -->
+                    <!-- Manage Users/Profile - All except GUEST: ADMIN goes to user list, others edit own profile -->
                     <a
-                        th:if="${#authorization.expression('(hasRole(''USER'') or hasRole(''GUEST'') or hasRole(''EXPENSE_ADMIN'')) and !hasRole(''ADMIN'')')}"
-                        th:href="@{/change-password}"
+                        th:unless="${#authorization.expression('hasRole(''GUEST'')')}"
+                        th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/task-activity/manage-users} : @{/profile/edit}"
                         class="btn btn-info"
-                        title="Change Password"
-                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >🔒 Update Password</a
-                    >
-                    <!-- Manage Users - Hidden for USER, disabled for GUEST, active for ADMIN -->
-                    <a
-                        th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}"
-                        th:href="@{/task-activity/manage-users}"
-                        class="btn btn-info"
-                        title="Manage Users"
-                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >👥 Manage Users</a
+                        th:title="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Manage Users' : 'Edit Profile'"
+                        th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? '👥 Manage Users' : '👤 My Profile'"
+                    ></a
                     >
                     <!-- Guest Activity - ADMIN only -->
                     <a

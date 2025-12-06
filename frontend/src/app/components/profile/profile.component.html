@@ -1,0 +1,113 @@
+<div class="profile-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>account_circle</mat-icon>
+        My Profile
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+      </div>
+
+      <form
+        *ngIf="!loading && currentUser"
+        #profileForm="ngForm"
+        (ngSubmit)="updateProfile()"
+      >
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Username</mat-label>
+            <input
+              matInput
+              [(ngModel)]="currentUser.username"
+              name="username"
+              disabled
+              readonly
+            />
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <input
+              matInput
+              [(ngModel)]="currentUser.role"
+              name="role"
+              disabled
+              readonly
+            />
+            <mat-icon matSuffix>badge</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input
+              matInput
+              [(ngModel)]="currentUser.firstname"
+              name="firstname"
+              required
+            />
+            <mat-icon matSuffix>person_outline</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input
+              matInput
+              [(ngModel)]="currentUser.lastname"
+              name="lastname"
+              required
+            />
+            <mat-icon matSuffix>person_outline</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Company</mat-label>
+            <input matInput [(ngModel)]="currentUser.company" name="company" />
+            <mat-icon matSuffix>business</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="email"
+              [(ngModel)]="currentUser.email"
+              name="email"
+            />
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-hint>Required for expense management features</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            [disabled]="!profileForm.form.valid || loading"
+          >
+            <mat-icon>save</mat-icon>
+            Update Profile
+          </button>
+
+          <button
+            type="button"
+            mat-raised-button
+            color="accent"
+            (click)="cancel()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <div *ngIf="!loading && !currentUser" class="error-message">
+        <mat-icon>error</mat-icon>
+        <p>Unable to load profile information</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -21,7 +21,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('ADMIN')")
 public class UserRestController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserRestController.class);
@@ -62,6 +61,42 @@ public class UserRestController {
                     return ResponseEntity.ok(ApiResponse.success("Current user", dto));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get current user's profile (for editing)
+     */
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<User>> getCurrentUserProfile(Authentication authentication) {
+        String username = authentication.getName();
+        logger.debug("REST API: Getting profile for user: {}", username);
+        return userService.getUserByUsername(username)
+                .map(user -> ResponseEntity.ok(ApiResponse.success("Profile retrieved", user)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Update current user's profile (non-admin users can only update their own profile)
+     */
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<User>> updateCurrentUserProfile(@RequestBody User updatedUser,
+            Authentication authentication) {
+        String username = authentication.getName();
+        logger.debug("REST API: Updating profile for user: {}", username);
+
+        return userService.getUserByUsername(username).map(existingUser -> {
+            // Non-admin users can only update specific fields
+            existingUser.setFirstname(updatedUser.getFirstname());
+            existingUser.setLastname(updatedUser.getLastname());
+            existingUser.setCompany(updatedUser.getCompany());
+            existingUser.setEmail(updatedUser.getEmail());
+
+            User savedUser = userService.updateUser(existingUser);
+            return ResponseEntity
+                    .ok(ApiResponse.success("Profile updated successfully", savedUser));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     /**

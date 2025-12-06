@@ -188,6 +188,7 @@ public class UserManagementController {
 
         model.addAttribute("userEditDto", userEditDto);
         model.addAttribute(ROLES, Role.values());
+        model.addAttribute("isOwnProfile", false);
         addUserDisplayInfo(model, authentication);
 
         return ADMIN_USER_EDIT;

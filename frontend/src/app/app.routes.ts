@@ -5,6 +5,7 @@ import { ExpenseListComponent } from './components/expense-list/expense-list.com
 import { UserListComponent } from './components/user-list/user-list.component';
 import { DropdownManagementComponent } from './components/dropdown-management/dropdown-management.component';
 import { ReportsComponent } from './components/reports/reports.component';
+import { ProfileComponent } from './components/profile/profile.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
@@ -32,4 +33,5 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
 ];

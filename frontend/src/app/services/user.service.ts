@@ -20,6 +20,14 @@ export class UserService {
     return this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`);
   }
 
+  getCurrentUserProfile(): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(`${this.apiUrl}/profile`);
+  }
+
+  updateCurrentUserProfile(user: User): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.apiUrl}/profile`, user);
+  }
+
   createUser(user: User): Observable<ApiResponse<User>> {
     return this.http.post<ApiResponse<User>>(this.apiUrl, user);
   }

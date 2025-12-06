@@ -111,7 +111,7 @@ public class SecurityConfig {
 
                                         // Allow all authenticated users to access their own user
                                         // info
-                                        .requestMatchers("/api/users/me")
+                                        .requestMatchers("/api/users/me", "/api/users/profile")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                         ROLE_EXPENSE_ADMIN)
 
@@ -141,6 +141,11 @@ public class SecurityConfig {
                                         // User Management - Admin only
                                         .requestMatchers("/task-activity/manage-users/**")
                         .hasRole(ADMIN_ROLE)
+
+                                        // Profile Management - accessible to USER, ADMIN, and
+                                        // EXPENSE_ADMIN
+                                        .requestMatchers("/profile/**")
+                                        .hasAnyRole(USER_ROLE, ADMIN_ROLE, ROLE_EXPENSE_ADMIN)
 
                                         // Admin pages - accessible to ADMIN and EXPENSE_ADMIN
                                         .requestMatchers(ADMIN_PATTERN)

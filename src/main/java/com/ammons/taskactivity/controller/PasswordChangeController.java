@@ -126,8 +126,8 @@ public class PasswordChangeController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Password changed successfully!");
 
-            // Redirect to task list after successful password change
-            return "redirect:/task-activity/list";
+            // Redirect to profile if accessed from My Profile, otherwise to task list
+            return "redirect:/profile/edit";
 
         } catch (Exception e) {
             logger.error("Error changing password for user '{}': {}", username, e.getMessage(), e);
