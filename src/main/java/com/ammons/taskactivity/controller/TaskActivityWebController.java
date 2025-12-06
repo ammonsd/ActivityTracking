@@ -766,7 +766,7 @@ public class TaskActivityWebController {
      */
     private String buildFilteredRedirect(String client, String project, String phase,
             String username, LocalDate startDate, LocalDate endDate) {
-        StringBuilder redirect = new StringBuilder("redirect:/task-activity/list");
+        StringBuilder redirect = new StringBuilder(REDIRECT_TASK_LIST);
         java.util.List<String> params = new java.util.ArrayList<>();
 
         if (client != null && !client.isEmpty()) {

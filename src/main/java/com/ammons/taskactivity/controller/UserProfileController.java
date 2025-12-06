@@ -33,6 +33,7 @@ public class UserProfileController {
     private static final String ERROR_MESSAGE = "errorMessage";
     private static final String SUCCESS_MESSAGE = "successMessage";
     private static final String ADMIN_USER_EDIT = "admin/user-edit";
+    private static final String IS_OWN_PROFILE = "isOwnProfile";
 
     private final UserService userService;
 
@@ -66,7 +67,7 @@ public class UserProfileController {
         userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
 
         model.addAttribute("userEditDto", userEditDto);
-        model.addAttribute("isOwnProfile", true);
+        model.addAttribute(IS_OWN_PROFILE, true);
         addUserDisplayInfo(model, authentication);
 
         return ADMIN_USER_EDIT;
@@ -84,7 +85,7 @@ public class UserProfileController {
         logger.info("User {} attempting to update their own profile", currentUsername);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("isOwnProfile", true);
+            model.addAttribute(IS_OWN_PROFILE, true);
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_EDIT;
         }
@@ -112,7 +113,7 @@ public class UserProfileController {
         } catch (IllegalArgumentException e) {
             logger.warn("Failed to update profile: {}", e.getMessage());
             bindingResult.rejectValue(USERNAME, "error.username", e.getMessage());
-            model.addAttribute("isOwnProfile", true);
+            model.addAttribute(IS_OWN_PROFILE, true);
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_EDIT;
         }
@@ -124,7 +125,7 @@ public class UserProfileController {
     private void addUserDisplayInfo(Model model, Authentication authentication) {
         if (authentication != null) {
             String username = authentication.getName();
-            model.addAttribute("username", username);
+            model.addAttribute(USERNAME, username);
 
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {

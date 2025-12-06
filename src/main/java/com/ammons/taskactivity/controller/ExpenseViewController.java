@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -66,9 +65,6 @@ public class ExpenseViewController {
     private static final String EMAIL_REQUIRED_MESSAGE =
             "Email address is required to access expense features. Please update your profile with a valid email address.";
 
-    // Redirect paths
-    private static final String REDIRECT_EXPENSE_DETAIL = "redirect:/expenses/detail/";
-    private static final String REDIRECT_APPROVAL_QUEUE = "redirect:/expenses/admin/approval-queue";
     private final ExpenseService expenseService;
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
