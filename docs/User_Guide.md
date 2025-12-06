@@ -342,7 +342,107 @@ Date,Client,Project,Phase,Hours,Task Details,Username
 10/29/2025,Acme Corp,Website Redesign,Testing,6.50,QA testing,jsmith
 ```
 
+## Managing Your Profile
+
+All users (except Guest users) can manage their own profile information, including personal details and passwords. The system provides both a modern Angular interface and a backend profile editor.
+
+### Accessing My Profile
+
+There are multiple ways to access your profile:
+
+**From the Angular Dashboard:**
+
+1. Click the **"My Profile"** card on the dashboard (non-Admin users only)
+2. Or select **"My Profile"** from the side menu
+
+**From the Backend:**
+
+- Navigate to the user menu and select "My Profile"
+
+### Editing Your Profile
+
+The profile editor allows you to update:
+
+- **First Name**: Your first/given name
+- **Last Name**: Your surname/family name
+- **Company**: Your company or organization name
+- **Email Address**: Your email (required for expense management features)
+
+**Note**: Your username, role, and account status cannot be changed through the profile editor. These fields are managed by administrators.
+
+**To Update Your Profile (Angular UI):**
+
+1. Access My Profile from the dashboard or side menu
+2. Modify the fields you want to update
+3. Click **"Update Profile"**
+4. A success message confirms your changes
+5. Click **"Cancel"** to return to the dashboard without saving
+
+**To Update Your Profile (Backend UI):**
+
+1. Access My Profile from the user menu
+2. Modify the fields you want to update
+3. Click **"Update Profile"**
+4. A success message appears at the top of the page
+5. Use the top navigation to return to other pages
+
+### Email Requirement for Expenses
+
+**Important**: You must have an email address configured in your profile to use expense management features:
+
+- The "Add New Expense" button is hidden if no email is configured
+- Expense submissions require email for approval notifications
+- Receipt uploads are linked to your email identity
+
+If you need to track expenses but don't have an email configured, contact your administrator to update your profile.
+
 ## Changing Your Password
+
+All users can change their own password at any time. Passwords expire every 90 days and must meet security requirements.
+
+### Password Requirements
+
+Your new password must:
+
+- Be at least 8 characters long
+- Contain at least one uppercase letter
+- Contain at least one lowercase letter
+- Contain at least one number
+- Contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)
+- Not match your current password
+
+### How to Change Your Password
+
+**From My Profile:**
+
+1. Access your profile (see "Accessing My Profile" above)
+2. Click the **"Update Password"** button
+3. Enter your **Current Password**
+4. Enter your **New Password**
+5. Enter your **Confirm Password** (must match new password)
+6. Click **"Change Password"**
+7. You'll be redirected back to My Profile with a success message
+
+**From the Backend Menu:**
+
+1. Navigate to the user menu
+2. Select "Change Password"
+3. Follow the same steps as above
+
+### Password Expiration
+
+- Passwords expire after **90 days**
+- You'll see a warning message when your password is nearing expiration
+- When expired, you'll be prompted to change it at login
+- The system tracks password history to prevent reuse
+
+### Account Lockout Protection
+
+For security, your account will be locked after **5 consecutive failed login attempts**:
+
+- Locked accounts must be unlocked by an administrator
+- The lockout counter resets after a successful login
+- Contact your administrator if you've been locked out
 
 ---
 

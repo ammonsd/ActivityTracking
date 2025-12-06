@@ -131,6 +131,34 @@ This document provides a comprehensive summary of all technical features, framew
   - Admin unlock capability via User Management UI
   - Visual indicators for locked accounts
 
+### User Profile Management
+
+- **Self-service profile editing** for USER, ADMIN, and EXPENSE_ADMIN roles
+- **Dual UI interfaces**:
+  - **Angular UI**: Modern Material Design profile component (frontend/src/app/components/profile/)
+  - **Backend UI**: Thymeleaf-based profile editor with Bootstrap styling
+- **User-controlled fields**: First name, last name, company, email address
+- **Protected fields**: Username (immutable), role, account status, lock status
+- **Profile access points**:
+  - Angular: "My Profile" card on dashboard and side menu option
+  - Backend: "My Profile" link in user menu
+- **REST API endpoints**:
+  - `GET /api/users/me` - Current user information
+  - `GET /api/users/profile` - Current user's profile for editing
+  - `PUT /api/users/profile` - Update current user's profile
+  - `GET /profile/edit` - Backend Thymeleaf profile editor
+  - `POST /profile/edit` - Backend profile update handler
+- **Security architecture**:
+  - SecurityConfig order-dependent requestMatchers (specific before broad)
+  - Profile endpoints allowed for USER/ADMIN/EXPENSE_ADMIN before general /api/users/** ADMIN restriction
+  - Method-level @PreAuthorize annotations on UserRestController
+  - UserProfileController with role-based @PreAuthorize
+- **Navigation flow**:
+  - Profile update success returns to profile page with confirmation message
+  - Password change redirects back to My Profile after completion
+  - Cancel button returns to dashboard (Angular) or uses top navigation (backend)
+- **Email requirement enforcement**: Email address required for expense management access
+
 ### Password Security
 
 - BCrypt password hashing
@@ -141,6 +169,11 @@ This document provides a comprehensive summary of all technical features, framew
 - **7-day advance warning** for expiring passwords
 - **Expired password enforcement** at login
 - Password expiration warnings displayed in both Spring Boot and Angular UIs
+- **Password change access**:
+  - All authenticated users (USER, ADMIN, EXPENSE_ADMIN) can change own password
+  - Accessed via "Update Password" button in My Profile
+  - Standalone `/change-password` endpoint with role-based security
+  - Redirects back to My Profile after successful password change
 - **GUEST role password restrictions**:
   - GUEST users cannot change their own passwords
   - Password change pages blocked for GUEST role

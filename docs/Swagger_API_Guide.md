@@ -371,6 +371,57 @@ When your access token expires (after 24 hours), use the refresh token:
 | PUT    | `/api/users/{id}` | Update user     | Yes           | ADMIN         |
 | DELETE | `/api/users/{id}` | Delete user     | Yes           | ADMIN         |
 
+### User Profile Management Endpoints (Self-Service)
+
+These endpoints allow authenticated users to view and manage their own profile without administrator privileges.
+
+| Method | Endpoint            | Description                | Auth Required | Role Required                |
+| ------ | ------------------- | -------------------------- | ------------- | ---------------------------- |
+| GET    | `/api/users/me`     | Get current user info      | Yes           | USER, ADMIN, EXPENSE_ADMIN   |
+| GET    | `/api/users/profile`| Get current user's profile | Yes           | USER, ADMIN, EXPENSE_ADMIN   |
+| PUT    | `/api/users/profile`| Update current user's profile | Yes        | USER, ADMIN, EXPENSE_ADMIN   |
+
+**Example: Get Current User Profile**
+
+```bash
+GET /api/users/profile
+```
+
+Response:
+```json
+{
+  "id": 5,
+  "username": "jdoe",
+  "firstname": "John",
+  "lastname": "Doe",
+  "company": "Acme Corp",
+  "email": "jdoe@example.com",
+  "role": "USER",
+  "enabled": true
+}
+```
+
+**Example: Update Current User Profile**
+
+```bash
+PUT /api/users/profile
+Content-Type: application/json
+
+{
+  "firstname": "John",
+  "lastname": "Doe",
+  "company": "Acme Corporation",
+  "email": "jdoe@acme.com"
+}
+```
+
+**Notes:**
+- Users can only update their own profile (authenticated user)
+- Updatable fields: `firstname`, `lastname`, `company`, `email`
+- Protected fields (ignored if provided): `username`, `role`, `enabled`, `accountLocked`, etc.
+- Email address is required for expense management access
+- Changes are immediately reflected in the Angular UI and backend templates
+
 ### Health Check Endpoints
 
 | Method | Endpoint           | Description               | Auth Required |

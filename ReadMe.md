@@ -36,6 +36,19 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 🔒 Users can only modify Draft, Submitted, or Resubmitted status
 - 🚫 Non-admins cannot modify approval/reimbursement fields
 
+### Profile Management
+
+- 👤 **My Profile**: Self-service profile management for non-admin users
+  - **Angular UI**: Modern Material Design profile editor accessible from dashboard and side menu
+  - **Backend UI**: Thymeleaf-based profile editor with success/error notifications
+  - Users can update their own first name, last name, company, and email
+  - Email address required for expense management features
+  - Password changes available via dedicated Change Password page
+  - Profile updates return to My Profile with confirmation message
+  - Password changes redirect back to My Profile after completion
+- 🔐 Secure password management with 90-day expiration policy
+- 🔒 Account lockout protection (5 failed login attempts)
+
 ### General Features
 
 - 🎯 Dynamic dropdown management for clients, projects, phases, and expense types
@@ -148,6 +161,13 @@ Interactive API documentation is available via Swagger UI:
 - `/api/expenses` - Expense CRUD operations, filtering, and status management
 - `/api/expenses/{id}/submit` - Submit expense for approval
 - `/api/expenses/{id}/approve` - Approve expense (Admin/Expense Admin only)
+
+**User Profile Management:**
+
+- `/api/users/me` - Get current user information
+- `/api/users/profile` - Get/update current user's profile (USER, ADMIN, EXPENSE_ADMIN)
+- `/profile/edit` - Backend My Profile page (Thymeleaf UI)
+- `/change-password` - Password change page with redirect to My Profile
 - `/api/expenses/{id}/reject` - Reject expense (Admin/Expense Admin only)
 - `/api/expenses/{id}/reimburse` - Mark as reimbursed (Admin/Expense Admin only)
 - `/api/expenses/pending-approvals` - View pending expenses for approval

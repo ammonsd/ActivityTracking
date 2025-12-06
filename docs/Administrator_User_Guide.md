@@ -117,6 +117,54 @@ As an administrator, you have the ability to view and manage tasks for all users
 
 **Note:** Regular users only see their own tasks and do not have access to this filtering feature.
 
+### User Self-Service Profile Management
+
+All users (except Guest users) can manage their own profile information without administrator intervention. This reduces administrative burden while maintaining security controls.
+
+**What Users Can Edit:**
+
+- First Name
+- Last Name  
+- Company
+- Email Address
+
+**What Users Cannot Edit:**
+
+- Username (immutable)
+- Role (only administrators can change roles)
+- Account Status (enabled/disabled)
+- Account Lock Status
+- Password (changed via separate Change Password page)
+
+**Access Methods:**
+
+Users can access their profile through:
+
+1. **Angular UI**: "My Profile" card on dashboard or side menu (modern Material Design interface)
+2. **Backend UI**: "My Profile" option in user menu (Thymeleaf-based with success/error notifications)
+
+**Password Management:**
+
+- Users can change their own password via the "Update Password" button in My Profile
+- Password changes redirect back to My Profile after completion
+- Passwords must meet security requirements (8+ characters, mixed case, numbers, special characters)
+- Passwords expire every 90 days
+- Account lockout after 5 failed login attempts (administrator must unlock)
+
+**Email Requirement:**
+
+Users must have an email address configured to access expense management features. If a user reports they cannot add expenses, verify their email is populated in their profile.
+
+**When to Edit as Administrator:**
+
+You should edit a user's profile as administrator only when:
+
+- The user is unable to access their profile (account locked, disabled, or Guest role)
+- Changing role assignments
+- Unlocking locked accounts
+- Enabling/disabling accounts
+- Initial user setup before first login
+
 ### Managing Task Activities
 
 Both the Thymeleaf and Angular UIs provide comprehensive task management capabilities. This section covers common operations for administrators and users.
