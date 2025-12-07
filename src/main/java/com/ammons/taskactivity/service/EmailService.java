@@ -392,7 +392,7 @@ public class EmailService {
      */
     private String buildExpenseSubmittedEmailBody(String username, String fullName, Long expenseId,
             String expenseDescription, String amount, String currency, String expenseDate) {
-        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER); // Uses local time
 
         StringBuilder details = new StringBuilder();
         if (fullName != null && !fullName.trim().isEmpty()) {

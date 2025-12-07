@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 
+        LOCAL DEVELOPMENT LOGBACK OVERRIDE
+        
+        This configuration is loaded by logback-spring.xml when SPRING_PROFILES_ACTIVE=local
+        Only overrides settings that differ from production configuration.      
+        All other settings inherited from main logback-spring.xml configuration
+    -->
+    
+    <!-- Include Spring Boot's default configuration -->
+    
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- Define log file path based on environment -->
+    <property name="LOG_PATH" value="${LOG_PATH:-C:/Logs}"/>
+    
+    <!-- Enable/disable file logging via environment variable -->
+    <property name="ENABLE_FILE_LOGGING" value="${ENABLE_FILE_LOGGING:-true}"/>
+    
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- File appender with size-based rolling - 1MB for local testing -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/ActivityTracking.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/ActivityTracking-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>1MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <if condition='property("ENABLE_FILE_LOGGING").equals("true")'>
+            <then>
+                <appender-ref ref="FILE" />
+            </then>
+        </if>
+    </root>
+</configuration>
