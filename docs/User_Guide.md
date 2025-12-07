@@ -525,12 +525,19 @@ Use the filter controls at the top of the expense list to find specific expenses
 1. **Complete Draft Expense**: Ensure all information is correct and receipt is attached
 2. **Submit**: Click **"Submit for Approval"** button
 3. **Status Change**: Expense status changes to "Submitted"
-4. **Wait for Review**: EXPENSE_ADMIN will review and approve or reject
-5. **Email Notification**: You'll receive an email when your expense is approved, rejected, or reimbursed
+4. **Approver Notification**: All configured approvers receive an email notification with expense details
+5. **Wait for Review**: EXPENSE_ADMIN will review and approve or reject
+6. **Email Notification**: You'll receive an email when your expense is approved, rejected, or reimbursed
 
 **Important:** Once submitted, you cannot edit or delete the expense.
 
 **Email Notifications**
+
+When you submit an expense, configured approvers receive an immediate email notification with:
+- Your full name and username
+- Expense ID and description
+- Amount and date
+- Instructions to review in the Approval Queue
 
 After submitting an expense, you'll receive automatic email notifications at each status change:
 - **Approved**: Notifies you the expense is ready for reimbursement processing

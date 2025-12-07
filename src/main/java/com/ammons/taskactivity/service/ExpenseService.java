@@ -455,7 +455,35 @@ public class ExpenseService {
         expense.setLastModified(LocalDateTime.now(ZoneOffset.UTC));
         expense.setLastModifiedBy(expense.getUsername());
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // Send email notification to expense approvers
+        try {
+            Optional<User> userOpt = userService.getUserByUsername(expense.getUsername());
+            String fullName = "";
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                fullName = (user.getFirstname() != null ? user.getFirstname() : "") + " "
+                        + (user.getLastname() != null ? user.getLastname() : "");
+                fullName = fullName.trim();
+            }
+
+            emailService.sendExpenseSubmittedNotification(expense.getUsername(), fullName,
+                    expense.getId(),
+                    expense.getDescription() != null ? expense.getDescription() : "No description",
+                    expense.getAmount() != null ? expense.getAmount().toString() : "0.00",
+                    expense.getCurrency() != null ? expense.getCurrency() : "USD",
+                    expense.getExpenseDate() != null ? expense.getExpenseDate().toString()
+                            : "Unknown");
+
+            logger.info("Expense submission notification sent for expense ID: {}", expense.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send expense submission notification for expense {}: {}",
+                    expense.getId(), e.getMessage(), e);
+            // Don't fail the submission if email fails
+        }
+
+        return savedExpense;
     }
 
     /**

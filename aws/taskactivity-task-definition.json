@@ -67,6 +67,10 @@
                 {
                     "name": "ADMIN_EMAIL",
                     "value": "deanammons@gmail.com"
+                },
+                {
+                    "name": "EXPENSE_APPROVERS",
+                    "value": "deanammons@gmail.com,deanammons48@gmail.com"
                 }
             ],
             "secrets": [

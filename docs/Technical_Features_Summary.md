@@ -67,7 +67,7 @@ This document provides a comprehensive summary of all technical features, framew
 - **Force password update filter** for administrative password resets
 - **Automatic password expiration** with 90-day policy and advance warnings
 - **Account lockout protection** - automatic lockout after 5 failed login attempts
-- **Email notifications** for security events (account lockouts) and expense status changes
+- **Email notifications** for security events (account lockouts), expense submissions, and expense status changes
 - **Email-based authorization** - users must have valid email address to access expense features
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
@@ -104,7 +104,9 @@ This document provides a comprehensive summary of all technical features, framew
 ### Email Notification System
 
 - **Email requirement for expense access** - users must have valid email to access expense features
+- **Expense submission notifications** - emails sent to configured approvers when expenses are submitted
 - **Automatic status notifications** - emails sent when expenses are approved, rejected, or reimbursed
+- **Multiple approver support** - comma-separated list of approver emails in configuration
 - **Status-specific messaging** - custom email content based on status change type
 - **Processor identification** - displays full name of approver/reimbursor in emails
 - **Email validation** - @Email annotation on User entity and DTOs

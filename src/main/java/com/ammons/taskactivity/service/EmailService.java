@@ -66,6 +66,9 @@ public class EmailService {
     @Value("${app.mail.admin-email:admin@taskactivity.com}")
     private String adminEmail;
 
+    @Value("${app.mail.expense-approvers:}")
+    private String expenseApprovers;
+
     @Value("${app.name:Task Activity Management System}")
     private String appName;
 
@@ -325,6 +328,96 @@ public class EmailService {
             logger.error("Failed to send test email", e);
             return false;
         }
+    }
+
+    /**
+     * Send expense submitted notification to approvers.
+     * 
+     * @param username the username of the expense submitter
+     * @param fullName the full name of the user (optional)
+     * @param expenseId the ID of the expense
+     * @param expenseDescription brief description of the expense
+     * @param amount the expense amount
+     * @param currency the currency code (e.g., USD)
+     * @param expenseDate the date of the expense
+     */
+    public void sendExpenseSubmittedNotification(String username, String fullName, Long expenseId,
+            String expenseDescription, String amount, String currency, String expenseDate) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping expense submission notification");
+            return;
+        }
+
+        if (expenseApprovers == null || expenseApprovers.trim().isEmpty()) {
+            logger.warn(
+                    "No expense approvers configured - skipping expense submission notification");
+            return;
+        }
+
+        // Parse comma-separated approver emails
+        String[] approverEmails = expenseApprovers.split(",");
+        if (approverEmails.length == 0) {
+            logger.warn("No valid expense approver emails found");
+            return;
+        }
+
+        String subject = String.format("[%s] New Expense Submitted - %s", appName, expenseId);
+        String body = buildExpenseSubmittedEmailBody(username, fullName, expenseId,
+                expenseDescription, amount, currency, expenseDate);
+
+        // Send to all configured approvers
+        for (String approverEmail : approverEmails) {
+            String email = approverEmail.trim();
+            if (email.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(email, subject, body);
+                } else {
+                    sendEmailViaSmtp(email, subject, body);
+                }
+                logger.info("Expense submission notification sent to {} for expense ID: {}", email,
+                        expenseId);
+            } catch (Exception e) {
+                logger.error("Failed to send expense submission notification to {}: {}", email,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Builds the email body for expense submission notifications.
+     */
+    private String buildExpenseSubmittedEmailBody(String username, String fullName, Long expenseId,
+            String expenseDescription, String amount, String currency, String expenseDate) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder details = new StringBuilder();
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            details.append(String.format("Submitted By:       %s (%s)%n", fullName, username));
+        } else {
+            details.append(String.format("Submitted By:       %s%n", username));
+        }
+        details.append(String.format("Description:        %s%n", expenseDescription));
+        details.append(String.format("Amount:             %s %s%n", amount, currency));
+        details.append(String.format("Expense Date:       %s%n", expenseDate));
+        details.append(String.format("Submitted:          %s", timestamp));
+
+        return String.format("""
+                NEW EXPENSE SUBMITTED FOR APPROVAL
+
+                A new expense has been submitted and is awaiting your review.
+
+                Expense Details:
+                ----------------------------------------
+                %s
+                ----------------------------------------
+
+                This is an automated notification from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
+                """, details.toString(), appName, expenseId, appName);
     }
 
     /**

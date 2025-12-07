@@ -135,7 +135,7 @@ aws secretsmanager create-secret `
 
 **Optional Secrets (for Email Notifications):**
 
-The application supports email notifications for security events (account lockouts). Email can be configured using either SMTP (development) or AWS SES (production).
+The application supports email notifications for security events (account lockouts), expense submissions, and expense status changes. Email can be configured using either SMTP (development) or AWS SES (production).
 
 **Option 1: AWS SES (Recommended for Production)**
 
@@ -146,7 +146,8 @@ AWS SES provides reliable, scalable email delivery without requiring SMTP creden
     {"name": "MAIL_ENABLED", "value": "true"},
     {"name": "MAIL_USE_AWS_SDK", "value": "true"},
     {"name": "MAIL_FROM", "value": "noreply@taskactivitytracker.com"},
-    {"name": "ADMIN_EMAIL", "value": "admin@yourdomain.com"}
+    {"name": "ADMIN_EMAIL", "value": "admin@yourdomain.com"},
+    {"name": "EXPENSE_APPROVERS", "value": "approver1@yourdomain.com,approver2@yourdomain.com"}
 ]
 ```
 

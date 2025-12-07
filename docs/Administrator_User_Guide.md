@@ -346,6 +346,34 @@ ADMIN and EXPENSE_ADMIN users can review and approve submitted expenses:
 
 **Tip**: After applying filters (e.g., Status = Submitted), the filter values are preserved when you edit an expense and return to the list, making it efficient to process multiple expenses in sequence.
 
+### Email Notifications for Expense Submissions
+
+When a user submits an expense (changes status from Draft to Submitted), the system automatically sends an email notification to all configured expense approvers.
+
+**Who Receives Notifications**:
+- All email addresses configured in the `EXPENSE_APPROVERS` environment variable
+- Multiple approvers can be configured using a comma-separated list
+- Default approvers are set during system deployment
+
+**Email Content**:
+- Submitter's full name and username
+- Expense ID
+- Expense description
+- Amount and currency
+- Expense date
+- Submission timestamp
+- Instructions to review in the Approval Queue
+
+**Purpose**:
+- Alerts approvers immediately when expenses need review
+- Provides key expense details without requiring login
+- Includes direct instructions for accessing the Approval Queue
+
+**Configuration**:
+- Contact your system administrator to modify the list of approvers
+- The approver list is managed via environment variables
+- No database changes required to add/remove approvers
+
 ### Email Notifications for Status Changes
 
 When you approve, reject, or reimburse an expense, the system automatically sends an email notification to the expense owner.

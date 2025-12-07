@@ -31,8 +31,9 @@ This guide walks through setting up AWS Simple Email Service (SES) for the Task 
 **Current Application Use Cases:**
 
 -   Account lockout notifications to administrators
+-   Expense submission notifications to configured approvers
+-   Expense status change notifications (approved, rejected, reimbursed)
 -   Password reset emails (future feature)
--   Expense approval notifications (future feature)
 -   System alerts and monitoring
 
 ---
