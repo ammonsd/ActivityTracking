@@ -276,7 +276,11 @@ function Build-AndPushImage {
     
     # Kill any stuck Node.js processes that might interfere with the build
     Write-Info "Checking for stuck Node.js processes..."
-    taskkill /F /IM node.exe >$null 2>&1
+    try {
+        taskkill /F /IM node.exe >$null 2>&1
+    } catch {
+        Write-Info "No Node.js processes found...."
+    }
     
     # Clean Angular build cache to prevent LMDB "Not enough space" errors
     Write-Info "Cleaning Angular build cache..."
