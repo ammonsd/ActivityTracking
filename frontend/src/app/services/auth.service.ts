@@ -14,6 +14,12 @@ export class AuthService {
   private readonly currentUserSubject = new BehaviorSubject<string>('');
   public readonly currentUser$ = this.currentUserSubject.asObservable();
 
+  private readonly userFirstnameSubject = new BehaviorSubject<string>('');
+  public readonly userFirstname$ = this.userFirstnameSubject.asObservable();
+
+  private readonly userLastnameSubject = new BehaviorSubject<string>('');
+  public readonly userLastname$ = this.userLastnameSubject.asObservable();
+
   private readonly userRoleSubject = new BehaviorSubject<string>('');
   public readonly userRole$ = this.userRoleSubject.asObservable();
 
@@ -76,6 +82,8 @@ export class AuthService {
             // Always emit to observables (even if value unchanged, to ensure UI updates)
             this.currentUserSubject.next(response.data.username);
             this.userRoleSubject.next(response.data.role);
+            this.userFirstnameSubject.next(response.data.firstname || '');
+            this.userLastnameSubject.next(response.data.lastname || '');
 
             // Handle password expiring warning
             if (response.data.passwordExpiringWarning) {
@@ -133,6 +141,8 @@ export class AuthService {
                 sessionStorage.setItem('userRole', response.data.role);
                 this.userRoleSubject.next(response.data.role);
                 this.currentUserSubject.next(response.data.username);
+                this.userFirstnameSubject.next(response.data.firstname || '');
+                this.userLastnameSubject.next(response.data.lastname || '');
 
                 // Handle password expiring warning
                 if (response.data.passwordExpiringWarning) {
@@ -159,6 +169,8 @@ export class AuthService {
     sessionStorage.removeItem('userRole');
     this.isAuthenticatedSubject.next(false);
     this.currentUserSubject.next('');
+    this.userFirstnameSubject.next('');
+    this.userLastnameSubject.next('');
     this.userRoleSubject.next('');
     this.passwordExpiringWarningSubject.next('');
   }

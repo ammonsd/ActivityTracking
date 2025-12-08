@@ -40,6 +40,7 @@ export class AppComponent {
   currentDate = new Date();
   passwordExpiringWarning = '';
   canAccessExpenses = false;
+  userDisplayName = '';
 
   constructor(
     public readonly authService: AuthService,
@@ -61,10 +62,25 @@ export class AppComponent {
       next: (username: string) => {
         console.log('AppComponent - Username updated:', username);
         this.currentUser = username;
+        this.updateDisplayName();
         // Re-check expense access when user changes
         if (username) {
           this.checkExpenseAccess();
         }
+      },
+    });
+
+    // Subscribe to firstname changes
+    this.authService.userFirstname$.subscribe({
+      next: () => {
+        this.updateDisplayName();
+      },
+    });
+
+    // Subscribe to lastname changes
+    this.authService.userLastname$.subscribe({
+      next: () => {
+        this.updateDisplayName();
       },
     });
 
@@ -83,6 +99,25 @@ export class AppComponent {
         this.passwordExpiringWarning = warning;
       },
     });
+  }
+
+  updateDisplayName(): void {
+    let firstname = '';
+    let lastname = '';
+
+    this.authService.userFirstname$
+      .subscribe((fn) => (firstname = fn))
+      .unsubscribe();
+    this.authService.userLastname$
+      .subscribe((ln) => (lastname = ln))
+      .unsubscribe();
+
+    if (firstname || lastname) {
+      const fullName = `${firstname} ${lastname}`.trim();
+      this.userDisplayName = `${fullName} (${this.currentUser})`;
+    } else {
+      this.userDisplayName = this.currentUser;
+    }
   }
 
   checkExpenseAccess(): void {
