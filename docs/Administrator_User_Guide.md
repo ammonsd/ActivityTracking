@@ -995,6 +995,225 @@ psql -h <host> -U <username> -d AmmoP1DB -c "SELECT current_database();"
 
 ---
 
+## Database Query Tool (SQL to CSV Export)
+
+### Overview
+
+Administrators can execute custom SQL queries against the database and export results to CSV format using a PowerShell script that calls a secure REST API endpoint. This tool provides a safe way to extract data for reporting and analysis without requiring direct database access.
+
+### Security Features
+
+- **Authentication Required**: Must authenticate with admin credentials
+- **Admin-Only Access**: Only users with ADMIN role can execute queries
+- **SELECT-Only Queries**: Only SELECT statements are allowed (INSERT, UPDATE, DELETE, DROP, etc. are blocked)
+- **Keyword Validation**: Dangerous SQL keywords are detected using word boundary matching
+- **Row Limit**: Results are limited to 10,000 rows to prevent memory issues
+- **No Direct Database Access**: Queries execute through the Spring Boot application API
+
+### Prerequisites
+
+- **For Local Testing**: Spring Boot application running locally (`.\start-local.ps1`)
+- **For AWS/Production**: Application deployed and accessible via Cloudflare Tunnel (https://taskactivitytracker.com)
+- **Admin Credentials**: Valid admin username and password configured in `.env` or `.env.local` file
+- **PowerShell**: Script requires PowerShell 5.1 or higher
+
+### Configuration Files
+
+**`.env` (AWS/Production)**
+```ini
+# API endpoint for AWS deployment (Cloudflare Tunnel)
+API_URL=https://taskactivitytracker.com
+
+# Admin credentials for API authentication
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your-admin-password
+```
+
+**`.env.local` (Local Testing)**
+```ini
+# API endpoint for local testing
+API_URL=http://localhost:8080
+
+# Admin credentials for local API authentication
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=Admin123!
+
+# Database Configuration for local Spring Boot
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=AmmoP1DB
+DB_USERNAME=postgres
+DB_PASSWORD=your-db-password
+```
+
+### Usage
+
+**1. Create a SQL query file** (e.g., `my-query.sql`):
+```sql
+SELECT id, username, email, userrole, created_date 
+FROM users 
+WHERE userrole = 'ADMIN' 
+ORDER BY created_date DESC
+LIMIT 10;
+```
+
+**2. Execute the script:**
+
+```powershell
+# Local testing (uses .env.local if it exists, otherwise .env)
+.\scripts\execute-sql-to-csv-api.ps1 -SqlFile "my-query.sql" -OutputCsv "results.csv"
+
+# Explicitly specify .env file
+.\scripts\execute-sql-to-csv-api.ps1 -SqlFile "my-query.sql" -OutputCsv "results.csv" -EnvFile ".env"
+
+# Override API URL for testing
+.\scripts\execute-sql-to-csv-api.ps1 -SqlFile "my-query.sql" -OutputCsv "results.csv" -ApiUrl "http://localhost:8080"
+```
+
+**3. Results:**
+- CSV file is created with query results
+- File size and row count are displayed
+- CSV includes proper escaping for commas, quotes, and newlines
+
+### Example Queries
+
+**Get all active users:**
+```sql
+SELECT id, username, firstname, lastname, userrole, company, enabled, created_date
+FROM users 
+WHERE enabled = true
+ORDER BY created_date DESC;
+```
+
+**Task hours by user and client:**
+```sql
+SELECT 
+    t.username,
+    t.client,
+    COUNT(*) as task_count,
+    SUM(t.hours) as total_hours
+FROM tasks t
+WHERE t.taskdate >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY t.username, t.client
+ORDER BY total_hours DESC;
+```
+
+**Recent expense submissions:**
+```sql
+SELECT 
+    e.username,
+    e.expense_date,
+    e.expense_type,
+    e.amount,
+    e.currency,
+    e.expense_status,
+    e.created_date
+FROM expenses e
+WHERE e.created_date >= CURRENT_DATE - INTERVAL '7 days'
+ORDER BY e.created_date DESC;
+```
+
+### Table and Column Reference
+
+**Common Tables:**
+- `users` - User accounts (username, firstname, lastname, email, userrole, enabled, created_date)
+- `tasks` - Task activities (username, taskdate, client, project, phase, hours, description)
+- `expenses` - Expense entries (username, expense_date, expense_type, amount, currency, expense_status)
+- `dropdownvalues` - Dropdown configuration (category, subcategory, itemvalue, displayorder, isactive)
+
+**Important Notes:**
+- Column names use lowercase (e.g., `userrole`, `created_date`, not `role`, `created_at`)
+- All tables are in the `public` schema
+- Date columns are `created_date`, `taskdate`, `expense_date` (not `created_at`)
+
+### CSV Format
+
+The exported CSV files follow RFC 4180 standard:
+- **Headers**: Column names from SELECT statement
+- **Comma-Separated**: Fields separated by commas
+- **Quoted Fields**: Values containing commas, quotes, or newlines are wrapped in double quotes
+- **Escaped Quotes**: Double quotes within values are escaped by doubling them (`""`)
+- **UTF-8 Encoding**: Supports international characters
+
+### Error Messages
+
+**Authentication Failed:**
+```
+[ERROR] Authentication failed: (401) Unauthorized
+```
+→ Check admin username and password in `.env` file
+
+**Query Contains Disallowed Keywords:**
+```
+[ERROR] Query execution failed: (400) Bad Request
+Error: Query contains disallowed keywords
+```
+→ Remove INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE, EXEC, EXECUTE, GRANT, or REVOKE from query
+
+**SQL Grammar Error:**
+```
+[ERROR] Query execution failed: (500) Internal Server Error
+Error executing query: bad SQL grammar
+```
+→ Check table/column names (remember: `userrole` not `role`, `created_date` not `created_at`)
+
+**Connection Refused:**
+```
+[ERROR] Query execution failed: Unable to connect to the remote server
+```
+→ Ensure Spring Boot application is running (local) or accessible (AWS)
+
+### API Endpoint Details
+
+**Endpoint:** `POST /api/admin/query/execute`  
+**Authentication:** Bearer token (JWT)  
+**Authorization:** `ADMIN` role required  
+**Request Body:**
+```json
+{
+  "query": "SELECT * FROM users LIMIT 10;"
+}
+```
+
+**Response:** CSV content as plain text with `text/csv` content type
+
+### Best Practices
+
+1. **Test queries locally first** before running against production
+2. **Use LIMIT clauses** to restrict result sizes for large tables
+3. **Filter by date ranges** when querying time-series data
+4. **Save frequently-used queries** as `.sql` files for reuse
+5. **Review column names** from schema.sql to ensure correct syntax
+6. **Keep sensitive data secure** - don't commit `.env` files with passwords to git
+7. **Use descriptive output filenames** including date/purpose (e.g., `user-report-2025-12.csv`)
+
+### Troubleshooting
+
+**Script can't find .env file:**
+```powershell
+# Check current directory
+Get-Location
+
+# Script looks for .env in workspace root (parent of scripts directory)
+# Verify .env exists:
+Test-Path .\.env
+```
+
+**Password prompts every time:**
+```powershell
+# Make sure ADMIN_PASSWORD is set in .env file
+# Script will prompt if password is empty or missing
+```
+
+**Wrong database being queried:**
+```powershell
+# Check which .env file is being used (script shows API URL at startup)
+# Local: http://localhost:8080 → local database
+# AWS: https://taskactivitytracker.com → RDS database
+```
+
+---
+
 ## 12-Factor App Compliance
 
 The Task Activity Management System is designed following the **[12-Factor App methodology](https://12factor.net/)**, a set of best practices for building modern, scalable, cloud-native applications. This section demonstrates how the application adheres to each principle.
