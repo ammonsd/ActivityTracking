@@ -228,8 +228,9 @@ try {
         New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     }
     
-    # Save CSV content
-    $response | Out-File -FilePath $OutputCsv -Encoding UTF8 -NoNewline
+    # Save CSV content (UTF8 without BOM)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($OutputCsv, $response, $utf8NoBom)
     
     if (-not (Test-Path $OutputCsv)) {
         Write-Error "Failed to create output file"
