@@ -17,6 +17,9 @@
 # Usage:
 #   .\setup-ses-tracking.ps1
 #
+# Author: Dean Ammons
+# Date: December 2025
+#
 ###############################################################################
 
 param(

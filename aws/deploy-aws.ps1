@@ -47,6 +47,9 @@
 #   -AdminEmail   : Administrator email address (defaults to ADMIN_EMAIL env var)
 #   -SkipEnvFile  : Skip loading environment variables from .env file
 #
+# Author: Dean Ammons
+# Date: October 2025
+#
 ###############################################################################
 
 param(

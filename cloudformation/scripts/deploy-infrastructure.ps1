@@ -29,7 +29,7 @@
 #   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment dev -Action status
 #
 # Author: Dean Ammons
-# Date: October 28, 2025
+# Date: October 2025
 ###############################################################################
 
 param(
