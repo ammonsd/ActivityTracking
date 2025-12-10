@@ -51,13 +51,6 @@ public class GlobalExceptionHandler {
         if (authentication != null && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getName())) {
 
-            // Don't show warning for GUEST users (they can't change passwords)
-            boolean isGuest = authentication.getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"));
-            if (isGuest) {
-                return null;
-            }
-
             String username = authentication.getName();
             if (userService.isPasswordExpiringSoon(username)) {
                 Long daysUntilExpiration = userService.getDaysUntilExpiration(username);

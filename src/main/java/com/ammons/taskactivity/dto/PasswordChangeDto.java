@@ -23,6 +23,8 @@ public class PasswordChangeDto {
     @NotBlank(message = "Confirm password is required")
     private String confirmNewPassword;
 
+    private boolean forcePasswordUpdate = false;
+
     // Constructors
     public PasswordChangeDto() {}
 
@@ -71,6 +73,14 @@ public class PasswordChangeDto {
 
     public void setConfirmNewPassword(String confirmNewPassword) {
         this.confirmNewPassword = confirmNewPassword;
+    }
+
+    public boolean isForcePasswordUpdate() {
+        return forcePasswordUpdate;
+    }
+
+    public void setForcePasswordUpdate(boolean forcePasswordUpdate) {
+        this.forcePasswordUpdate = forcePasswordUpdate;
     }
 
     // Validation helper

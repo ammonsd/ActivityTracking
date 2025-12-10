@@ -349,8 +349,18 @@ public class UserManagementController {
         }
 
         try {
+            // Change password but don't clear force update flag (clearForceUpdate=false)
             userService.changePassword(passwordChangeDto.getUsername(),
-                    passwordChangeDto.getNewPassword(), true);
+                    passwordChangeDto.getNewPassword(), false);
+
+            // Then set the force password update flag based on admin's choice
+            if (passwordChangeDto.isForcePasswordUpdate()) {
+                user.setForcePasswordUpdate(true);
+                userService.updateUser(user);
+                logger.info("Admin {} set force password update for user: {}",
+                        authentication.getName(), passwordChangeDto.getUsername());
+            }
+
             logger.info("Admin {} successfully changed password for user: {}",
                     authentication.getName(), passwordChangeDto.getUsername());
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,

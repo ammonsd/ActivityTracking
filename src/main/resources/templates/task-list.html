@@ -1,4 +1,4 @@
-T<!DOCTYPE html>
+<!DOCTYPE html>
 <html
     lang="en"
     xmlns:th="http://www.thymeleaf.org"
@@ -444,13 +444,13 @@ T<!DOCTYPE html>
         <div sec:authorize="hasRole('GUEST')" 
              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    padding: 15px 20px;
+                    padding: 12px 20px;
                     margin: 0;
                     text-align: center;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <div style="max-width: 1400px; margin: 0 auto;">
-                <strong style="font-size: 16px;">👋 Welcome, Guest!</strong>
-                <span style="margin-left: 10px; font-size: 14px;">
+                <strong style="font-size: 15px;">👋 Welcome, Guest!</strong>
+                <span style="margin-left: 10px; font-size: 13px;">
                     You can create and edit your own tasks and view the weekly timesheet. 
                     Other features are visible but read-only to allow exposure to the full application functionality.
                 </span>
@@ -493,13 +493,15 @@ T<!DOCTYPE html>
                         title="Expense Tracking"
                         >💰 Expense List</a
                     >
-                    <!-- Manage Users/Profile - All except GUEST: ADMIN goes to user list, others edit own profile -->
+                    <!-- Manage Users/Profile - ADMIN: active manage users, USER/EXPENSE_ADMIN: edit own profile, GUEST: disabled manage users -->
                     <a
-                        th:unless="${#authorization.expression('hasRole(''GUEST'')')}"
-                        th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/task-activity/manage-users} : @{/profile/edit}"
+                        th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/task-activity/manage-users} : (${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/profile/edit})"
                         class="btn btn-info"
-                        th:title="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Manage Users' : 'Edit Profile'"
-                        th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? '👥 Manage Users' : '👤 My Profile'"
+                        th:title="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Manage Users' : (${#authorization.expression('hasRole(''GUEST'')')} ? 'Manage Users (read-only)' : 'Edit Profile')"
+                        th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? '👥 Manage Users' : (${#authorization.expression('hasRole(''GUEST'')')} ? '👥 Manage Users' : '👤 My Profile')"
+                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                     ></a
                     >
                     <!-- Guest Activity - ADMIN only -->

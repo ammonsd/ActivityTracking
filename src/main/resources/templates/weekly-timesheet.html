@@ -207,9 +207,15 @@
             <div class="nav-content">
                 <h1>Task Activity Tracker</h1>
                 <div class="user-info">
-                    <span class="welcome-text">
-                        <span th:text="${userDisplayName}">Username</span>
-                    </span>
+                    <div style="display: inline-flex; align-items: center; gap: 15px;">
+                        <div th:if="${passwordExpiringWarning}"
+                             style="background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 4px; font-size: 13px; border: 1px solid #ffc107;">
+                            <span th:text="${passwordExpiringWarning}"></span>
+                        </div>
+                        <span class="welcome-text">
+                            <span th:text="${userDisplayName}">Username</span>
+                        </span>
+                    </div>
                     <form th:action="@{/logout}" method="post" style="display: inline;">
                         <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
                     </form>
@@ -219,6 +225,7 @@
                         </script>
                     </span>
                 </div>
+                </div>
             </div>
         </nav>
         
@@ -226,13 +233,13 @@
         <div sec:authorize="hasRole('GUEST')" 
              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    padding: 15px 20px;
+                    padding: 12px 20px;
                     margin: 0;
                     text-align: center;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <div style="max-width: 1400px; margin: 0 auto;">
-                <strong style="font-size: 16px;">👋 Welcome, Guest!</strong>
-                <span style="margin-left: 10px; font-size: 14px;">
+                <strong style="font-size: 15px;">👋 Welcome, Guest!</strong>
+                <span style="margin-left: 10px; font-size: 13px;">
                     You can create and edit your own tasks and view the weekly timesheet. 
                     Other features are visible but read-only to allow exposure to the full application functionality.
                 </span>
