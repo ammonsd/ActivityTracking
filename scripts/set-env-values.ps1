@@ -2,12 +2,20 @@
 # Environment Variable Loader
 # 
 # Loads environment variables from a .env file into the current PowerShell session.
-# Supports comments (#), empty lines, and quoted values.
+# Features:
+#	• Supports comments (#) and empty lines
+#	• Handles quoted values (VARIABLE="value" or VARIABLE='value')
+#	• Optional override mode for existing environment variables
+#	• Error handling for missing files
+#	• Graceful warnings instead of failures
 #
 # Usage:
 #   .\set-env-values.ps1
 #   .\set-env-values.ps1 -envFile "path/to/.env"
 #   .\set-env-values.ps1 -overrideExisting $true
+#
+# Author: Dean Ammons
+# Date: December 2025
 #
 ###############################################################################
 

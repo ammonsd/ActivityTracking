@@ -21,6 +21,9 @@
 #   -Username     : Admin username (overrides ADMIN_USERNAME from .env)
 #   -Password     : Admin password (overrides ADMIN_PASSWORD from .env)
 #
+# Author: Dean Ammons
+# Date: December 2025
+#
 ###############################################################################
 
 param(
