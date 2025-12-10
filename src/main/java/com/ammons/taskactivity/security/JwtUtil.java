@@ -3,6 +3,9 @@ package com.ammons.taskactivity.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,7 +27,14 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:taskactivity-secret-key-change-this-in-production-must-be-at-least-256-bits-long}")
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+    private static final String INSECURE_DEFAULT =
+            "taskactivity-secret-key-change-this-in-production-must-be-at-least-256-bits-long";
+    private static final int MINIMUM_KEY_LENGTH = 32; // 256 bits
+    private static final String KEY_GENERATION_HELP =
+            "Generate a secure key: openssl rand -base64 32";
+
+    @Value("${jwt.secret:}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
@@ -32,6 +42,45 @@ public class JwtUtil {
 
     @Value("${jwt.refresh.expiration:604800000}") // 7 days in milliseconds
     private Long refreshExpiration;
+
+    /**
+     * Validate JWT secret configuration on application startup Prevents application from starting
+     * with insecure or missing JWT secret
+     */
+    @PostConstruct
+    public void validateJwtSecret() {
+        if (secret == null || secret.trim().isEmpty()) {
+            logger.error("CRITICAL SECURITY ERROR: JWT secret is not configured!");
+            logger.error("Set the 'jwt.secret' property or JWT_SECRET environment variable.");
+            logger.error(KEY_GENERATION_HELP);
+            throw new IllegalStateException("JWT secret is required but not configured. "
+                    + "Set jwt.secret property or JWT_SECRET environment variable.");
+        }
+
+        if (secret.equals(INSECURE_DEFAULT)) {
+            logger.error(
+                    "CRITICAL SECURITY ERROR: JWT secret is using the default insecure value!");
+            logger.error("This is a serious security vulnerability that allows token forgery.");
+            logger.error(KEY_GENERATION_HELP);
+            throw new IllegalStateException("JWT secret must not use the default value. "
+                    + "Generate a secure random key and set it via jwt.secret property or JWT_SECRET environment variable.");
+        }
+
+        if (secret.getBytes(StandardCharsets.UTF_8).length < MINIMUM_KEY_LENGTH) {
+            logger.error(
+                    "CRITICAL SECURITY ERROR: JWT secret is too short (minimum 256 bits required)!");
+            logger.error("Current length: {} bytes, Required: {} bytes",
+                    secret.getBytes(StandardCharsets.UTF_8).length, MINIMUM_KEY_LENGTH);
+            logger.error(KEY_GENERATION_HELP);
+            throw new IllegalStateException(String.format(
+                    "JWT secret must be at least %d bytes (256 bits). "
+                            + "Current length: %d bytes. Generate a secure random key.",
+                    MINIMUM_KEY_LENGTH, secret.getBytes(StandardCharsets.UTF_8).length));
+        }
+
+        logger.info("JWT secret validation passed - using secure {} byte key",
+                secret.getBytes(StandardCharsets.UTF_8).length);
+    }
 
     /**
      * Extract username from JWT token

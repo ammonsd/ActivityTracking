@@ -1,7 +1,13 @@
+# SECURITY NOTE: Development profiles use environment variables for convenience
+# Environment variables are visible via 'docker inspect' and 'docker exec env'
+# For production deployments, use the 'production' profile which uses Docker secrets
+# See: https://docs.docker.com/engine/swarm/secrets/
+
 services:
     # Application service - STANDARD BUILD (connects to host PostgreSQL)
     # Uses multi-stage Dockerfile (slower ~120s, but self-contained)
     # Usage: docker-compose --profile host-db build && docker-compose --profile host-db up -d
+    # SECURITY: Development only - credentials exposed via environment variables
     app:
         profiles: ["host-db"]
         build: .
@@ -9,6 +15,10 @@ services:
             - "8080:8080"
         environment:
             - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            # SECURITY: Required environment variables
+            - JWT_SECRET=${JWT_SECRET}
+            - APP_ADMIN_INITIAL_PASSWORD=${APP_ADMIN_INITIAL_PASSWORD}
+            # Database configuration
             - DB_USERNAME=${DB_USERNAME}
             - DB_PASSWORD=${DB_PASSWORD}
             # Default to host database connection
@@ -41,6 +51,10 @@ services:
             - "8080:8080"
         environment:
             - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            # SECURITY: Required environment variables
+            - JWT_SECRET=${JWT_SECRET}
+            - APP_ADMIN_INITIAL_PASSWORD=${APP_ADMIN_INITIAL_PASSWORD}
+            # Database configuration
             - DB_USERNAME=${DB_USERNAME}
             - DB_PASSWORD=${DB_PASSWORD}
             # Default to host database connection
@@ -91,6 +105,10 @@ services:
             - "8080:8080"
         environment:
             - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+            # SECURITY: Required environment variables
+            - JWT_SECRET=${JWT_SECRET}
+            - APP_ADMIN_INITIAL_PASSWORD=${APP_ADMIN_INITIAL_PASSWORD}
+            # Database configuration
             - DB_USERNAME=${DB_USERNAME}
             - DB_PASSWORD=${DB_PASSWORD}
             # Override to use containerized database
@@ -121,6 +139,9 @@ services:
             - "8080:8080"
         environment:
             - SPRING_PROFILES_ACTIVE=production
+            # SECURITY: Required environment variables
+            - JWT_SECRET=${JWT_SECRET}
+            - APP_ADMIN_INITIAL_PASSWORD=${APP_ADMIN_INITIAL_PASSWORD}
             # Use Docker secrets for production
             - DB_USERNAME_FILE=/run/secrets/db_username
             - DB_PASSWORD_FILE=/run/secrets/db_password

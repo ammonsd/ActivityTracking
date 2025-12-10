@@ -2,9 +2,24 @@
 
 ## First Time Setup - Admin User
 
+> **🔒 SECURITY REQUIREMENTS:**
+> 
+> Before starting the application, you must configure:
+> 
+> 1. **JWT_SECRET** - Generate a secure 256-bit key:
+>    ```bash
+>    # Generate JWT secret
+>    openssl rand -base64 32
+>    # Add to docker-compose.yml or .env file
+>    ```
+> 
+> 2. **APP_ADMIN_INITIAL_PASSWORD** - Set a secure admin password (12+ chars, mixed case, numbers, special chars)
+>
+> **⚠️ IMPORTANT:** This guide is for **local development only**. Development profiles expose credentials via environment variables (visible with `docker inspect`). For production deployments, use Docker secrets or AWS Secrets Manager.
+
 When you first start the application, an admin user is automatically created:
 - **Username**: `admin`
-- **Password**: `Admin123!` (all environments)
+- **Password**: Set via `APP_ADMIN_INITIAL_PASSWORD` environment variable
 - **Note**: You'll be prompted to change the password on first login
 
 For more details, see [Admin User Setup Guide](ADMIN_USER_SETUP.md).

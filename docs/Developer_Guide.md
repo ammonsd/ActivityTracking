@@ -976,14 +976,32 @@ logging.level.org.springframework.web=DEBUG
 
 ### Environment Variables
 
-| Variable                 | Description         | Default                                   | Required |
-| ------------------------ | ------------------- | ----------------------------------------- | -------- |
-| `DB_USERNAME`            | Database username   | postgres                                  | Yes      |
-| `DB_PASSWORD`            | Database password   | N1ghrd01-1948                             | Yes      |
-| `SPRING_PROFILES_ACTIVE` | Active profile      | default                                   | No       |
-| `SPRING_DATASOURCE_URL`  | Database URL        | jdbc:postgresql://localhost:5432/AmmoP1DB | No       |
-| `ENABLE_FILE_LOGGING`    | Enable file logging | true                                      | No       |
-| `LOG_PATH`               | Log file directory  | C:/Logs (local), /var/log/app (Docker)    | No       |
+> **🔒 CRITICAL SECURITY REQUIREMENTS:**
+> 
+> The application enforces strict security validation on startup:
+> 
+> 1. **JWT_SECRET** - Must be set and cannot use the default value. Application will fail to start if:
+>    - Not configured
+>    - Using the default insecure value
+>    - Less than 256 bits (32 bytes)
+>    
+>    Generate: `openssl rand -base64 32`
+> 
+> 2. **APP_ADMIN_INITIAL_PASSWORD** - Required for production profiles. Must meet complexity requirements:
+>    - Minimum 12 characters
+>    - Include uppercase, lowercase, number, and special character
+>    - Force password change on first login (automatically enforced)
+
+| Variable                       | Description                        | Default                                   | Required       |
+| ------------------------------ | ---------------------------------- | ----------------------------------------- | -------------- |
+| `JWT_SECRET`                   | JWT signing key (256+ bits)        | None (must be set)                        | **Yes**        |
+| `APP_ADMIN_INITIAL_PASSWORD`   | Initial admin password             | None (must be set in production)          | **Yes (prod)** |
+| `DB_USERNAME`                  | Database username                  | postgres                                  | Yes            |
+| `DB_PASSWORD`                  | Database password                  | N1ghrd01-1948                             | Yes            |
+| `SPRING_PROFILES_ACTIVE`       | Active profile                     | default                                   | No             |
+| `SPRING_DATASOURCE_URL`        | Database URL                       | jdbc:postgresql://localhost:5432/AmmoP1DB | No             |
+| `ENABLE_FILE_LOGGING`          | Enable file logging                | true                                      | No             |
+| `LOG_PATH`                     | Log file directory                 | C:/Logs (local), /var/log/app (Docker)    | No             |
 
 ### Database Configuration
 
@@ -3232,16 +3250,19 @@ Swagger UI endpoints are configured for **public access** by default in developm
                 "/swagger-resources/**", "/webjars/**").permitAll()
 ```
 
-**Production Considerations:**
+**Production Security:**
 
-For production environments, you should restrict access to Swagger UI:
+> **🔒 SECURITY NOTE:** Swagger UI is **automatically disabled** in production (AWS profile) to prevent API documentation exposure.
 
-1. **Disable in Production** (`application-aws.properties` or `application-docker.properties`):
+For production environments (`application-aws.properties`):
    
-   ```properties
-   springdoc.swagger-ui.enabled=false
-   springdoc.api-docs.enabled=false
-   ```
+```properties
+# Swagger/OpenAPI disabled in production for security
+springdoc.swagger-ui.enabled=false
+springdoc.api-docs.enabled=false
+```
+
+**Development/Local environments** can keep Swagger enabled for API testing
 
 2. **Or Require Authentication** (modify `SecurityConfig.java`):
    

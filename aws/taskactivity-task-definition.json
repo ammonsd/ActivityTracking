@@ -75,6 +75,10 @@
             ],
             "secrets": [
                 {
+                    "name": "JWT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/jwt/secret:secret::"
+                },
+                {
                     "name": "DB_USERNAME",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:378010131175:secret:taskactivity/database/credentials:username::"
                 },

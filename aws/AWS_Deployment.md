@@ -99,9 +99,37 @@ Edit `taskactivity-task-definition.json` and replace:
 
 ### Step 2: Create AWS Secrets
 
+> **🔒 CRITICAL SECURITY REQUIREMENTS:**
+> 
+> The application enforces strict security requirements and **will fail to start** if the following are not properly configured:
+> 
+> 1. **JWT_SECRET** - Must be set and cannot use the default value. Generate a secure 256-bit key:
+>    ```powershell
+>    # Generate a secure JWT secret (PowerShell)
+>    $jwtSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+>    Write-Host "JWT_SECRET=$jwtSecret"
+>    
+>    # Or use OpenSSL (WSL/Linux/Mac)
+>    openssl rand -base64 32
+>    ```
+> 
+> 2. **APP_ADMIN_INITIAL_PASSWORD** - Must be set via AWS Secrets Manager. Minimum requirements:
+>    - At least 12 characters
+>    - Include uppercase, lowercase, number, and special character
+>    - Will be forced to change on first login
+> 
+> 3. **Swagger/OpenAPI** - Disabled in production (AWS profile) for security
+
 **Required Secrets:**
 
 ```powershell
+# JWT Secret (REQUIRED - CRITICAL)
+# Generate a secure 256-bit key using the command above
+aws secretsmanager create-secret `
+    --name taskactivity/jwt/secret `
+    --description "TaskActivity JWT Secret Key" `
+    --secret-string '{\"secret\":\"YOUR-GENERATED-BASE64-KEY-HERE\"}'
+
 # Database credentials (REQUIRED)
 aws secretsmanager create-secret `
     --name taskactivity/database/credentials `
@@ -109,10 +137,11 @@ aws secretsmanager create-secret `
     --secret-string '{\"username\":\"admin\",\"password\":\"YourSecurePassword\",\"jdbcUrl\":\"jdbc:postgresql://your-rds-endpoint:5432/AmmoP1DB\"}'
 
 # Admin credentials (REQUIRED)
+# Password must be: 12+ chars, uppercase, lowercase, number, special character
 aws secretsmanager create-secret `
     --name taskactivity/admin/credentials `
     --description "TaskActivity Admin Credentials" `
-    --secret-string '{\"password\":\"YourAdminPassword\"}'
+    --secret-string '{\"password\":\"YourSecureAdminPassword123!\"}'
 ```
 
 **Optional Secrets (for Cloudflare Tunnel):**
@@ -465,6 +494,10 @@ The following environment variables are configured in the task definition:
 -   `STORAGE_S3_BUCKET=taskactivity-receipts-prod` - S3 bucket for receipts
 -   `STORAGE_S3_REGION=us-east-1` - S3 bucket region
 
+### Security Configuration (from Secrets Manager)
+
+-   `JWT_SECRET` - **REQUIRED** - JWT signing key (minimum 256 bits). Application will fail to start if not set or using default value.
+
 ### Database Configuration (from Secrets Manager)
 
 -   `DB_USERNAME` - Database username
@@ -473,7 +506,7 @@ The following environment variables are configured in the task definition:
 
 ### Admin Configuration (from Secrets Manager)
 
--   `ADMIN_PASSWORD` - Admin user password
+-   `APP_ADMIN_INITIAL_PASSWORD` - **REQUIRED** - Initial admin password (minimum 12 chars, must include uppercase, lowercase, number, and special character)
 
 ### Cloudflare Tunnel Configuration (from Secrets Manager)
 
