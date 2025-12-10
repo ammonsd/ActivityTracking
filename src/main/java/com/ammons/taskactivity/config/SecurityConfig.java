@@ -4,6 +4,7 @@ import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.security.JwtAuthenticationFilter;
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -47,6 +49,14 @@ public class SecurityConfig {
     private static final String USER_ROLE = "USER";
     private static final String GUEST_ROLE = "GUEST";
     private static final String CONTENT_TYPE_JSON = "application/json";
+
+    /**
+     * CORS allowed origins - configurable via environment variable. Defaults to localhost ports for
+     * development. For production, set CORS_ALLOWED_ORIGINS environment variable with explicit
+     * origins. Example: CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+     */
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,http://localhost:8080}")
+    private String allowedOrigins;
 
     private final UserDetailsServiceImpl userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -338,10 +348,22 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Configures CORS with explicit allowed origins from environment variable. Uses
+     * setAllowedOrigins() with explicit origin list instead of wildcard patterns to prevent CSRF
+     * attacks when credentials are enabled.
+     * 
+     * @return CorsConfigurationSource with secure CORS settings
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        // Parse allowed origins from comma-separated string
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+
+        // Use explicit origins instead of wildcard patterns for security
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
