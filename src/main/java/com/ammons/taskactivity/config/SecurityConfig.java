@@ -353,6 +353,9 @@ public class SecurityConfig {
      * setAllowedOrigins() with explicit origin list instead of wildcard patterns to prevent CSRF
      * attacks when credentials are enabled.
      * 
+     * Special handling: - If origins contains "*", use setAllowedOriginPatterns() for development -
+     * Otherwise, use setAllowedOrigins() for production security
+     * 
      * @return CorsConfigurationSource with secure CORS settings
      */
     @Bean
@@ -362,8 +365,18 @@ public class SecurityConfig {
         // Parse allowed origins from comma-separated string
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
 
-        // Use explicit origins instead of wildcard patterns for security
-        configuration.setAllowedOrigins(origins);
+        // Trim whitespace from each origin
+        origins = origins.stream().map(String::trim).toList();
+
+        // Check if wildcard pattern is used (for development/testing only)
+        if (origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"))) {
+                // Use pattern matching for development - WARNING: Less secure
+                configuration.setAllowedOriginPatterns(origins);
+        } else {
+                // Use explicit origins for production security
+                configuration.setAllowedOrigins(origins);
+    }
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
