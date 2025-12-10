@@ -167,13 +167,17 @@ class UserServiceTest {
         // Arrange
         String username = "testuser";
         String newPassword = "NewValid123!"; // Updated to meet new requirements
-        String encodedPassword = "encodedNewPassword";
-        User user = new User(username, "oldPassword", Role.USER);
+        String encodedOldPassword = "encodedOldPassword";
+        String encodedNewPassword = "encodedNewPassword";
+        User user = new User(username, encodedOldPassword, Role.USER);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
+        when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
         when(userRepository.save(any(User.class))).thenReturn(user);
-        when(passwordEncoder.matches(newPassword, encodedPassword)).thenReturn(true);
+        // Mock that new password does NOT match current password (password reuse check)
+        when(passwordEncoder.matches(newPassword, encodedOldPassword)).thenReturn(false);
+        // Mock that original password hash is null (no session history)
+        when(passwordHistoryService.getOriginalPasswordHash(username)).thenReturn(null);
 
         // Act - Test the 3-parameter method directly (where the actual logic is)
         // Pass false for clearForceUpdate, so forcePasswordUpdate should remain at its default
@@ -185,8 +189,9 @@ class UserServiceTest {
                                                                    // change, once for verification
         verify(passwordEncoder).encode(newPassword);
         verify(userRepository).save(user);
-        verify(passwordEncoder).matches(newPassword, encodedPassword);
-        assertEquals(encodedPassword, user.getPassword());
+        verify(passwordEncoder).matches(newPassword, encodedOldPassword);
+        verify(passwordHistoryService).getOriginalPasswordHash(username);
+        assertEquals(encodedNewPassword, user.getPassword());
         assertTrue(user.isForcePasswordUpdate()); // Should still be true since we passed false for
                                                   // clearForceUpdate
     }
