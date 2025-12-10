@@ -147,7 +147,13 @@ Users can access their profile through:
 
 - Users can change their own password via the "Update Password" button in My Profile
 - Password changes redirect back to My Profile after completion
-- Passwords must meet security requirements (8+ characters, mixed case, numbers, special characters)
+- Passwords must meet security requirements:
+  - Minimum 10 characters
+  - At least 1 uppercase letter
+  - At least 1 numeric digit
+  - At least 1 special character (+&%$#@!~)
+  - Not contain more than 2 consecutive identical characters
+  - Not be the same as the current password
 - Passwords expire every 90 days
 - Account lockout after 5 failed login attempts (administrator must unlock)
 

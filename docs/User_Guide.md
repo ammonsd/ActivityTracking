@@ -404,11 +404,11 @@ All users can change their own password at any time. Passwords expire every 90 d
 
 Your new password must:
 
-- Be at least 8 characters long
+- Be at least 10 characters long
 - Contain at least one uppercase letter
-- Contain at least one lowercase letter
 - Contain at least one number
-- Contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)
+- Contain at least one special character (+&%$#@!~)
+- Not contain more than 2 consecutive identical characters
 - Not match your current password
 
 ### How to Change Your Password
@@ -623,6 +623,8 @@ Your new password must meet these requirements:
 2. ✅ **At least 1 uppercase letter** (A-Z)
 3. ✅ **At least 1 number** (0-9)
 4. ✅ **At least 1 special character** from: `+ & % $ # @ ! ~`
+5. ✅ **Not contain more than 2 consecutive identical characters** (e.g., "aaa" is not allowed)
+6. ✅ **Not be the same as your current password**
 
 ### How to Change Your Password (Regular Users)
 

@@ -26,6 +26,8 @@ public final class ValidationConstants {
     public static final String DIGIT_PATTERN = ".*\\d.*";
     public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~].*";
     public static final String ALLOWED_SPECIAL_CHARS = "+&%$#@!~";
+    // Pattern to detect more than 2 consecutive identical characters
+    public static final String CONSECUTIVE_CHARS_PATTERN = "(.)\\1{2,}";
 
     // Name validation
     public static final int FIRSTNAME_MAX_LENGTH = 50;
@@ -56,6 +58,12 @@ public final class ValidationConstants {
             "Password must contain at least 1 numeric digit";
     public static final String PASSWORD_SPECIAL_CHAR_MSG =
             "Password must contain at least 1 special character (" + ALLOWED_SPECIAL_CHARS + ")";
+    public static final String PASSWORD_CONSECUTIVE_CHARS_MSG =
+                    "Password cannot contain more than 2 consecutive identical characters";
+    public static final String PASSWORD_REUSE_CURRENT_MSG =
+                    "New password cannot be the same as your current password";
+    public static final String PASSWORD_REUSE_SESSION_MSG =
+                    "New password cannot be the same as your original password from this session";
     public static final String LASTNAME_NULL_OR_EMPTY_MSG = "Last name cannot be null or empty";
     public static final String ROLE_NULL_MSG = "Role cannot be null";
 }

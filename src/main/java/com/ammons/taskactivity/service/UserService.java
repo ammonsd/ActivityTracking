@@ -32,14 +32,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidationService passwordValidationService;
     private final LoginAuditService loginAuditService;
+    private final PasswordHistoryService passwordHistoryService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
             PasswordValidationService passwordValidationService,
-            LoginAuditService loginAuditService) {
+            LoginAuditService loginAuditService, PasswordHistoryService passwordHistoryService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordValidationService = passwordValidationService;
         this.loginAuditService = loginAuditService;
+        this.passwordHistoryService = passwordHistoryService;
     }
 
     public List<User> getAllUsers() {
@@ -270,6 +272,23 @@ public class UserService {
             logger.warn("Password change attempted for non-existent user: {}", username);
             return new IllegalArgumentException("User not found");
         });
+
+        // Check if new password matches current password
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            logger.warn("Password change failed: new password same as current for user: {}",
+                    username);
+            throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_CURRENT_MSG);
+        }
+
+        // Check if new password matches original password from this session
+        String originalPasswordHash = passwordHistoryService.getOriginalPasswordHash(username);
+        if (originalPasswordHash != null
+                && passwordEncoder.matches(newPassword, originalPasswordHash)) {
+            logger.warn(
+                    "Password change failed: new password same as original session password for user: {}",
+                    username);
+            throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_SESSION_MSG);
+        }
 
         logger.debug("Found user for password change: id={}, username={}, currentForceUpdate={}",
                 user.getId(), user.getUsername(), user.isForcePasswordUpdate());

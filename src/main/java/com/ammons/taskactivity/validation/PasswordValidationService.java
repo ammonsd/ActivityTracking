@@ -4,6 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 /**
  * Service for validating password strength and requirements.
  *
@@ -14,6 +17,8 @@ import org.springframework.stereotype.Component;
 public class PasswordValidationService {
 
     private static final Logger logger = LoggerFactory.getLogger(PasswordValidationService.class);
+    private static final Pattern CONSECUTIVE_CHARS_PATTERN =
+            Pattern.compile(ValidationConstants.CONSECUTIVE_CHARS_PATTERN);
 
     /**
      * Validates that a password meets the required strength criteria.
@@ -44,6 +49,13 @@ public class PasswordValidationService {
         if (!password.matches(ValidationConstants.SPECIAL_CHAR_PATTERN)) {
             logger.warn("Password validation failed: no special character");
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_SPECIAL_CHAR_MSG);
+        }
+
+        Matcher consecutiveMatcher = CONSECUTIVE_CHARS_PATTERN.matcher(password);
+        if (consecutiveMatcher.find()) {
+            logger.warn(
+                    "Password validation failed: contains more than 2 consecutive identical characters");
+            throw new IllegalArgumentException(ValidationConstants.PASSWORD_CONSECUTIVE_CHARS_MSG);
         }
 
         logger.debug("Password validation successful");

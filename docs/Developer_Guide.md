@@ -1898,6 +1898,8 @@ export APP_ADMIN_INITIAL_PASSWORD=securePassword123!
    - At least 1 uppercase letter
    - At least 1 numeric digit
    - At least 1 special character from: `+&%$#@!~`
+   - Not contain more than 2 consecutive identical characters
+   - Not be the same as the current password
 4. **Enable password change enforcement** to require users to change initial passwords on first login
 
 **Example - Production Deployment:**

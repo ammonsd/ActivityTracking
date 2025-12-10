@@ -49,19 +49,22 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final com.ammons.taskactivity.service.LoginAuditService loginAuditService;
     private final com.ammons.taskactivity.service.GeoIpService geoIpService;
     private final com.ammons.taskactivity.service.EmailService emailService;
+    private final com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService;
 
     public CustomAuthenticationSuccessHandler(UserRepository userRepository,
             UserDetailsServiceImpl userDetailsService,
             @Lazy com.ammons.taskactivity.service.UserService userService,
             com.ammons.taskactivity.service.LoginAuditService loginAuditService,
             com.ammons.taskactivity.service.GeoIpService geoIpService,
-            com.ammons.taskactivity.service.EmailService emailService) {
+            com.ammons.taskactivity.service.EmailService emailService,
+            com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginAuditService = loginAuditService;
         this.geoIpService = geoIpService;
         this.emailService = emailService;
+        this.passwordHistoryService = passwordHistoryService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
         setAlwaysUseDefaultTargetUrl(false);
@@ -105,6 +108,13 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             userDetailsService.updateLastLoginTime(username);
 
             Optional<User> userOptional = userRepository.findByUsername(username);
+
+            // Store original password hash for this session
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                passwordHistoryService.storeOriginalPassword(username, user.getPassword());
+                log.debug("Stored original password hash for user: {}", username);
+            }
 
             // Send email notification if GUEST role user logs in
             if (userOptional.isPresent()) {
