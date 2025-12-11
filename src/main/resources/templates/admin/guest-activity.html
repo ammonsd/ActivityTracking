@@ -255,16 +255,17 @@
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.startupTime) {
-                        // Parse server's LocalDateTime as local time
+                        // Parse server's LocalDateTime as UTC (AWS server is in UTC)
+                        // Then convert to user's local timezone for display
                         const dateTimeParts = data.startupTime.split(/[T\-\:\.]/).map(Number);
-                        const startupDate = new Date(
+                        const startupDate = new Date(Date.UTC(
                             dateTimeParts[0], // year
                             dateTimeParts[1] - 1, // month (0-indexed)
                             dateTimeParts[2], // day
                             dateTimeParts[3], // hour
                             dateTimeParts[4], // minute
                             dateTimeParts[5] || 0 // second
-                        );
+                        ));
                         const formattedDate = startupDate.toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "short",
