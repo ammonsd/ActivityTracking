@@ -45,23 +45,27 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
         Authentication result = super.authenticate(authentication);
         log.info("Parent authentication succeeded for user: {}", username);
 
-        // After successful authentication, check if this is a GUEST user with expired password
+        // After successful authentication, check if this is a GUEST user with expired password or
+        // forced update
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            log.info("User '{}' found with role: {}, expirationDate: {}", username, user.getRole(),
-                    user.getExpirationDate());
+            log.info("User '{}' found with role: {}, expirationDate: {}, forcePasswordUpdate: {}",
+                    username, user.getRole(), user.getExpirationDate(),
+                    user.isForcePasswordUpdate());
 
             if (user.getRole() == Role.GUEST) {
                 boolean expired = isPasswordExpired(user);
-                log.info("GUEST user '{}' password expired: {}", username, expired);
+                boolean forcedUpdate = user.isForcePasswordUpdate();
+                log.info("GUEST user '{}' password expired: {}, forced update: {}", username,
+                        expired, forcedUpdate);
 
-                if (expired) {
+                if (expired || forcedUpdate) {
                     log.warn(
-                            "Authentication rejected: GUEST user '{}' has expired password and cannot change it",
+                            "Authentication rejected: GUEST user '{}' requires password update but cannot change it",
                             username);
                     throw new GuestPasswordExpiredException(
-                            "Password has expired. Contact system administrator.");
+                            "Password requires update. Contact system administrator.");
                 }
             }
         }

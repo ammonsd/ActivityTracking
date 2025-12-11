@@ -216,7 +216,7 @@
                 </div>
             </div>
 
-            <h2>Recent Login Activity</h2>
+            <h2 id="activityHeader">Recent Login Activity</h2>
             <div id="auditTableContainer">
                 <div class="loading">Loading audit data...</div>
             </div>
@@ -250,6 +250,37 @@
         </div>
 
         <script>
+            // Fetch and display deployment/startup date
+            fetch("/api/health/startup")
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.startupTime) {
+                        // Parse server's LocalDateTime as local time
+                        const dateTimeParts = data.startupTime.split(/[T\-\:\.]/).map(Number);
+                        const startupDate = new Date(
+                            dateTimeParts[0], // year
+                            dateTimeParts[1] - 1, // month (0-indexed)
+                            dateTimeParts[2], // day
+                            dateTimeParts[3], // hour
+                            dateTimeParts[4], // minute
+                            dateTimeParts[5] || 0 // second
+                        );
+                        const formattedDate = startupDate.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        });
+                        document.getElementById("activityHeader").textContent = `Login Activity Since Last Deployment (${formattedDate})`;
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error loading startup time:", error);
+                    // Fallback to generic text if startup time can't be fetched
+                    document.getElementById("activityHeader").textContent = "Login Activity Since Last Deployment";
+                });
+
             // Fetch login audit data from API
             fetch("/api/users/login-audit?username=guest&limit=100")
                 .then((response) => response.json())

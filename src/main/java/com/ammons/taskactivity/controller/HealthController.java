@@ -22,6 +22,8 @@ import java.util.Map;
 @RequestMapping("/api/health")
 public class HealthController {
 
+    private static final LocalDateTime STARTUP_TIME = LocalDateTime.now();
+
     @Autowired
     private DataSource dataSource;
 
@@ -42,6 +44,9 @@ public class HealthController {
             health.put("application", "Task Activity Management API");
             health.put("version", "1.0.0");
             health.put("authentication", "Windows Authentication");
+            health.put("startupTime", STARTUP_TIME);
+            health.put("uptime",
+                    java.time.Duration.between(STARTUP_TIME, LocalDateTime.now()).toString());
 
             return ResponseEntity.ok(health);
 
@@ -58,5 +63,14 @@ public class HealthController {
     @GetMapping("/simple")
     public ResponseEntity<String> simpleHealth() {
         return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/startup")
+    public ResponseEntity<Map<String, Object>> getStartupInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("startupTime", STARTUP_TIME);
+        info.put("uptime",
+                java.time.Duration.between(STARTUP_TIME, LocalDateTime.now()).toString());
+        return ResponseEntity.ok(info);
     }
 }
