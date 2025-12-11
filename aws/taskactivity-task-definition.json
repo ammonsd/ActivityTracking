@@ -34,7 +34,7 @@
                 },
                 {
                     "name": "CORS_ALLOWED_ORIGINS",
-                    "value": "https://yourdomain.com,https://www.yourdomain.com"
+                    "value": "https://*.taskactivitytracker.com,http://*.taskactivitytracker.com,https://taskactivitytracker.com,http://taskactivitytracker.com"
                 },
                 {
                     "name": "SWAGGER_SERVER_URL",

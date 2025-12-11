@@ -368,13 +368,18 @@ public class SecurityConfig {
         // Trim whitespace from each origin
         origins = origins.stream().map(String::trim).toList();
 
+        // Log configured origins for debugging
+        System.out.println("[CORS] Configured origins: " + origins);
+
         // Check if wildcard pattern is used (for development/testing only)
         if (origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"))) {
                 // Use pattern matching for development - WARNING: Less secure
                 configuration.setAllowedOriginPatterns(origins);
+            System.out.println("[CORS] Using setAllowedOriginPatterns for wildcard support");
         } else {
                 // Use explicit origins for production security
                 configuration.setAllowedOrigins(origins);
+            System.out.println("[CORS] Using setAllowedOrigins for explicit origin list");
     }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
