@@ -1730,7 +1730,7 @@ The application defines custom configuration properties that extend beyond Sprin
     {
       "name": "cors.allowed-origins",
       "type": "java.lang.String",
-      "description": "Allowed origins for CORS requests",
+      "description": "Allowed origins for CORS requests. Supports wildcard patterns (e.g., https://*.example.com) for subdomain matching. Multiple origins can be comma-separated.",
       "defaultValue": "https://yourdomain.com"
     },
     {

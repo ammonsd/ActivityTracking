@@ -95,7 +95,11 @@ Edit `taskactivity-task-definition.json` and replace:
 
 -   `ACCOUNT_ID` - Your AWS account ID
 -   `REGION` - Your AWS region (e.g., `us-east-1`)
--   Update CORS_ALLOWED_ORIGINS with your domain
+-   Update `CORS_ALLOWED_ORIGINS` with your domain:
+    -   **Wildcard subdomains**: Use `https://*.yourdomain.com` to allow all subdomains
+    -   **Specific domains**: Use `https://yourdomain.com,https://www.yourdomain.com`
+    -   **Example**: `https://*.taskactivitytracker.com,https://taskactivitytracker.com`
+    -   **Note**: The application automatically detects wildcard patterns (`*`) and uses `setAllowedOriginPatterns()` instead of `setAllowedOrigins()`
 
 ### Step 2: Create AWS Secrets
 
