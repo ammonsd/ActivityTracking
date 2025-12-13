@@ -122,13 +122,36 @@ public class EmailService {
             return;
         }
 
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No admin email configured - skipping account lockout notification for user: {}",
+                    username);
+            return;
+        }
+
         String subject = String.format("[%s] Account Locked: %s", appName, username);
         String body = buildLockoutEmailBody(username, fullName, failedAttempts, ipAddress);
 
-        if (useAwsSdk && sesClient != null) {
-            sendEmailViaAwsSdk(adminEmail, subject, body);
-        } else {
-            sendEmailViaSmtp(adminEmail, subject, body);
+        // Parse comma-separated admin emails
+        String[] adminEmails = adminEmail.split(",");
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Account lockout notification sent to {} for user: {}", trimmedEmail,
+                        username);
+            } catch (Exception e) {
+                logger.error("Failed to send lockout notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
         }
     }
 
@@ -200,13 +223,36 @@ public class EmailService {
             return;
         }
 
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No admin email configured - skipping GUEST login notification for user: {}",
+                    username);
+            return;
+        }
+
         String subject = String.format("[%s] GUEST User Login", appName);
         String body = buildGuestLoginEmailBody(username, fullName, ipAddress, location);
 
-        if (useAwsSdk && sesClient != null) {
-            sendEmailViaAwsSdk(adminEmail, subject, body);
-        } else {
-            sendEmailViaSmtp(adminEmail, subject, body);
+        // Parse comma-separated admin emails
+        String[] adminEmails = adminEmail.split(",");
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("GUEST login notification sent to {} for user: {}", trimmedEmail,
+                        username);
+            } catch (Exception e) {
+                logger.error("Failed to send GUEST login notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
         }
     }
 
@@ -308,26 +354,46 @@ public class EmailService {
             return false;
         }
 
-        String method = useAwsSdk ? "AWS SES SDK" : "SMTP";
-        String subject = String.format("[%s] Test Email", appName);
-        String body = String.format(
-                "This is a test email to verify email configuration is working correctly.\n\n"
-                        + "Email method: %s\n" + "From: %s\n" + "To: %s\n" + "AWS Region: %s\n"
-                        + "Timestamp: %s",
-                method, fromAddress, adminEmail, awsRegion,
-                LocalDateTime.now().format(DATE_FORMATTER));
-
-        try {
-            if (useAwsSdk && sesClient != null) {
-                sendEmailViaAwsSdk(adminEmail, subject, body);
-            } else {
-                sendEmailViaSmtp(adminEmail, subject, body);
-            }
-            return true;
-        } catch (Exception e) {
-            logger.error("Failed to send test email", e);
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn("No admin email configured - cannot send test email");
             return false;
         }
+
+        String method = useAwsSdk ? "AWS SES SDK" : "SMTP";
+        String subject = String.format("[%s] Test Email", appName);
+
+        // Parse comma-separated admin emails
+        String[] adminEmails = adminEmail.split(",");
+        boolean allSuccessful = true;
+
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            String body = String.format(
+                    "This is a test email to verify email configuration is working correctly.\n\n"
+                            + "Email method: %s\n" + "From: %s\n" + "To: %s\n" + "AWS Region: %s\n"
+                            + "Timestamp: %s",
+                    method, fromAddress, trimmedEmail, awsRegion,
+                    LocalDateTime.now().format(DATE_FORMATTER));
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Test email sent successfully to {}", trimmedEmail);
+            } catch (Exception e) {
+                logger.error("Failed to send test email to {}: {}", trimmedEmail, e.getMessage(),
+                        e);
+                allSuccessful = false;
+            }
+        }
+
+        return allSuccessful;
     }
 
     /**
