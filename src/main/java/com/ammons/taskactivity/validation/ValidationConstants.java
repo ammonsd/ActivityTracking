@@ -60,6 +60,8 @@ public final class ValidationConstants {
             "Password must contain at least 1 special character (" + ALLOWED_SPECIAL_CHARS + ")";
     public static final String PASSWORD_CONSECUTIVE_CHARS_MSG =
                     "Password cannot contain more than 2 consecutive identical characters";
+    public static final String PASSWORD_CONTAINS_USERNAME_MSG =
+                    "Password cannot contain the username";
     public static final String PASSWORD_REUSE_CURRENT_MSG =
                     "New password cannot be the same as your current password";
     public static final String PASSWORD_REUSE_SESSION_MSG =

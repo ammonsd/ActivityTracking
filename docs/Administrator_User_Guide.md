@@ -153,6 +153,7 @@ Users can access their profile through:
   - At least 1 numeric digit
   - At least 1 special character (+&%$#@!~)
   - Not contain more than 2 consecutive identical characters
+  - Not contain the username (case-insensitive)
   - Not be the same as the current password
 - Passwords expire every 90 days
 - Account lockout after 5 failed login attempts (administrator must unlock)

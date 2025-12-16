@@ -27,6 +27,17 @@ public class PasswordValidationService {
      * @throws IllegalArgumentException if password doesn't meet requirements
      */
     public void validatePasswordStrength(String password) {
+        validatePasswordStrength(password, null);
+    }
+
+    /**
+     * Validates that a password meets the required strength criteria.
+     *
+     * @param password the password to validate
+     * @param username the username to check against (optional)
+     * @throws IllegalArgumentException if password doesn't meet requirements
+     */
+    public void validatePasswordStrength(String password, String username) {
         if (password == null || password.isEmpty()) {
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_NULL_OR_EMPTY_MSG);
         }
@@ -58,6 +69,14 @@ public class PasswordValidationService {
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_CONSECUTIVE_CHARS_MSG);
         }
 
+        if (username != null && !username.isEmpty()) {
+            if (password.toLowerCase().contains(username.toLowerCase())) {
+                logger.warn("Password validation failed: contains username");
+                throw new IllegalArgumentException(
+                        ValidationConstants.PASSWORD_CONTAINS_USERNAME_MSG);
+            }
+        }
+
         logger.debug("Password validation successful");
     }
 
@@ -68,8 +87,19 @@ public class PasswordValidationService {
      * @return true if password is valid, false otherwise
      */
     public boolean isPasswordValid(String password) {
+        return isPasswordValid(password, null);
+    }
+
+    /**
+     * Checks if a password meets all strength requirements without throwing exceptions.
+     *
+     * @param password the password to check
+     * @param username the username to check against (optional)
+     * @return true if password is valid, false otherwise
+     */
+    public boolean isPasswordValid(String password, String username) {
         try {
-            validatePasswordStrength(password);
+            validatePasswordStrength(password, username);
             return true;
         } catch (IllegalArgumentException e) {
             return false;

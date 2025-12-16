@@ -409,6 +409,7 @@ Your new password must:
 - Contain at least one number
 - Contain at least one special character (+&%$#@!~)
 - Not contain more than 2 consecutive identical characters
+- Not contain the username (case-insensitive)
 - Not match your current password
 
 ### How to Change Your Password
@@ -624,7 +625,8 @@ Your new password must meet these requirements:
 3. ✅ **At least 1 number** (0-9)
 4. ✅ **At least 1 special character** from: `+ & % $ # @ ! ~`
 5. ✅ **Not contain more than 2 consecutive identical characters** (e.g., "aaa" is not allowed)
-6. ✅ **Not be the same as your current password**
+6. ✅ **Not contain the username** (case-insensitive)
+7. ✅ **Not be the same as your current password**
 
 ### How to Change Your Password (Regular Users)
 

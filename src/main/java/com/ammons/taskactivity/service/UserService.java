@@ -140,8 +140,8 @@ public class UserService {
             throw new IllegalArgumentException(ValidationConstants.USERNAME_LENGTH_MSG);
         }
 
-        // Password strength validation
-        passwordValidationService.validatePasswordStrength(password);
+        // Password strength validation (including username check)
+        passwordValidationService.validatePasswordStrength(password, username);
 
         // Check if username already exists
         if (userRepository.existsByUsername(username)) {
@@ -232,13 +232,13 @@ public class UserService {
             throw new IllegalArgumentException("New password cannot be null or empty");
         }
 
-        // Password strength validation
-        passwordValidationService.validatePasswordStrength(newPassword);
-
         User user = userRepository.findByUsername(username).orElseThrow(() -> {
             logger.warn("Password change attempted for non-existent user: {}", username);
             return new IllegalArgumentException("User not found");
         });
+
+        // Password strength validation (including username check)
+        passwordValidationService.validatePasswordStrength(newPassword, username);
 
         logger.debug("Found user for password change: id={}, username={}, currentForceUpdate={}",
                 user.getId(), user.getUsername(), user.isForcePasswordUpdate());
@@ -265,13 +265,13 @@ public class UserService {
             throw new IllegalArgumentException("New password cannot be null or empty");
         }
 
-        // Password strength validation
-        passwordValidationService.validatePasswordStrength(newPassword);
-
         User user = userRepository.findByUsername(username).orElseThrow(() -> {
             logger.warn("Password change attempted for non-existent user: {}", username);
             return new IllegalArgumentException("User not found");
         });
+
+        // Password strength validation (including username check)
+        passwordValidationService.validatePasswordStrength(newPassword, username);
 
         // Check if new password matches current password
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
