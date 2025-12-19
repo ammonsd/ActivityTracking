@@ -17,6 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,6 +38,8 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+        private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     // URL Constants
     private static final String API_PATTERN = "/api/**";
@@ -369,17 +373,17 @@ public class SecurityConfig {
         origins = origins.stream().map(String::trim).toList();
 
         // Log configured origins for debugging
-        System.out.println("[CORS] Configured origins: " + origins);
+        logger.info("[CORS] Configured origins: {}", origins);
 
         // Check if wildcard pattern is used (for development/testing only)
         if (origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"))) {
                 // Use pattern matching for development - WARNING: Less secure
                 configuration.setAllowedOriginPatterns(origins);
-            System.out.println("[CORS] Using setAllowedOriginPatterns for wildcard support");
+                logger.info("[CORS] Using setAllowedOriginPatterns for wildcard support");
         } else {
                 // Use explicit origins for production security
                 configuration.setAllowedOrigins(origins);
-            System.out.println("[CORS] Using setAllowedOrigins for explicit origin list");
+                logger.info("[CORS] Using setAllowedOrigins for explicit origin list");
     }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
