@@ -229,7 +229,7 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
 
         String username = authentication.getName();
         LocalDate today = LocalDate.now();
-        LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+        LocalDate startOfWeek = today.minusDays((long) today.getDayOfWeek().getValue() - 1);
         LocalDate endOfWeek = startOfWeek.plusDays(6);
 
         List<Expense> expenses =

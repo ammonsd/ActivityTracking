@@ -1,6 +1,5 @@
 package com.ammons.taskactivity.config;
 
-import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
 import org.slf4j.Logger;

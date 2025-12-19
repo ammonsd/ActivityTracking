@@ -1,8 +1,6 @@
 package com.ammons.taskactivity.security;
 
 import com.ammons.taskactivity.service.PermissionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -29,8 +27,6 @@ import java.io.Serializable;
  */
 @Component("permissionEvaluator")
 public class CustomPermissionEvaluator implements PermissionEvaluator {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomPermissionEvaluator.class);
 
     private final PermissionService permissionService;
 

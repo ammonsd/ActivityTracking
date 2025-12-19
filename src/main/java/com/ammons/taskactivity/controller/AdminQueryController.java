@@ -5,7 +5,6 @@ import com.ammons.taskactivity.service.QueryExecutionService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.ammons.taskactivity.security.RequirePermission;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

@@ -3,7 +3,6 @@ package com.ammons.taskactivity.service;
 import com.ammons.taskactivity.entity.Permission;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
-import com.ammons.taskactivity.repository.PermissionRepository;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import org.slf4j.Logger;
@@ -39,13 +38,10 @@ public class PermissionService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
 
-    public PermissionService(UserRepository userRepository, RoleRepository roleRepository,
-            PermissionRepository permissionRepository) {
+    public PermissionService(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.permissionRepository = permissionRepository;
     }
 
     /**

@@ -126,7 +126,7 @@ public class UserRestController {
     public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
         logger.debug("REST API: Getting all users");
         List<User> users = userService.getAllUsers();
-        List<UserDto> userDtos = users.stream().map(UserDto::new).collect(Collectors.toList());
+        List<UserDto> userDtos = users.stream().map(UserDto::new).toList();
         ApiResponse<List<UserDto>> response = ApiResponse
                 .success("Users retrieved successfully", userDtos).withCount(userDtos.size());
         return ResponseEntity.ok(response);

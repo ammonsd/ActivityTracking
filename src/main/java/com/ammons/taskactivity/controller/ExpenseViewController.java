@@ -663,7 +663,8 @@ public class ExpenseViewController {
         addUserInfo(model, authentication);
 
         LocalDate targetDate = date != null ? date : LocalDate.now();
-        LocalDate startOfWeek = targetDate.minusDays(targetDate.getDayOfWeek().getValue() - 1);
+        LocalDate startOfWeek =
+                targetDate.minusDays((long) targetDate.getDayOfWeek().getValue() - 1);
         LocalDate endOfWeek = startOfWeek.plusDays(6);
 
         String username = authentication.getName();
@@ -1207,7 +1208,7 @@ public class ExpenseViewController {
      */
     private String buildFilteredRedirect(String client, String project, String expenseType,
             String status, String username, LocalDate startDate, LocalDate endDate) {
-        StringBuilder redirect = new StringBuilder("redirect:/expenses/list");
+        StringBuilder redirect = new StringBuilder(REDIRECT_EXPENSE_LIST);
         List<String> params = new ArrayList<>();
 
         if (client != null && !client.isEmpty()) {

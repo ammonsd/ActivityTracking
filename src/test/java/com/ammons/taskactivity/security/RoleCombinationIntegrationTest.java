@@ -1,8 +1,5 @@
 package com.ammons.taskactivity.security;
 
-import com.ammons.taskactivity.entity.Permission;
-import com.ammons.taskactivity.entity.Roles;
-import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.PermissionRepository;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
