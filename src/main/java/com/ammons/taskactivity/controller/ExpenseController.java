@@ -14,9 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.ammons.taskactivity.security.RequirePermission;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,7 +67,7 @@ private void validateUserHasEmail(String username) {
 /**
  * Check if current user can access expense features
  */
-@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+@RequirePermission(resource = "EXPENSE", action = "READ")
 @GetMapping("/can-access")
 public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication authentication) {
         String username = authentication.getName();
@@ -82,9 +82,14 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== CREATE ==========
 
     /**
-     * Create a new expense
+     * Create a new expense. Requires the user to have a valid email address. The username is
+     * automatically set from the authenticated user.
+     * 
+     * @param expenseDto the expense data transfer object containing expense details
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the created expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "CREATE")
     @PostMapping
     public ResponseEntity<ApiResponse<Expense>> createExpense(
             @Valid @RequestBody ExpenseDto expenseDto, Authentication authentication) {
@@ -107,10 +112,23 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== READ ==========
 
     /**
-     * Get all expenses with pagination and filtering - ADMIN: sees all expenses - USER/GUEST: sees
-     * only their own expenses
+     * Get all expenses with pagination and filtering. ADMIN and EXPENSE_ADMIN users can see all
+     * expenses and filter by username. Regular users can only see their own expenses.
+     * 
+     * @param page page number (default: 0)
+     * @param size page size (default: 20)
+     * @param client optional filter by client
+     * @param project optional filter by project
+     * @param expenseType optional filter by expense type
+     * @param status optional filter by status
+     * @param paymentMethod optional filter by payment method
+     * @param startDate optional filter by start date
+     * @param endDate optional filter by end date
+     * @param username optional filter by username (admin only)
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing a paginated list of expenses
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Expense>>> getAllExpenses(
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
@@ -163,10 +181,13 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Get a single expense by ID - Users can only get their own expenses - Admins can get any
-     * expense
+     * Get a single expense by ID. Users can only view their own expenses unless they are admins.
+     * 
+     * @param id the expense ID
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the expense if found and authorized
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Expense>> getExpenseById(@PathVariable Long id,
             Authentication authentication) {
@@ -195,9 +216,13 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Get expenses for the current week (convenience endpoint)
+     * Get expenses for the current week (convenience endpoint). Returns all expenses for the
+     * authenticated user from Monday to Sunday of the current week.
+     * 
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing list of current week expenses
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ")
     @GetMapping("/current-week")
     public ResponseEntity<ApiResponse<List<Expense>>> getCurrentWeekExpenses(
             Authentication authentication) {
@@ -216,10 +241,16 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== UPDATE ==========
 
     /**
-     * Update an existing expense - Users can only update their own expenses - Users cannot modify
-     * approval/reimbursement fields - Admins can update any expense
+     * Update an existing expense. Users can only update their own expenses and cannot modify
+     * approval/reimbursement fields. Non-admins can only set status to Draft, Submitted, or
+     * Resubmitted. Admins can update any expense and all fields.
+     * 
+     * @param id the expense ID to update
+     * @param expenseDto the updated expense data
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the updated expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "UPDATE")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Expense>> updateExpense(@PathVariable Long id,
             @Valid @RequestBody ExpenseDto expenseDto, Authentication authentication) {
@@ -276,9 +307,13 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== DELETE ==========
 
     /**
-     * Delete an expense - Users can only delete their own expenses - Admins can delete any expense
+     * Delete an expense. Users can only delete their own expenses. Admins can delete any expense.
+     * 
+     * @param id the expense ID to delete
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity with success message
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "DELETE")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteExpense(@PathVariable Long id,
             Authentication authentication) {
@@ -312,9 +347,14 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== STATUS MANAGEMENT ==========
 
     /**
-     * Submit expense for approval
+     * Submit an expense for approval. Changes the expense status to "Submitted" or "Resubmitted"
+     * and sends notification email.
+     * 
+     * @param id the expense ID to submit
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the submitted expense
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "SUBMIT")
     @PostMapping("/{id}/submit")
     public ResponseEntity<ApiResponse<Expense>> submitForApproval(@PathVariable Long id,
             Authentication authentication) {
@@ -336,9 +376,15 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Approve an expense (admin only)
+     * Approve an expense (admin only). Changes the expense status to "Approved" and records the
+     * approver and date. Sends notification email to the expense owner.
+     * 
+     * @param id the expense ID to approve
+     * @param notes optional approval notes
+     * @param authentication the authenticated admin making the request
+     * @return ResponseEntity containing the approved expense
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "APPROVE")
     @PostMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Expense>> approveExpense(@PathVariable Long id,
             @RequestParam(required = false) String notes, Authentication authentication) {
@@ -359,9 +405,15 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Reject an expense (admin only)
+     * Reject an expense (admin only). Changes the expense status to "Rejected" and records the
+     * reason. Sends notification email to the expense owner.
+     * 
+     * @param id the expense ID to reject
+     * @param notes required rejection reason/notes
+     * @param authentication the authenticated admin making the request
+     * @return ResponseEntity containing the rejected expense
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "REJECT")
     @PostMapping("/{id}/reject")
     public ResponseEntity<ApiResponse<Expense>> rejectExpense(@PathVariable Long id,
             @RequestParam String notes, Authentication authentication) {
@@ -382,9 +434,16 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Mark expense as reimbursed (admin and expense admin)
+     * Mark an expense as reimbursed. Changes the expense status to "Reimbursed" and records the
+     * reimbursement details. Sends notification email to the expense owner.
+     * 
+     * @param id the expense ID to mark as reimbursed
+     * @param reimbursedAmount the amount reimbursed (optional, defaults to expense amount)
+     * @param notes optional reimbursement notes
+     * @param authentication the authenticated admin making the request
+     * @return ResponseEntity containing the updated expense
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "MARK_REIMBURSED")
     @PostMapping("/{id}/reimburse")
     public ResponseEntity<ApiResponse<Expense>> markAsReimbursed(@PathVariable Long id,
                     @RequestParam(required = false) BigDecimal reimbursedAmount,
@@ -408,9 +467,12 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Get pending approval queue (admin only)
+     * Get pending approval queue (admin only). Returns all expenses with "Submitted" or
+     * "Resubmitted" status.
+     * 
+     * @return ResponseEntity containing list of expenses pending approval
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ_ALL")
     @GetMapping("/pending-approvals")
     public ResponseEntity<ApiResponse<List<Expense>>> getPendingApprovals() {
 
@@ -424,9 +486,15 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     // ========== AGGREGATE QUERIES ==========
 
     /**
-     * Get total expenses for user in date range
+     * Get total expenses for user in date range. Calculates the sum of all expense amounts for the
+     * authenticated user within the specified date range.
+     * 
+     * @param startDate the start date of the range
+     * @param endDate the end date of the range
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the total expense amount
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ")
     @GetMapping("/total")
     public ResponseEntity<ApiResponse<Double>> getTotalExpenses(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -441,9 +509,14 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
     }
 
     /**
-     * Get total expenses by status for user
+     * Get total expenses by status for user. Calculates the sum of all expense amounts for the
+     * authenticated user with the specified status.
+     * 
+     * @param status the expense status to filter by
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the total expense amount for the status
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "READ")
     @GetMapping("/total-by-status")
     public ResponseEntity<ApiResponse<Double>> getTotalByStatus(@RequestParam String status,
             Authentication authentication) {

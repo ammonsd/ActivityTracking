@@ -18,13 +18,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import com.ammons.taskactivity.security.RequirePermission;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +37,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * MVC Controller for Expense web views and forms. Handles expense management UI including forms,
+ * lists, approval workflow, and receipt handling. Implements role-based access control to ensure
+ * users can only manage their own expenses unless they have admin privileges.
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ */
 @Controller
 @RequestMapping("/expenses")
 public class ExpenseViewController {
@@ -358,8 +366,21 @@ public class ExpenseViewController {
         }
     }
 
+    /**
+     * Submit expense form (create or update). Validates the form data and creates/updates the
+     * expense. Optionally handles receipt file upload. Sets the username from the authenticated
+     * user to ensure ownership.
+     * 
+     * @param expenseDto the expense data transfer object
+     * @param bindingResult validation results
+     * @param receipt optional receipt file upload
+     * @param model the model for view rendering
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated user
+     * @return redirect to expense list on success, or form view on validation errors
+     */
+    @RequirePermission(resource = "EXPENSE", action = "CREATE")
     @PostMapping("/submit")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
     public String submitForm(@Valid @ModelAttribute ExpenseDto expenseDto,
             BindingResult bindingResult,
             @RequestParam(value = "receipt", required = false) MultipartFile receipt, Model model,
@@ -853,7 +874,15 @@ public class ExpenseViewController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    /**
+     * Show the expense approval queue (admin only). Displays all expenses with "Submitted" or
+     * "Resubmitted" status, excluding the current user's own expenses.
+     * 
+     * @param model the model for view rendering
+     * @param authentication the authenticated admin user
+     * @return the approval queue view
+     */
+    @RequirePermission(resource = "EXPENSE", action = "READ_ALL")
     @GetMapping("/admin/approval-queue")
     public String showApprovalQueue(Model model, Authentication authentication) {
         addUserInfo(model, authentication);
@@ -885,7 +914,17 @@ public class ExpenseViewController {
         return APPROVAL_QUEUE_VIEW;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    /**
+     * Approve an expense from the approval queue (admin only). Changes the expense status to
+     * "Approved" and sends notification email.
+     * 
+     * @param id the expense ID to approve
+     * @param notes optional approval notes
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated admin user
+     * @return redirect to expense list
+     */
+    @RequirePermission(resource = "EXPENSE", action = "APPROVE")
     @PostMapping("/admin/approve/{id}")
     public String approveExpense(@PathVariable Long id,
             @RequestParam(required = false) String notes, RedirectAttributes redirectAttributes,
@@ -901,7 +940,17 @@ public class ExpenseViewController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    /**
+     * Reject an expense from the approval queue (admin only). Changes the expense status to
+     * "Rejected" and sends notification email.
+     * 
+     * @param id the expense ID to reject
+     * @param notes required rejection reason/notes
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated admin user
+     * @return redirect to expense list
+     */
+    @RequirePermission(resource = "EXPENSE", action = "REJECT")
     @PostMapping("/admin/reject/{id}")
     public String rejectExpense(@PathVariable Long id, @RequestParam String notes,
             RedirectAttributes redirectAttributes, Authentication authentication) {
@@ -916,7 +965,24 @@ public class ExpenseViewController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    /**
+     * Approve an expense from the detail view (admin only). Preserves filter parameters when
+     * redirecting back to the list view.
+     * 
+     * @param id the expense ID to approve
+     * @param notes optional approval notes
+     * @param client filter parameter to preserve
+     * @param project filter parameter to preserve
+     * @param expenseType filter parameter to preserve
+     * @param status filter parameter to preserve
+     * @param username filter parameter to preserve
+     * @param startDate filter parameter to preserve
+     * @param endDate filter parameter to preserve
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated admin user
+     * @return redirect to filtered expense list
+     */
+    @RequirePermission(resource = "EXPENSE", action = "APPROVE")
     @PostMapping("/{id}/approve")
     public String approveExpenseFromDetail(@PathVariable Long id,
             @RequestParam(required = false) String notes,
@@ -944,7 +1010,24 @@ public class ExpenseViewController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXPENSE_ADMIN')")
+    /**
+     * Reject an expense from the detail view (admin only). Preserves filter parameters when
+     * redirecting back to the list view.
+     * 
+     * @param id the expense ID to reject
+     * @param notes required rejection reason/notes
+     * @param client filter parameter to preserve
+     * @param project filter parameter to preserve
+     * @param expenseType filter parameter to preserve
+     * @param status filter parameter to preserve
+     * @param username filter parameter to preserve
+     * @param startDate filter parameter to preserve
+     * @param endDate filter parameter to preserve
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated admin user
+     * @return redirect to filtered expense list
+     */
+    @RequirePermission(resource = "EXPENSE", action = "REJECT")
     @PostMapping("/{id}/reject")
     public String rejectExpenseFromDetail(@PathVariable Long id, @RequestParam String notes,
             @RequestParam(required = false) String client,
@@ -1080,10 +1163,15 @@ public class ExpenseViewController {
     }
 
     /**
-     * Download/view receipt file
+     * Download or view receipt file for an expense. Retrieves the receipt from S3 or local file
+     * system based on configuration. Returns the file as an inline attachment for viewing in the
+     * browser.
+     * 
+     * @param id the expense ID to retrieve the receipt from
+     * @return ResponseEntity containing the receipt file stream
      */
+    @RequirePermission(resource = "EXPENSE", action = "MANAGE_RECEIPTS")
     @GetMapping("/receipt/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'EXPENSE_ADMIN')")
     public ResponseEntity<Resource> getReceipt(@PathVariable Long id) {
         try {
             Optional<Expense> expenseOpt = expenseService.getExpenseById(id);

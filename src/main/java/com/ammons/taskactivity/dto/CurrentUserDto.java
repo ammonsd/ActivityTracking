@@ -1,6 +1,6 @@
 package com.ammons.taskactivity.dto;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 
 /**
  * DTO for current user information including password expiration warning
@@ -15,7 +15,7 @@ public class CurrentUserDto {
     private String lastname;
     private String company;
     private String email;
-    private Role role;
+    private String role; // Role name as String for Angular compatibility
     private boolean enabled;
     private String passwordExpiringWarning;
     private Long daysUntilExpiration;
@@ -23,14 +23,14 @@ public class CurrentUserDto {
     public CurrentUserDto() {}
 
     public CurrentUserDto(Long id, String username, String firstname, String lastname,
-            String company, String email, Role role, boolean enabled) {
+            String company, String email, Roles role, boolean enabled) {
         this.id = id;
         this.username = username;
         this.firstname = firstname;
         this.lastname = lastname;
         this.company = company;
         this.email = email;
-        this.role = role;
+        this.role = role != null ? role.getName() : null; // Extract name from Roles entity
         this.enabled = enabled;
     }
 
@@ -83,11 +83,11 @@ public class CurrentUserDto {
         this.email = email;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
 

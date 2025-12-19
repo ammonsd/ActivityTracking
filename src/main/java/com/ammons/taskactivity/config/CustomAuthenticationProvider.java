@@ -1,6 +1,6 @@
 package com.ammons.taskactivity.config;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
                     username, user.getRole(), user.getExpirationDate(),
                     user.isForcePasswordUpdate());
 
-            if (user.getRole() == Role.GUEST) {
+            if ("GUEST".equals(user.getRole().getName())) {
                 boolean expired = isPasswordExpired(user);
                 boolean forcedUpdate = user.isForcePasswordUpdate();
                 log.info("GUEST user '{}' password expired: {}, forced update: {}", username,

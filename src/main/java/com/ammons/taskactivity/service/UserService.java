@@ -1,6 +1,6 @@
 package com.ammons.taskactivity.service;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.validation.PasswordValidationService;
@@ -49,8 +49,8 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<User> filterUsers(String username, Role role, String company) {
-        logger.debug("Filtering users - username: {}, role: {}, company: {}", username, role,
+    public List<User> filterUsers(String username, String roleName, String company) {
+        logger.debug("Filtering users - username: {}, role: {}, company: {}", username, roleName,
                 company);
 
         List<User> users = userRepository.findAll();
@@ -63,9 +63,11 @@ public class UserService {
                     .toList();
         }
 
-        // Apply role filter (exact match)
-        if (role != null) {
-            users = users.stream().filter(user -> user.getRole().equals(role)).toList();
+        // Apply role filter (exact match by role name)
+        if (roleName != null && !roleName.trim().isEmpty()) {
+            users = users.stream().filter(
+                    user -> user.getRole() != null && roleName.equals(user.getRole().getName()))
+                    .toList();
         }
 
         // Apply company filter (case-insensitive partial match, including null values)
@@ -95,29 +97,29 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public User createUser(String username, String password, Role role) {
+    public User createUser(String username, String password, Roles role) {
         return createUser(username, password, role, true);
     }
 
-    public User createUser(String username, String password, Role role,
+    public User createUser(String username, String password, Roles role,
             boolean forcePasswordUpdate) {
         return createUser(username, null, null, null, null, password, role, forcePasswordUpdate);
     }
 
     public User createUser(String username, String firstname, String lastname, String password,
-            Role role, boolean forcePasswordUpdate) {
+            Roles role, boolean forcePasswordUpdate) {
         return createUser(username, firstname, lastname, null, null, password, role,
                 forcePasswordUpdate);
     }
 
     public User createUser(String username, String firstname, String lastname, String company,
-            String password, Role role, boolean forcePasswordUpdate) {
+            String password, Roles role, boolean forcePasswordUpdate) {
         return createUser(username, firstname, lastname, company, null, password, role,
                 forcePasswordUpdate);
     }
 
     public User createUser(String username, String firstname, String lastname, String company,
-            String email, String password, Role role, boolean forcePasswordUpdate) {
+            String email, String password, Roles role, boolean forcePasswordUpdate) {
         logger.info("Attempting to create new user: {}", username);
 
         // Input validation

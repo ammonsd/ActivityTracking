@@ -4,10 +4,10 @@ import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +32,14 @@ public class UserRestController {
     }
 
     /**
-     * Get current authenticated user
+     * Get current authenticated user with profile details. Includes password expiration warnings if
+     * applicable.
+     * 
+     * No permission check required - all authenticated users can view their own basic info.
+     * 
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the current user's profile data
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserDto>> getCurrentUser(
             Authentication authentication) {
@@ -64,9 +69,13 @@ public class UserRestController {
     }
 
     /**
-     * Get current user's profile (for editing)
+     * Get current user's full profile (for editing). Returns the complete user entity for profile
+     * editing.
+     * 
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the user's complete profile
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<User>> getCurrentUserProfile(Authentication authentication) {
         String username = authentication.getName();
@@ -77,9 +86,15 @@ public class UserRestController {
     }
 
     /**
-     * Update current user's profile (non-admin users can only update their own profile)
+     * Update current user's profile. Non-admin users can only update their own profile fields:
+     * firstname, lastname, company, email. Role and other security-related fields cannot be
+     * modified.
+     * 
+     * @param updatedUser the user entity containing updated profile data
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the updated user profile
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<User>> updateCurrentUserProfile(@RequestBody User updatedUser,
             Authentication authentication) {
@@ -100,9 +115,11 @@ public class UserRestController {
     }
 
     /**
-     * Get all users
+     * Get all users in the system. Returns a complete list of all registered users.
+     * 
+     * @return ResponseEntity containing list of all users
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'GUEST')")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         logger.debug("REST API: Getting all users");
@@ -113,9 +130,12 @@ public class UserRestController {
     }
 
     /**
-     * Get user by ID
+     * Get user by ID. Returns the complete user entity for the specified user ID.
+     * 
+     * @param id the user ID to retrieve
+     * @return ResponseEntity containing the user if found
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'GUEST')")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id) {
         logger.debug("REST API: Getting user with ID: {}", id);

@@ -6,7 +6,6 @@ import com.ammons.taskactivity.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +23,6 @@ import java.util.Optional;
  */
 @Controller
 @RequestMapping("/profile")
-@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
 public class UserProfileController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);

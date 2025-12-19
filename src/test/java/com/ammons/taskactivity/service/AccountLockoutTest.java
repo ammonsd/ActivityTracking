@@ -1,7 +1,8 @@
 package com.ammons.taskactivity.service;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,15 +26,22 @@ class AccountLockoutTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private RoleRepository roleRepository;
+
     private User testUser;
+    private Roles userRole;
 
     @BeforeEach
     void setUp() {
+        userRole = new Roles("USER");
+        userRole.setId(2L);
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
         testUser.setPassword("encodedPassword");
-        testUser.setRole(Role.USER);
+        testUser.setRole(userRole);
         testUser.setEnabled(true);
         testUser.setFailedLoginAttempts(0);
         testUser.setAccountLocked(false);

@@ -10,8 +10,8 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import com.ammons.taskactivity.security.RequirePermission;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,9 +48,16 @@ public class ReceiptController {
     }
 
     /**
-     * Upload a receipt for an expense
+     * Upload a receipt for an expense. Validates file size (max 5MB) and type (JPEG, PNG, PDF).
+     * Users can only upload receipts for their own expenses unless they are admins. Stores the
+     * receipt in S3 or local file system based on configuration.
+     * 
+     * @param expenseId the expense ID to attach the receipt to
+     * @param file the receipt file to upload
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the receipt path
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "MANAGE_RECEIPTS")
     @PostMapping("/{expenseId}")
     public ResponseEntity<ApiResponse<String>> uploadReceipt(@PathVariable Long expenseId,
             @RequestParam("file") MultipartFile file, Authentication authentication) {
@@ -114,9 +121,15 @@ public class ReceiptController {
     }
 
     /**
-     * Download a receipt
+     * Download a receipt for an expense. Users can only download receipts for their own expenses
+     * unless they are admins. Returns the file as an inline attachment with appropriate content
+     * type.
+     * 
+     * @param expenseId the expense ID to download the receipt from
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity containing the receipt file stream
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "MANAGE_RECEIPTS")
     @GetMapping("/{expenseId}")
     public ResponseEntity<Object> downloadReceipt(@PathVariable Long expenseId,
             Authentication authentication) {
@@ -165,9 +178,15 @@ public class ReceiptController {
     }
 
     /**
-     * Delete a receipt
+     * Delete a receipt from an expense. Users can only delete receipts for their own expenses
+     * unless they are admins. Removes the file from storage and clears the receipt path in the
+     * expense record.
+     * 
+     * @param expenseId the expense ID to delete the receipt from
+     * @param authentication the authenticated user making the request
+     * @return ResponseEntity with success message
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "EXPENSE", action = "MANAGE_RECEIPTS")
     @DeleteMapping("/{expenseId}")
     public ResponseEntity<ApiResponse<Void>> deleteReceipt(@PathVariable Long expenseId,
             Authentication authentication) {

@@ -119,7 +119,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Send email notification if GUEST role user logs in
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
-                if (user.getRole() == com.ammons.taskactivity.entity.Role.GUEST) {
+                if ("GUEST".equals(user.getRole().getName())) {
                     try {
                         String fullName = user.getFirstname() != null && user.getLastname() != null
                                 ? user.getFirstname() + " " + user.getLastname()
