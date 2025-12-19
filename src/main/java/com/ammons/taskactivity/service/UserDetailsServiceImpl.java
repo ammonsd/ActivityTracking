@@ -39,6 +39,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                         ? user.getPassword().substring(0, Math.min(20, user.getPassword().length()))
                         : "NULL");
 
+        // Handle case where role might not be loaded yet (e.g., during test initialization)
+        if (user.getRole() == null) {
+            log.error("User {} has null role - this should not happen in production", username);
+            throw new UsernameNotFoundException("User " + username + " has no role assigned");
+        }
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername()).password(user.getPassword())
                 .authorities("ROLE_" + user.getRole().getName()).accountExpired(false)
