@@ -57,8 +57,21 @@ This document provides a comprehensive summary of all technical features, framew
 ### Spring Security
 
 - **Form-based authentication** with custom login pages
-- **Role-based access control (RBAC)** - ADMIN, USER, GUEST, and EXPENSE_ADMIN roles
-- **Method-level security** with @PreAuthorize annotations
+- **Database-driven Role-Based Access Control (RBAC)**:
+  - Roles stored in `roles` database table (not enum)
+  - Permissions stored in `permissions` table with resource:action pattern
+  - Many-to-many relationship via `role_permissions` join table
+  - Four default roles: ADMIN, USER, GUEST, EXPENSE_ADMIN
+  - Custom roles can be created via web UI without code changes
+- **Custom Authorization Framework**:
+  - `@RequirePermission` annotation for method-level security
+  - `PermissionAspect` - Spring AOP interceptor for runtime permission enforcement
+  - Replaces standard @PreAuthorize with flexible database-driven permission checking
+- **Role & Permission Management UI**:
+  - Web interface for creating custom roles
+  - Assign/revoke permissions without code deployment
+  - RoleManagementController with role-management, role-edit, role-add pages
+  - Permission format: RESOURCE:ACTION (e.g., TASK_ACTIVITY:READ, EXPENSE:APPROVE)
 - **BCrypt password encoding** for secure password storage
 - **CSRF protection** with CookieCsrfTokenRepository
 - **Session management** with concurrent session control
@@ -72,6 +85,7 @@ This document provides a comprehensive summary of all technical features, framew
 - **Spring Security Test** for security-aware testing
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
+  - ADMIN-only Role & Permission Management interface
   - EXPENSE_ADMIN access to expense approval and reimbursement functions
   - Role-based data filtering (ADMIN sees all users, regular users see only own data)
   - SecurityConfig request matcher ordering for proper API access control
@@ -121,7 +135,12 @@ This document provides a comprehensive summary of all technical features, framew
 ### Authentication & Authorization
 
 - Form-based login with secure session handling
-- Role-based authorization (ADMIN/USER/GUEST roles)
+- **Database-driven role-based authorization**
+  - Roles entity with customizable permissions
+  - Permission entity with resource:action pattern
+  - @RequirePermission annotation for method-level security
+  - PermissionAspect for AOP-based permission enforcement
+  - Custom role creation via web UI
 - Method-level security annotations
 - Custom authentication success/failure handlers
 - Session fixation protection

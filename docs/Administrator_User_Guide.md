@@ -25,16 +25,20 @@ Both interfaces connect to the same backend and share the same data and authenti
 
 ### User Roles Overview
 
-The system supports four user roles with different permission levels:
+The system uses a **database-driven role-based access control (RBAC) system** with customizable permissions. Administrators can create custom roles and assign permissions through the web interface without requiring code changes.
+
+**Four Default Roles:**
+
+The system provides four pre-configured roles with different permission levels:
 
 **GUEST (Read-Only Access)**
-- Can view task list and task details in read-only mode
-- Cannot create, edit, or delete tasks
+- Can view task list and task details
+- Full CRUD access for task activities (can create, edit, delete own tasks)
 - No access to weekly timesheet, expenses, user management, or dropdown settings
 - **Cannot change password** (password changes must be done by an administrator)
 - **Password expiration warnings are suppressed** (GUEST users won't see expiration warnings)
 - **Cannot log in if password has expired** (must contact administrator for password reset)
-- Useful for stakeholders who need visibility without editing capabilities
+- Useful for stakeholders who need task tracking without expense access
 
 **Important for GUEST Users:**
 - When a GUEST user's password expires, they will be blocked from logging in with the message: "Password has expired. Contact system administrator."
@@ -45,6 +49,7 @@ The system supports four user roles with different permission levels:
 - Access to weekly timesheet and weekly expense sheet
 - Can upload receipts for expenses
 - Can submit expenses for approval
+- Can manage dropdown values (clients, projects, phases)
 - Can change their own password
 - Cannot view other users' tasks or expenses (except when submitted for approval)
 - Standard role for team members doing time and expense tracking
@@ -53,6 +58,9 @@ The system supports four user roles with different permission levels:
 - All USER permissions plus administrative capabilities
 - Can view and manage all users' tasks and expenses
 - Can create, edit, and delete user accounts
+- **Can manage roles and permissions** through web UI
+- Can create custom roles tailored to organizational needs
+- Can assign/revoke permissions without code changes
 - Can manage dropdown values (clients, projects, phases, expense types, payment methods)
 - Can change passwords for any user
 - Has access to all expense approval functions (can also act as EXPENSE_ADMIN)
@@ -64,6 +72,16 @@ The system supports four user roles with different permission levels:
 - Can mark expenses as reimbursed
 - Can view expense approval history and notes
 - Cannot manage users or system settings (unless also has ADMIN role)
+
+**Custom Roles:**
+
+Administrators can create additional roles as needed:
+- Navigate to "Manage Roles & Permissions" from the header
+- Click "Add Role" to create a new custom role
+- Assign specific permissions based on organizational requirements
+- Examples: "PROJECT_MANAGER", "FINANCE_VIEWER", "READ_ONLY_ADMIN"
+
+For detailed information on managing roles and permissions, see the "Managing Roles and Permissions" section below.
 
 ### Managing Users
 
@@ -99,6 +117,152 @@ Administrators can create, edit, and delete user accounts:
         - Users who have task entries in the system
     - Users with task entries cannot be deleted to maintain data integrity
     - To prevent a user from accessing the system, disable their account instead of deleting
+
+### Managing Roles and Permissions
+
+The system features a **database-driven authorization system** that allows administrators to create custom roles and assign permissions without modifying code. This provides flexibility in tailoring access controls to your organization's specific needs.
+
+#### Accessing Role Management
+
+1. **Navigate to Role Management**: Click **"Manage Roles & Permissions"** from the header (ADMIN only)
+2. **View All Roles**: See a list of all roles with their descriptions and assigned permissions
+
+#### Understanding the Permission Model
+
+Permissions follow a **resource:action** pattern:
+
+**Resources:**
+- `TASK_ACTIVITY` - Task management features
+- `EXPENSE` - Expense management features
+- `USER` - User account management
+- `DROPDOWN` - Dropdown value management
+- `ROLE` - Role and permission management
+
+**Actions:**
+- `CREATE` - Create new records
+- `READ` - View/list records
+- `UPDATE` - Edit existing records
+- `DELETE` - Remove records
+- `MANAGE` - Full management access (often implies all CRUD operations)
+- `APPROVE` - Approve submitted items (expenses)
+
+**Examples:**
+- `TASK_ACTIVITY:CREATE` - Permission to create new tasks
+- `EXPENSE:APPROVE` - Permission to approve expenses
+- `USER:MANAGE` - Permission to manage user accounts
+- `ROLE:MANAGE` - Permission to manage roles and permissions
+
+#### Default Roles
+
+Four default roles are provided:
+
+1. **ADMIN**
+   - All permissions across all resources
+   - Can manage users, roles, permissions, dropdowns
+   - Full access to tasks and expenses for all users
+   - Can approve expenses
+
+2. **USER**
+   - Full CRUD access to own tasks (`TASK_ACTIVITY:CREATE/READ/UPDATE/DELETE`)
+   - Full CRUD access to own expenses (`EXPENSE:CREATE/READ/UPDATE/DELETE`)
+   - Can manage dropdown values (`DROPDOWN:MANAGE`)
+   - Standard role for team members
+
+3. **GUEST**
+   - Full CRUD access to task activities (`TASK_ACTIVITY:CREATE/READ/UPDATE/DELETE`)
+   - **No expense access** (no expense permissions)
+   - Read-only for most features
+   - Useful for contractors or temporary staff
+
+4. **EXPENSE_ADMIN**
+   - All USER permissions for tasks
+   - All EXPENSE permissions including APPROVE
+   - Can view and manage all users' expenses
+   - Specialized role for expense approvers
+
+#### Creating Custom Roles
+
+1. **Access Role Management**: Click "Manage Roles & Permissions" from header
+2. **Click "Add Role"**: Opens the role creation form
+3. **Enter Role Details**:
+   - **Role Name**: Unique identifier (e.g., "PROJECT_MANAGER", "FINANCE_VIEWER")
+   - **Description**: Brief explanation of the role's purpose
+4. **Assign Permissions**: Check the boxes for permissions this role should have
+   - Permissions are organized by resource (TASK_ACTIVITY, EXPENSE, etc.)
+   - Each resource shows available actions (CREATE, READ, UPDATE, DELETE, etc.)
+5. **Save Role**: Click "Create Role" button
+6. **Success**: Role is created and can be assigned to users immediately
+
+**Best Practices for Custom Roles:**
+- Use clear, descriptive names (e.g., "READ_ONLY_TASKS" instead of "RO_TASKS")
+- Document the purpose in the description field
+- Start with minimal permissions and add more as needed
+- Test new roles with a test user account before production use
+
+#### Editing Role Permissions
+
+1. **Access Role Management**: Navigate to the role management page
+2. **Select Role to Edit**: Click "Edit" button next to the role
+3. **View Current Permissions**: See which permissions are currently assigned
+4. **Modify Permissions**:
+   - **Check boxes** to add permissions
+   - **Uncheck boxes** to remove permissions
+   - Role name is read-only (cannot be changed)
+   - Description can be updated
+5. **Save Changes**: Click "Save Changes" button
+6. **Immediate Effect**: Permission changes take effect immediately for all users with that role
+
+**Important Notes:**
+- Removing permissions from a role immediately affects all users with that role
+- Users must log out and log back in to see permission changes reflected in the UI
+- Built-in roles (ADMIN, USER, GUEST, EXPENSE_ADMIN) can be edited but use caution
+- Always test permission changes in a non-production environment first
+
+#### Assigning Roles to Users
+
+Roles are assigned through the User Management interface:
+
+1. **Navigate to User Management**: Click "Manage Users" from header
+2. **Edit User**: Click "Edit" button next to the user
+3. **Select Role**: Choose from the dropdown list of available roles
+4. **Save**: User immediately receives permissions from the new role
+
+#### Permission Checking in the System
+
+The system uses the `@RequirePermission` annotation to enforce permissions:
+
+```java
+@RequirePermission(resource = "TASK_ACTIVITY", action = "CREATE")
+public void createTask() { ... }
+```
+
+When you create new features:
+1. Define new permissions in the database
+2. Assign permissions to appropriate roles
+3. Use `@RequirePermission` annotation on controller methods
+4. No code deployment required to assign permissions to roles
+
+For detailed information on adding permissions when developing new features, see **`docs/localdocs/Adding_Roles_and_Permissions_Guide.md`**.
+
+#### Troubleshooting Permission Issues
+
+**User reports they can't access a feature:**
+1. Check user's assigned role in User Management
+2. Navigate to Role Management and view the role's permissions
+3. Verify the required permission is assigned to the role
+4. Add missing permission if necessary
+5. Ask user to log out and log back in
+
+**New feature isn't secured:**
+1. Verify `@RequirePermission` annotation is present on controller method
+2. Check permission exists in `permissions` table
+3. Ensure appropriate roles have the permission assigned
+4. Review application logs for permission check failures
+
+**Role changes not taking effect:**
+- Users must log out and log back in after role or permission changes
+- Check browser console for authentication errors
+- Verify PermissionAspect is configured correctly
 
 ### Viewing All User Tasks
 
