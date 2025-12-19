@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Add New Role</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+
+        <style>
+            .permissions-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 10px;
+                margin-top: 10px;
+            }
+            .permission-item {
+                background-color: #f8f9fa;
+                padding: 10px;
+                border-radius: 4px;
+                border: 1px solid #dee2e6;
+            }
+            .permission-item label {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                font-weight: normal;
+            }
+            .permission-item input[type="checkbox"] {
+                margin-right: 10px;
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }
+            .permission-item:hover {
+                background-color: #e9ecef;
+            }
+            .permission-item
+                input[type="checkbox"]:checked
+                + .permission-label {
+                font-weight: bold;
+                color: #007bff;
+            }
+            .permission-description {
+                font-size: 0.85em;
+                color: #6c757d;
+                margin-left: 28px;
+                margin-top: 5px;
+            }
+            .error {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            .required {
+                color: #dc3545;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>➕ Add New Role</h1>
+                <div>
+                    <a
+                        th:href="@{/task-activity/manage-roles}"
+                        class="btn btn-secondary"
+                        >← Back to Roles</a
+                    >
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Success Message -->
+                <div
+                    th:if="${successMessage}"
+                    class="success-message"
+                    th:text="${successMessage}"
+                ></div>
+
+                <!-- Error Message -->
+                <div
+                    th:if="${errorMessage}"
+                    class="error-message"
+                    th:text="${errorMessage}"
+                ></div>
+
+                <form
+                    th:action="@{/task-activity/manage-roles/add}"
+                    method="post"
+                    th:object="${roleDto}"
+                >
+                    <!-- Role Name -->
+                    <div class="form-group">
+                        <label for="name"
+                            >Role Name <span class="required">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="name"
+                            th:field="*{name}"
+                            placeholder="Enter role name (e.g., MANAGER, SUPERVISOR)"
+                            required
+                            maxlength="50"
+                        />
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('name')}"
+                            th:errors="*{name}"
+                        ></div>
+                        <div
+                            style="
+                                font-size: 0.85em;
+                                color: #6c757d;
+                                margin-top: 5px;
+                            "
+                        >
+                            Use uppercase letters and underscores (e.g.,
+                            PROJECT_MANAGER)
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea
+                            id="description"
+                            th:field="*{description}"
+                            rows="3"
+                            placeholder="Enter role description"
+                            maxlength="255"
+                        ></textarea>
+                        <div
+                            class="error"
+                            th:if="${#fields.hasErrors('description')}"
+                            th:errors="*{description}"
+                        ></div>
+                    </div>
+
+                    <!-- Permissions -->
+                    <div class="form-group">
+                        <label>Assign Permissions</label>
+                        <div class="permissions-grid">
+                            <div
+                                th:each="permission : ${allPermissions}"
+                                class="permission-item"
+                            >
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="permissionIds"
+                                        th:value="${permission.id}"
+                                    />
+                                    <span class="permission-label">
+                                        <strong th:text="${permission.resource}"
+                                            >TASK_ACTIVITY</strong
+                                        >
+                                        :
+                                        <span th:text="${permission.action}"
+                                            >READ</span
+                                        >
+                                    </span>
+                                </label>
+                                <div
+                                    class="permission-description"
+                                    th:if="${permission.description}"
+                                    th:text="${permission.description}"
+                                >
+                                    Permission description
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-group" style="margin-top: 30px">
+                        <button type="submit" class="btn btn-primary">
+                            ✅ Create Role
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

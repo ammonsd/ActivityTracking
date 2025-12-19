@@ -181,11 +181,11 @@ JOIN permissions p ON p.resource = 'REPORTS'
 WHERE r.name = 'USER'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
--- Assign permissions to GUEST role (read-only)
+-- Assign permissions to GUEST role (all TASK_ACTIVITY functions for own tasks, no expenses)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-JOIN permissions p ON (p.resource = 'TASK_ACTIVITY' AND p.action = 'READ')
+JOIN permissions p ON (p.resource = 'TASK_ACTIVITY' AND p.action IN ('CREATE', 'READ', 'UPDATE', 'DELETE'))
     OR (p.resource = 'REPORTS' AND p.action = 'VIEW')
 WHERE r.name = 'GUEST'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
