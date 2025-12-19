@@ -3,6 +3,7 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.PasswordChangeDto;
 import com.ammons.taskactivity.dto.UserCreateDto;
 import com.ammons.taskactivity.dto.UserEditDto;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.service.UserService;
@@ -180,7 +181,8 @@ public class UserManagementController {
 
         User user = userOptional.get();
         UserEditDto userEditDto =
-                new UserEditDto(user.getId(), user.getUsername(), user.getRole(), user.isEnabled(),
+                new UserEditDto(user.getId(), user.getUsername(),
+                        user.getRole() != null ? user.getRole().getName() : null, user.isEnabled(),
                         user.isForcePasswordUpdate());
         userEditDto.setFirstname(user.getFirstname());
         userEditDto.setLastname(user.getLastname());
@@ -226,7 +228,12 @@ public class UserManagementController {
             user.setLastname(userEditDto.getLastname());
             user.setCompany(userEditDto.getCompany());
             user.setEmail(userEditDto.getEmail());
-            user.setRole(userEditDto.getRole());
+
+            // Convert role String to Roles entity
+            Roles role = roleRepository.findByName(userEditDto.getRole()).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid role: " + userEditDto.getRole()));
+            user.setRole(role);
+
             user.setEnabled(userEditDto.isEnabled());
             user.setForcePasswordUpdate(userEditDto.isForcePasswordUpdate());
             user.setAccountLocked(userEditDto.isAccountLocked());

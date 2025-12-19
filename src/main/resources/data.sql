@@ -163,12 +163,30 @@ JOIN permissions p ON p.resource = 'TASK_ACTIVITY'
 WHERE r.name = 'USER'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
+-- Give USER role basic user management permissions (for profile self-service)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'USER_MANAGEMENT'
+    AND p.action IN ('READ', 'UPDATE')
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give USER role report viewing permission
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'REPORTS'
+    AND p.action = 'VIEW'
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
 -- Assign permissions to GUEST role (read-only)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-JOIN permissions p ON p.resource IN ('TASK_ACTIVITY', 'REPORTS', 'EXPENSE')
-    AND p.action IN ('READ')
+JOIN permissions p ON (p.resource = 'TASK_ACTIVITY' AND p.action = 'READ')
+    OR (p.resource = 'REPORTS' AND p.action = 'VIEW')
 WHERE r.name = 'GUEST'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
@@ -180,7 +198,16 @@ JOIN permissions p ON p.resource = 'EXPENSE'
 WHERE r.name = 'EXPENSE_ADMIN'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
--- Also give EXPENSE_ADMIN access to reports
+-- Give EXPENSE_ADMIN access to view task activities
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'TASK_ACTIVITY'
+    AND p.action IN ('READ', 'READ_ALL')
+WHERE r.name = 'EXPENSE_ADMIN'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give EXPENSE_ADMIN access to reports
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r

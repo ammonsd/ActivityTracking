@@ -251,9 +251,9 @@
                                     <option value="">-- All Roles --</option>
                                     <option
                                         th:each="r : ${roles}"
-                                        th:value="${r}"
-                                        th:text="${r.name()}"
-                                        th:selected="${r == filterRole}"
+                                        th:value="${r.name}"
+                                        th:text="${r.name}"
+                                        th:selected="${r.name == filterRole}"
                                     ></option>
                                 </select>
                             </div>
@@ -321,8 +321,8 @@
                             >user@example.com</td>
                             <td>
                                 <span
-                                    th:class="${'role-badge ' + (user.role.name() == 'ADMIN' ? 'role-admin' : (user.role.name() == 'GUEST' ? 'role-guest' : (user.role.name() == 'EXPENSE_ADMIN' ? 'role-EXPENSE_ADMIN' : 'role-user')))}"
-                                    th:text="${user.role.name()}"
+                                    th:class="${'role-badge ' + (user.role.name == 'ADMIN' ? 'role-admin' : (user.role.name == 'GUEST' ? 'role-guest' : (user.role.name == 'EXPENSE_ADMIN' ? 'role-EXPENSE_ADMIN' : 'role-user')))}"
+                                    th:text="${user.role.name}"
                                     >ADMIN</span
                                 >
                             </td>

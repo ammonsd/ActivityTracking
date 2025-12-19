@@ -55,7 +55,8 @@ public class UserProfileController {
         }
 
         User user = userOptional.get();
-        UserEditDto userEditDto = new UserEditDto(user.getId(), user.getUsername(), user.getRole(),
+        UserEditDto userEditDto = new UserEditDto(user.getId(), user.getUsername(),
+                user.getRole() != null ? user.getRole().getName() : null,
                 user.isEnabled(), user.isForcePasswordUpdate());
         userEditDto.setFirstname(user.getFirstname());
         userEditDto.setLastname(user.getLastname());

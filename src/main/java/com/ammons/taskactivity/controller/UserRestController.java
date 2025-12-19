@@ -2,6 +2,7 @@ package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.CurrentUserDto;
+import com.ammons.taskactivity.dto.UserDto;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.security.RequirePermission;
@@ -12,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST API Controller for User Management Used by Angular frontend
@@ -121,11 +123,12 @@ public class UserRestController {
      */
     @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
         logger.debug("REST API: Getting all users");
         List<User> users = userService.getAllUsers();
-        ApiResponse<List<User>> response =
-                ApiResponse.success("Users retrieved successfully", users).withCount(users.size());
+        List<UserDto> userDtos = users.stream().map(UserDto::new).collect(Collectors.toList());
+        ApiResponse<List<UserDto>> response = ApiResponse
+                .success("Users retrieved successfully", userDtos).withCount(userDtos.size());
         return ResponseEntity.ok(response);
     }
 
@@ -137,10 +140,11 @@ public class UserRestController {
      */
     @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
         logger.debug("REST API: Getting user with ID: {}", id);
         return userService.getUserById(id)
-                .map(user -> ResponseEntity.ok(ApiResponse.success("User found", user)))
+                .map(user -> ResponseEntity
+                        .ok(ApiResponse.success("User found", new UserDto(user))))
                 .orElse(ResponseEntity.notFound().build());
     }
 
