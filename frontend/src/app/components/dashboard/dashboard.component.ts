@@ -232,6 +232,9 @@ export class DashboardComponent implements OnInit {
     console.log('Dashboard component initialized');
     this.currentRole = this.authService.getCurrentRole();
     console.log('Dashboard - Current role:', this.currentRole);
+    console.log('Dashboard - Current role type:', typeof this.currentRole);
+    console.log('Dashboard - Role === GUEST?', this.currentRole === 'GUEST');
+    console.log('Dashboard - Role === USER?', this.currentRole === 'USER');
 
     // Check if user can access expenses
     this.expenseService.canAccessExpenses().subscribe({

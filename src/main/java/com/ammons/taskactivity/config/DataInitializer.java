@@ -1,7 +1,8 @@
 package com.ammons.taskactivity.config;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +41,13 @@ public class DataInitializer {
     private String adminPassword;
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataInitializer(UserRepository userRepository, RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -54,12 +58,17 @@ public class DataInitializer {
         if (!existingAdmin.isPresent()) {
             logger.info("Creating admin user...");
 
+            // Fetch the ADMIN role from database
+            Roles adminRole =
+                    roleRepository.findByName("ADMIN").orElseThrow(() -> new IllegalStateException(
+                            "ADMIN role not found in database. Please ensure data.sql has been executed."));
+
             User admin = new User();
             admin.setUsername(ADMIN_USERNAME);
             admin.setFirstname("System");
             admin.setLastname("Administrator");
             admin.setPassword(passwordEncoder.encode(adminPassword));
-            admin.setRole(Role.ADMIN);
+            admin.setRole(adminRole);
             admin.setEnabled(true);
             admin.setForcePasswordUpdate(true);
             admin.setCreatedDate(LocalDateTime.now(ZoneOffset.UTC));

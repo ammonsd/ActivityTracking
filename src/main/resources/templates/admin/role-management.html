@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Role Management</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+
+        <style>
+            .container {
+                max-width: 1400px;
+            }
+            .roles-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            .roles-table th,
+            .roles-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+            .roles-table th {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                color: #495057;
+            }
+            .roles-table tr:hover {
+                background-color: #f5f5f5;
+            }
+            .role-badge {
+                padding: 0.25rem 0.5rem;
+                border-radius: 3px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                display: inline-block;
+                margin-bottom: 3px;
+            }
+            .permission-badge {
+                background-color: #e9ecef;
+                color: #495057;
+                padding: 0.15rem 0.4rem;
+                border-radius: 3px;
+                font-size: 0.7rem;
+                display: inline-block;
+                margin: 2px;
+            }
+            .permission-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>🔐 Role & Permission Management</h1>
+                <div>
+                    <a
+                        th:href="@{/task-activity/manage-roles/add}"
+                        class="btn btn-primary"
+                        >➕ Add New Role</a
+                    >
+                    <a
+                        th:href="@{/task-activity/manage-users}"
+                        class="btn btn-secondary"
+                        >👥 Manage Users</a
+                    >
+                    <a
+                        th:href="@{/task-activity/list}"
+                        class="btn btn-secondary"
+                        >📋 Activity List</a
+                    >
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Success Message -->
+                <div
+                    th:if="${successMessage}"
+                    class="success-message"
+                    th:text="${successMessage}"
+                ></div>
+
+                <!-- Error Message -->
+                <div
+                    th:if="${errorMessage}"
+                    class="error-message"
+                    th:text="${errorMessage}"
+                ></div>
+
+                <div th:if="${#lists.isEmpty(roles)}" class="error-message">
+                    No roles found in the system.
+                </div>
+
+                <table th:if="${!#lists.isEmpty(roles)}" class="roles-table">
+                    <thead>
+                        <tr>
+                            <th>Role Name</th>
+                            <th>Description</th>
+                            <th>Assigned Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="role : ${roles}">
+                            <td>
+                                <span class="role-badge" th:text="${role.name}"
+                                    >ADMIN</span
+                                >
+                            </td>
+                            <td th:text="${role.description ?: '-'}">
+                                Full system access
+                            </td>
+                            <td>
+                                <div class="permission-list">
+                                    <span
+                                        th:each="permission : ${role.permissions}"
+                                        class="permission-badge"
+                                        th:text="${permission.resource + ':' + permission.action}"
+                                        >TASK_ACTIVITY:READ</span
+                                    >
+                                </div>
+                                <div
+                                    th:if="${#lists.isEmpty(role.permissions)}"
+                                    style="color: #6c757d; font-style: italic"
+                                >
+                                    No permissions assigned
+                                </div>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    <a
+                                        th:href="@{/task-activity/manage-roles/edit/{id}(id=${role.id})}"
+                                        class="btn btn-warning btn-sm"
+                                        >✏️ Edit</a
+                                    >
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

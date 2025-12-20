@@ -78,6 +78,11 @@ export class AuthService {
               'AuthService - Role loaded from API:',
               response.data.role
             );
+            console.log('AuthService - Role type:', typeof response.data.role);
+            console.log(
+              'AuthService - Role stringified:',
+              JSON.stringify(response.data.role)
+            );
 
             // Always emit to observables (even if value unchanged, to ensure UI updates)
             this.currentUserSubject.next(response.data.username);

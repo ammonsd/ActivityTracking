@@ -4,6 +4,7 @@ import com.ammons.taskactivity.config.DropdownConfig;
 import com.ammons.taskactivity.config.TaskListSortConfig;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.security.RequirePermission;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.WeeklyTimesheetService;
 import com.ammons.taskactivity.service.DropdownValueService;
@@ -19,7 +20,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -141,7 +141,18 @@ public class TaskActivityWebController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    /**
+     * Submit task activity form (create or update). Validates the form data and creates/updates the
+     * task activity. Sets the username from the authenticated user to ensure ownership.
+     * 
+     * @param taskActivityDto the task activity data transfer object
+     * @param bindingResult validation results
+     * @param model the model for view rendering
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated user
+     * @return redirect to task list on success, or form view on validation errors
+     */
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "CREATE")
     @PostMapping("/submit")
     public String submitForm(@Valid @ModelAttribute TaskActivityDto taskActivityDto,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes,
@@ -583,7 +594,17 @@ public class TaskActivityWebController {
         return REDIRECT_DROPDOWN_MANAGEMENT;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    /**
+     * Delete a dropdown value (admin only). Permanently removes a dropdown option from the
+     * database.
+     * 
+     * @param id the dropdown value ID to delete
+     * @param returnCategory optional category to return to after deletion
+     * @param redirectAttributes for flash messages
+     * @param authentication the authenticated admin user
+     * @return redirect to dropdown management page
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "DELETE")
     @PostMapping("/delete-dropdown/{id}")
     public String deleteDropdownValue(@PathVariable Long id,
             @RequestParam(required = false) String returnCategory,

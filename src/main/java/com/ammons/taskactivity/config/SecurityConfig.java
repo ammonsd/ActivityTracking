@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.config;
 
 import com.ammons.taskactivity.repository.UserRepository;
+import com.ammons.taskactivity.security.CustomPermissionEvaluator;
 import com.ammons.taskactivity.security.JwtAuthenticationFilter;
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -393,6 +396,15 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+                    CustomPermissionEvaluator permissionEvaluator) {
+            DefaultMethodSecurityExpressionHandler handler =
+                            new DefaultMethodSecurityExpressionHandler();
+            handler.setPermissionEvaluator(permissionEvaluator);
+            return handler;
     }
 }
 

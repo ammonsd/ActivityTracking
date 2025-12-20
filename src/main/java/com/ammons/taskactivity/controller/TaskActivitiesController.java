@@ -3,6 +3,7 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.security.RequirePermission;
 import com.ammons.taskactivity.service.TaskActivityService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -10,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -45,7 +45,7 @@ public class TaskActivitiesController {
     /**
      * Create a new task activity
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "CREATE")
     @PostMapping
     public ResponseEntity<ApiResponse<TaskActivity>> createTaskActivity(
             @Valid @RequestBody TaskActivityDto taskActivityDto,
@@ -65,7 +65,7 @@ public class TaskActivitiesController {
      * Get all task activities with pagination - ADMIN users: see all tasks - GUEST/USER: see only
      * their own tasks
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "READ")
     @GetMapping
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getAllTaskActivities(
                     @RequestParam(defaultValue = "0") int page,
@@ -136,7 +136,7 @@ public class TaskActivitiesController {
     /**
      * Get task activity by ID
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "READ")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskActivity>> getTaskActivityById(@PathVariable Long id) {
 
@@ -156,7 +156,7 @@ public class TaskActivitiesController {
     /**
      * Update task activity
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "UPDATE")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskActivity>> updateTaskActivity(@PathVariable Long id,
                     @Valid @RequestBody TaskActivityDto taskActivityDto,
@@ -198,7 +198,7 @@ public class TaskActivitiesController {
     /**
      * Delete task activity
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "DELETE")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteTaskActivity(@PathVariable Long id,
             Authentication authentication) {
@@ -215,7 +215,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by date
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "READ")
     @GetMapping("/by-date")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -233,7 +233,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by date range
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "READ")
     @GetMapping("/by-date-range")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -253,7 +253,7 @@ public class TaskActivitiesController {
     /**
      * Get task activities by client
      */
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST', 'EXPENSE_ADMIN')")
+    @RequirePermission(resource = "TASK_ACTIVITY", action = "READ")
     @GetMapping("/by-client")
     public ResponseEntity<ApiResponse<List<TaskActivity>>> getTaskActivitiesByClient(
             @RequestParam String client) {

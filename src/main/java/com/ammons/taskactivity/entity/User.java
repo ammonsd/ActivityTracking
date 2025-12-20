@@ -35,9 +35,9 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "userrole", nullable = false, length = 20)
-    private Role role = Role.USER;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Roles role;
 
     @Column(name = "email", length = 100)
     private String email;
@@ -68,7 +68,7 @@ public class User {
         this.createdDate = LocalDateTime.now(ZoneOffset.UTC);
     }
 
-    public User(String username, String password, Role role) {
+    public User(String username, String password, Roles role) {
         this();
         this.username = username;
         this.password = password;
@@ -124,11 +124,11 @@ public class User {
         this.password = password;
     }
 
-    public Role getRole() {
+    public Roles getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(Roles role) {
         this.role = role;
     }
 

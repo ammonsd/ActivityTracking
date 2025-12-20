@@ -77,14 +77,17 @@ Date,Client,Project,Phase,Hours,Details
 
 ### User Roles and Permissions
 
-The system has three user roles with different levels of access:
+The system uses a **database-driven role-based access control system**. While four default roles are provided, administrators can create custom roles and assign permissions as needed through the Role & Permission Management interface.
+
+**Default Roles:**
 
 **GUEST (Read-Only Access)**
 
 - ✅ View task list
 - ✅ View task details
-- ❌ Cannot create, edit, or delete tasks
+- ✅ Create, edit, and delete tasks (full CRUD access for task activities)
 - ❌ Cannot access weekly timesheet
+- ❌ Cannot access expenses (no expense-related permissions)
 - ❌ Cannot change password
 - ❌ No access to user management or dropdown settings
 
@@ -93,10 +96,12 @@ The system has three user roles with different levels of access:
 - ✅ View, create, edit, and delete your own tasks
 - ✅ Access weekly timesheet
 - ✅ Clone tasks
+- ✅ Manage your own expenses
 - ✅ Change your own password
 - ✅ Export your tasks to CSV
+- ✅ Manage dropdown values (clients, projects, phases)
 - ❌ Cannot view other users' tasks
-- ❌ No access to user management or dropdown settings
+- ❌ No access to user management or role management
 
 **EXPENSE_ADMIN (Expense Approver)**
 
@@ -106,7 +111,7 @@ The system has three user roles with different levels of access:
 - ✅ Approve or reject expense submissions from expense detail page
 - ✅ Process reimbursements
 - ❌ No access to task management for other users
-- ❌ No access to user management or dropdown settings
+- ❌ No access to user management or role management
 
 **Email Requirement for Expense Access**
 
@@ -124,11 +129,12 @@ All users (except GUEST) must have a valid email address configured in their pro
 - ✅ View and manage all users' tasks
 - ✅ Filter tasks by any username
 - ✅ Create, edit, and delete user accounts
+- ✅ **Manage roles and permissions** - create custom roles and assign permissions via web UI
 - ✅ Manage dropdown values (clients, projects, phases)
 - ✅ Change other users' passwords
 - ✅ All EXPENSE_ADMIN permissions for expenses
 
-**Note:** Contact your administrator if you need different access permissions.
+**Note:** Contact your administrator if you need different access permissions. Administrators can create custom roles tailored to your organization's needs.
 
 ### Accessing the Application
 

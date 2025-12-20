@@ -4,8 +4,8 @@ import com.ammons.taskactivity.entity.DropdownValue;
 import com.ammons.taskactivity.service.DropdownValueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.ammons.taskactivity.security.RequirePermission;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +18,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/dropdowns")
-@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'GUEST')")
 public class DropdownRestController {
 
     private static final Logger logger = LoggerFactory.getLogger(DropdownRestController.class);
@@ -130,10 +129,14 @@ public class DropdownRestController {
     }
 
     /**
-     * Add new dropdown value (ADMIN only)
+     * Add new dropdown value (ADMIN only). Creates a new dropdown option for the specified category
+     * and subcategory.
+     * 
+     * @param dropdownValue the dropdown value to create
+     * @return ResponseEntity containing the created dropdown value
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "CREATE")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DropdownValue> addDropdownValue(
             @RequestBody DropdownValue dropdownValue) {
         logger.debug("REST API: Adding dropdown value: {} / {} = {}", dropdownValue.getCategory(),
@@ -146,10 +149,15 @@ public class DropdownRestController {
     }
 
     /**
-     * Update dropdown value (ADMIN only)
+     * Update dropdown value (ADMIN only). Modifies the item value, display order, or active status
+     * of an existing dropdown option.
+     * 
+     * @param id the dropdown value ID to update
+     * @param dropdownValue the updated dropdown value data
+     * @return ResponseEntity containing the updated dropdown value
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DropdownValue> updateDropdownValue(@PathVariable Long id,
             @RequestBody DropdownValue dropdownValue) {
         logger.debug("REST API: Updating dropdown value with ID: {}", id);
@@ -162,10 +170,13 @@ public class DropdownRestController {
     }
 
     /**
-     * Delete dropdown value (ADMIN only)
+     * Delete dropdown value (ADMIN only). Permanently removes a dropdown option from the database.
+     * 
+     * @param id the dropdown value ID to delete
+     * @return ResponseEntity with no content on success
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "DELETE")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDropdownValue(@PathVariable Long id) {
         logger.debug("REST API: Deleting dropdown value with ID: {}", id);
         return dropdownValueService.getDropdownValueById(id).map(dropdown -> {

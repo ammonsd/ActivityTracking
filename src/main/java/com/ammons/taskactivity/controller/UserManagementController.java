@@ -3,14 +3,15 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.PasswordChangeDto;
 import com.ammons.taskactivity.dto.UserCreateDto;
 import com.ammons.taskactivity.dto.UserEditDto;
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import jakarta.validation.Valid;
+import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,7 +32,6 @@ import java.util.Optional;
  */
 @Controller
 @RequestMapping("/task-activity/manage-users")
-@PreAuthorize("hasRole('ADMIN')")
 public class UserManagementController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserManagementController.class);
@@ -49,19 +49,22 @@ public class UserManagementController {
 
     private final UserService userService;
     private final TaskActivityService taskActivityService;
+    private final RoleRepository roleRepository;
 
     public UserManagementController(UserService userService,
-            TaskActivityService taskActivityService) {
+            TaskActivityService taskActivityService, RoleRepository roleRepository) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
+        this.roleRepository = roleRepository;
     }
 
     /**
      * Display the user management page with list of all users
      */
     @GetMapping
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     public String manageUsers(@RequestParam(required = false) String username,
-            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) String role,
             @RequestParam(required = false) String company, Model model,
             Authentication authentication) {
         logger.info("Admin {} accessing user management", authentication.getName());
@@ -69,7 +72,8 @@ public class UserManagementController {
         List<User> users;
 
         // Check if any filter is applied
-        if ((username != null && !username.trim().isEmpty()) || role != null
+        if ((username != null && !username.trim().isEmpty())
+                || (role != null && !role.trim().isEmpty())
                 || (company != null && !company.trim().isEmpty())) {
             users = userService.filterUsers(username, role, company);
             logger.info("Filtered users: {} results", users.size());
@@ -85,7 +89,7 @@ public class UserManagementController {
         model.addAttribute("filterCompany", company != null ? company : "");
 
         // Add roles for the dropdown filter
-        model.addAttribute(ROLES, Role.values());
+        model.addAttribute(ROLES, roleRepository.findAll());
 
         // Create a map to track which users have task activities
         Map<String, Boolean> userHasTasks = new HashMap<>();
@@ -108,7 +112,7 @@ public class UserManagementController {
         logger.info("Admin {} accessing add user form", authentication.getName());
 
         model.addAttribute("userCreateDto", new UserCreateDto());
-        model.addAttribute(ROLES, Role.values());
+        model.addAttribute(ROLES, roleRepository.findAll());
         addUserDisplayInfo(model, authentication);
 
         return ADMIN_USER_ADD;
@@ -127,7 +131,7 @@ public class UserManagementController {
 
         // Check for validation errors
         if (bindingResult.hasErrors()) {
-            model.addAttribute(ROLES, Role.values());
+            model.addAttribute(ROLES, roleRepository.findAll());
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_ADD;
         }
@@ -136,7 +140,7 @@ public class UserManagementController {
         if (!userCreateDto.isPasswordMatching()) {
             bindingResult.rejectValue("confirmPassword", "error.confirmPassword",
                     "Passwords do not match");
-            model.addAttribute(ROLES, Role.values());
+            model.addAttribute(ROLES, roleRepository.findAll());
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_ADD;
         }
@@ -155,7 +159,7 @@ public class UserManagementController {
         } catch (IllegalArgumentException e) {
             logger.warn("Failed to create user: {}", e.getMessage());
             bindingResult.rejectValue(USERNAME, "error.username", e.getMessage());
-            model.addAttribute(ROLES, Role.values());
+            model.addAttribute(ROLES, roleRepository.findAll());
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_ADD;
         }
@@ -177,7 +181,8 @@ public class UserManagementController {
 
         User user = userOptional.get();
         UserEditDto userEditDto =
-                new UserEditDto(user.getId(), user.getUsername(), user.getRole(), user.isEnabled(),
+                new UserEditDto(user.getId(), user.getUsername(),
+                        user.getRole() != null ? user.getRole().getName() : null, user.isEnabled(),
                         user.isForcePasswordUpdate());
         userEditDto.setFirstname(user.getFirstname());
         userEditDto.setLastname(user.getLastname());
@@ -187,7 +192,7 @@ public class UserManagementController {
         userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
 
         model.addAttribute("userEditDto", userEditDto);
-        model.addAttribute(ROLES, Role.values());
+        model.addAttribute(ROLES, roleRepository.findAll());
         model.addAttribute("isOwnProfile", false);
         addUserDisplayInfo(model, authentication);
 
@@ -205,7 +210,7 @@ public class UserManagementController {
         logger.info("Admin {} attempting to edit user ID: {}", authentication.getName(), id);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute(ROLES, Role.values());
+            model.addAttribute(ROLES, roleRepository.findAll());
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_EDIT;
         }
@@ -223,7 +228,12 @@ public class UserManagementController {
             user.setLastname(userEditDto.getLastname());
             user.setCompany(userEditDto.getCompany());
             user.setEmail(userEditDto.getEmail());
-            user.setRole(userEditDto.getRole());
+
+            // Convert role String to Roles entity
+            Roles role = roleRepository.findByName(userEditDto.getRole()).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid role: " + userEditDto.getRole()));
+            user.setRole(role);
+
             user.setEnabled(userEditDto.isEnabled());
             user.setForcePasswordUpdate(userEditDto.isForcePasswordUpdate());
             user.setAccountLocked(userEditDto.isAccountLocked());
@@ -244,7 +254,7 @@ public class UserManagementController {
         } catch (IllegalArgumentException e) {
             logger.warn("Failed to update user: {}", e.getMessage());
             bindingResult.rejectValue(USERNAME, "error.username", e.getMessage());
-            model.addAttribute(ROLES, Role.values());
+            model.addAttribute(ROLES, roleRepository.findAll());
             addUserDisplayInfo(model, authentication);
             return ADMIN_USER_EDIT;
         }
@@ -403,13 +413,14 @@ public class UserManagementController {
     @GetMapping("/export-csv")
     @ResponseBody
     public String exportUsersToCsv(@RequestParam(required = false) String username,
-            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) String role,
             @RequestParam(required = false) String company) {
 
         List<User> users;
 
         // Apply filters if provided
-        if ((username != null && !username.trim().isEmpty()) || role != null
+        if ((username != null && !username.trim().isEmpty())
+                || (role != null && !role.trim().isEmpty())
                 || (company != null && !company.trim().isEmpty())) {
             users = userService.filterUsers(username, role, company);
         } else {

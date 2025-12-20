@@ -1,6 +1,6 @@
 package com.ammons.taskactivity.service;
 
-import com.ammons.taskactivity.entity.Role;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.validation.PasswordValidationService;
@@ -55,7 +55,7 @@ class UserServiceTest {
         String firstname = "Test";
         String lastname = "User";
         String password = "ValidPass123!"; // Updated to meet new requirements
-        Role role = Role.USER;
+        Roles role = new Roles("USER");
         String encodedPassword = "encodedPassword";
 
         when(userRepository.existsByUsername(username)).thenReturn(false);
@@ -84,7 +84,7 @@ class UserServiceTest {
         String firstname = "Existing";
         String lastname = "User";
         String password = "ValidPass123!"; // Updated to meet new requirements
-        Role role = Role.USER;
+        Roles role = new Roles("USER");
 
         when(userRepository.existsByUsername(username)).thenReturn(true);
 
@@ -100,37 +100,39 @@ class UserServiceTest {
 
     @Test
     void testCreateUserWithInvalidInput() {
+        Roles role = new Roles("USER");
+
         // Test null username
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser(null, "ValidPass123!", Role.USER));
+                () -> userService.createUser(null, "ValidPass123!", role));
 
         // Test empty username
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("", "ValidPass123!", Role.USER));
+                () -> userService.createUser("", "ValidPass123!", role));
 
         // Test short username
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("ab", "ValidPass123!", Role.USER));
+                () -> userService.createUser("ab", "ValidPass123!", role));
 
         // Test null password
         assertThrows(IllegalArgumentException.class,
-                () -> userService.createUser("testuser", null, Role.USER));
+                () -> userService.createUser("testuser", null, role));
 
         // Test password too short (less than 10 characters)
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("testuser", "Short1!", Role.USER));
+                () -> userService.createUser("testuser", "Short1!", role));
 
         // Test password without uppercase
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("testuser", "nouppercas1!", Role.USER));
+                () -> userService.createUser("testuser", "nouppercas1!", role));
 
         // Test password without digit
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("testuser", "NoDigitPass!", Role.USER));
+                () -> userService.createUser("testuser", "NoDigitPass!", role));
 
         // Test password without special character
         assertThrows(IllegalArgumentException.class,
-                        () -> userService.createUser("testuser", "NoSpecial123", Role.USER));
+                () -> userService.createUser("testuser", "NoSpecial123", role));
 
         // Test null role
         assertThrows(IllegalArgumentException.class,
@@ -141,7 +143,7 @@ class UserServiceTest {
     void testGetUserByUsername() {
         // Arrange
         String username = "testuser";
-        User user = new User(username, "encodedPassword", Role.USER);
+        User user = new User(username, "encodedPassword", new Roles("USER"));
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
 
         // Act
@@ -169,7 +171,7 @@ class UserServiceTest {
         String newPassword = "NewValid123!"; // Updated to meet new requirements
         String encodedOldPassword = "encodedOldPassword";
         String encodedNewPassword = "encodedNewPassword";
-        User user = new User(username, encodedOldPassword, Role.USER);
+        User user = new User(username, encodedOldPassword, new Roles("USER"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);

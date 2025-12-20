@@ -99,3 +99,127 @@ VALUES
   ('EXPENSE', 'PROJECT', 'General Administration', 1, true),
   ('EXPENSE', 'PROJECT', 'Non-Billable', 2, true)
 ON CONFLICT (category, subcategory, itemvalue) DO NOTHING;
+
+-- Insert existing roles
+INSERT INTO roles (name, description) VALUES
+    ('ADMIN', 'Full system administrator with all permissions'),
+    ('USER', 'Standard user with basic permissions'),
+    ('GUEST', 'Guest user with read-only access'),
+    ('EXPENSE_ADMIN', 'Administrator for expense-related features')
+ON CONFLICT (name) DO NOTHING;
+
+-- Define permissions for task activities
+INSERT INTO permissions (resource, action, description) VALUES
+    ('TASK_ACTIVITY', 'CREATE', 'Create new task activities'),
+    ('TASK_ACTIVITY', 'READ', 'View task activities'),
+    ('TASK_ACTIVITY', 'UPDATE', 'Modify existing task activities'),
+    ('TASK_ACTIVITY', 'DELETE', 'Delete task activities'),
+    ('TASK_ACTIVITY', 'READ_ALL', 'View all users task activities (admin)')
+ON CONFLICT (resource, action) DO NOTHING;
+
+-- Define permissions for user management
+INSERT INTO permissions (resource, action, description) VALUES
+    ('USER_MANAGEMENT', 'CREATE', 'Create new users'),
+    ('USER_MANAGEMENT', 'READ', 'View user information'),
+    ('USER_MANAGEMENT', 'UPDATE', 'Modify user information'),
+    ('USER_MANAGEMENT', 'DELETE', 'Delete users'),
+    ('USER_MANAGEMENT', 'MANAGE_ROLES', 'Assign roles to users')
+ON CONFLICT (resource, action) DO NOTHING;
+
+-- Define permissions for reports
+INSERT INTO permissions (resource, action, description) VALUES
+    ('REPORTS', 'VIEW', 'Access reports'),
+    ('REPORTS', 'EXPORT', 'Export reports to file')
+ON CONFLICT (resource, action) DO NOTHING;
+
+-- Define permissions for expenses
+INSERT INTO permissions (resource, action, description) VALUES
+    ('EXPENSE', 'CREATE', 'Create new expenses'),
+    ('EXPENSE', 'READ', 'View own expenses'),
+    ('EXPENSE', 'READ_ALL', 'View all users expenses (admin)'),
+    ('EXPENSE', 'UPDATE', 'Modify own expenses'),
+    ('EXPENSE', 'DELETE', 'Delete own expenses'),
+    ('EXPENSE', 'SUBMIT', 'Submit expenses for approval'),
+    ('EXPENSE', 'APPROVE', 'Approve expense submissions'),
+    ('EXPENSE', 'REJECT', 'Reject expense submissions'),
+    ('EXPENSE', 'MARK_REIMBURSED', 'Mark expenses as reimbursed'),
+    ('EXPENSE', 'MANAGE_RECEIPTS', 'Upload and manage receipt files')
+ON CONFLICT (resource, action) DO NOTHING;
+
+-- Assign permissions to ADMIN role (has everything)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'ADMIN'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Assign permissions to USER role
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'TASK_ACTIVITY' 
+    AND p.action IN ('CREATE', 'READ', 'UPDATE', 'DELETE')
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give USER role basic user management permissions (for profile self-service)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'USER_MANAGEMENT'
+    AND p.action IN ('READ', 'UPDATE')
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give USER role report viewing permission
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'REPORTS'
+    AND p.action = 'VIEW'
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Assign permissions to GUEST role (all TASK_ACTIVITY functions for own tasks, no expenses)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON (p.resource = 'TASK_ACTIVITY' AND p.action IN ('CREATE', 'READ', 'UPDATE', 'DELETE'))
+    OR (p.resource = 'REPORTS' AND p.action = 'VIEW')
+WHERE r.name = 'GUEST'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Assign permissions to EXPENSE_ADMIN role
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'EXPENSE'
+WHERE r.name = 'EXPENSE_ADMIN'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give EXPENSE_ADMIN access to view task activities
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'TASK_ACTIVITY'
+    AND p.action IN ('READ', 'READ_ALL')
+WHERE r.name = 'EXPENSE_ADMIN'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give EXPENSE_ADMIN access to reports
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'REPORTS'
+WHERE r.name = 'EXPENSE_ADMIN'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Give regular USER role standard expense permissions (create, read, update, delete, submit own)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.resource = 'EXPENSE'
+    AND p.action IN ('CREATE', 'READ', 'UPDATE', 'DELETE', 'SUBMIT', 'MANAGE_RECEIPTS')
+WHERE r.name = 'USER'
+ON CONFLICT (role_id, permission_id) DO NOTHING;

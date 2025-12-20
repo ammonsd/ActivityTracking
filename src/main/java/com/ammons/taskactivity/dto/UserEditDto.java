@@ -1,6 +1,5 @@
 package com.ammons.taskactivity.dto;
 
-import com.ammons.taskactivity.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,8 +34,8 @@ public class UserEditDto {
     @Size(max = 100, message = "Email cannot exceed 100 characters")
     private String email;
 
-    @NotNull(message = "Role is required")
-    private Role role;
+    @NotBlank(message = "Role is required")
+    private String role;
 
     private boolean enabled;
 
@@ -49,14 +48,14 @@ public class UserEditDto {
     // Constructors
     public UserEditDto() {}
 
-    public UserEditDto(Long id, String username, Role role, boolean enabled) {
+    public UserEditDto(Long id, String username, String role, boolean enabled) {
         this.id = id;
         this.username = username;
         this.role = role;
         this.enabled = enabled;
     }
 
-    public UserEditDto(Long id, String username, Role role, boolean enabled,
+    public UserEditDto(Long id, String username, String role, boolean enabled,
             boolean forcePasswordUpdate) {
         this.id = id;
         this.username = username;
@@ -114,11 +113,11 @@ public class UserEditDto {
         this.email = email;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
