@@ -485,12 +485,15 @@
                         class="btn btn-info"
                         >📊 Weekly Timesheet</a
                     >
-                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN with email -->
+                    <!-- Expense List - USER, ADMIN, and EXPENSE_ADMIN with email, read-only for GUEST -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'')') and userHasEmail}"
-                        th:href="@{/expenses/list}"
+                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'', ''GUEST'')') and (userHasEmail or #authorization.expression('hasRole(''GUEST'')'))}"
+                        th:href="${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/expenses/list}"
                         class="btn btn-info"
-                        title="Expense Tracking"
+                        th:title="${#authorization.expression('hasRole(''GUEST'')')} ? 'Expense Tracking (read-only)' : 'Expense Tracking'"
+                        th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
+                        th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
+                        th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
                         >💰 Expense List</a
                     >
                     <!-- Manage Users/Profile - ADMIN: active manage users, USER/EXPENSE_ADMIN: edit own profile, GUEST: disabled manage users -->

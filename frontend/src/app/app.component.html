@@ -84,9 +84,9 @@
       <a 
         *ngIf="canAccessExpenses || currentRole === 'GUEST'"
         mat-list-item 
-        [href]="currentRole === 'GUEST' ? null : '/expenses/list'"
+        [routerLink]="currentRole === 'GUEST' ? null : '/expenses/list'"
         [class.disabled]="currentRole === 'GUEST'"
-        (click)="currentRole === 'GUEST' ? $event.preventDefault() : navigateExternal($event, '/expenses/list')">
+        (click)="currentRole === 'GUEST' && navigateExternal($event, '/expenses/list', true)">
         <mat-icon matListItemIcon>attach_money</mat-icon>
         <span matListItemTitle>Expense Tracker</span>
       </a>

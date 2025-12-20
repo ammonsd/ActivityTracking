@@ -144,8 +144,14 @@ export class AppComponent {
     globalThis.location.href = '/logout';
   }
 
-  navigateExternal(event: Event, url: string): void {
+  navigateExternal(
+    event: Event,
+    url: string,
+    preventDefault: boolean = false
+  ): void {
     event.preventDefault();
-    globalThis.location.href = url;
+    if (!preventDefault) {
+      globalThis.location.href = url;
+    }
   }
 }
