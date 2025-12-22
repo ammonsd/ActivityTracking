@@ -5,6 +5,7 @@
 Welcome to the Task Activity & Expense Management System! This comprehensive application helps you track both time spent on tasks and project-related expenses. Whether you're logging daily work activities, reviewing your weekly timesheet, submitting expenses for reimbursement, or managing expense approvals, this guide will help you make the most of the system.
 
 **Key Features:**
+
 - **Task Activity Tracking**: Log time spent on client projects and tasks with detailed phase tracking
 - **Expense Management**: Record and submit business expenses with receipt attachments
 - **Approval Workflows**: Submit expenses for review and track their approval status
@@ -86,10 +87,10 @@ The system uses a **database-driven role-based access control system**. While fo
 - ✅ View task list
 - ✅ View task details
 - ✅ Create, edit, and delete tasks (full CRUD access for task activities)
-- ❌ Cannot access weekly timesheet
+- ✅ Access weekly timesheet
 - ❌ Cannot access expenses (no expense-related permissions)
 - ❌ Cannot change password
-- ❌ No access to user management or dropdown settings
+- ❌ No access to user, dropdown or role management
 
 **USER (Standard Access)**
 
@@ -99,9 +100,8 @@ The system uses a **database-driven role-based access control system**. While fo
 - ✅ Manage your own expenses
 - ✅ Change your own password
 - ✅ Export your tasks to CSV
-- ✅ Manage dropdown values (clients, projects, phases)
 - ❌ Cannot view other users' tasks
-- ❌ No access to user management or role management
+- ❌ No access to user, dropdown or role management
 
 **EXPENSE_ADMIN (Expense Approver)**
 
@@ -111,11 +111,12 @@ The system uses a **database-driven role-based access control system**. While fo
 - ✅ Approve or reject expense submissions from expense detail page
 - ✅ Process reimbursements
 - ❌ No access to task management for other users
-- ❌ No access to user management or role management
+- ❌ No access to user, dropdown or role management
 
 **Email Requirement for Expense Access**
 
 All users (except GUEST) must have a valid email address configured in their profile to access expense features. Without an email:
+
 - ❌ Expense tracking buttons and links are hidden
 - ❌ Cannot create, view, or manage expenses
 - ❌ Cannot submit expenses for approval
@@ -129,7 +130,7 @@ All users (except GUEST) must have a valid email address configured in their pro
 - ✅ View and manage all users' tasks
 - ✅ Filter tasks by any username
 - ✅ Create, edit, and delete user accounts
-- ✅ **Manage roles and permissions** - create custom roles and assign permissions via web UI
+- ✅ Manage roles and permissions - create custom roles and assign permissions via web UI
 - ✅ Manage dropdown values (clients, projects, phases)
 - ✅ Change other users' passwords
 - ✅ All EXPENSE_ADMIN permissions for expenses
@@ -190,13 +191,6 @@ To protect your account from unauthorized access, the system automatically locks
 3. **Double-check your password** before attempting to log in again
 4. If you've forgotten your password, ask your administrator to reset it
 
-**Tips to Avoid Lockouts:**
-
-- Keep your password in a secure location
-- Use a password manager if available
-- Type carefully when entering your password
-- If you're unsure of your password, contact your administrator before using all 5 attempts
-
 ### Password Expiration Warnings
 
 **Automatic Expiration**: All passwords expire automatically **90 days** after they are set or changed.
@@ -230,12 +224,6 @@ To protect your account from unauthorized access, the system automatically locks
 2. If a GUEST password expires, they will be blocked from logging in
 3. The login page will display: "Password has expired. Contact system administrator."
 4. An administrator must reset the GUEST user's password
-
-**Tips:**
-
-- Save your work regularly
-- The system will show a clear message when your session expires
-- All your data is saved automatically when you create or edit tasks
 
 ## Managing Your Tasks
 
@@ -350,13 +338,13 @@ Date,Client,Project,Phase,Hours,Task Details,Username
 
 ## Managing Your Profile
 
-All users (except Guest users) can manage their own profile information, including personal details and passwords. The system provides both a modern Angular interface and a backend profile editor.
+All users (except Guest users) can manage their own profile information, including personal details and passwords. 
 
 ### Accessing My Profile
 
 There are multiple ways to access your profile:
 
-**From the Angular Dashboard:**
+**From the Dashboard:**
 
 1. Click the **"My Profile"** card on the dashboard (non-Admin users only)
 2. Or select **"My Profile"** from the side menu
@@ -376,7 +364,7 @@ The profile editor allows you to update:
 
 **Note**: Your username, role, and account status cannot be changed through the profile editor. These fields are managed by administrators.
 
-**To Update Your Profile (Angular UI):**
+**To Update Your Profile (Dashboard UI):**
 
 1. Access My Profile from the dashboard or side menu
 2. Modify the fields you want to update
@@ -541,17 +529,20 @@ Use the filter controls at the top of the expense list to find specific expenses
 **Email Notifications**
 
 When you submit an expense, configured approvers receive an immediate email notification with:
+
 - Your full name and username
 - Expense ID and description
 - Amount and date
 - Instructions to review in the Approval Queue
 
 After submitting an expense, you'll receive automatic email notifications at each status change:
+
 - **Approved**: Notifies you the expense is ready for reimbursement processing
 - **Rejected**: Includes reviewer notes explaining the rejection
 - **Reimbursed**: Confirms payment has been processed
 
 Each email includes:
+
 - Your full name
 - Expense description
 - Amount and currency
@@ -739,14 +730,6 @@ ADMIN users see an additional tab with team performance analytics:
   - ADMIN users see data for all users in the system
 - **Color-Coded Visualizations**: Easy-to-read charts with consistent, professional color schemes
 - **Responsive Design**: Charts adapt to different screen sizes
-
-### Tips for Using Reports
-
-- **Review your Overview tab weekly** to track your time allocation and ensure you're meeting targets
-- **Use Client Analysis** to understand which clients consume most of your time
-- **Check Time Trends** to identify patterns in your daily work hours and adjust your schedule
-- **Monitor Phase Distribution** to ensure balanced time across different work phases
-- **ADMIN users:** Use User Analysis to monitor team performance and identify top contributors
 
 ### Understanding Your Data
 
