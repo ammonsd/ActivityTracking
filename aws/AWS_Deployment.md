@@ -77,7 +77,8 @@ Before deploying to AWS, ensure you have:
     - ECR repository: `taskactivity`
     - RDS PostgreSQL instance
     - S3 buckets:
-        - `taskactivity-receipts-prod` (expense receipt storage)
+        - `taskactivity-receipts-prod` (expense receipt storage - private)
+        - `taskactivity-docs` (public documentation - HTML, PDF files)
         - `taskactivity-logs-archive` (CloudWatch log exports)
     - Secrets in AWS Secrets Manager:
         - `taskactivity/database/credentials` (username, password, jdbcUrl)
@@ -310,15 +311,50 @@ aws s3api put-public-access-block --bucket taskactivity-receipts-prod --public-a
 aws s3api put-bucket-lifecycle-configuration --bucket taskactivity-receipts-prod --lifecycle-configuration file://aws/s3-receipts-lifecycle-policy.json
 ```
 
+**Public Documentation Bucket:**
+
+```powershell
+# Create S3 bucket for public documentation
+aws s3api create-bucket --bucket taskactivity-docs --region us-east-1
+
+# Enable server-side encryption
+aws s3api put-bucket-encryption --bucket taskactivity-docs --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+# Allow public read access via bucket policy (keep ACL blocks enabled)
+aws s3api put-public-access-block --bucket taskactivity-docs --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+# Add bucket policy for public read access
+aws s3api put-bucket-policy --bucket taskactivity-docs --policy '{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "PublicReadGetObject",
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::taskactivity-docs/*"
+  }]
+}'
+```
+
+**Upload documentation files:**
+
+```powershell
+# Upload HTML documentation to S3
+aws s3 cp docs/User_Guide.html s3://taskactivity-docs/ --content-type "text/html"
+aws s3 cp docs/Task_Activity_Mangement_Technology_Stack.html s3://taskactivity-docs/ --content-type "text/html"
+aws s3 cp docs/activitytracking.html s3://taskactivity-docs/ --content-type "text/html"
+```
+
 **Verify buckets created:**
 
 ```powershell
 aws s3 ls | findstr taskactivity
 ```
 
-You should see both:
+You should see:
 - `taskactivity-logs-archive`
 - `taskactivity-receipts-prod`
+- `taskactivity-docs`
 
 ### Step 4: Create ECR Repository
 

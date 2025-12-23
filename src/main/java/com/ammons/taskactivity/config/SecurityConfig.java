@@ -122,6 +122,8 @@ public class SecurityConfig {
                         .permitAll()
                         // Health checks
                         .requestMatchers("/api/health/**", "/actuator/health").permitAll()
+                                        // Public documentation from S3
+                                        .requestMatchers("/docs/**").permitAll()
 
                                         // JWT Authentication endpoints - public access
                                         .requestMatchers("/api/auth/**").permitAll()

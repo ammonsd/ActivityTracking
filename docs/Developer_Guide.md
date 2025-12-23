@@ -259,7 +259,10 @@ npm run test:once
 - **Amazon RDS (PostgreSQL)**: Managed database service
 - **AWS Secrets Manager**: Credential and secrets management
 - **Amazon CloudWatch Logs**: Real-time application logging
-- **Amazon S3**: Long-term log archival
+- **Amazon S3**: 
+  - `taskactivity-receipts-prod` - Expense receipt storage (private)
+  - `taskactivity-docs` - Public documentation hosting (HTML, PDF)
+  - `taskactivity-logs-archive` - Long-term log archival
 - **Amazon ECR**: Container image registry
 - **Cloudflare Tunnel**: Secure HTTPS access integrated in ECS container
 
@@ -2994,6 +2997,38 @@ The admin interface includes a "Guest Activity" dashboard (`/admin/guest-activit
 ### Web Controller Endpoints
 
 The application provides web-based endpoints for user interaction through Thymeleaf templates.
+
+#### Public Documentation Endpoint
+
+```http
+GET /docs/{filename}
+```
+
+**Description:** Serves public documentation files from S3 bucket `taskactivity-docs`
+
+**Parameters:**
+- `filename`: Document filename (e.g., `User_Guide.html`, `Task_Activity_Mangement_Technology_Stack.pdf`)
+
+**Access Control:** Public - no authentication required
+
+**Features:**
+- Automatic gzip decompression for compressed S3 objects
+- Content-Type detection with UTF-8 charset for HTML files
+- Content-Length header for proper PDF rendering
+- 1-hour browser caching via Cache-Control header
+- Directory traversal protection
+
+**Examples:**
+```
+https://taskactivitytracker.com/docs/User_Guide.html
+https://taskactivitytracker.com/docs/Task_Activity_Mangement_Technology_Stack.html
+https://taskactivitytracker.com/docs/Task_Activity_Mangement_Technology_Stack.pdf
+```
+
+**Implementation:**
+- Controller: `DocumentController.java`
+- Service: `DocumentService.java`
+- S3 Bucket: `taskactivity-docs` (public read access)
 
 #### Task List Endpoint
 
