@@ -28,6 +28,15 @@
                 "arn:aws:s3:::taskactivity-receipts",
                 "arn:aws:s3:::taskactivity-receipts/*"
             ]
+        },
+        {
+            "Sid": "S3DocsAccess",
+            "Effect": "Allow",
+            "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+            "Resource": [
+                "arn:aws:s3:::taskactivity-docs",
+                "arn:aws:s3:::taskactivity-docs/*"
+            ]
         }
     ]
 }

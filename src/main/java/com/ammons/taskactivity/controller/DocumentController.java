@@ -109,6 +109,8 @@ public class DocumentController {
             // Return document with appropriate headers
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                     .contentLength(documentBytes.length)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + filename + "\"")
                     .header(HttpHeaders.CACHE_CONTROL, "public, max-age=3600") // Cache for 1 hour
                     .body(new ByteArrayResource(documentBytes));
 

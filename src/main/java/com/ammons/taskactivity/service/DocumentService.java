@@ -86,11 +86,13 @@ public class DocumentService {
 
             s3ContentType = s3Client.headObject(headRequest).contentType();
 
-            // If S3 returned a generic/incorrect content type, use file extension logic
-            if (s3ContentType == null || s3ContentType.equals("application/octet-stream")
+            // If S3 returned a generic/incorrect/empty content type, use file extension logic
+            if (s3ContentType == null || s3ContentType.isEmpty() || s3ContentType.isBlank()
+                    || s3ContentType.equals("application/octet-stream")
                     || s3ContentType.equals("text/plain")
                     || s3ContentType.equals("binary/octet-stream")) {
-                logger.info("S3 returned generic content type '{}' for {}, using file extension",
+                logger.info(
+                        "S3 returned generic/empty content type '{}' for {}, using file extension",
                         s3ContentType, documentPath);
                 return getContentTypeFromExtension(documentPath);
             }
@@ -114,18 +116,6 @@ public class DocumentService {
             return "text/html; charset=UTF-8";
         if (documentPath.endsWith(".pdf"))
             return "application/pdf";
-        if (documentPath.endsWith(".docx"))
-            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        if (documentPath.endsWith(".doc"))
-            return "application/msword";
-        if (documentPath.endsWith(".xlsx"))
-            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        if (documentPath.endsWith(".xls"))
-            return "application/vnd.ms-excel";
-        if (documentPath.endsWith(".csv"))
-            return "text/csv; charset=UTF-8";
-        if (documentPath.endsWith(".ods"))
-            return "application/vnd.oasis.opendocument.spreadsheet";
         if (documentPath.endsWith(".txt"))
             return "text/plain; charset=UTF-8";
         if (documentPath.endsWith(".css"))
