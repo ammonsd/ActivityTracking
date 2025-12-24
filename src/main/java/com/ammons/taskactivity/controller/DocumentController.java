@@ -37,6 +37,16 @@ public class DocumentController {
     private DocumentService documentService;
 
     /**
+     * Handle root /docs path - defaults to error.html
+     * 
+     * @return Document content for error.html
+     */
+    @GetMapping({"", "/"})
+    public ResponseEntity<?> getDefaultDocument() {
+        return getDocument("error.html");
+    }
+
+    /**
      * Serve document from S3
      * 
      * @param filename Document filename (e.g., "user-guide.html")
