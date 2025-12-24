@@ -167,6 +167,46 @@
                 "cloudwatch:ListMetrics"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "S3ReceiptsBucketAccess",
+            "Effect": "Allow",
+            "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+            "Resource": [
+                "arn:aws:s3:::taskactivity-receipts-prod",
+                "arn:aws:s3:::taskactivity-logs-archive"
+            ]
+        },
+        {
+            "Sid": "S3ReceiptsObjectAccess",
+            "Effect": "Allow",
+            "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+            "Resource": [
+                "arn:aws:s3:::taskactivity-receipts-prod/*",
+                "arn:aws:s3:::taskactivity-logs-archive/*"
+            ]
+        },
+        {
+            "Sid": "S3DocsBucketAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:GetBucketPolicy"
+            ],
+            "Resource": "arn:aws:s3:::taskactivity-docs"
+        },
+        {
+            "Sid": "S3DocsObjectAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl",
+                "s3:GetObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::taskactivity-docs/*"
         }
     ]
 }

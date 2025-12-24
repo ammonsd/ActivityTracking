@@ -343,6 +343,17 @@ aws s3api put-bucket-policy --bucket taskactivity-docs --policy '{
 aws s3 cp docs/User_Guide.html s3://taskactivity-docs/ --content-type "text/html"
 aws s3 cp docs/Task_Activity_Mangement_Technology_Stack.html s3://taskactivity-docs/ --content-type "text/html"
 aws s3 cp docs/activitytracking.html s3://taskactivity-docs/ --content-type "text/html"
+
+# Upload Word documents with proper content type
+aws s3 cp docs/MyDocument.docx s3://taskactivity-docs/ --content-type "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+aws s3 cp docs/MyDocument.doc s3://taskactivity-docs/ --content-type "application/msword"
+
+# Upload Excel documents with proper content type
+aws s3 cp docs/MySpreadsheet.xlsx s3://taskactivity-docs/ --content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+aws s3 cp docs/MySpreadsheet.xls s3://taskactivity-docs/ --content-type "application/vnd.ms-excel"
+
+# Upload PDF documents
+aws s3 cp docs/MyDocument.pdf s3://taskactivity-docs/ --content-type "application/pdf"
 ```
 
 **Verify buckets created:**
@@ -893,6 +904,60 @@ See `localdocs/Production_Operations_Runbook.md` for the complete IAM policy inc
 -   **Without S3 archival**: $0.30/month (logs deleted after 30 days)
 
 **Recommendation**: Enable S3 archival for compliance and troubleshooting, cost is minimal compared to value.
+
+## Managing S3 Document Content Types
+
+### Issue: Word/Excel files download as .txt files
+
+When documents are uploaded to S3 without proper Content-Type metadata, they may download with incorrect file extensions. The application now includes fallback logic to detect content types by file extension, but you can also fix the S3 metadata directly.
+
+### Solution 1: Update IAM Permissions (Required)
+
+Your IAM user needs permissions to access the `taskactivity-docs` bucket:
+
+```powershell
+# Run the IAM policy update script
+.\update-iam-policy.ps1
+```
+
+This will update your IAM policy to include:
+- `s3:ListBucket` on `taskactivity-docs`
+- `s3:GetObject` and `s3:PutObject` on `taskactivity-docs/*`
+
+### Solution 2: Fix Existing Files in S3
+
+After updating IAM permissions, fix content types for existing files:
+
+```powershell
+# Fix content types for all documents in S3
+.\fix-s3-content-types.ps1
+```
+
+This script will:
+- Scan all files in the `taskactivity-docs` bucket
+- Update Word, Excel, PDF files that have incorrect content types
+- Preserve files that already have correct metadata
+
+### Solution 3: Upload New Files with Correct Content Types
+
+When uploading new documents, always specify the content type:
+
+```powershell
+# Word documents
+aws s3 cp MyDocument.docx s3://taskactivity-docs/ --content-type "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+aws s3 cp MyDocument.doc s3://taskactivity-docs/ --content-type "application/msword"
+
+# Excel documents
+aws s3 cp MySpreadsheet.xlsx s3://taskactivity-docs/ --content-type "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+aws s3 cp MySpreadsheet.xls s3://taskactivity-docs/ --content-type "application/vnd.ms-excel"
+
+# PDF documents
+aws s3 cp MyDocument.pdf s3://taskactivity-docs/ --content-type "application/pdf"
+```
+
+### Application-Level Protection
+
+The `DocumentService` class now includes fallback logic that detects content types by file extension when S3 returns generic types like `text/plain` or `application/octet-stream`. This provides automatic protection even if S3 metadata is incorrect.
 
 ## Additional Resources
 

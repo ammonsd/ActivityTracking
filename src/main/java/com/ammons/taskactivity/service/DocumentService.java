@@ -78,39 +78,61 @@ public class DocumentService {
      * @return Content type (e.g., "text/html")
      */
     public String getContentType(String documentPath) {
+        String s3ContentType = null;
+
         try {
             HeadObjectRequest headRequest =
                     HeadObjectRequest.builder().bucket(docsBucketName).key(documentPath).build();
 
-            return s3Client.headObject(headRequest).contentType();
+            s3ContentType = s3Client.headObject(headRequest).contentType();
+
+            // If S3 returned a generic/incorrect content type, use file extension logic
+            if (s3ContentType == null || s3ContentType.equals("application/octet-stream")
+                    || s3ContentType.equals("text/plain")
+                    || s3ContentType.equals("binary/octet-stream")) {
+                logger.info("S3 returned generic content type '{}' for {}, using file extension",
+                        s3ContentType, documentPath);
+                return getContentTypeFromExtension(documentPath);
+            }
+
+            return s3ContentType;
 
         } catch (S3Exception e) {
             logger.warn("Error getting content type for {}: {}", documentPath, e.getMessage());
-            // Return default based on file extension
-            if (documentPath.endsWith(".html"))
-                return "text/html; charset=UTF-8";
-            if (documentPath.endsWith(".pdf"))
-                return "application/pdf";
-            if (documentPath.endsWith(".docx"))
-                return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            if (documentPath.endsWith(".doc"))
-                return "application/msword";
-            if (documentPath.endsWith(".xlsx"))
-                return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            if (documentPath.endsWith(".xls"))
-                return "application/vnd.ms-excel";
-            if (documentPath.endsWith(".csv"))
-                return "text/csv; charset=UTF-8";
-            if (documentPath.endsWith(".ods"))
-                return "application/vnd.oasis.opendocument.spreadsheet";
-            if (documentPath.endsWith(".txt"))
-                return "text/plain; charset=UTF-8";
-            if (documentPath.endsWith(".css"))
-                return "text/css; charset=UTF-8";
-            if (documentPath.endsWith(".js"))
-                return "application/javascript; charset=UTF-8";
-            return "application/octet-stream";
+            return getContentTypeFromExtension(documentPath);
         }
+    }
+
+    /**
+     * Determine content type based on file extension
+     * 
+     * @param documentPath Path to the document
+     * @return Content type based on file extension
+     */
+    private String getContentTypeFromExtension(String documentPath) {
+        if (documentPath.endsWith(".html"))
+            return "text/html; charset=UTF-8";
+        if (documentPath.endsWith(".pdf"))
+            return "application/pdf";
+        if (documentPath.endsWith(".docx"))
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (documentPath.endsWith(".doc"))
+            return "application/msword";
+        if (documentPath.endsWith(".xlsx"))
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        if (documentPath.endsWith(".xls"))
+            return "application/vnd.ms-excel";
+        if (documentPath.endsWith(".csv"))
+            return "text/csv; charset=UTF-8";
+        if (documentPath.endsWith(".ods"))
+            return "application/vnd.oasis.opendocument.spreadsheet";
+        if (documentPath.endsWith(".txt"))
+            return "text/plain; charset=UTF-8";
+        if (documentPath.endsWith(".css"))
+            return "text/css; charset=UTF-8";
+        if (documentPath.endsWith(".js"))
+            return "application/javascript; charset=UTF-8";
+        return "application/octet-stream";
     }
 
     /**
