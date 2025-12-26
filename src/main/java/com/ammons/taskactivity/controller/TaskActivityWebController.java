@@ -352,9 +352,9 @@ public class TaskActivityWebController {
     @PostMapping("/update/{id}")
     public String updateTask(@PathVariable Long id,
             @Valid @ModelAttribute TaskActivityDto taskActivityDto, BindingResult bindingResult,
-            @RequestParam(required = false) String client,
-            @RequestParam(required = false) String project,
-            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String filterClient,
+            @RequestParam(required = false) String filterProject,
+            @RequestParam(required = false) String filterPhase,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -378,7 +378,8 @@ public class TaskActivityWebController {
                         && !existingTask.get().getUsername().equals(currentUsername)) {
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Access denied: You can only update your own tasks.");
-                    return buildFilteredRedirect(client, project, phase, username, startDate,
+                    return buildFilteredRedirect(filterClient, filterProject, filterPhase, username,
+                            startDate,
                             endDate);
                 }
             }
@@ -386,7 +387,8 @@ public class TaskActivityWebController {
             taskActivityService.updateTaskActivity(id, taskActivityDto);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity updated successfully!");
-            return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+            return buildFilteredRedirect(filterClient, filterProject, filterPhase, username,
+                    startDate, endDate);
 
         } catch (Exception e) {
             model.addAttribute(ERROR_MESSAGE_ATTR,

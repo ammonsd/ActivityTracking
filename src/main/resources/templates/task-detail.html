@@ -341,10 +341,10 @@
                         ></div>
                     </div>
 
-                    <!-- Hidden filter fields to preserve filters -->
-                    <input type="hidden" name="client" th:value="${selectedClient}" />
-                    <input type="hidden" name="project" th:value="${selectedProject}" />
-                    <input type="hidden" name="phase" th:value="${selectedPhase}" />
+                    <!-- Hidden filter fields to preserve filters (renamed to avoid conflict with form fields) -->
+                    <input type="hidden" name="filterClient" th:value="${selectedClient}" />
+                    <input type="hidden" name="filterProject" th:value="${selectedProject}" />
+                    <input type="hidden" name="filterPhase" th:value="${selectedPhase}" />
                     <input type="hidden" name="username" th:value="${selectedUsername}" />
                     <input type="hidden" name="startDate" th:value="${startDate}" />
                     <input type="hidden" name="endDate" th:value="${endDate}" />
