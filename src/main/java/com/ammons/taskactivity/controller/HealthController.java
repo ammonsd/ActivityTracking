@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,41 @@ public class HealthController {
 
     @Autowired
     private DataSource dataSource;
+
+    /**
+     * Formats a Duration into a human-readable string
+     * 
+     * @param duration The duration to format
+     * @return Human-readable string like "3 days, 8 hours, 34 minutes"
+     */
+    private String formatUptime(Duration duration) {
+        long days = duration.toDays();
+        long hours = duration.toHoursPart();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+
+        StringBuilder uptime = new StringBuilder();
+        if (days > 0) {
+            uptime.append(days).append(days == 1 ? " day" : " days");
+        }
+        if (hours > 0) {
+            if (uptime.length() > 0)
+                uptime.append(", ");
+            uptime.append(hours).append(hours == 1 ? " hour" : " hours");
+        }
+        if (minutes > 0) {
+            if (uptime.length() > 0)
+                uptime.append(", ");
+            uptime.append(minutes).append(minutes == 1 ? " minute" : " minutes");
+        }
+        if (seconds > 0 || uptime.length() == 0) {
+            if (uptime.length() > 0)
+                uptime.append(", ");
+            uptime.append(seconds).append(seconds == 1 ? " second" : " seconds");
+        }
+
+        return uptime.toString();
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
@@ -46,7 +82,7 @@ public class HealthController {
             health.put("authentication", "Windows Authentication");
             health.put("startupTime", STARTUP_TIME);
             health.put("uptime",
-                    java.time.Duration.between(STARTUP_TIME, LocalDateTime.now()).toString());
+                    formatUptime(Duration.between(STARTUP_TIME, LocalDateTime.now())));
 
             return ResponseEntity.ok(health);
 
@@ -70,7 +106,7 @@ public class HealthController {
         Map<String, Object> info = new HashMap<>();
         info.put("startupTime", STARTUP_TIME);
         info.put("uptime",
-                java.time.Duration.between(STARTUP_TIME, LocalDateTime.now()).toString());
+                formatUptime(Duration.between(STARTUP_TIME, LocalDateTime.now())));
         return ResponseEntity.ok(info);
     }
 }
