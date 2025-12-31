@@ -1,0 +1,25 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "CostExplorerReadAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ce:GetCostAndUsage",
+                "ce:GetCostAndUsageWithResources",
+                "ce:GetCostForecast",
+                "ce:GetDimensionValues",
+                "ce:GetTags",
+                "ce:GetReservationUtilization",
+                "ce:GetSavingsPlansUtilization"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "BillingReadAccess",
+            "Effect": "Allow",
+            "Action": ["aws-portal:ViewBilling", "aws-portal:ViewUsage"],
+            "Resource": "*"
+        }
+    ]
+}
