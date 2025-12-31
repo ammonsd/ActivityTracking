@@ -73,10 +73,9 @@ if (-not (Test-AwsCli)) {
 }
 
 # Get current AWS identity
-Write-Host "Checking AWS credentials..." -ForegroundColor $InfoColor
 try {
     $identity = aws sts get-caller-identity | ConvertFrom-Json
-    Write-Host "✓ Connected as: $($identity.Arn)" -ForegroundColor $SuccessColor
+    Write-Host "  Connected as: $($identity.Arn)" -ForegroundColor $SuccessColor
     Write-Host "  Account: $($identity.Account)`n" -ForegroundColor $SuccessColor
 }
 catch {
@@ -87,22 +86,21 @@ catch {
 
 # Determine date range
 if ($LastMonth) {
-    $startDate = (Get-Date).AddMonths(-1).ToString("yyyy-MM-01")
-    $endDate = (Get-Date -Day 1).ToString("yyyy-MM-dd")
-    $periodName = "Last Month"
+    $prevMonth = (Get-Date).AddMonths(-1)
+    $lastDay = [DateTime]::DaysInMonth($prevMonth.Year, $prevMonth.Month)
+    $startDate = "{0:yyyy-MM-01}" -f $prevMonth
+    $endDate = "{0:yyyy-MM}-{1:00}" -f $prevMonth, $lastDay
 }
 else {
     $startDate = (Get-Date -Day 1).ToString("yyyy-MM-dd")
     # AWS Cost Explorer requires end date to be today or earlier
     $endDate = (Get-Date).ToString("yyyy-MM-dd")
-    $periodName = "Month-to-Date"
 }
 
-Write-Host "Period: $periodName ($startDate to $endDate)" -ForegroundColor $InfoColor
-Write-Host "----------------------------------------`n" -ForegroundColor $InfoColor
+Write-Host "Period: $startDate to $endDate" -ForegroundColor $InfoColor
+Write-Host "-----------------------------------------------------------------------" -ForegroundColor $InfoColor
 
 # Get total costs
-Write-Host "Fetching cost data..." -ForegroundColor $InfoColor
 try {
     if ($Detailed) {
         # Get costs by service
@@ -127,10 +125,10 @@ try {
             $currency = $services[0].Currency
         }
         
-        Write-Host "`n$periodName Total: " -NoNewline -ForegroundColor $InfoColor
+        Write-Host "`nTotal: " -NoNewline -ForegroundColor $InfoColor
         Write-Host "$currency `$$totalCost" -ForegroundColor $SuccessColor
         Write-Host "`nCosts by Service:" -ForegroundColor $InfoColor
-        Write-Host "----------------------------------------" -ForegroundColor $InfoColor
+        Write-Host "-----------------------------------------------------------------------" -ForegroundColor $InfoColor
         
         foreach ($service in $services) {
             $serviceName = $service.Service.PadRight(50)
@@ -147,7 +145,7 @@ try {
         $totalCost = [math]::Round([decimal]$result.ResultsByTime[0].Total.UnblendedCost.Amount, 2)
         $currency = $result.ResultsByTime[0].Total.UnblendedCost.Unit
         
-        Write-Host "`n$periodName Total: " -NoNewline -ForegroundColor $InfoColor
+        Write-Host "`nTotal: " -NoNewline -ForegroundColor $InfoColor
         Write-Host "$currency `$$totalCost" -ForegroundColor $SuccessColor
         Write-Host "`nTip: Use -Detailed flag to see breakdown by service" -ForegroundColor $WarningColor
     }
@@ -173,7 +171,7 @@ if ($Forecast -and -not $LastMonth) {
     $daysRemaining = $lastDayOfMonth - $today.Day
     
     if ($daysRemaining -gt 0) {
-        Write-Host "`n----------------------------------------" -ForegroundColor $InfoColor
+        Write-Host "`n-----------------------------------------------------------------------" -ForegroundColor $InfoColor
         Write-Host "Fetching forecast..." -ForegroundColor $InfoColor
         
         try {
@@ -196,9 +194,9 @@ if ($Forecast -and -not $LastMonth) {
             Write-Host $_.Exception.Message -ForegroundColor $WarningColor
         }
     } else {
-        Write-Host "`n----------------------------------------" -ForegroundColor $InfoColor
+        Write-Host "`n-----------------------------------------------------------------------" -ForegroundColor $InfoColor
         Write-Host "Note: Today is the last day of the month - no forecast available" -ForegroundColor $WarningColor
     }
 }
 
-Write-Host "`n============================================`n" -ForegroundColor $InfoColor
+Write-Host "`n========================================================================`n" -ForegroundColor $InfoColor
