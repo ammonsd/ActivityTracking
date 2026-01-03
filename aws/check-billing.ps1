@@ -61,7 +61,7 @@ function Test-CostExplorerEnabled {
 }
 
 # Main script
-Write-Host "`n============================================" -ForegroundColor $InfoColor
+Write-Host "============================================" -ForegroundColor $InfoColor
 Write-Host "AWS Billing Information" -ForegroundColor $InfoColor
 Write-Host "============================================`n" -ForegroundColor $InfoColor
 
@@ -85,16 +85,17 @@ catch {
 }
 
 # Determine date range
+# NOTE: AWS Cost Explorer uses EXCLUSIVE end dates (end date is not included in results)
 if ($LastMonth) {
     $prevMonth = (Get-Date).AddMonths(-1)
-    $lastDay = [DateTime]::DaysInMonth($prevMonth.Year, $prevMonth.Month)
     $startDate = "{0:yyyy-MM-01}" -f $prevMonth
-    $endDate = "{0:yyyy-MM}-{1:00}" -f $prevMonth, $lastDay
+    # End date should be first day of current month (exclusive, so last month's last day is included)
+    $endDate = (Get-Date -Day 1).ToString("yyyy-MM-dd")
 }
 else {
     $startDate = (Get-Date -Day 1).ToString("yyyy-MM-dd")
-    # AWS Cost Explorer requires end date to be today or earlier
-    $endDate = (Get-Date).ToString("yyyy-MM-dd")
+    # For current month, use tomorrow's date to include today
+    $endDate = (Get-Date).AddDays(1).ToString("yyyy-MM-dd")
 }
 
 Write-Host "Period: $startDate to $endDate" -ForegroundColor $InfoColor
