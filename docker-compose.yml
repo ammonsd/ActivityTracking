@@ -139,10 +139,9 @@ services:
             - "8080:8080"
         environment:
             - SPRING_PROFILES_ACTIVE=production
-            # SECURITY: Required environment variables
-            - JWT_SECRET=${JWT_SECRET}
-            - APP_ADMIN_INITIAL_PASSWORD=${APP_ADMIN_INITIAL_PASSWORD}
-            # Use Docker secrets for production
+            # Use Docker secrets for all sensitive data
+            - JWT_SECRET_FILE=/run/secrets/jwt_secret
+            - APP_ADMIN_INITIAL_PASSWORD_FILE=/run/secrets/admin_password
             - DB_USERNAME_FILE=/run/secrets/db_username
             - DB_PASSWORD_FILE=/run/secrets/db_password
             - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-production:5432/AmmoP1DB
@@ -151,6 +150,8 @@ services:
             # Timezone configuration (set to match host timezone)
             - TZ=${TZ:-America/New_York}
         secrets:
+            - jwt_secret
+            - admin_password
             - db_username
             - db_password
         depends_on:
@@ -211,6 +212,12 @@ volumes:
 
 # Docker secrets for production (external secrets recommended)
 secrets:
+    jwt_secret:
+        external: true
+        name: taskactivity_jwt_secret
+    admin_password:
+        external: true
+        name: taskactivity_admin_password
     db_username:
         external: true
         name: taskactivity_db_username

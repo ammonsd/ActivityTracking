@@ -21,7 +21,27 @@ This guide provides comprehensive instructions for using the Task Activity Manag
 
 ## Accessing Swagger UI
 
-The Swagger UI is available at the following URLs when the application is running:
+⚠️ **Security Note:** Swagger UI is **disabled by default** in production for security reasons.
+
+### Enabling Swagger for Development
+
+To access Swagger UI in development, you must explicitly enable it:
+
+**Option 1: Environment Variable**
+```bash
+export SPRINGDOC_SWAGGER_UI_ENABLED=true
+export SPRINGDOC_API_DOCS_ENABLED=true
+```
+
+**Option 2: application-local.properties**
+```properties
+springdoc.swagger-ui.enabled=true
+springdoc.api-docs.enabled=true
+```
+
+### Accessing the UI
+
+Once enabled, the Swagger UI is available at the following URLs:
 
 -   **Primary URL**: `http://localhost:8080/swagger-ui.html`
 -   **Alternative URL**: `http://localhost:8080/swagger-ui/index.html`
@@ -29,6 +49,8 @@ The Swagger UI is available at the following URLs when the application is runnin
 The OpenAPI specification (JSON format) is available at:
 
 -   `http://localhost:8080/v3/api-docs`
+
+**Production Behavior:** When disabled (default), Swagger endpoints return `403 Forbidden` to prevent API documentation exposure.
 
 ---
 
@@ -424,10 +446,12 @@ Content-Type: application/json
 
 ### Health Check Endpoints
 
-| Method | Endpoint           | Description               | Auth Required |
-| ------ | ------------------ | ------------------------- | ------------- |
-| GET    | `/api/health`      | Application health status | No            |
-| GET    | `/actuator/health` | Actuator health check     | No            |
+| Method | Endpoint           | Description               | Auth Required | Details Shown |
+| ------ | ------------------ | ------------------------- | ------------- | ------------- |
+| GET    | `/api/health`      | Application health status | No            | Basic only    |
+| GET    | `/actuator/health` | Actuator health check     | No            | Status only   |
+
+**Security Note:** Health endpoints return minimal information (`{"status":"UP"}`) to prevent information leakage. Detailed health information (database status, disk space, etc.) is not exposed.
 
 ---
 

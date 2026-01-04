@@ -3,6 +3,7 @@ package com.ammons.taskactivity.config;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.security.CustomPermissionEvaluator;
 import com.ammons.taskactivity.security.JwtAuthenticationFilter;
+import com.ammons.taskactivity.security.RateLimitFilter;
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,6 +66,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,http://localhost:8080}")
     private String allowedOrigins;
 
+    @Value("${springdoc.swagger-ui.enabled:false}")
+    private boolean swaggerEnabled;
+
     private final UserDetailsServiceImpl userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
@@ -73,6 +77,7 @@ public class SecurityConfig {
     private final ForcePasswordUpdateFilter forcePasswordUpdateFilter;
     private final UserRepository userRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                     CustomAccessDeniedHandler customAccessDeniedHandler,
@@ -81,7 +86,8 @@ public class SecurityConfig {
             CustomLogoutSuccessHandler customLogoutSuccessHandler,
                     ForcePasswordUpdateFilter forcePasswordUpdateFilter,
                     UserRepository userRepository,
-                    JwtAuthenticationFilter jwtAuthenticationFilter) {
+                    JwtAuthenticationFilter jwtAuthenticationFilter,
+                    RateLimitFilter rateLimitFilter) {
         this.userDetailsService = userDetailsService;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
@@ -90,6 +96,7 @@ public class SecurityConfig {
         this.forcePasswordUpdateFilter = forcePasswordUpdateFilter;
         this.userRepository = userRepository;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -138,12 +145,17 @@ public class SecurityConfig {
                                         .requestMatchers("/api/users/**", "/api/dropdownvalues/**")
                                         .hasRole(ADMIN_ROLE)
 
-                                        // Swagger/OpenAPI endpoints - public access for
-                                        // documentation
+                                        // Swagger/OpenAPI endpoints - only accessible when
+                                        // explicitly enabled
                                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                                         "/v3/api-docs/**", "/swagger-resources/**",
                                                         "/webjars/**")
-                        .permitAll() // API endpoints - require authentication
+                                        .access((authentication, context) -> swaggerEnabled
+                                                        ? new org.springframework.security.authorization.AuthorizationDecision(
+                                                                        true)
+                                                        : new org.springframework.security.authorization.AuthorizationDecision(
+                                                                        false))
+                                        // API endpoints - require authentication
                                         .requestMatchers(HttpMethod.GET, API_PATTERN)
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                         ROLE_EXPENSE_ADMIN)
@@ -338,10 +350,42 @@ public class SecurityConfig {
                                                                                      // dual UI
                                                                                      // support
                         .authenticationProvider(customAuthenticationProvider)
+                        .addFilterBefore(rateLimitFilter,
+                                        UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(jwtAuthenticationFilter,
                                         UsernamePasswordAuthenticationFilter.class)
                         .addFilterAfter(forcePasswordUpdateFilter,
-                                        UsernamePasswordAuthenticationFilter.class);
+                                        UsernamePasswordAuthenticationFilter.class)
+                        // Security Headers - OWASP recommendations
+                        .headers(headers -> headers
+                                        // Prevent clickjacking attacks
+                                        .frameOptions(frameOptions -> frameOptions.deny())
+                                        // Prevent MIME type sniffing
+                                        .contentTypeOptions(contentTypeOptions -> contentTypeOptions
+                                                        .disable())
+                                        // Disable XSS protection (modern browsers don't need it,
+                                        // can cause issues)
+                                        .xssProtection(xssProtection -> xssProtection.disable())
+                                        // Content Security Policy - Restrict resource loading
+                                        .contentSecurityPolicy(csp -> csp
+                                                        .policyDirectives("default-src 'self'; "
+                                                                        + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                                                                        + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                                                                        + "img-src 'self' data: https:; "
+                                                                        + "font-src 'self' data: https://fonts.gstatic.com; "
+                                                                        + "connect-src 'self'; "
+                                                                        + "frame-ancestors 'none'"))
+                                        // HTTP Strict Transport Security - Force HTTPS
+                                        .httpStrictTransportSecurity(
+                                                        hsts -> hsts.includeSubDomains(true)
+                                                                        .maxAgeInSeconds(31536000)) // 1
+                                                                                                    // year
+                                        // Referrer Policy - Control referer header
+                                        .referrerPolicy(referrer -> referrer.policy(
+                                                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                        // Permissions Policy - Control browser features
+                                        .permissionsPolicy(permissions -> permissions.policy(
+                                                        "camera=(), microphone=(), geolocation=(), payment=()")));
 
         return http.build();
     }

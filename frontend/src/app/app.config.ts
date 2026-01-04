@@ -7,9 +7,20 @@ import {
 } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
+
+// Configure Material Icons to use SVG instead of font ligatures
+function configureIcons(
+  iconRegistry: MatIconRegistry,
+  sanitizer: DomSanitizer
+) {
+  iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
+  return () => {};
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,5 +32,11 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimations(),
     provideNativeDateAdapter(),
+    {
+      provide: 'ICON_INIT',
+      useFactory: configureIcons,
+      deps: [MatIconRegistry, DomSanitizer],
+      multi: true,
+    },
   ],
 };

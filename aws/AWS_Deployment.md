@@ -548,6 +548,8 @@ The following environment variables are configured in the task definition:
 ### Security Configuration (from Secrets Manager)
 
 -   `JWT_SECRET` - **REQUIRED** - JWT signing key (minimum 256 bits). Application will fail to start if not set or using default value.
+-   `JWT_EXPIRATION` - *Optional* - Access token lifetime in milliseconds (default: 86400000 = 24 hours)
+-   `JWT_REFRESH_EXPIRATION` - *Optional* - Refresh token lifetime in milliseconds (default: 604800000 = 7 days)
 
 ### Database Configuration (from Secrets Manager)
 

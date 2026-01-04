@@ -95,6 +95,15 @@ The application automatically creates tables and populates initial data on start
 
 ⚠️ **Security:** Change the default admin password immediately after first login!
 
+**Built-in Security Features:**
+
+- **Account Lockout**: 5 failed login attempts locks account (admin can unlock)
+- **Rate Limiting**: 5 authentication requests per minute per IP address
+- **Security Headers**: X-Frame-Options, CSP, HSTS, Referrer-Policy, Permissions-Policy
+- **JWT Authentication**: Secure token-based API authentication with configurable expiration
+- **Docker Secrets**: Production uses secrets for all sensitive credentials
+- **Disabled by Default**: Swagger UI and detailed Actuator endpoints require explicit enablement
+
 ### Run Locally
 
 ```powershell
@@ -112,6 +121,31 @@ docker-compose --profile host-db up -d
 Access the application at **http://localhost:8080**
 
 ### Configuration
+
+#### Required Environment Variables
+
+The application requires the following environment variables to be set:
+
+**Security (Required):**
+
+```bash
+# JWT authentication configuration
+export JWT_SECRET=$(openssl rand -base64 32)  # Generate secure 256-bit key
+export APP_ADMIN_INITIAL_PASSWORD="YourSecure123!Pass"  # Min 12 chars, mixed case, numbers, special chars
+
+# Database credentials
+export DB_USERNAME="your_db_user"
+export DB_PASSWORD="your_db_password"
+```
+
+**Optional JWT Customization:**
+
+```bash
+export JWT_EXPIRATION=86400000        # Access token lifetime in ms (default: 24 hours)
+export JWT_REFRESH_EXPIRATION=604800000  # Refresh token lifetime in ms (default: 7 days)
+```
+
+⚠️ **Security Note:** The application will fail to start if `JWT_SECRET` is not set or uses an insecure default value.
 
 #### Receipt Storage Configuration
 
@@ -142,7 +176,15 @@ For AWS deployment, ensure:
 
 ### API Documentation
 
-Interactive API documentation is available via Swagger UI:
+⚠️ **Security Note:** Swagger UI is **disabled by default** for security. To enable for development/testing:
+
+```properties
+# In application-local.properties or set environment variable
+springdoc.swagger-ui.enabled=true
+springdoc.api-docs.enabled=true
+```
+
+Interactive API documentation is available via Swagger UI when enabled:
 
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs

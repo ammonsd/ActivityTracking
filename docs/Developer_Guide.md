@@ -998,6 +998,8 @@ logging.level.org.springframework.web=DEBUG
 | Variable                       | Description                        | Default                                   | Required       |
 | ------------------------------ | ---------------------------------- | ----------------------------------------- | -------------- |
 | `JWT_SECRET`                   | JWT signing key (256+ bits)        | None (must be set)                        | **Yes**        |
+| `JWT_EXPIRATION`               | Access token lifetime (ms)         | 86400000 (24 hours)                       | No             |
+| `JWT_REFRESH_EXPIRATION`       | Refresh token lifetime (ms)        | 604800000 (7 days)                        | No             |
 | `APP_ADMIN_INITIAL_PASSWORD`   | Initial admin password             | None (must be set in production)          | **Yes (prod)** |
 | `DB_USERNAME`                  | Database username                  | postgres                                  | Yes            |
 | `DB_PASSWORD`                  | Database password                  | N1ghrd01-1948                             | Yes            |
@@ -2516,6 +2518,18 @@ public class User {
 - **Automatic Reset**: Failed login counter resets to 0 on successful authentication
 - **Admin Unlock**: Administrators can unlock accounts via the User Management UI
 - **Lockout Visibility**: Locked accounts display a 🔒 indicator in the user management interface
+- **Rate Limiting**: Authentication endpoints (`/api/auth/login`, `/login`, `/api/auth/refresh`) are limited to 5 requests per minute per IP address to prevent brute force attacks
+  - **Configurable**: Set `security.rate-limit.enabled=false` in application-local.properties to disable for testing
+  - **Adjustable**: Configure `security.rate-limit.capacity` and `security.rate-limit.refill-minutes` as needed
+  - **Production Default**: Enabled with 5 requests per minute
+  - **Local Development**: Disabled by default to prevent testing issues
+- **Security Headers**: Comprehensive OWASP-recommended headers including:
+  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
+  - `Content-Security-Policy` - Restricts resource loading
+  - `Strict-Transport-Security` - Enforces HTTPS with 1-year max-age
+  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
+  - `Permissions-Policy` - Restricts browser features
+- **Docker Secrets**: Production deployments use Docker secrets for sensitive credentials (JWT_SECRET, database passwords, admin password) instead of environment variables
 
 ## API Reference
 
