@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.ammons.taskactivity.security.RateLimitFilter;
+
 /**
  * Test Security Configuration for unit and integration tests. Provides simplified security setup
  * with in-memory users for testing.
@@ -21,6 +24,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @TestConfiguration
 @EnableWebSecurity
 public class TestSecurityConfig {
+
+    /**
+     * Mock the RateLimitFilter to prevent rate limiting during tests
+     */
+    @MockBean
+    private RateLimitFilter rateLimitFilter;
 
     /**
      * Security filter chain for testing - disables CSRF and allows all requests
