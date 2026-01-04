@@ -27,6 +27,11 @@ mat-card-header {
   gap: 10px;
   margin-bottom: 20px;
   align-items: end;
+  
+  /* Ensure buttons don't overflow on smaller screens */
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
 }
 
 .filter-section mat-form-field {
@@ -53,8 +58,12 @@ mat-card-header {
   display: flex;
   gap: 8px;
   align-items: flex-end;
-  grid-column: -1;
   white-space: nowrap;
+  justify-content: flex-end;
+  
+  /* Allow wrapping on smaller screens and ensure visibility */
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .table-actions .button-text {
