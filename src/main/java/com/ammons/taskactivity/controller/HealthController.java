@@ -77,7 +77,7 @@ public class HealthController {
 
             health.put("status", "UP");
             health.put("timestamp", LocalDateTime.now());
-            health.put("application", "Task Activity Management API");
+            health.put("application", "Task Activity & Expense Management API");
             health.put("version", "1.0.0");
             health.put("authentication", "Windows Authentication");
             health.put("startupTime", STARTUP_TIME);

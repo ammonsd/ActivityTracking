@@ -173,7 +173,6 @@ if ($Forecast -and -not $LastMonth) {
     
     if ($daysRemaining -gt 0) {
         Write-Host "`n-----------------------------------------------------------------------" -ForegroundColor $InfoColor
-        Write-Host "Fetching forecast..." -ForegroundColor $InfoColor
         
         try {
             $forecastStart = (Get-Date).AddDays(1).ToString("yyyy-MM-dd")
