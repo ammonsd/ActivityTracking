@@ -4,6 +4,7 @@ import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.entity.Expense;
 import com.ammons.taskactivity.service.ExpenseService;
 import com.ammons.taskactivity.service.ReceiptStorageService;
+import com.ammons.taskactivity.util.FileTypeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -41,10 +42,13 @@ public class ReceiptController {
 
     private final ReceiptStorageService storageService;
     private final ExpenseService expenseService;
+    private final FileTypeValidator fileTypeValidator;
 
-    public ReceiptController(ReceiptStorageService storageService, ExpenseService expenseService) {
+    public ReceiptController(ReceiptStorageService storageService, ExpenseService expenseService,
+            FileTypeValidator fileTypeValidator) {
         this.storageService = storageService;
         this.expenseService = expenseService;
+        this.fileTypeValidator = fileTypeValidator;
     }
 
     /**
@@ -94,6 +98,18 @@ public class ReceiptController {
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
             return ResponseEntity.badRequest().body(ApiResponse
                     .error("File type not allowed. Please upload JPG, PNG, or PDF", null));
+        }
+
+        // SECURITY FIX: Validate file type using magic numbers (Issue #10)
+        // This prevents attacks where malicious files are disguised with fake extensions
+        FileTypeValidator.ValidationResult validationResult =
+                fileTypeValidator.validateFileType(file, file.getContentType());
+
+        if (!validationResult.isSuccess()) {
+            logger.warn("File validation failed for user {} expense {}: {}", username, expenseId,
+                    validationResult.getErrorMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(validationResult.getErrorMessage(), null));
         }
 
         try {

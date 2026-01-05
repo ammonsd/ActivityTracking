@@ -40,12 +40,15 @@ class UserServiceTest {
     @Mock
     private PasswordHistoryService passwordHistoryService;
 
+    @Mock
+    private TokenRevocationService tokenRevocationService;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserService(userRepository, passwordEncoder, passwordValidationService,
-                loginAuditService, passwordHistoryService);
+                        loginAuditService, passwordHistoryService, tokenRevocationService);
     }
 
     @Test

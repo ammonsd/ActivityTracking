@@ -1,5 +1,7 @@
 package com.ammons.taskactivity.security;
 
+import com.ammons.taskactivity.service.TokenRevocationService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,10 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenRevocationService tokenRevocationService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService,
+            TokenRevocationService tokenRevocationService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @Override
@@ -60,6 +65,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (Boolean.TRUE.equals(jwtUtil.validateToken(jwt, userDetails))) {
+                // SECURITY FIX: Check if token is revoked (logout, password change, etc.)
+                try {
+                    Claims claims = jwtUtil.extractAllClaims(jwt);
+                    String jti = claims.getId();
+                    if (jti != null && tokenRevocationService.isTokenRevoked(jti)) {
+                        logger.warn("Authentication attempt with revoked token: JTI={}, User={}",
+                                jti, username);
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to check token revocation status: {}", e.getMessage());
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 // SECURITY FIX: Check account status before granting authentication
                 if (!userDetails.isEnabled()) {
                     logger.warn("Authentication attempt with disabled account: {}", username);

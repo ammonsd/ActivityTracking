@@ -33,15 +33,18 @@ public class UserService {
     private final PasswordValidationService passwordValidationService;
     private final LoginAuditService loginAuditService;
     private final PasswordHistoryService passwordHistoryService;
+    private final TokenRevocationService tokenRevocationService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
             PasswordValidationService passwordValidationService,
-            LoginAuditService loginAuditService, PasswordHistoryService passwordHistoryService) {
+            LoginAuditService loginAuditService, PasswordHistoryService passwordHistoryService,
+            TokenRevocationService tokenRevocationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordValidationService = passwordValidationService;
         this.loginAuditService = loginAuditService;
         this.passwordHistoryService = passwordHistoryService;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     public List<User> getAllUsers() {
@@ -317,6 +320,12 @@ public class UserService {
 
         logger.info("Password successfully changed for user: {} (id={}), forceUpdate now: {}",
                 username, savedUser.getId(), savedUser.isForcePasswordUpdate());
+
+        // SECURITY FIX: Revoke all JWT tokens on password change
+        // This ensures that attackers who may have stolen a token cannot use it after password
+        // change
+        tokenRevocationService.revokeAllUserTokens(username, "password_change");
+        logger.info("Revoked all JWT tokens for user '{}' after password change", username);
 
         // Verify the password was actually saved by reading it back
         User verifyUser = userRepository.findByUsername(username).orElse(null);

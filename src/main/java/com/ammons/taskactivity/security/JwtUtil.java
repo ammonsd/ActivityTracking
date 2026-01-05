@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -126,9 +127,10 @@ public class JwtUtil {
     }
 
     /**
-     * Extract all claims from JWT token
+     * Extract all claims from JWT token SECURITY FIX: Made public to allow TokenRevocationService
+     * to extract claims
      */
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token)
                 .getPayload();
     }
@@ -163,10 +165,17 @@ public class JwtUtil {
     }
 
     /**
-     * Create JWT token with claims and subject
+     * Create JWT token with claims and subject SECURITY FIX: Added JTI (JWT ID) claim for token
+     * revocation support
      */
     private String createToken(Map<String, Object> claims, String subject, Long expirationTime) {
-        return Jwts.builder().claims(claims).subject(subject)
+        return Jwts.builder().claims(claims).subject(subject).id(UUID.randomUUID().toString()) // SECURITY
+                                                                                               // FIX:
+                                                                                               // Add
+                                                                                               // unique
+                                                                                               // JTI
+                                                                                               // for
+                                                                                               // revocation
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey()).compact();

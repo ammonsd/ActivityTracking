@@ -34,10 +34,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        log.debug("Loading user: {}, password hash starts with: {}", username,
-                user.getPassword() != null
-                        ? user.getPassword().substring(0, Math.min(20, user.getPassword().length()))
-                        : "NULL");
+        // SECURITY FIX (January 2026): Removed password hash logging
+        // Previous code logged first 20 chars of password hash at DEBUG level
+        // While hashed, this unnecessarily exposes data if logs are compromised
+        log.debug("Loading user: {}", username);
 
         // Handle case where role might not be loaded yet (e.g., during test initialization)
         if (user.getRole() == null) {

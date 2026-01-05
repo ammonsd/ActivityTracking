@@ -82,6 +82,39 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique 
 ON public.users (username);
 
+--------------------------------
+-- Create revoked_tokens table for JWT token revocation/blacklist
+-- Security Note: This table is part of Issue #9 (Token Revocation) from security audit
+-- Ensures that tokens cannot be reused after:
+-- - User logout
+-- - Password change
+-- - Security incidents
+-- - Manual token revocation by administrators
+--------------------------------
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    jti VARCHAR(255) NOT NULL UNIQUE,  -- JWT ID claim (unique identifier for each token)
+    username VARCHAR(50) NOT NULL,     -- Username who owned the token
+    token_type VARCHAR(20) NOT NULL,   -- 'access' or 'refresh'
+    expiration_time TIMESTAMP NOT NULL, -- When the token expires (for cleanup)
+    revoked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- When token was revoked
+    reason VARCHAR(50) NOT NULL        -- 'logout', 'password_change', 'security_incident', 'manual'
+);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_jti ON revoked_tokens(jti);
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expiration ON revoked_tokens(expiration_time);
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_username ON revoked_tokens(username);
+
+-- Add comments to table and columns
+COMMENT ON TABLE revoked_tokens IS 'JWT token blacklist for logout and password change. Stores revoked tokens to prevent reuse.';
+COMMENT ON COLUMN revoked_tokens.jti IS 'JWT ID claim - unique identifier for each token';
+COMMENT ON COLUMN revoked_tokens.username IS 'Username who owned the revoked token';
+COMMENT ON COLUMN revoked_tokens.token_type IS 'Type of token: access or refresh';
+COMMENT ON COLUMN revoked_tokens.expiration_time IS 'Original expiration time of the token (for automatic cleanup)';
+COMMENT ON COLUMN revoked_tokens.revoked_at IS 'Timestamp when the token was revoked';
+COMMENT ON COLUMN revoked_tokens.reason IS 'Reason for revocation: logout, password_change, security_incident, manual';
+
 -----------------------------------
 -- Create public.dropdownvalues table
 -----------------------------------
