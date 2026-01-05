@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -22,6 +24,8 @@ import java.io.IOException;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
@@ -56,6 +60,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (Boolean.TRUE.equals(jwtUtil.validateToken(jwt, userDetails))) {
+                // SECURITY FIX: Check account status before granting authentication
+                if (!userDetails.isEnabled()) {
+                    logger.warn("Authentication attempt with disabled account: {}", username);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                if (!userDetails.isAccountNonLocked()) {
+                    logger.warn("Authentication attempt with locked account: {}", username);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                if (!userDetails.isAccountNonExpired()) {
+                    logger.warn("Authentication attempt with expired account: {}", username);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                if (!userDetails.isCredentialsNonExpired()) {
+                    logger.warn("Authentication attempt with expired credentials: {}", username);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null,
                                 userDetails.getAuthorities());

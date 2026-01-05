@@ -105,6 +105,27 @@ public class JwtUtil {
     }
 
     /**
+     * Extract token type from JWT token SECURITY FIX: Added to validate token type (access vs
+     * refresh)
+     */
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("token_type", String.class));
+    }
+
+    /**
+     * Validate if token is a refresh token SECURITY FIX: Added to prevent access tokens from being
+     * used as refresh tokens
+     */
+    public Boolean isRefreshToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return "refresh".equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
      * Extract all claims from JWT token
      */
     private Claims extractAllClaims(String token) {
@@ -126,6 +147,8 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles",
                 userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        // SECURITY FIX: Add token_type claim to distinguish access tokens
+        claims.put("token_type", "access");
         return createToken(claims, userDetails.getUsername(), expiration);
     }
 
@@ -134,6 +157,8 @@ public class JwtUtil {
      */
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        // SECURITY FIX: Add token_type claim to distinguish refresh tokens
+        claims.put("token_type", "refresh");
         return createToken(claims, userDetails.getUsername(), refreshExpiration);
     }
 

@@ -165,9 +165,10 @@ public class ReceiptController {
             String filename = expense.getReceiptPath()
                     .substring(expense.getReceiptPath().lastIndexOf('/') + 1);
 
+            // SECURITY FIX: Force attachment disposition to prevent XSS via inline rendering
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + filename + "\"")
+                            "attachment; filename=\"" + filename + "\"")
                     .body(new InputStreamResource(receiptStream));
 
         } catch (IOException e) {

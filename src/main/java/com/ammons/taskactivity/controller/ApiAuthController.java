@@ -98,6 +98,12 @@ public class ApiAuthController {
             String refreshToken = request.getRefreshToken();
             String username = jwtUtil.extractUsername(refreshToken);
 
+            // SECURITY FIX: Validate that this is actually a refresh token
+            if (!Boolean.TRUE.equals(jwtUtil.isRefreshToken(refreshToken))) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                    .body("Invalid token type - refresh token required");
+            }
+
             // Load user details
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 

@@ -360,9 +360,9 @@ public class SecurityConfig {
                         .headers(headers -> headers
                                         // Prevent clickjacking attacks
                                         .frameOptions(frameOptions -> frameOptions.deny())
-                                        // Prevent MIME type sniffing
+                                        // SECURITY FIX: Enable MIME type sniffing protection
                                         .contentTypeOptions(contentTypeOptions -> contentTypeOptions
-                                                        .disable())
+                                                        .and())
                                         // Disable XSS protection (modern browsers don't need it,
                                         // can cause issues)
                                         .xssProtection(xssProtection -> xssProtection.disable())
