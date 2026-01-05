@@ -19,7 +19,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 ### Expense Management
 
 - 💰 Travel and business expense tracking with receipt management
-- 📸 Receipt upload/download (JPEG, PNG, PDF) with AWS S3 or local storage
+- 📸 Receipt upload/download (JPEG, PNG, PDF validated via magic number signatures) with AWS S3 or local storage
 - 💳 Payment method and vendor tracking
 - 📋 Expense categorization by type (travel, meals, office supplies, etc.)
 - ✅ Multi-stage approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
@@ -63,7 +63,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - **Storage:** AWS S3 (production) / Local file system (development) for receipt storage
 - **API Documentation:** Springdoc OpenAPI 2.6.0 (Swagger UI)
 - **Build:** Maven, npm
-- **Testing:** JUnit 5, Testcontainers, Karma/Jasmine
+- **Testing:** JUnit 5 (290+ tests), Testcontainers, Karma/Jasmine
 - **Deployment:** Docker, AWS ECS (optional)
 
 ## Quick Start
@@ -101,6 +101,9 @@ The application automatically creates tables and populates initial data on start
 - **Rate Limiting**: 5 authentication requests per minute per IP address
 - **Security Headers**: X-Frame-Options, CSP, HSTS, Referrer-Policy, Permissions-Policy
 - **JWT Authentication**: Secure token-based API authentication with configurable expiration
+- **JWT Token Revocation**: Server-side token blacklisting on logout and password change
+- **File Upload Security**: Magic number validation prevents malicious file uploads (JPEG/PNG/PDF signatures verified)
+- **Password Security**: Password hashes removed from debug logs, BCrypt hashing
 - **Docker Secrets**: Production uses secrets for all sensitive credentials
 - **Disabled by Default**: Swagger UI and detailed Actuator endpoints require explicit enablement
 
@@ -193,6 +196,12 @@ Interactive API documentation is available via Swagger UI when enabled:
 
 #### Key API Endpoints
 
+**Authentication:**
+
+- `/api/auth/login` - User login with JWT token generation
+- `/api/auth/logout` - Logout with server-side token revocation
+- `/api/auth/refresh` - Refresh access token
+
 **Time Tracking:**
 
 - `/api/task-activities` - Task CRUD operations, filtering, and reports
@@ -222,6 +231,7 @@ Interactive API documentation is available via Swagger UI when enabled:
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
 - 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking and expense management
 - 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, expense approvals, and 12-Factor App compliance
+- 🔒 [Security Measures and Best Practices](docs/Security_Measures_and_Best_Practices.md) - Comprehensive security documentation (NEW)
 
 ### Docker & Containerization
 

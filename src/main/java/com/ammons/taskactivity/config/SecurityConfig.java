@@ -116,6 +116,32 @@ public class SecurityConfig {
                         "/swagger-ui.html", API_PATTERN) // Disable CSRF for API
                                                          // endpoints
         ).cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                        // Security Headers - Protection against common web vulnerabilities
+                        .headers(headers -> headers
+                                        // X-Frame-Options: Prevent clickjacking attacks
+                                        .frameOptions(frame -> frame.deny())
+                                        // X-XSS-Protection: Enable browser XSS protection
+                                        .xssProtection(xss -> xss.headerValue(
+                                                        org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                        // Content-Security-Policy: Restrict resource loading
+                                        .contentSecurityPolicy(csp -> csp
+                                                        .policyDirectives("default-src 'self'; "
+                                                                        + "script-src 'self' 'unsafe-inline'; "
+                                                                        + "style-src 'self' 'unsafe-inline'; "
+                                                                        + "img-src 'self' data:; "
+                                                                        + "font-src 'self' data:; "
+                                                                        + "connect-src 'self'"))
+                                        // HTTP Strict Transport Security: Force HTTPS
+                                        .httpStrictTransportSecurity(
+                                                        hsts -> hsts.includeSubDomains(true)
+                                                                        .maxAgeInSeconds(31536000)) // 1
+                                                                                                    // year
+                                        // Referrer-Policy: Control referrer information
+                                        .referrerPolicy(referrer -> referrer.policy(
+                                                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                        // Permissions-Policy: Disable unnecessary browser features
+                                        .permissionsPolicy(permissions -> permissions.policy(
+                                                        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
                 .authorizeHttpRequests(auth -> auth
                         // Public resources
                         .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**",
@@ -135,8 +161,10 @@ public class SecurityConfig {
                                         // JWT Authentication endpoints - public access
                                         .requestMatchers("/api/auth/**").permitAll()
 
-                                        // Allow all authenticated users to access their own user
-                                        // info
+                                        // Admin API endpoints - require authentication
+                                        // Method-level @RequirePermission annotations control
+                                        // granular access
+                                        .requestMatchers("/api/admin/**").authenticated()
                                         .requestMatchers("/api/users/me", "/api/users/profile")
                                         .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                         ROLE_EXPENSE_ADMIN)
@@ -360,16 +388,20 @@ public class SecurityConfig {
                         .headers(headers -> headers
                                         // Prevent clickjacking attacks
                                         .frameOptions(frameOptions -> frameOptions.deny())
-                                        // Prevent MIME type sniffing
+                                        // SECURITY FIX: Enable MIME type sniffing protection
                                         .contentTypeOptions(contentTypeOptions -> contentTypeOptions
-                                                        .disable())
+                                                        .and())
                                         // Disable XSS protection (modern browsers don't need it,
                                         // can cause issues)
                                         .xssProtection(xssProtection -> xssProtection.disable())
                                         // Content Security Policy - Restrict resource loading
+                                        // SECURITY: Removed 'unsafe-eval' to prevent dynamic code
+                                        // execution (eval, Function constructor)
+                                        // Note: 'unsafe-inline' kept for Thymeleaf inline scripts
+                                        // (TODO: migrate to nonces)
                                         .contentSecurityPolicy(csp -> csp
                                                         .policyDirectives("default-src 'self'; "
-                                                                        + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                                                                        + "script-src 'self' 'unsafe-inline'; "
                                                                         + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                                                                         + "img-src 'self' data: https:; "
                                                                         + "font-src 'self' data: https://fonts.gstatic.com; "
@@ -406,10 +438,15 @@ public class SecurityConfig {
      * setAllowedOrigins() with explicit origin list instead of wildcard patterns to prevent CSRF
      * attacks when credentials are enabled.
      * 
+     * SECURITY: Fails fast if wildcard origins are configured with credentials in production.
+     * Wildcard CORS with credentials is a critical security vulnerability that allows any origin to
+     * make authenticated requests.
+     * 
      * Special handling: - If origins contains "*", use setAllowedOriginPatterns() for development -
      * Otherwise, use setAllowedOrigins() for production security
      * 
      * @return CorsConfigurationSource with secure CORS settings
+     * @throws IllegalStateException if wildcard CORS + credentials detected in production
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -425,15 +462,33 @@ public class SecurityConfig {
         logger.info("[CORS] Configured origins: {}", origins);
 
         // Check if wildcard pattern is used (for development/testing only)
-        if (origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"))) {
+        boolean hasWildcard =
+                        origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"));
+
+        if (hasWildcard) {
+                // SECURITY CHECK: Fail fast if wildcard CORS + credentials in production
+                String activeProfile = System.getProperty("spring.profiles.active", "");
+                boolean isProduction =
+                                activeProfile.contains("aws") || activeProfile.contains("prod");
+
+                if (isProduction) {
+                        String errorMsg = String.format(
+                                        "CRITICAL SECURITY ERROR: Wildcard CORS origins with credentials enabled in production! "
+                                                        + "Active profile: %s, Origins: %s. This allows ANY origin to make authenticated requests. "
+                                                        + "Set CORS_ALLOWED_ORIGINS to explicit domains (e.g., https://taskactivitytracker.com)",
+                                        activeProfile, origins);
+                        logger.error("[CORS] {}", errorMsg);
+                        throw new IllegalStateException(errorMsg);
+                }
+
                 // Use pattern matching for development - WARNING: Less secure
                 configuration.setAllowedOriginPatterns(origins);
-                logger.info("[CORS] Using setAllowedOriginPatterns for wildcard support");
+                logger.warn("[CORS] Using setAllowedOriginPatterns for wildcard support - DEVELOPMENT ONLY");
         } else {
                 // Use explicit origins for production security
                 configuration.setAllowedOrigins(origins);
                 logger.info("[CORS] Using setAllowedOrigins for explicit origin list");
-    }
+        }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

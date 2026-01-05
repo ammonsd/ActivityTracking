@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -105,9 +106,31 @@ public class JwtUtil {
     }
 
     /**
-     * Extract all claims from JWT token
+     * Extract token type from JWT token SECURITY FIX: Added to validate token type (access vs
+     * refresh)
      */
-    private Claims extractAllClaims(String token) {
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("token_type", String.class));
+    }
+
+    /**
+     * Validate if token is a refresh token SECURITY FIX: Added to prevent access tokens from being
+     * used as refresh tokens
+     */
+    public Boolean isRefreshToken(String token) {
+        try {
+            String tokenType = extractTokenType(token);
+            return "refresh".equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Extract all claims from JWT token SECURITY FIX: Made public to allow TokenRevocationService
+     * to extract claims
+     */
+    public Claims extractAllClaims(String token) {
         return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token)
                 .getPayload();
     }
@@ -126,6 +149,8 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles",
                 userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        // SECURITY FIX: Add token_type claim to distinguish access tokens
+        claims.put("token_type", "access");
         return createToken(claims, userDetails.getUsername(), expiration);
     }
 
@@ -134,14 +159,23 @@ public class JwtUtil {
      */
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        // SECURITY FIX: Add token_type claim to distinguish refresh tokens
+        claims.put("token_type", "refresh");
         return createToken(claims, userDetails.getUsername(), refreshExpiration);
     }
 
     /**
-     * Create JWT token with claims and subject
+     * Create JWT token with claims and subject SECURITY FIX: Added JTI (JWT ID) claim for token
+     * revocation support
      */
     private String createToken(Map<String, Object> claims, String subject, Long expirationTime) {
-        return Jwts.builder().claims(claims).subject(subject)
+        return Jwts.builder().claims(claims).subject(subject).id(UUID.randomUUID().toString()) // SECURITY
+                                                                                               // FIX:
+                                                                                               // Add
+                                                                                               // unique
+                                                                                               // JTI
+                                                                                               // for
+                                                                                               // revocation
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey()).compact();

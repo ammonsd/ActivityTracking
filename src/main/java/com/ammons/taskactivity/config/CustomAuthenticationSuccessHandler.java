@@ -205,40 +205,29 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     }
 
     /**
-     * Extracts the client's IP address from the HTTP request, handling proxies and load balancers.
+     * Extracts the client's IP address from the HTTP request.
      * 
      * <p>
-     * Checks the following headers in order:
-     * <ul>
-     * <li>X-Forwarded-For - Standard proxy header (Cloudflare, AWS ALB, etc.)</li>
-     * <li>X-Real-IP - Alternative proxy header</li>
-     * <li>Proxy-Client-IP - WebLogic proxy</li>
-     * <li>WL-Proxy-Client-IP - WebLogic proxy alternative</li>
-     * <li>HTTP_X_FORWARDED_FOR - Alternative format</li>
-     * <li>HTTP_CLIENT_IP - Some proxies</li>
-     * <li>Remote address - Direct connection</li>
-     * </ul>
+     * SECURITY: Uses CloudFlare's CF-Connecting-IP header which cannot be spoofed by clients.
+     * CloudFlare sets this header with the actual client IP address. Falls back to getRemoteAddr()
+     * if not behind CloudFlare.
+     * 
+     * <p>
+     * X-Forwarded-For and other proxy headers are NOT trusted as they can be easily spoofed by
+     * attackers to bypass rate limiting and security controls.
      * 
      * @param request the HTTP request
      * @return the client's IP address, or "unknown" if not determinable
      */
     private String getClientIpAddress(HttpServletRequest request) {
-        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP",
-                "WL-Proxy-Client-IP", "HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP"};
-
-        for (String header : headerNames) {
-            String ip = request.getHeader(header);
-            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2)
-                // The first one is the original client
-                if (ip.contains(",")) {
-                    ip = ip.split(",")[0].trim();
-                }
-                return ip;
-            }
+        // CloudFlare provides CF-Connecting-IP with the real client IP (cannot be spoofed)
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isEmpty()
+                && !"unknown".equalsIgnoreCase(cfConnectingIp)) {
+            return cfConnectingIp;
         }
 
-        // Fallback to remote address
+        // Fallback to direct connection IP (not behind CloudFlare)
         String remoteAddr = request.getRemoteAddr();
         return (remoteAddr != null && !remoteAddr.isEmpty()) ? remoteAddr : "unknown";
     }

@@ -36,49 +36,13 @@ public class ServerConfig implements WebMvcConfigurer {
     private String allowedOrigins;
 
     /**
-     * Configures Cross-Origin Resource Sharing (CORS) for the application. CORS allows the backend
-     * API to accept requests from frontend applications running on different domains/ports.
+     * CORS Configuration Note: CORS is configured in SecurityConfig.java for better security
+     * integration. The SecurityConfig CORS includes: - Production wildcard validation (fails fast
+     * if misconfigured) - Explicit origin lists for production - Credentials support - All HTTP
+     * methods and headers
      * 
-     * Environment-Based Configuration: - Development: Uses localhost origins (4200 for Angular,
-     * 3000 for React, 8080 for local) - Local Network: Set CORS_ALLOWED_ORIGINS with your current
-     * IP (e.g., http://192.168.12.179:8080) - Production (AWS): Set CORS_ALLOWED_ORIGINS
-     * environment variable with production domains
-     * 
-     * Example local network:
-     * CORS_ALLOWED_ORIGINS=http://localhost:4200,http://localhost:3000,http://192.168.12.179:8080
-     * 
-     * Example AWS deployment:
-     * CORS_ALLOWED_ORIGINS=https://app.yourdomain.com,https://api.yourdomain.com
+     * This avoids duplicate CORS configuration and potential conflicts.
      */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        // Split comma-separated origins from environment variable
-        String[] origins = allowedOrigins.split(",");
-
-        registry.addMapping("/api/**") // Apply CORS to all /api/** endpoints
-                // Allowed Origins: Configurable via environment variable
-                // Development defaults:
-                // - http://localhost:4200: Angular development server (default port)
-                // - http://localhost:3000: React development server (default port)
-                // - http://localhost:8080: Local network access
-                // Local Network: Add your current IP via CORS_ALLOWED_ORIGINS environment variable
-                // Production: Set via CORS_ALLOWED_ORIGINS environment variable
-                .allowedOrigins(origins)
-
-                // Allowed HTTP methods that can be used in CORS requests
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-
-                // Allowed headers: "*" means any header sent by the client is accepted
-                .allowedHeaders("*")
-
-                // Allow credentials (cookies, authorization headers) to be sent
-                // Required for authentication/session management
-                .allowCredentials(true)
-
-                // Cache preflight response for 3600 seconds (1 hour)
-                // Reduces preflight OPTIONS requests for better performance
-                .maxAge(3600);
-    }
 
     /**
      * Configure resource handlers for static content including Angular SPA. Routes /app/** to serve

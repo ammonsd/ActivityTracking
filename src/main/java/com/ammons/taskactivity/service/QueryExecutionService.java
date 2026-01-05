@@ -34,12 +34,17 @@ public class QueryExecutionService {
      * Execute a SQL query and return results as CSV.
      * 
      * @param sql SQL query to execute (must be SELECT only)
+     * @param username Username of the admin executing the query (for audit logging)
      * @return CSV formatted results
      * @throws IllegalArgumentException if query is not a SELECT statement
      */
-    public String executeQueryAsCsv(String sql) {
+    public String executeQueryAsCsv(String sql, String username) {
         // Validate query is read-only
         validateReadOnlyQuery(sql);
+
+        // Audit log: Record query execution
+        logger.info("[AUDIT] Admin query executed by user: {} | Query: {}", username,
+                sql.substring(0, Math.min(200, sql.length())));
 
         logger.debug("Executing query: {}", sql.substring(0, Math.min(100, sql.length())));
 

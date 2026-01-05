@@ -4,6 +4,7 @@ import com.ammons.taskactivity.dto.LoginRequest;
 import com.ammons.taskactivity.dto.LoginResponse;
 import com.ammons.taskactivity.dto.RefreshTokenRequest;
 import com.ammons.taskactivity.security.JwtUtil;
+import com.ammons.taskactivity.service.TokenRevocationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,15 +36,18 @@ public class ApiAuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenRevocationService tokenRevocationService;
 
     @Value("${jwt.expiration:86400000}")
     private Long jwtExpiration;
 
     public ApiAuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
-            UserDetailsService userDetailsService) {
+                    UserDetailsService userDetailsService,
+                    TokenRevocationService tokenRevocationService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @PostMapping("/login")
@@ -98,6 +102,12 @@ public class ApiAuthController {
             String refreshToken = request.getRefreshToken();
             String username = jwtUtil.extractUsername(refreshToken);
 
+            // SECURITY FIX: Validate that this is actually a refresh token
+            if (!Boolean.TRUE.equals(jwtUtil.isRefreshToken(refreshToken))) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                    .body("Invalid token type - refresh token required");
+            }
+
             // Load user details
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -118,5 +128,38 @@ public class ApiAuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
         }
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout and revoke token",
+                    description = "Revokes the current JWT token by adding it to the revoked tokens blacklist. "
+                                    + "The token will no longer be accepted for authentication. "
+                                    + "Provide the token in the Authorization header as 'Bearer {token}'.",
+                    responses = {@ApiResponse(responseCode = "200",
+                                    description = "Token revoked successfully"),
+                                    @ApiResponse(responseCode = "401",
+                                                    description = "Invalid or missing token")})
+    public ResponseEntity<Object> logout(@RequestHeader("Authorization") String authHeader) {
+            try {
+                    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                            .body("Missing or invalid Authorization header");
+                    }
+
+                    String token = authHeader.substring(7);
+                    boolean revoked = tokenRevocationService.revokeToken(token, "logout");
+
+                    if (revoked) {
+                            return ResponseEntity.ok(
+                                            "Token revoked successfully. You have been logged out.");
+                    } else {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                            .body("Token could not be revoked");
+                    }
+
+            } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .body("Failed to revoke token: " + e.getMessage());
+            }
     }
 }

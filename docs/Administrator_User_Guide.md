@@ -850,6 +850,22 @@ A bar chart visualization comparing total hours across all team members:
 
 ## Security Features
 
+> **📘 Comprehensive Security Documentation**  
+> For detailed information about all security measures, controls, and best practices implemented in this application, please refer to the **[Security Measures and Best Practices](Security_Measures_and_Best_Practices.md)** document.
+> 
+> **Recent Security Enhancements (January 2026):**
+> - Admin endpoint access control with defense-in-depth security
+> - JWT token type differentiation (access vs refresh tokens)
+> - Enhanced account status enforcement in authentication filter
+> - Receipt XSS prevention via Content-Disposition headers
+> - MIME sniffing protection with X-Content-Type-Options
+> - Refresh token validation to prevent token misuse
+> - **Server-side JWT token revocation and blacklisting**
+> - **Magic number validation for file uploads (prevents malicious files)**
+> - **Password hash removal from debug logs**
+>
+> This section provides a quick overview of key security features relevant to administrators.
+
 ### Account Lockout Policy
 
 The system includes automatic account lockout protection to prevent unauthorized access:
@@ -887,6 +903,83 @@ The system includes automatic account lockout protection to prevent unauthorized
 
 **Email Configuration:**
 Email notifications require proper SMTP configuration. See the Developer Guide for details on configuring email settings for local development and AWS deployments.
+
+### JWT Token Revocation Management
+
+The system includes a server-side token revocation mechanism to invalidate JWT tokens before their natural expiration. This provides enhanced security control over user sessions.
+
+**How Token Revocation Works:**
+- When users log out, their tokens are added to a blacklist database (`revoked_tokens` table)
+- When users change their password, all their existing tokens are automatically revoked
+- Authentication requests check the blacklist before granting access
+- Expired tokens are automatically cleaned up via scheduled job (daily at 2 AM)
+
+**Auditing Revoked Tokens:**
+
+As an administrator, you can audit revoked tokens directly in the database to:
+- Monitor logout activity
+- Track password change events
+- Identify security incidents where tokens were manually revoked
+- Review token expiration patterns
+
+**SQL Queries for Monitoring:**
+
+```sql
+-- Count total revoked tokens
+SELECT COUNT(*) FROM revoked_tokens;
+
+-- View recent revocations
+SELECT jti, username, token_type, reason, revoked_at 
+FROM revoked_tokens 
+ORDER BY revoked_at DESC 
+LIMIT 20;
+
+-- Count revocations by reason
+SELECT reason, COUNT(*) as count 
+FROM revoked_tokens 
+GROUP BY reason 
+ORDER BY count DESC;
+
+-- Count revocations by user
+SELECT username, COUNT(*) as token_count 
+FROM revoked_tokens 
+GROUP BY username 
+ORDER BY token_count DESC;
+
+-- Find expired tokens (can be cleaned up)
+SELECT COUNT(*) FROM revoked_tokens 
+WHERE expiration_time < NOW();
+
+-- View all revocations for a specific user
+SELECT jti, token_type, reason, revoked_at, expiration_time 
+FROM revoked_tokens 
+WHERE username = 'john.doe' 
+ORDER BY revoked_at DESC;
+```
+
+**Revoked Tokens Table Schema:**
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | SERIAL | Primary key |
+| `jti` | VARCHAR(255) | Unique JWT ID (UUID) |
+| `username` | VARCHAR(255) | Owner of the token |
+| `token_type` | VARCHAR(20) | "access" or "refresh" |
+| `expiration_time` | TIMESTAMP | When token naturally expires |
+| `revoked_at` | TIMESTAMP | When token was revoked |
+| `reason` | VARCHAR(100) | Revocation reason (logout, password_change, security_incident, manual) |
+
+**Performance Considerations:**
+- Blacklist checks are highly optimized (O(1) lookup via indexed JTI)
+- Typical overhead: <50ms per authentication request
+- Automatic cleanup prevents table bloat
+- Indexes on `jti`, `expiration_time`, and `username` ensure fast queries
+
+**Best Practices:**
+- Monitor revocation patterns for unusual activity (e.g., mass logouts may indicate compromise)
+- Review `security_incident` reasons regularly
+- Consider manual token revocation if you suspect account compromise
+- Run cleanup query manually if automatic cleanup fails: `DELETE FROM revoked_tokens WHERE expiration_time < NOW()`
 
 ---
 
