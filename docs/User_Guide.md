@@ -173,6 +173,28 @@ For security, your session will expire after **30 minutes** of inactivity.
 - You'll see a message: "⚠️ Your session has expired. Please log in again."
 - Simply log in again to continue working
 
+### Logging Out
+
+To end your session securely:
+
+1. **Click Logout**: Click the **"Logout"** link in the header
+2. **Token Revocation**: Your session token is immediately invalidated and added to a server-side blacklist
+3. **Redirect**: You'll be redirected to the login page
+4. **Security**: The revoked token cannot be reused, even if intercepted
+
+**What Token Revocation Means:**
+
+- Your access token is permanently blacklisted on the server
+- Even if someone has a copy of your old token, they cannot use it
+- This provides stronger security than client-side-only logout
+- All your tokens are automatically revoked when you change your password
+
+**Best Practices:**
+
+- Always log out when using shared computers
+- Log out before closing your browser on public computers
+- If you forget to log out, your session will automatically expire after 30 minutes
+
 ### Account Lockout Policy
 
 To protect your account from unauthorized access, the system automatically locks accounts after **5 failed login attempts**.
@@ -498,8 +520,12 @@ Use the filter controls at the top of the expense list to find specific expenses
 4. **Upload Receipt** (Recommended):
    
    - Click **"Choose File"** next to Receipt
-   - Select an image file (JPG, PNG, PDF)
+   - Select an image file (JPEG, PNG, or PDF only)
    - Receipt is uploaded and attached to the expense
+   - **File Validation**: The system validates the actual file content (magic numbers), not just the file extension
+   - **Accepted File Types**: JPEG images, PNG images, PDF documents
+   - **Rejected Files**: Executables, scripts, and files with mismatched content are automatically rejected
+   - If you see "Invalid file type" error, ensure your file is a genuine JPEG, PNG, or PDF
 
 5. **Save as Draft**: Click **"Save Expense"**
    
@@ -638,6 +664,16 @@ Your new password must meet these requirements:
 7. **Submit**: Click **"Change Password"**
 8. **Success**: You'll be redirected with a confirmation message
 
+**Security Impact of Password Changes:**
+
+When you change your password:
+- **All your existing session tokens are immediately revoked**
+- You'll be logged out automatically and must log in with your new password
+- Any other active sessions (e.g., on different devices) are also terminated
+- This prevents unauthorized access if someone had access to your old credentials or tokens
+
+This enhanced security ensures that changing your password fully protects your account, even if someone previously obtained your authentication token.
+
 ### Forced Password Changes
 
 If your administrator has enabled "Force Password Update" for your account:
@@ -703,6 +739,31 @@ ADMIN users see an additional tab with team performance analytics:
     - 🏆 Gold trophy for #1 performer
     - 🥈 Silver medal for #2 performer
     - 🥉 Bronze medal for #3 performer
+
+---
+
+## Troubleshooting
+
+### File Upload Issues
+
+**Problem:** "Invalid file type" error when uploading receipts
+
+**Causes:**
+- The file extension doesn't match the actual file content
+- The file is not a genuine JPEG, PNG, or PDF
+- The file might be an executable or script with a fake image extension
+- The file is corrupted or too small
+
+**Solutions:**
+1. **Verify File Type**: Open the file on your computer to ensure it's a valid image or PDF
+2. **Re-save the File**: Open the image in an image editor and save it as JPEG or PNG
+3. **Convert PDF**: If using a PDF, ensure it was created by a legitimate PDF tool
+4. **Check File Size**: Ensure the file is at least 8 bytes (very small files are rejected)
+5. **Avoid Screenshots from Unknown Sources**: Screenshots should be saved properly as JPEG or PNG
+
+**Technical Note:** The system validates the actual file content (magic numbers/signatures) rather than trusting the file extension. This prevents malicious files from being uploaded, even if they're renamed to look like images.
+
+---
   - Metrics displayed:
     - Total hours worked
     - **Billable hours** (green) - Hours on client projects
