@@ -4,6 +4,7 @@ import com.ammons.taskactivity.entity.RevokedToken;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.RevokedTokenRepository;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.service.TokenRevocationService;
 import io.jsonwebtoken.Claims;
@@ -55,6 +56,9 @@ class TokenRevocationIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private User testUser;
@@ -64,6 +68,10 @@ class TokenRevocationIntegrationTest {
         // Clean up any existing test data
         revokedTokenRepository.deleteAll();
 
+        // Create or find USER role
+        Roles userRole = roleRepository.findByName("USER")
+                .orElseGet(() -> roleRepository.save(new Roles("USER")));
+
         // Create test user if doesn't exist
         testUser = userRepository.findByUsername("tokenTestUser").orElseGet(() -> {
             User user = new User();
@@ -71,7 +79,7 @@ class TokenRevocationIntegrationTest {
             user.setFirstname("Token");
             user.setLastname("Test");
             user.setPassword(passwordEncoder.encode("TestPass123!"));
-            user.setRole(new Roles("USER"));
+            user.setRole(userRole);
             user.setEnabled(true);
             user.setAccountLocked(false);
             return userRepository.save(user);
@@ -83,7 +91,10 @@ class TokenRevocationIntegrationTest {
         // Generate access token
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         String token = jwtUtil.generateToken(userDetails);
 
@@ -118,7 +129,10 @@ class TokenRevocationIntegrationTest {
         // Generate refresh token
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
@@ -141,7 +155,10 @@ class TokenRevocationIntegrationTest {
         // Generate token
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         String token = jwtUtil.generateToken(userDetails);
 
@@ -159,7 +176,10 @@ class TokenRevocationIntegrationTest {
         // Generate token
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         String token = jwtUtil.generateToken(userDetails);
 
@@ -225,7 +245,10 @@ class TokenRevocationIntegrationTest {
         // Generate multiple tokens for same user
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         String token1 = jwtUtil.generateToken(userDetails);
         String token2 = jwtUtil.generateToken(userDetails);
@@ -274,7 +297,10 @@ class TokenRevocationIntegrationTest {
     void testTokenRevocationWithDifferentReasons() {
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(testUser.getUsername(),
-                        testUser.getPassword(), testUser.getAuthorities());
+                        testUser.getPassword(),
+                        java.util.Collections.singletonList(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                        "ROLE_" + testUser.getRole().getName())));
 
         // Test different revocation reasons
         String[] reasons = {"logout", "password_change", "security_incident", "manual"};

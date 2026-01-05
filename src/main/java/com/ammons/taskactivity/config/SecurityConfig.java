@@ -116,6 +116,32 @@ public class SecurityConfig {
                         "/swagger-ui.html", API_PATTERN) // Disable CSRF for API
                                                          // endpoints
         ).cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                        // Security Headers - Protection against common web vulnerabilities
+                        .headers(headers -> headers
+                                        // X-Frame-Options: Prevent clickjacking attacks
+                                        .frameOptions(frame -> frame.deny())
+                                        // X-XSS-Protection: Enable browser XSS protection
+                                        .xssProtection(xss -> xss.headerValue(
+                                                        org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                        // Content-Security-Policy: Restrict resource loading
+                                        .contentSecurityPolicy(csp -> csp
+                                                        .policyDirectives("default-src 'self'; "
+                                                                        + "script-src 'self' 'unsafe-inline'; "
+                                                                        + "style-src 'self' 'unsafe-inline'; "
+                                                                        + "img-src 'self' data:; "
+                                                                        + "font-src 'self' data:; "
+                                                                        + "connect-src 'self'"))
+                                        // HTTP Strict Transport Security: Force HTTPS
+                                        .httpStrictTransportSecurity(
+                                                        hsts -> hsts.includeSubDomains(true)
+                                                                        .maxAgeInSeconds(31536000)) // 1
+                                                                                                    // year
+                                        // Referrer-Policy: Control referrer information
+                                        .referrerPolicy(referrer -> referrer.policy(
+                                                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                        // Permissions-Policy: Disable unnecessary browser features
+                                        .permissionsPolicy(permissions -> permissions.policy(
+                                                        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
                 .authorizeHttpRequests(auth -> auth
                         // Public resources
                         .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**",

@@ -516,7 +516,9 @@ CREATE INDEX idx_revoked_tokens_jti ON revoked_tokens(jti);
 
 ## Application Security Headers
 
-### HTTP Security Headers (Enhanced: January 2026)
+### HTTP Security Headers (Fully Implemented: January 2026)
+
+All security headers are now implemented and configured in `SecurityConfig.java`. These headers provide multiple layers of protection against common web vulnerabilities.
 
 **X-Content-Type-Options:**
 
@@ -530,26 +532,29 @@ CREATE INDEX idx_revoked_tokens_jti ON revoked_tokens(jti);
 
 -   **Value:** `DENY`
 -   **Purpose:** Prevents clickjacking attacks
--   **Browser Behavior:** Page cannot be embedded in iframe
+-   **Browser Behavior:** Page cannot be embedded in iframe or frame
 -   **Protection:** Prevents UI redressing attacks
+-   **Implementation:** Configured in SecurityConfig headers configuration
+-   **Status:** ✅ Implemented
 
 **X-XSS-Protection:**
 
 -   **Value:** `1; mode=block`
 -   **Purpose:** Enables browser XSS filtering
--   **Browser Behavior:** Blocks suspected XSS attacks
--   **Legacy Support:** For older browsers
+-   **Browser Behavior:** Blocks suspected XSS attacks completely
+-   **Legacy Support:** For older browsers that don't support CSP
+-   **Implementation:** Configured with ENABLED_MODE_BLOCK
+-   **Status:** ✅ Implemented
 
 **Content-Security-Policy (Hardened: January 2026):**
 
 -   **Current Implementation:**
     -   `default-src 'self'` - Only load resources from same origin
     -   `script-src 'self' 'unsafe-inline'` - Scripts from same origin + inline (for Thymeleaf)
-    -   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` - Styles from same origin + Google Fonts
-    -   `img-src 'self' data: https:` - Images from same origin, data URIs, HTTPS URLs
-    -   `font-src 'self' data: https://fonts.gstatic.com` - Fonts from same origin + Google Fonts
+    -   `style-src 'self' 'unsafe-inline'` - Styles from same origin + inline
+    -   `img-src 'self' data:` - Images from same origin and data URIs
+    -   `font-src 'self' data:` - Fonts from same origin and data URIs
     -   `connect-src 'self'` - API calls only to same origin
-    -   `frame-ancestors 'none'` - Cannot be embedded in iframes
 -   **Security Enhancements:**
     -   **Removed 'unsafe-eval':** Prevents dynamic code execution (eval, Function constructor)
     -   **XSS Prevention:** Restricts script sources to prevent injection attacks
@@ -559,13 +564,44 @@ CREATE INDEX idx_revoked_tokens_jti ON revoked_tokens(jti);
     -   Implement nonce-based CSP for inline scripts
     -   Remove 'unsafe-inline' completely
 -   **Benefits:** Prevents code injection and data exfiltration attacks
+-   **Status:** ✅ Implemented
 
 **Strict-Transport-Security (HSTS):**
 
 -   **Value:** `max-age=31536000; includeSubDomains`
--   **Purpose:** Forces HTTPS connections
--   **Browser Behavior:** Browsers always use HTTPS
--   **Duration:** 1 year
+-   **Purpose:** Forces HTTPS connections for 1 year
+-   **Browser Behavior:** Browsers always use HTTPS, even if user types http://
+-   **Sub-domains:** includeSubDomains applies policy to all subdomains
+-   **Duration:** 31,536,000 seconds (1 year)
+-   **Implementation:** Configured in SecurityConfig headers
+-   **Status:** ✅ Implemented
+
+**Referrer-Policy:**
+
+-   **Value:** `strict-origin-when-cross-origin`
+-   **Purpose:** Controls how much referrer information is sent
+-   **Behavior:** 
+    -   Same-origin requests: Full URL sent
+    -   Cross-origin HTTPS→HTTPS: Only origin sent
+    -   Cross-origin HTTPS→HTTP: No referrer sent
+-   **Privacy Protection:** Prevents leaking sensitive URL parameters
+-   **Implementation:** Configured in SecurityConfig headers
+-   **Status:** ✅ Implemented (January 2026)
+
+**Permissions-Policy:**
+
+-   **Value:** `geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()`
+-   **Purpose:** Disables unnecessary browser features
+-   **Protected Features:**
+    -   Geolocation access blocked
+    -   Microphone access blocked
+    -   Camera access blocked
+    -   Payment API blocked
+    -   USB device access blocked
+    -   Device sensors blocked
+-   **Security Benefits:** Reduces attack surface and prevents unauthorized feature access
+-   **Implementation:** Configured in SecurityConfig headers
+-   **Status:** ✅ Implemented (January 2026)
 
 **Cache-Control:**
 
@@ -895,7 +931,50 @@ response.setHeader("Content-Disposition", "attachment; filename=\"" + filename +
 
 ## Recent Security Enhancements
 
-### January 2026 Security Update
+### January 2026 Security Improvements (Phase 2)
+
+**1. HTTP Security Headers - Full Implementation**
+
+-   **X-Frame-Options:** DENY - Prevents clickjacking attacks
+-   **X-XSS-Protection:** Enabled with blocking mode
+-   **Content-Security-Policy:** Hardened policy restricting resource loading
+-   **Strict-Transport-Security (HSTS):** 1 year max-age with includeSubDomains
+-   **Referrer-Policy:** strict-origin-when-cross-origin for privacy protection
+-   **Permissions-Policy:** Disabled geolocation, microphone, camera, payment, USB, sensors
+-   **Implementation:** Configured in SecurityConfig.java headers configuration
+-   **Impact:** Comprehensive protection against clickjacking, XSS, and other browser-based attacks
+
+**2. CORS Configuration Consolidation**
+
+-   **Removed Duplicate:** Eliminated duplicate CORS configuration in ServerConfig.java
+-   **Single Source:** All CORS configuration now centralized in SecurityConfig.java
+-   **Production Validation:** Wildcard origins with credentials fail fast in production
+-   **Explicit Origins:** Production requires explicit origin lists for security
+-   **Impact:** Prevents CORS misconfiguration and potential security vulnerabilities
+
+**3. Session Cookie Security Enhancement**
+
+-   **Secure Flag:** Added conditional secure flag for session cookies
+-   **Configuration:** `server.servlet.session.cookie.secure=${SESSION_COOKIE_SECURE:false}`
+-   **Development:** Defaults to false for local development (HTTP)
+-   **Production:** Set to true in application-aws.properties for HTTPS
+-   **Additional Flags:** HttpOnly and SameSite=Lax already configured
+-   **Impact:** Prevents session cookie transmission over insecure connections in production
+
+**4. Admin Query Audit Logging**
+
+-   **What's Logged:** Username, timestamp, and SQL query (first 200 characters)
+-   **Log Level:** INFO level with [AUDIT] prefix for easy filtering
+-   **Implementation:** AdminQueryController and QueryExecutionService
+-   **Format:** `[AUDIT] Admin query executed by user: {username} | Query: {sql}`
+-   **Benefits:** 
+    -   Track all admin SQL query executions
+    -   Security incident investigation
+    -   Compliance audit trail
+    -   Accountability for privileged operations
+-   **Impact:** Enhanced visibility into admin database access and operations
+
+### January 2026 Security Update (Phase 1)
 
 **Nine Critical Security Fixes Implemented:**
 
@@ -1071,11 +1150,10 @@ response.setHeader("Content-Disposition", "attachment; filename=\"" + filename +
     - File content scanning
     - Virus scanning integration
 
-7. **Security Headers Enhancement**
-
-    - Referrer-Policy header
-    - Permissions-Policy header
-    - Feature-Policy header
+7. **Content Security Policy Hardening**
+    - Remove 'unsafe-inline' from script-src
+    - Implement nonce-based CSP
+    - Migrate inline scripts to external files
 
 8. **Session Security Enhancement**
     - Session fingerprinting
@@ -1140,6 +1218,7 @@ response.setHeader("Content-Disposition", "attachment; filename=\"" + filename +
 
 | Version | Date            | Author | Changes                                      |
 | ------- | --------------- | ------ | -------------------------------------------- |
+| 1.1     | January 5, 2026 | System | Security enhancements: HTTP headers, CORS consolidation, secure cookies, audit logging |
 | 1.0     | January 5, 2026 | System | Initial comprehensive security documentation |
 
 ### Review Schedule

@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -42,11 +43,13 @@ public class AdminQueryController {
      */
     @PostMapping("/execute")
     public ResponseEntity<String> executeQuery(
-            @Valid @RequestBody QueryExecutionRequestDto request) {
-        logger.info("Executing query for admin user");
+            @Valid @RequestBody QueryExecutionRequestDto request, Authentication authentication) {
+        String username = authentication.getName();
+        logger.info("[AUDIT] Admin user {} executing SQL query", username);
 
         try {
-            String csvResult = queryExecutionService.executeQueryAsCsv(request.getQuery());
+            String csvResult =
+                    queryExecutionService.executeQueryAsCsv(request.getQuery(), username);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(new MediaType("text", "csv"));

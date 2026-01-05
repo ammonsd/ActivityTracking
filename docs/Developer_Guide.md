@@ -1824,30 +1824,42 @@ The application defines custom configuration properties that extend beyond Sprin
 
 ### CORS Configuration
 
-**Primary Location**: `src/main/java/com/ammons/taskactivity/config/CorsConfig.java`
+**Primary Location**: `src/main/java/com/ammons/taskactivity/config/SecurityConfig.java`
 
-The application supports Cross-Origin Resource Sharing (CORS) configuration for API access from different domains.
+The application supports Cross-Origin Resource Sharing (CORS) configuration for API access from different domains. CORS is configured in `SecurityConfig.java` as part of the security filter chain for better security integration.
 
-**Configuration Class:**
+**Important Change (January 2026)**: CORS configuration was consolidated from multiple locations into `SecurityConfig.java` to prevent conflicts and ensure consistent security policy enforcement.
+
+**Configuration Method:**
 
 ```java
-@Component
-@ConfigurationProperties(prefix = "cors")
-public class CorsConfig {
-    private String allowedOrigins = "https://yourdomain.com";
-    private String allowedMethods = "GET,POST,PUT,DELETE,OPTIONS";
-    private String allowedHeaders = "*";
-    private boolean allowCredentials = true;
-
-    // Getters and setters
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    
+    // Parse allowed origins from comma-separated string
+    List<String> origins = Arrays.asList(allowedOrigins.split(","));
+    
+    // Production validation: Fail fast if wildcard + credentials
+    if (hasWildcard && isProduction) {
+        throw new IllegalStateException(
+            "Wildcard CORS origins with credentials enabled in production!");
+    }
+    
+    configuration.setAllowedOrigins(origins);
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+    
+    return source;
 }
 ```
 
 **Properties:**
 
 ```properties
-# CORS Configuration
-cors.allowed-origins=https://example.com,https://app.example.com
+# CORS Configuration - Production restrictions
+cors.allowed-origins=${CORS_ALLOWED_ORIGINS:https://taskactivitytracker.com}
 cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
 cors.allowed-headers=*
 cors.allow-credentials=true
@@ -1855,14 +1867,21 @@ cors.allow-credentials=true
 
 **Property Descriptions:**
 
-- `cors.allowed-origins`: Comma-separated list of allowed origins (use `*` for all origins - not recommended for production)
+- `cors.allowed-origins`: Comma-separated list of allowed origins. **CRITICAL**: Never use `*` with credentials in production
 - `cors.allowed-methods`: HTTP methods that are allowed for cross-origin requests
 - `cors.allowed-headers`: Headers that are allowed in requests (use `*` for all headers)
 - `cors.allow-credentials`: Whether to allow credentials (cookies, authorization headers) in CORS requests
 
+**Security Features:**
+
+- **Production Validation**: Application fails to start if wildcard origins (`*`) are configured with credentials in production profile
+- **Explicit Origins**: Production requires explicit domain lists (e.g., `https://app.example.com,https://admin.example.com`)
+- **Development Flexibility**: Wildcard patterns allowed in development using `setAllowedOriginPatterns()`
+- **Single Configuration Point**: All CORS settings in one location prevents conflicts
+
 **Usage:**
 
-The CORS configuration is automatically applied through Spring Security's `CorsConfiguration`. For production deployments, restrict `allowed-origins` to specific trusted domains.
+The CORS configuration is automatically applied through Spring Security's filter chain. For production deployments, always restrict `allowed-origins` to specific trusted domains.
 
 **Example - Multiple Origins:**
 
@@ -1870,19 +1889,19 @@ The CORS configuration is automatically applied through Spring Security's `CorsC
 cors.allowed-origins=https://app.example.com,https://admin.example.com,https://mobile.example.com
 ```
 
-**Example - Development (Allow All):**
+**Example - Development (Local):**
 
 ```properties
-cors.allowed-origins=*
-cors.allow-credentials=false
+cors.allowed-origins=http://localhost:4200,http://localhost:3000,http://localhost:8080
 ```
 
 **Security Notes:**
 
-- Never use `cors.allowed-origins=*` with `cors.allow-credentials=true` in production
-- Restrict allowed origins to specific trusted domains
-- Review allowed methods - consider removing unused methods (e.g., DELETE if not needed)
-- Be cautious with `allowedHeaders=*` - specify exact headers when possible
+- ⚠️ **NEVER** use `cors.allowed-origins=*` with `cors.allow-credentials=true` in production - this is a critical security vulnerability
+- ✅ Always restrict allowed origins to specific trusted domains in production
+- ✅ Application validates this configuration at startup and fails fast if misconfigured
+- ✅ Review allowed methods - consider removing unused methods (e.g., DELETE if not needed)
+- ⚠️ Be cautious with `allowedHeaders=*` - specify exact headers when possible for tighter security
 
 ### Admin User Initial Password Configuration
 
@@ -2523,12 +2542,15 @@ public class User {
   - **Adjustable**: Configure `security.rate-limit.capacity` and `security.rate-limit.refill-minutes` as needed
   - **Production Default**: Enabled with 5 requests per minute
   - **Local Development**: Disabled by default to prevent testing issues
-- **Security Headers**: Comprehensive OWASP-recommended headers including:
-  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
-  - `Content-Security-Policy` - Restricts resource loading
-  - `Strict-Transport-Security` - Enforces HTTPS with 1-year max-age
-  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
-  - `Permissions-Policy` - Restricts browser features
+- **Security Headers**: Comprehensive OWASP-recommended headers (Fully Implemented January 2026):
+  - `X-Frame-Options: DENY` - Prevents clickjacking attacks by blocking iframe embedding
+  - `X-XSS-Protection: 1; mode=block` - Enables browser XSS protection with blocking mode
+  - `Content-Security-Policy` - Restricts resource loading sources (self + inline for Thymeleaf)
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains` - Enforces HTTPS for 1 year including subdomains
+  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information leakage
+  - `Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()` - Disables unnecessary browser features
+  - **Implementation**: Configured in SecurityConfig.java `.headers()` configuration
+  - **Status**: ✅ All headers implemented and active
 - **Docker Secrets**: Production deployments use Docker secrets for sensitive credentials (JWT_SECRET, database passwords, admin password) instead of environment variables
 
 ## API Reference
