@@ -369,9 +369,13 @@ public class SecurityConfig {
                                         // can cause issues)
                                         .xssProtection(xssProtection -> xssProtection.disable())
                                         // Content Security Policy - Restrict resource loading
+                                        // SECURITY: Removed 'unsafe-eval' to prevent dynamic code
+                                        // execution (eval, Function constructor)
+                                        // Note: 'unsafe-inline' kept for Thymeleaf inline scripts
+                                        // (TODO: migrate to nonces)
                                         .contentSecurityPolicy(csp -> csp
                                                         .policyDirectives("default-src 'self'; "
-                                                                        + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                                                                        + "script-src 'self' 'unsafe-inline'; "
                                                                         + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                                                                         + "img-src 'self' data: https:; "
                                                                         + "font-src 'self' data: https://fonts.gstatic.com; "
@@ -408,10 +412,15 @@ public class SecurityConfig {
      * setAllowedOrigins() with explicit origin list instead of wildcard patterns to prevent CSRF
      * attacks when credentials are enabled.
      * 
+     * SECURITY: Fails fast if wildcard origins are configured with credentials in production.
+     * Wildcard CORS with credentials is a critical security vulnerability that allows any origin to
+     * make authenticated requests.
+     * 
      * Special handling: - If origins contains "*", use setAllowedOriginPatterns() for development -
      * Otherwise, use setAllowedOrigins() for production security
      * 
      * @return CorsConfigurationSource with secure CORS settings
+     * @throws IllegalStateException if wildcard CORS + credentials detected in production
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -427,15 +436,33 @@ public class SecurityConfig {
         logger.info("[CORS] Configured origins: {}", origins);
 
         // Check if wildcard pattern is used (for development/testing only)
-        if (origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"))) {
+        boolean hasWildcard =
+                        origins.contains("*") || origins.stream().anyMatch(o -> o.contains("*"));
+
+        if (hasWildcard) {
+                // SECURITY CHECK: Fail fast if wildcard CORS + credentials in production
+                String activeProfile = System.getProperty("spring.profiles.active", "");
+                boolean isProduction =
+                                activeProfile.contains("aws") || activeProfile.contains("prod");
+
+                if (isProduction) {
+                        String errorMsg = String.format(
+                                        "CRITICAL SECURITY ERROR: Wildcard CORS origins with credentials enabled in production! "
+                                                        + "Active profile: %s, Origins: %s. This allows ANY origin to make authenticated requests. "
+                                                        + "Set CORS_ALLOWED_ORIGINS to explicit domains (e.g., https://taskactivitytracker.com)",
+                                        activeProfile, origins);
+                        logger.error("[CORS] {}", errorMsg);
+                        throw new IllegalStateException(errorMsg);
+                }
+
                 // Use pattern matching for development - WARNING: Less secure
                 configuration.setAllowedOriginPatterns(origins);
-                logger.info("[CORS] Using setAllowedOriginPatterns for wildcard support");
+                logger.warn("[CORS] Using setAllowedOriginPatterns for wildcard support - DEVELOPMENT ONLY");
         } else {
                 // Use explicit origins for production security
                 configuration.setAllowedOrigins(origins);
                 logger.info("[CORS] Using setAllowedOrigins for explicit origin list");
-    }
+        }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

@@ -101,20 +101,25 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extract client IP address from request, considering proxy headers
+     * Extract client IP address from request.
+     * 
+     * SECURITY: Uses CloudFlare's CF-Connecting-IP header which cannot be spoofed by clients.
+     * CloudFlare sets this header with the actual client IP address. Falls back to getRemoteAddr()
+     * if not behind CloudFlare.
+     * 
+     * X-Forwarded-For is NOT trusted as it can be easily spoofed by attackers.
      */
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // X-Forwarded-For can contain multiple IPs, take the first one
-            return xForwardedFor.split(",")[0].trim();
+        // CloudFlare provides CF-Connecting-IP with the real client IP
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isEmpty()) {
+            logger.debug("[Rate Limit] Using CF-Connecting-IP: {}", cfConnectingIp);
+            return cfConnectingIp;
         }
 
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty()) {
-            return xRealIp;
-        }
-
-        return request.getRemoteAddr();
+        // Fall back to direct connection IP (not behind CloudFlare)
+        String remoteAddr = request.getRemoteAddr();
+        logger.debug("[Rate Limit] Using getRemoteAddr(): {}", remoteAddr);
+        return remoteAddr;
     }
 }

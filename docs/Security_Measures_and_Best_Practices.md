@@ -419,6 +419,24 @@ public ResponseEntity<?> getTaskActivities() { ... }
 -   **Certificate Validation:** Valid SSL certificates required
 -   **HSTS Header:** Strict-Transport-Security enforced
 
+### CloudFlare Integration (Added: January 2026)
+
+**Reverse Proxy Security:**
+
+-   **CF-Connecting-IP Header:** Application trusts CloudFlare's client IP header
+-   **Rate Limiting:** Uses CF-Connecting-IP for accurate rate limiting (cannot be spoofed)
+-   **DDoS Protection:** CloudFlare provides Layer 3/4/7 DDoS mitigation
+-   **Web Application Firewall:** CloudFlare WAF rules protect against common attacks
+-   **SSL/TLS Termination:** Full encryption end-to-end
+-   **Caching & Performance:** Edge caching reduces server load and attack surface
+
+**Security Benefits:**
+
+-   **IP Spoofing Prevention:** CF-Connecting-IP set by CloudFlare, not client
+-   **X-Forwarded-For Ignored:** Application does not trust easily-spoofed headers
+-   **Fallback Mechanism:** Uses getRemoteAddr() when not behind CloudFlare
+-   **Rate Limit Integrity:** Attackers cannot bypass rate limits via header manipulation
+
 ### AWS Network Security
 
 **VPC Configuration:**
@@ -427,12 +445,14 @@ public ResponseEntity<?> getTaskActivities() { ... }
 -   **Security Groups:** Firewall rules limit traffic
 -   **Network ACLs:** Additional network layer security
 
-**Load Balancer Security:**
+**CloudFlare Reverse Proxy:**
 
--   **Application Load Balancer:** Layer 7 security features
--   **SSL Termination:** HTTPS handled at load balancer
+-   **CF-Connecting-IP:** Trusted client IP header (cannot be spoofed)
+-   **SSL/TLS Termination:** Full encryption end-to-end
 -   **Health Checks:** Only healthy instances receive traffic
--   **DDoS Protection:** AWS Shield integration
+-   **DDoS Protection:** Layer 3/4/7 DDoS mitigation
+-   **Web Application Firewall:** Protection against common attacks
+-   **Rate Limiting Integration:** Application uses CF-Connecting-IP for accurate rate limiting
 
 ---
 
@@ -462,11 +482,25 @@ public ResponseEntity<?> getTaskActivities() { ... }
 -   **Browser Behavior:** Blocks suspected XSS attacks
 -   **Legacy Support:** For older browsers
 
-**Content-Security-Policy:**
+**Content-Security-Policy (Hardened: January 2026):**
 
--   **Current Status:** (Recommended enhancement)
--   **Planned Implementation:** Restrict resource loading sources
--   **Benefits:** Prevent XSS and data injection attacks
+-   **Current Implementation:**
+    -   `default-src 'self'` - Only load resources from same origin
+    -   `script-src 'self' 'unsafe-inline'` - Scripts from same origin + inline (for Thymeleaf)
+    -   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` - Styles from same origin + Google Fonts
+    -   `img-src 'self' data: https:` - Images from same origin, data URIs, HTTPS URLs
+    -   `font-src 'self' data: https://fonts.gstatic.com` - Fonts from same origin + Google Fonts
+    -   `connect-src 'self'` - API calls only to same origin
+    -   `frame-ancestors 'none'` - Cannot be embedded in iframes
+-   **Security Enhancements:**
+    -   **Removed 'unsafe-eval':** Prevents dynamic code execution (eval, Function constructor)
+    -   **XSS Prevention:** Restricts script sources to prevent injection attacks
+    -   **Data Exfiltration Prevention:** connect-src limits API destinations
+-   **Future Improvements:**
+    -   Migrate inline scripts to external files
+    -   Implement nonce-based CSP for inline scripts
+    -   Remove 'unsafe-inline' completely
+-   **Benefits:** Prevents code injection and data exfiltration attacks
 
 **Strict-Transport-Security (HSTS):**
 
@@ -755,7 +789,7 @@ List<TaskActivity> findByUsernameAndClientContaining(String username, String cli
 
 ### January 2026 Security Update
 
-**Six Critical Security Fixes Implemented:**
+**Nine Critical Security Fixes Implemented:**
 
 1. **Admin Endpoint Access Control**
 
@@ -793,22 +827,50 @@ List<TaskActivity> findByUsernameAndClientContaining(String username, String cli
     - **Implementation:** ReceiptController header modification
 
 6. **MIME Sniffing Protection**
+
     - **Issue:** X-Content-Type-Options header not configured
     - **Fix:** Enabled nosniff header globally
     - **Impact:** Prevents MIME type confusion attacks
     - **Implementation:** SecurityConfig header configuration
 
+7. **Rate Limiting CloudFlare Integration**
+
+    - **Issue:** Rate limiting trusted X-Forwarded-For header (easily spoofed)
+    - **Fix:** Use CloudFlare's CF-Connecting-IP header instead
+    - **Impact:** Prevents rate limit bypass via header spoofing
+    - **Implementation:** RateLimitFilter now uses CF-Connecting-IP or getRemoteAddr()
+    - **Rationale:** CloudFlare sets CF-Connecting-IP with real client IP, cannot be spoofed by clients
+
+8. **CORS Wildcard Production Validation**
+
+    - **Issue:** Wildcard CORS with credentials could be enabled in production
+    - **Fix:** Fail-fast validation rejects wildcard CORS + credentials in production profiles
+    - **Impact:** Prevents critical CORS misconfiguration that allows any origin to make authenticated requests
+    - **Implementation:** SecurityConfig.corsConfigurationSource() validates profile and throws IllegalStateException
+    - **Security:** Application fails to start if misconfigured (fail-secure design)
+
+9. **Content Security Policy (CSP) Hardening**
+    - **Issue:** CSP allowed 'unsafe-eval' enabling dynamic code execution (eval, Function constructor)
+    - **Fix:** Removed 'unsafe-eval' from CSP directive
+    - **Impact:** Prevents JavaScript injection attacks via eval() or Function() constructor
+    - **Implementation:** SecurityConfig CSP directive updated to: `script-src 'self' 'unsafe-inline'`
+    - **Note:** 'unsafe-inline' retained for Thymeleaf inline scripts (future: migrate to nonces)
+
 **Testing:**
 
--   24 new integration tests added (SecurityFixesIntegrationTest)
--   All 286 tests passing
--   Zero test failures, zero errors
--   Comprehensive coverage of security controls
+-   34 new integration tests added (SecurityFixesIntegrationTest + ShortTermSecurityFixesIntegrationTest)
+-   All tests passing
+-   Comprehensive coverage of security controls including:
+    -   CloudFlare CF-Connecting-IP rate limiting
+    -   X-Forwarded-For spoofing protection
+    -   CSP header validation (no unsafe-eval)
+    -   Security headers (X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy)
 
 **Documentation:**
 
 -   Updated Administrator User Guide
 -   Updated Technical Features Summary
+-   Updated Task Activity Management Technology Stack (HTML)
 -   Created Security Measures document (this document)
 -   Added inline code documentation
 
