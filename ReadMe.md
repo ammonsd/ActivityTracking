@@ -222,6 +222,7 @@ Interactive API documentation is available via Swagger UI when enabled:
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
 - 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking and expense management
 - 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, expense approvals, and 12-Factor App compliance
+- 🔒 [Security Measures and Best Practices](docs/Security_Measures_and_Best_Practices.md) - Comprehensive security documentation (NEW)
 
 ### Docker & Containerization
 

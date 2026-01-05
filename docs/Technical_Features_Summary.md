@@ -1,8 +1,11 @@
 # Technical Features Summary
 
 **Project:** Task Activity Management System  
-**Last Updated:** November 7, 2025  
-**Version:** 1.0
+**Last Updated:** January 5, 2026  
+**Version:** 1.1
+
+> **🔒 Security Documentation**  
+> For comprehensive security measures, controls, and best practices, see **[Security Measures and Best Practices](Security_Measures_and_Best_Practices.md)**.
 
 ---
 
@@ -57,6 +60,11 @@ This document provides a comprehensive summary of all technical features, framew
 ### Spring Security
 
 - **Form-based authentication** with custom login pages
+- **JWT (JSON Web Token) Authentication** (Enhanced January 2026):
+  - Access tokens and refresh tokens with type differentiation
+  - Token type validation prevents token misuse
+  - JJWT library (0.12.6) for secure token generation
+  - 512-bit minimum secret key requirement
 - **Database-driven Role-Based Access Control (RBAC)**:
   - Roles stored in `roles` database table (not enum)
   - Permissions stored in `permissions` table with resource:action pattern
@@ -67,11 +75,20 @@ This document provides a comprehensive summary of all technical features, framew
   - `@RequirePermission` annotation for method-level security
   - `PermissionAspect` - Spring AOP interceptor for runtime permission enforcement
   - Replaces standard @PreAuthorize with flexible database-driven permission checking
+  - Defense-in-depth: URL-based authentication + method-level permissions
 - **Role & Permission Management UI**:
   - Web interface for creating custom roles
   - Assign/revoke permissions without code deployment
   - RoleManagementController with role-management, role-edit, role-add pages
   - Permission format: RESOURCE:ACTION (e.g., TASK_ACTIVITY:READ, EXPENSE:APPROVE)
+- **Admin Endpoint Protection** (Enhanced January 2026):
+  - `/api/admin/**` requires authentication
+  - Permission-based access control via @RequirePermission
+  - Prevents anonymous access to administrative functions
+- **Account Status Enforcement** (Enhanced January 2026):
+  - Post-authentication account status validation in JWT filter
+  - Validates enabled, locked, expired, and credentials status
+  - Prevents disabled/locked accounts from using valid tokens
 - **BCrypt password encoding** for secure password storage
 - **CSRF protection** with CookieCsrfTokenRepository
 - **Session management** with concurrent session control
@@ -82,7 +99,12 @@ This document provides a comprehensive summary of all technical features, framew
 - **Account lockout protection** - automatic lockout after 5 failed login attempts
 - **Email notifications** for security events (account lockouts), expense submissions, and expense status changes
 - **Email-based authorization** - users must have valid email address to access expense features
+- **Security Headers** (Enhanced January 2026):
+  - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
+  - X-Frame-Options: DENY (prevents clickjacking)
+  - Content-Disposition: attachment for file downloads (prevents XSS)
 - **Spring Security Test** for security-aware testing
+- **Comprehensive Security Test Suite**: 24 dedicated security integration tests
 - **Role-based UI features**:
   - ADMIN-only User Analysis tab in Reports
   - ADMIN-only Role & Permission Management interface

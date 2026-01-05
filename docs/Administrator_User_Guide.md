@@ -850,6 +850,19 @@ A bar chart visualization comparing total hours across all team members:
 
 ## Security Features
 
+> **📘 Comprehensive Security Documentation**  
+> For detailed information about all security measures, controls, and best practices implemented in this application, please refer to the **[Security Measures and Best Practices](Security_Measures_and_Best_Practices.md)** document.
+> 
+> **Recent Security Enhancements (January 2026):**
+> - Admin endpoint access control with defense-in-depth security
+> - JWT token type differentiation (access vs refresh tokens)
+> - Enhanced account status enforcement in authentication filter
+> - Receipt XSS prevention via Content-Disposition headers
+> - MIME sniffing protection with X-Content-Type-Options
+> - Refresh token validation to prevent token misuse
+>
+> This section provides a quick overview of key security features relevant to administrators.
+
 ### Account Lockout Policy
 
 The system includes automatic account lockout protection to prevent unauthorized access:
