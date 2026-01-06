@@ -57,11 +57,11 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 ## Tech Stack
 
-- **Backend:** Java 21, Spring Boot 3.5.6 (MVC + Thymeleaf), Spring Data JPA
+- **Backend:** Java 21, Spring Boot 3.5.7 (MVC + Thymeleaf), Spring Data JPA
 - **Frontend:** Angular 19, Angular Material, TypeScript, Chart.js
 - **Database:** PostgreSQL 15+
 - **Storage:** AWS S3 (production) / Local file system (development) for receipt storage
-- **API Documentation:** Springdoc OpenAPI 2.6.0 (Swagger UI)
+- **API Documentation:** Springdoc OpenAPI 2.7.0 (Swagger UI)
 - **Build:** Maven, npm
 - **Testing:** JUnit 5 (290+ tests), Testcontainers, Karma/Jasmine
 - **Deployment:** Docker, AWS ECS (optional)
