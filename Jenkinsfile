@@ -72,7 +72,7 @@ pipeline {
         IMAGE_LATEST = "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest-${params.ENVIRONMENT}"
         
         // Build Configuration
-        MAVEN_OPTS = '-Xmx1024m -XX:MaxPermSize=256m'
+        MAVEN_OPTS = '-Xmx1024m'
         JAVA_HOME = tool name: 'JDK-21', type: 'jdk'
         MAVEN_HOME = tool name: 'Maven-3.9', type: 'maven'
         PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${env.PATH}"
