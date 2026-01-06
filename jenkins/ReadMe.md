@@ -319,13 +319,13 @@ For issues with these scripts:
 
 ## Additional Resources
 
--   [Jenkins Setup Guide](../docs/JENKINS_SETUP.md)
--   [Environment Configuration](../docs/JENKINS_ENVIRONMENTS.md)
--   [Quick Reference](../docs/JENKINS_QUICK_REFERENCE.md)
+-   [Jenkins Setup Guide](Jenkins_Setup.md)
+-   [Environment Configuration](Jenkins_Environments.md)
+-   [Quick Reference](Jenkins_Quick_Reference.md)
 -   [AWS CLI Documentation](https://docs.aws.amazon.com/cli/)
 -   [Jenkins CLI Guide](https://www.jenkins.io/doc/book/managing/cli/)
 
 ---
 
-**Last Updated:** October 2025  
+**Last Updated:** January 2026  
 **Maintained By:** DevOps Team

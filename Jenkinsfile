@@ -14,7 +14,7 @@
  * Prerequisites:
  * - Jenkins plugins: Pipeline, Docker Pipeline, AWS Steps, Maven Integration, Git
  * - Jenkins credentials: 'aws-credentials' (AWS access key/secret)
- * - Jenkins tools: Maven 3.9+, JDK 21
+ * - Jenkins tools: Maven 3.9+, JDK 21, Spring Boot 3.5+
  * - AWS resources: ECR repository, ECS cluster, task definition
  */
 
