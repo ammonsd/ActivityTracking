@@ -442,18 +442,32 @@
                 const fileError = document.getElementById('fileError');
                 const submitBtn = document.querySelector('.submit-btn');
                 
+                // Allowed file extensions
+                const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+                
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
+                    const fileName = file.name.toLowerCase();
+                    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
                     
+                    // Check file type first
+                    if (!allowedExtensions.includes(fileExtension)) {
+                        fileError.textContent = `Invalid file type. Only PDF, JPG, and PNG files are allowed.`;
+                        fileError.style.display = 'block';
+                        input.value = ''; // Clear the file input
+                        if (submitBtn) submitBtn.disabled = true;
+                        return;
+                    }
+                    
+                    // Then check file size
                     if (file.size > maxFileSizeBytes) {
-                        // File too large - show error and clear input
                         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                         fileError.textContent = `File size (${fileSizeMB}MB) exceeds maximum of ${maxFileSizeMB}MB. Please select a smaller file.`;
                         fileError.style.display = 'block';
                         input.value = ''; // Clear the file input
                         if (submitBtn) submitBtn.disabled = true;
                     } else {
-                        // File size OK - hide error
+                        // File is valid - hide error
                         fileError.style.display = 'none';
                         fileError.textContent = '';
                         if (submitBtn) submitBtn.disabled = false;
