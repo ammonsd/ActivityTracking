@@ -232,6 +232,10 @@
 									<followSymlinks>false</followSymlinks>
 								</fileset>
 								<fileset>
+									<directory>frontend/node_modules</directory>
+									<followSymlinks>false</followSymlinks>
+								</fileset>
+								<fileset>
 									<directory>target/classes/static/app</directory>
 									<followSymlinks>false</followSymlinks>
 								</fileset>
