@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import com.ammons.taskactivity.security.RequirePermission;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +79,9 @@ public class ExpenseViewController {
     private final UserService userService;
     private final ReceiptStorageService storageService;
 
+    @Value("${app.upload.max-file-size}")
+    private long maxFileSize;
+
     public ExpenseViewController(ExpenseService expenseService,
             DropdownValueService dropdownValueService, UserService userService,
             ReceiptStorageService storageService) {
@@ -96,6 +100,15 @@ public class ExpenseViewController {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, EMAIL_REQUIRED_MESSAGE);
             throw new IllegalStateException(EMAIL_REQUIRED_MESSAGE);
         }
+    }
+
+    /**
+     * Helper method to add file upload configuration to the model
+     */
+    private void addFileUploadConfig(Model model) {
+        long maxFileSizeMB = maxFileSize / (1024 * 1024);
+        model.addAttribute("maxFileSize", maxFileSize);
+        model.addAttribute("maxFileSizeMB", maxFileSizeMB);
     }
 
     @GetMapping
@@ -281,6 +294,7 @@ public class ExpenseViewController {
         model.addAttribute(EXPENSE_DTO_ATTR, expenseDto);
         model.addAttribute(IS_EDIT_ATTR, false);
         addDropdownOptions(model);
+        addFileUploadConfig(model);
         return EXPENSE_FORM_VIEW;
     }
 
@@ -315,6 +329,7 @@ public class ExpenseViewController {
         model.addAttribute(EXPENSE_ID_ATTR, id);
         model.addAttribute(IS_EDIT_ATTR, true);
         addDropdownOptions(model);
+        addFileUploadConfig(model);
         return EXPENSE_FORM_VIEW;
     }
 
@@ -352,6 +367,7 @@ public class ExpenseViewController {
                 model.addAttribute(EXPENSE_DTO_ATTR, dto);
                 model.addAttribute(IS_EDIT_ATTR, false);
                 addDropdownOptions(model);
+                addFileUploadConfig(model);
                 return EXPENSE_FORM_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -389,6 +405,7 @@ public class ExpenseViewController {
             addUserInfo(model, authentication);
             model.addAttribute(IS_EDIT_ATTR, false);
             addDropdownOptions(model);
+            addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
 
@@ -405,6 +422,7 @@ public class ExpenseViewController {
                             "Expense created but receipt upload failed: " + e.getMessage());
                     addUserInfo(model, authentication);
                     addDropdownOptions(model);
+                    addFileUploadConfig(model);
                     return EXPENSE_FORM_VIEW;
                 }
             } else {
@@ -419,6 +437,7 @@ public class ExpenseViewController {
             model.addAttribute(ERROR_MESSAGE_ATTR, "Failed to create expense: " + e.getMessage());
             addUserInfo(model, authentication);
             addDropdownOptions(model);
+            addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
     }
@@ -458,6 +477,7 @@ public class ExpenseViewController {
         model.addAttribute(EXPENSE_DTO_ATTR, convertToDto(expense));
         model.addAttribute(EXPENSE_ID_ATTR, id);
         addDropdownOptions(model);
+        addFileUploadConfig(model);
 
         // Pass filter parameters to the detail view so they can be used when going back
         addFilterAttributes(model, client, project, expenseType, status, username, startDate,
@@ -485,6 +505,7 @@ public class ExpenseViewController {
             model.addAttribute(EXPENSE_ID_ATTR, id);
             model.addAttribute(IS_EDIT_ATTR, true);
             addDropdownOptions(model);
+            addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
 
@@ -543,6 +564,7 @@ public class ExpenseViewController {
             model.addAttribute(EXPENSE_ID_ATTR, id);
             model.addAttribute(IS_EDIT_ATTR, true);
             addDropdownOptions(model);
+            addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
     }

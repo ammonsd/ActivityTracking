@@ -103,6 +103,13 @@ This document provides a comprehensive summary of all technical features, framew
   - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
   - X-Frame-Options: DENY (prevents clickjacking)
   - Content-Disposition: attachment for file downloads (prevents XSS)
+- **File Upload Security**:
+  - Magic number (file signature) validation for uploaded receipts
+  - Configurable file size limits per environment (2MB local, 5MB production, 10MB AWS)
+  - Dynamic file size limit display to users
+  - Multi-layer validation: frontend, Spring Boot multipart filter, and controller
+  - Rejected file types: executables, scripts, and files with mismatched content
+  - Supported formats: JPEG, PNG, PDF (validated by actual file content)
 - **Spring Security Test** for security-aware testing
 - **Comprehensive Security Test Suite**: 24 dedicated security integration tests
 - **Role-based UI features**:

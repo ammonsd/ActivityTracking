@@ -67,4 +67,58 @@ export class ExpenseService {
   canAccessExpenses(): Observable<ApiResponse<boolean>> {
     return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/can-access`);
   }
+
+  // Receipt Management Methods
+
+  /**
+   * Get the maximum allowed file size for receipt uploads
+   */
+  getMaxFileSize(): Observable<
+    ApiResponse<{
+      maxFileSizeBytes: number;
+      maxFileSizeMB: number;
+      message: string;
+    }>
+  > {
+    return this.http.get<
+      ApiResponse<{
+        maxFileSizeBytes: number;
+        maxFileSizeMB: number;
+        message: string;
+      }>
+    >(`${environment.apiUrl}/receipts/max-file-size`);
+  }
+
+  /**
+   * Upload a receipt for an expense
+   */
+  uploadReceipt(
+    expenseId: number,
+    file: File
+  ): Observable<ApiResponse<string>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<string>>(
+      `${environment.apiUrl}/receipts/${expenseId}`,
+      formData
+    );
+  }
+
+  /**
+   * Download a receipt for an expense
+   */
+  downloadReceipt(expenseId: number): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/receipts/${expenseId}`, {
+      responseType: 'blob',
+    });
+  }
+
+  /**
+   * Delete a receipt from an expense
+   */
+  deleteReceipt(expenseId: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(
+      `${environment.apiUrl}/receipts/${expenseId}`
+    );
+  }
 }

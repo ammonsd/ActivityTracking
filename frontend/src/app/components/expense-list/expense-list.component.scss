@@ -131,3 +131,15 @@ mat-icon {
   color: #333;
   font-weight: bold;
 }
+
+.receipt-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-start;
+
+  button {
+    min-width: 36px;
+    padding: 4px;
+  }
+}

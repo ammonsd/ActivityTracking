@@ -3954,10 +3954,11 @@ public ResponseEntity<?> uploadReceipt(@PathVariable Long expenseId,
             .body(Map.of("error", result.getMessage()));
     }
     
-    // Additional size check
-    if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit
+    // Configurable size check from application properties
+    if (file.getSize() > maxFileSize) {
+        long maxFileSizeMB = maxFileSize / (1024 * 1024);
         return ResponseEntity.badRequest()
-            .body(Map.of("error", "File size exceeds 10MB limit"));
+            .body(Map.of("error", "File size exceeds maximum of " + maxFileSizeMB + "MB"));
     }
     
     // Proceed with upload
@@ -3969,6 +3970,110 @@ public ResponseEntity<?> uploadReceipt(@PathVariable Long expenseId,
             .body(Map.of("error", "Upload failed"));
     }
 }
+```
+
+#### File Upload Size Configuration
+
+The application supports configurable file size limits for receipt uploads, with different limits per environment:
+
+**Configuration Properties:**
+
+```properties
+# File Upload Configuration
+# Maximum file size for receipt uploads (in bytes)
+app.upload.max-file-size=${MAX_FILE_SIZE:5242880}
+
+# Spring Boot Multipart Configuration (must match or exceed app.upload.max-file-size)
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=5MB
+```
+
+**Environment-Specific Limits:**
+
+| Environment | Default Limit | Configuration File |
+|-------------|---------------|-------------------|
+| Production | 5MB (5242880 bytes) | `application.properties` |
+| Docker | 5MB (5242880 bytes) | `application-docker.properties` |
+| AWS | 10MB (10485760 bytes) | `application-aws.properties` |
+| Local Development | 2MB (2097152 bytes) | `application-local.properties` |
+
+**Controller Implementation:**
+
+```java
+@RestController
+@RequestMapping("/api/receipts")
+public class ReceiptController {
+    
+    @Value("${app.upload.max-file-size}")
+    private long maxFileSize;
+    
+    @GetMapping("/max-file-size")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMaxFileSize() {
+        long maxFileSizeMB = maxFileSize / (1024 * 1024);
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("maxFileSizeBytes", maxFileSize);
+        data.put("maxFileSizeMB", maxFileSizeMB);
+        data.put("message", "Maximum file size: " + maxFileSizeMB + "MB");
+        
+        return ResponseEntity.ok(ApiResponse.success("File size limit retrieved", data));
+    }
+}
+```
+
+**Frontend Integration:**
+
+The Angular frontend automatically fetches the max file size from the backend API:
+
+```typescript
+// expense.service.ts
+getMaxFileSize(): Observable<ApiResponse<{
+  maxFileSizeBytes: number;
+  maxFileSizeMB: number;
+  message: string
+}>> {
+  return this.http.get<ApiResponse<...>>(
+    `${environment.apiUrl}/receipts/max-file-size`
+  );
+}
+
+// receipt-upload-dialog.component.ts
+ngOnInit(): void {
+  this.expenseService.getMaxFileSize().subscribe({
+    next: (response) => {
+      this.maxFileSize = response.data.maxFileSizeBytes;
+      this.maxFileSizeMB = response.data.maxFileSizeMB;
+      this.maxFileSizeMessage = response.data.message; // Displayed to user
+    }
+  });
+}
+```
+
+**Validation Layers:**
+
+1. **Frontend Validation**: Client-side check before upload (fast feedback)
+2. **Spring Boot Multipart Filter**: Rejects requests exceeding `spring.servlet.multipart.max-file-size`
+3. **Controller Validation**: Custom validation using `@Value` injected limit with dynamic error messages
+
+**Changing File Size Limits:**
+
+To adjust the limit for any environment, update both properties:
+
+```properties
+# Example: Set to 1.5MB
+app.upload.max-file-size=1572864
+spring.servlet.multipart.max-file-size=1.5MB
+spring.servlet.multipart.max-request-size=1.5MB
+
+# Example: Set to 10MB
+app.upload.max-file-size=10485760
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+Or use environment variables:
+```bash
+export MAX_FILE_SIZE=10485760  # 10MB in bytes
 ```
 
 #### Security Benefits

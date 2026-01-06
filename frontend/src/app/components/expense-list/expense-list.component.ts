@@ -12,11 +12,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ExpenseService } from '../../services/expense.service';
 import { AuthService } from '../../services/auth.service';
 import { Expense } from '../../models/expense.model';
 import { ExpenseEditDialogComponent } from '../expense-edit-dialog/expense-edit-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ReceiptUploadDialogComponent } from '../receipt-upload-dialog/receipt-upload-dialog.component';
 
 @Component({
   selector: 'app-expense-list',
@@ -34,6 +37,8 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatSnackBarModule,
+    MatTooltipModule,
   ],
   templateUrl: './expense-list.component.html',
   styleUrl: './expense-list.component.scss',
@@ -83,7 +88,8 @@ export class ExpenseListComponent implements OnInit {
   constructor(
     private readonly expenseService: ExpenseService,
     private readonly authService: AuthService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
+    private readonly snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -116,6 +122,7 @@ export class ExpenseListComponent implements OnInit {
         'amount',
         'expenseStatus',
         'username',
+        'receipt',
       ];
     } else {
       this.displayedColumns = [
@@ -126,6 +133,7 @@ export class ExpenseListComponent implements OnInit {
         'description',
         'amount',
         'expenseStatus',
+        'receipt',
       ];
     }
   }
@@ -463,5 +471,84 @@ export class ExpenseListComponent implements OnInit {
       return `$${amount.toFixed(2)}`;
     }
     return `${currency} ${amount.toFixed(2)}`;
+  }
+
+  // Receipt Management Methods
+
+  uploadReceipt(expense: Expense): void {
+    const dialogRef = this.dialog.open(ReceiptUploadDialogComponent, {
+      width: '500px',
+      data: {
+        expenseId: expense.id,
+        currentReceiptPath: expense.receiptPath,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.snackBar.open('Receipt uploaded successfully', 'Close', {
+          duration: 3000,
+        });
+        this.loadExpenses(); // Reload to show updated receipt status
+      }
+    });
+  }
+
+  downloadReceipt(expense: Expense): void {
+    if (!expense.id || !expense.receiptPath) {
+      this.snackBar.open('No receipt available', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.expenseService.downloadReceipt(expense.id).subscribe({
+      next: (blob) => {
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        // Extract filename from receiptPath or use default
+        const filename = expense.receiptPath?.split('/').pop() || 'receipt';
+        link.download = filename;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Error downloading receipt:', err);
+        this.snackBar.open('Failed to download receipt', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
+  deleteReceiptConfirm(expense: Expense): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Confirm Delete Receipt',
+        message: 'Are you sure you want to delete this receipt?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && expense.id) {
+        this.expenseService.deleteReceipt(expense.id).subscribe({
+          next: () => {
+            this.snackBar.open('Receipt deleted successfully', 'Close', {
+              duration: 3000,
+            });
+            this.loadExpenses(); // Reload to show updated status
+          },
+          error: (err) => {
+            console.error('Error deleting receipt:', err);
+            this.snackBar.open('Failed to delete receipt', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
   }
 }

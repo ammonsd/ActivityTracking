@@ -521,10 +521,18 @@ Use the filter controls at the top of the expense list to find specific expenses
    
    - Click **"Choose File"** next to Receipt
    - Select an image file (JPEG, PNG, or PDF only)
+   - The system displays the maximum allowed file size for your environment
    - Receipt is uploaded and attached to the expense
+   - **File Size Limits**: 
+     - Local development: 2MB maximum
+     - Production/AWS: 10MB maximum
+     - Docker: 5MB maximum
    - **File Validation**: The system validates the actual file content (magic numbers), not just the file extension
    - **Accepted File Types**: JPEG images, PNG images, PDF documents
-   - **Rejected Files**: Executables, scripts, and files with mismatched content are automatically rejected
+   - **Rejected Files**: 
+     - Files exceeding the size limit
+     - Executables, scripts, and files with mismatched content
+   - If you see "File size exceeds maximum" error, reduce the file size or resolution before uploading
    - If you see "Invalid file type" error, ensure your file is a genuine JPEG, PNG, or PDF
 
 5. **Save as Draft**: Click **"Save Expense"**

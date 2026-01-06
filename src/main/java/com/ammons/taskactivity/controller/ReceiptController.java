@@ -7,6 +7,7 @@ import com.ammons.taskactivity.service.ReceiptStorageService;
 import com.ammons.taskactivity.util.FileTypeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,11 +35,13 @@ import java.util.Optional;
 public class ReceiptController {
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiptController.class);
-    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024; // 5MB
     private static final List<String> ALLOWED_TYPES =
             Arrays.asList("image/jpeg", "image/jpg", "image/png", "application/pdf");
     private static final String EXPENSE_NOT_FOUND = "Expense not found";
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
+
+    @Value("${app.upload.max-file-size}")
+    private long maxFileSize;
 
     private final ReceiptStorageService storageService;
     private final ExpenseService expenseService;
@@ -52,9 +55,27 @@ public class ReceiptController {
     }
 
     /**
-     * Upload a receipt for an expense. Validates file size (max 5MB) and type (JPEG, PNG, PDF).
-     * Users can only upload receipts for their own expenses unless they are admins. Stores the
-     * receipt in S3 or local file system based on configuration.
+     * Get the maximum allowed file size for receipt uploads. This endpoint allows the frontend to
+     * display the current file size limit to users.
+     * 
+     * @return ResponseEntity containing the max file size in bytes and a formatted display message
+     */
+    @GetMapping("/max-file-size")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getMaxFileSize() {
+        long maxFileSizeMB = maxFileSize / (1024 * 1024);
+
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("maxFileSizeBytes", maxFileSize);
+        data.put("maxFileSizeMB", maxFileSizeMB);
+        data.put("message", "Maximum file size: " + maxFileSizeMB + "MB");
+
+        return ResponseEntity.ok(ApiResponse.success("File size limit retrieved", data));
+    }
+
+    /**
+     * Upload a receipt for an expense. Validates file size and type (JPEG, PNG, PDF). Users can
+     * only upload receipts for their own expenses unless they are admins. Stores the receipt in S3
+     * or local file system based on configuration.
      * 
      * @param expenseId the expense ID to attach the receipt to
      * @param file the receipt file to upload
@@ -90,9 +111,11 @@ public class ReceiptController {
             return ResponseEntity.badRequest().body(ApiResponse.error("File is empty", null));
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
+        if (file.getSize() > maxFileSize) {
+            long maxFileSizeMB = maxFileSize / (1024 * 1024);
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("File size exceeds maximum of 5MB", null));
+                    .body(ApiResponse.error("File size exceeds maximum of " + maxFileSizeMB + "MB",
+                            null));
         }
 
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
