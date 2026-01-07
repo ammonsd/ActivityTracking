@@ -304,35 +304,28 @@ pipeline {
                 echo "Deploying to ECS cluster: ${ECS_CLUSTER}"
                 script {
                     withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
-                        // Get current task definition
-                        def taskDefJson = sh(
-                            script: """
-                                aws ecs describe-task-definition \
-                                    --task-definition ${TASK_DEFINITION_FAMILY} \
-                                    --query 'taskDefinition' \
-                                    --output json
-                            """,
-                            returnStdout: true
-                        ).trim()
+                        // Get current task definition and save to file
+                        sh """
+                            aws ecs describe-task-definition \
+                                --task-definition ${TASK_DEFINITION_FAMILY} \
+                                --query 'taskDefinition' \
+                                --output json > task-def.json
+                        """
                         
-                        // Update image in task definition
-                        def updatedTaskDef = sh(
-                            script: """
-                                echo '${taskDefJson}' | \
-                                jq --arg IMAGE "${IMAGE_FULL}" \
-                                '.containerDefinitions[0].image = \$IMAGE | 
-                                 del(.taskDefinitionArn, .revision, .status, .requiresAttributes, 
-                                     .compatibilities, .registeredAt, .registeredBy)'
-                            """,
-                            returnStdout: true
-                        ).trim()
+                        // Update image in task definition and save to new file
+                        sh """
+                            jq --arg IMAGE "${IMAGE_FULL}" \
+                            '.containerDefinitions[0].image = \$IMAGE | 
+                             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, 
+                                 .compatibilities, .registeredAt, .registeredBy)' \
+                            task-def.json > updated-task-def.json
+                        """
                         
-                        // Register new task definition
+                        // Register new task definition from file
                         def newTaskDefArn = sh(
                             script: """
-                                echo '${updatedTaskDef}' | \
                                 aws ecs register-task-definition \
-                                    --cli-input-json file:///dev/stdin \
+                                    --cli-input-json file://updated-task-def.json \
                                     --query 'taskDefinition.taskDefinitionArn' \
                                     --output text
                             """,
