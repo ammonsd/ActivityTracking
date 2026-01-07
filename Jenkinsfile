@@ -61,10 +61,10 @@ pipeline {
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         ECR_REPOSITORY = 'taskactivity'
         
-        // ECS Configuration - Environment-specific
-        ECS_CLUSTER = "taskactivity-cluster-${params.ENVIRONMENT}"
-        ECS_SERVICE = "taskactivity-service-${params.ENVIRONMENT}"
-        TASK_DEFINITION_FAMILY = "taskactivity-task-${params.ENVIRONMENT}"
+        // ECS Configuration - Matches existing AWS resources
+        ECS_CLUSTER = "taskactivity-cluster"
+        ECS_SERVICE = "taskactivity-service"
+        TASK_DEFINITION_FAMILY = "taskactivity"
         
         // Docker Image Tags
         IMAGE_TAG = "${env.BUILD_NUMBER}"

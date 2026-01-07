@@ -240,11 +240,16 @@ npm run test:once
 - **Docker Compose**: Multi-container orchestration
 - **Cloudflare Tunnel (cloudflared)**: Integrated in Docker container for secure HTTPS access
 
-### CI/CD (Deployment-Ready)
+### CI/CD (Implemented)
 
-- **Jenkins**: CI/CD pipeline configuration and documentation
-- **Jenkinsfile**: Declarative pipeline for automated builds and deployments
-- **Helper Scripts**: Deployment verification and management utilities
+- **Jenkins**: Running locally on WSL Ubuntu with systemd service
+- **Jenkinsfile**: 539-line declarative pipeline with 10 stages (Build, Test, Docker, Security Scan, ECR Push, ECS Deploy, etc.)
+- **Build Modes**: build-only (local testing), deploy (AWS), rollback (revert)
+- **Multi-Environment**: dev, staging, production parameter support
+- **AWS Integration**: Configured with IAM credentials, ECR and ECS ready
+- **Automation**: PowerShell startup scripts (`Start-Jenkins.ps1`)
+- **Testing**: 315 automated tests per build
+- **Cost Efficient**: Local hosting saves ~$40/month vs EC2-hosted Jenkins
 
 ### Infrastructure as Code (Deployment-Ready)
 
