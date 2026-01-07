@@ -249,6 +249,9 @@ pipeline {
                     // Tag with latest for environment
                     sh "docker tag ${IMAGE_FULL} ${IMAGE_LATEST}"
                     
+                    // Tag with simple latest for local development
+                    sh "docker tag ${IMAGE_FULL} taskactivity:latest"
+                    
                     echo "Docker image built successfully"
                     sh "docker images | grep ${ECR_REPOSITORY}"
                 }
@@ -466,6 +469,9 @@ pipeline {
         }
         
         stage('Cleanup') {
+            when {
+                expression { params.DEPLOY_ACTION != 'build-only' }
+            }
             steps {
                 echo 'Cleaning up local Docker images...'
                 script {
