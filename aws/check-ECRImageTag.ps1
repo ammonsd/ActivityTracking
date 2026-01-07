@@ -1,107 +1,72 @@
-function Test-ECRImageTag {
-    <#
-    .SYNOPSIS
-        Check if a Docker image tag exists in AWS ECR repository.
+# Script parameter: The Docker image tag to check
+param([Parameter(Mandatory=$true)][string]$Tag)
+
+<#
+.SYNOPSIS
+    Tests whether a specific image tag exists in an AWS ECR repository.
+
+.DESCRIPTION
+    Queries the AWS Elastic Container Registry (ECR) to verify if a specified
+    image tag exists in the 'taskactivity' repository. This is useful for
+    validation in deployment pipelines or build verification processes.
+
+.PARAMETER Tag
+    The Docker image tag to search for in the ECR repository.
+
+.EXAMPLE
+    Check-ECRImageTag -Tag "v1.2.3"
+    Checks if the tag 'v1.2.3' exists in the taskactivity ECR repository.
+
+.EXAMPLE
+    Check-ECRImageTag -Tag "latest"
+    Checks if the 'latest' tag exists in the repository.
+
+.OUTPUTS
+    Boolean - Returns $true if the tag exists, $false otherwise.
+
+.NOTES
+    Requires AWS CLI to be installed and configured with appropriate credentials.
+    The IAM user/role must have ecr:ListImages permission for the repository.
+#>
+function Check-ECRImageTag {
+    param([string]$Tag)
     
-    .DESCRIPTION
-        Queries AWS ECR to verify if a specific image tag exists in the taskactivity repository.
-        Returns true if found, false otherwise, with colored console output.
+    Write-Host "Searching for tag '$Tag' in ECR repository 'taskactivity'..." -ForegroundColor Cyan
     
-    .PARAMETER Tag
-        The Docker image tag to search for (e.g., '16', 'latest', 'latest-dev')
+    # Query ECR for all images in the taskactivity repository
+    # --output json ensures we get structured data that can be parsed
+    $result = aws ecr list-images --repository-name taskactivity --region us-east-1 --output json | ConvertFrom-Json
     
-    .PARAMETER RepositoryName
-        The ECR repository name. Defaults to 'taskactivity'.
+    # Search through the imageIds array to find a matching tag
+    $found = $result.imageIds | Where-Object { $_.imageTag -eq $Tag }
     
-    .PARAMETER Region
-        AWS region. Defaults to 'us-east-1'.
-    
-    .EXAMPLE
-        Test-ECRImageTag '16'
-        # Checks if tag '16' exists in ECR
-    
-    .EXAMPLE
-        Test-ECRImageTag -Tag 'latest-dev' -RepositoryName 'myapp' -Region 'us-west-2'
-        # Checks custom repository and region
-    #>
-    
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$Tag,
+    # Display result with visual indicator
+    if ($found) {
+        Write-Host "Tag '$Tag' exists in ECR" -ForegroundColor Green
         
-        [Parameter()]
-        [string]$RepositoryName = 'taskactivity',
+        # Get detailed information about the image
+        $imageDigest = $found.imageDigest
+        $details = aws ecr describe-images --repository-name taskactivity --region us-east-1 --image-ids imageDigest=$imageDigest --output json | ConvertFrom-Json
         
-        [Parameter()]
-        [string]$Region = 'us-east-1'
-    )
-    
-    try {
-        Write-Host "Searching for tag '$Tag' in ECR repository '$RepositoryName'..." -ForegroundColor Cyan
-        
-        # Query ECR for all images in the repository
-        $result = aws ecr list-images --repository-name $RepositoryName --region $Region --output json 2>&1
-        
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Error querying ECR: $result" -ForegroundColor Red
-            return $false
-        }
-        
-        $images = $result | ConvertFrom-Json
-        $found = $images.imageIds | Where-Object { $_.imageTag -eq $Tag }
-        
-        if ($found) {
-            Write-Host "Tag '$Tag' exists in ECR" -ForegroundColor Green
+        if ($details.imageDetails) {
+            $imageDetail = $details.imageDetails[0]
+            Write-Host "  Image Digest: $imageDigest" -ForegroundColor Gray
             
-            # Get additional details about the image
-            $details = aws ecr describe-images --repository-name $RepositoryName --region $Region --image-ids imageTag=$Tag --output json | ConvertFrom-Json
-            if ($details.imageDetails) {
-                $image = $details.imageDetails[0]
-                Write-Host "  Image Digest: $($image.imageDigest)" -ForegroundColor Gray
-                Write-Host "  Size: $([math]::Round($image.imageSizeInBytes / 1MB, 2)) MB" -ForegroundColor Gray
-                Write-Host "  Pushed: $($image.imagePushedAt)" -ForegroundColor Gray
-                
-                # Show other tags on the same image
-                # if ($image.imageTags.Count -gt 1) {
-                #     Write-Host "  Other tags: $($image.imageTags -join ', ')" -ForegroundColor Gray
-                # }
+            # Calculate and display image size
+            if ($imageDetail.imageSizeInBytes) {
+                $sizeMB = [math]::Round($imageDetail.imageSizeInBytes / 1MB, 2)
+                Write-Host "  Size: $sizeMB MB" -ForegroundColor Gray
             }
             
-            return $true
-        } else {
-            Write-Host "Tag '$Tag' not found in ECR" -ForegroundColor Red
-            return $false
+            # Display push timestamp
+            if ($imageDetail.imagePushedAt) {
+                Write-Host "  Pushed: $($imageDetail.imagePushedAt)" -ForegroundColor Gray
+            }
         }
-    }
-    catch {
-        Write-Host "Exception: $($_.Exception.Message)" -ForegroundColor Red
-        return $false
+    } else {
+        Write-Host "Tag '$Tag' not found in ECR" -ForegroundColor Red
     }
 }
 
-# If script is run directly (not dot-sourced), execute tests
-if ($MyInvocation.InvocationName -ne '.') {
-    if ($args.Count -gt 0) {
-        # User provided tags as arguments - check each one
-        foreach ($tag in $args) {
-            Test-ECRImageTag $tag
-            Write-Host ""
-        }
-    } else {
-        # No arguments provided - run default tests
-        Write-Host ""
-        Write-Host "=== Testing ECR Image Tag Check ===" -ForegroundColor Yellow
-        Write-Host ""
-        
-        # Test with tag 16
-        Test-ECRImageTag '16'
-        Write-Host ""
-        
-        # Test with latest-dev
-        Test-ECRImageTag 'latest-dev'
-        Write-Host ""
-        
-        # Test with non-existent tag
-        Test-ECRImageTag '999'
-    }
-}
+# Execute the function with the provided tag parameter
+Check-ECRImageTag -Tag $Tag
