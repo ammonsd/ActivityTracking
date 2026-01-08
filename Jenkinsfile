@@ -29,7 +29,7 @@ pipeline {
         )
         choice(
             name: 'DEPLOY_ACTION',
-            choices: ['deploy', 'build-only', 'rollback'],
+            choices: ['build-only', 'deploy', 'rollback'],
             description: 'Deployment action to perform'
         )
         booleanParam(
