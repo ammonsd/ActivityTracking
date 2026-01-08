@@ -227,20 +227,9 @@ Write-Host "                       wsl sudo systemctl stop jenkins" -ForegroundC
 
 Write-Host ""
 Write-Host "=== Ready to Build! ===" -ForegroundColor Green
-
-# Ensure the KeepWSLAlive scheduled task is running
-$task = Get-ScheduledTask -TaskName "KeepWSLAlive" -ErrorAction SilentlyContinue
-if ($task) {
-    if ($task.State -ne "Running") {
-        Start-ScheduledTask -TaskName "KeepWSLAlive" -ErrorAction SilentlyContinue
-        Write-Host "Started KeepWSLAlive task to keep WSL running." -ForegroundColor Green
-    } else {
-        Write-Host "KeepWSLAlive task is already running." -ForegroundColor Gray
-    }
-} else {
-    Write-Host "Note: KeepWSLAlive scheduled task not found." -ForegroundColor Yellow
-    Write-Host "Run scripts\setup-wsl-keepalive-task.ps1 as Administrator to set it up." -ForegroundColor Yellow
-}
-
-Write-Host "WSL will stay running. Use 'wsl --shutdown' to stop." -ForegroundColor Gray
 Write-Host ""
+Write-Host "Tailing Jenkins logs (Ctrl+C to exit)..." -ForegroundColor Yellow
+Write-Host ""
+
+# Tail Jenkins logs
+wsl -u root journalctl -u jenkins -f
