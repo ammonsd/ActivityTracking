@@ -14,6 +14,7 @@ Complete guide for setting up Jenkins CI/CD pipeline for the Task Activity Track
 -   [Environment Configuration](#environment-configuration)
 -   [Testing the Pipeline](#testing-the-pipeline)
 -   [Troubleshooting](#troubleshooting)
+-   [WSL-Specific Setup](#wsl-specific-setup)
 
 ## Prerequisites
 
@@ -623,6 +624,42 @@ After successful setup:
 5. ✅ Set up automated testing
 6. ✅ Create deployment dashboards
 7. ✅ Document runbook procedures
+
+---
+
+## WSL-Specific Setup
+
+If running Jenkins locally in WSL (Windows Subsystem for Linux), you need to prevent WSL from auto-shutting down after terminal windows close.
+
+### The Problem
+
+WSL2 automatically shuts down approximately 60 seconds after all terminal connections close, which stops Jenkins even though the systemd service shows as \"running\".
+
+### The Solution
+
+Use a Windows scheduled task that keeps WSL alive. See the [Local Jenkins Setup Guide](Local_Jenkins_Setup_Guide.md#keeping-wsl-active-for-jenkins) for detailed instructions.
+
+**Quick Setup:**
+
+1. Open PowerShell as Administrator
+2. Run the setup script:
+   ```powershell
+   cd C:\\Users\\[YOUR_USERNAME]\\GitHub\\ActivityTracking\\scripts
+   .\\setup-wsl-keepalive-task.ps1
+   ```
+3. Start Jenkins normally with `start-jenkins.ps1`
+
+The `start-jenkins.ps1` script will automatically ensure WSL stays active.
+
+**Key Points:**
+- Jenkins runs on port **8081** (changed from 8080)
+- Your application uses port **8080**
+- WSL stays running even after closing terminals
+- Stop with: `wsl --shutdown`
+
+For complete details, see: [Keeping WSL Active for Jenkins](Local_Jenkins_Setup_Guide.md#keeping-wsl-active-for-jenkins)
+
+---
 
 ## Additional Resources
 

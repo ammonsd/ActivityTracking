@@ -21,7 +21,8 @@ This guide documents the complete process of setting up Jenkins locally in WSL f
 9. [Verification](#verification)
 10. [Running the Jenkins-Built Application](#running-the-jenkins-built-application)
 11. [Daily Jenkins Startup](#daily-jenkins-startup)
-12. [Next Steps](#next-steps)
+12. [Keeping WSL Active for Jenkins](#keeping-wsl-active-for-jenkins)
+13. [Next Steps](#next-steps)
 
 ---
 
@@ -1139,6 +1140,220 @@ sudo -u jenkins docker ps
 -   [Jenkins Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
 -   [Angular CLI](https://angular.io/cli)
 -   [Maven Documentation](https://maven.apache.org/guides/)
+
+---
+
+## Keeping WSL Active for Jenkins
+
+### The Problem
+
+By default, WSL2 automatically shuts down approximately 60 seconds after the last terminal connection closes. This causes Jenkins (running in WSL) to stop, making it inaccessible even though the systemd service shows as \"running\".
+
+**Symptoms:**
+- Jenkins accessible after starting `start-jenkins.ps1`
+- Closing all WSL/PowerShell terminals causes Jenkins to become inaccessible
+- Running `wsl --list --running` shows no distributions running
+- Need to restart Jenkins every time you want to access it
+
+### The Solution
+
+Use a Windows scheduled task that periodically pings WSL to keep it alive in the background.
+
+### Setup Instructions
+
+#### Step 1: Run the Setup Script (One-Time)
+
+**Open PowerShell as Administrator** and run:
+
+```powershell
+cd c:\\Users\\[YOUR_USERNAME]\\GitHub\\ActivityTracking\\scripts
+.\\setup-wsl-keepalive-task.ps1
+```
+
+When prompted, choose **Y** to start the task immediately.
+
+**What this does:**
+- Creates a Windows scheduled task named \"KeepWSLAlive\"
+- Task runs automatically on user login
+- Executes `keep-wsl-alive.ps1` in hidden background mode
+- Pings WSL every 15 seconds to prevent auto-shutdown
+- Auto-restarts if it crashes (up to 999 times)
+
+#### Step 2: Verify Setup
+
+```powershell
+# Check if task exists and is running
+Get-ScheduledTask -TaskName \"KeepWSLAlive\" | Select-Object TaskName, State
+
+# Should show:
+# TaskName       State
+# --------       -----
+# KeepWSLAlive   Running
+```
+
+#### Step 3: Test WSL Stays Alive
+
+1. Start Jenkins with `start-jenkins.ps1`
+2. Close all terminal windows
+3. Wait 2-3 minutes
+4. Open new PowerShell and run:
+   ```powershell
+   wsl --list --running
+   ```
+5. Should show: `Ubuntu (Default)` is running
+6. Access Jenkins at `http://[WSL-IP]:8081` - should be accessible
+
+### Automatic Startup
+
+The `start-jenkins.ps1` script now automatically ensures the KeepWSLAlive task is running:
+
+```powershell
+# Just run your normal Jenkins start script
+.\\scripts\\start-jenkins.ps1
+
+# Script will:
+# 1. Start Jenkins on port 8081
+# 2. Check if KeepWSLAlive task is running
+# 3. Start the task if not already running
+# 4. Display connection information
+```
+
+### Managing the Keep-Alive Task
+
+**Check Status:**
+```powershell
+Get-ScheduledTask -TaskName \"KeepWSLAlive\" | Select-Object TaskName, State, LastRunTime
+```
+
+**Start Task Manually:**
+```powershell
+Start-ScheduledTask -TaskName \"KeepWSLAlive\"
+```
+
+**Stop Task:**
+```powershell
+Stop-ScheduledTask -TaskName \"KeepWSLAlive\"
+```
+
+**Remove Task (if you want to disable this feature):**
+```powershell
+Unregister-ScheduledTask -TaskName \"KeepWSLAlive\" -Confirm:$false
+```
+
+**Recreate Task (if settings changed):**
+```powershell
+# Run setup script again as Administrator
+.\\scripts\\setup-wsl-keepalive-task.ps1
+```
+
+### Stopping Everything
+
+When you want to shut down Jenkins and WSL:
+
+```powershell
+# Option 1: Stop just the keep-alive task (WSL will shutdown after 60 seconds)
+Stop-ScheduledTask -TaskName \"KeepWSLAlive\"
+
+# Option 2: Force immediate WSL shutdown
+wsl --shutdown
+
+# Jenkins will stop when WSL shuts down
+```
+
+### Troubleshooting
+
+#### WSL Still Shutting Down After Setup
+
+**Check if task is actually running:**
+```powershell
+Get-ScheduledTask -TaskName \"KeepWSLAlive\" | Format-List *
+```
+
+**Check task execution history:**
+```powershell
+Get-ScheduledTaskInfo -TaskName \"KeepWSLAlive\" | Select-Object LastRunTime, LastTaskResult, NumberOfMissedRuns
+```
+
+**View keep-alive log (if errors occur):**
+```powershell
+# Log file location
+Get-Content \"$env:TEMP\\keep-wsl-alive.log\" -Tail 20
+```
+
+**Manually test the keep-alive script:**
+```powershell
+# Run the script directly to see if it works
+.\\scripts\\keep-wsl-alive.ps1
+# Press Ctrl+C to stop after a few iterations
+```
+
+#### Task Shows \"Running\" but WSL Stops
+
+**Solution:** Recreate the task with elevated privileges:
+
+```powershell
+# As Administrator
+Unregister-ScheduledTask -TaskName \"KeepWSLAlive\" -Confirm:$false
+.\\scripts\\setup-wsl-keepalive-task.ps1
+```
+
+#### Task Not Starting on Login
+
+**Check trigger configuration:**
+```powershell
+$task = Get-ScheduledTask -TaskName \"KeepWSLAlive\"
+$task.Triggers | Format-List *
+```
+
+Should show trigger type: `LOGON`
+
+**Manually start for current session:**
+```powershell
+Start-ScheduledTask -TaskName \"KeepWSLAlive\"
+```
+
+#### High CPU Usage from Keep-Alive Task
+
+The task pings WSL every 15 seconds with minimal CPU impact. If you see high usage:
+
+1. Check if multiple instances are running:
+   ```powershell
+   Get-Process | Where-Object {$_.Name -like \"*powershell*\" -and $_.CommandLine -like \"*keep-wsl-alive*\"}
+   ```
+
+2. Stop and restart the task:
+   ```powershell
+   Stop-ScheduledTask -TaskName \"KeepWSLAlive\"
+   Start-Sleep -Seconds 5
+   Start-ScheduledTask -TaskName \"KeepWSLAlive\"
+   ```
+
+### Alternative: .wslconfig Method (Not Recommended)
+
+You may find recommendations to configure WSL auto-shutdown in `%USERPROFILE%\\.wslconfig`. However, **this does not prevent WSL shutdown** when no connections are active. The scheduled task approach is more reliable.
+
+### Related Files
+
+- **setup-wsl-keepalive-task.ps1** - One-time setup script (requires Admin)
+- **keep-wsl-alive.ps1** - Background script that keeps WSL running
+- **start-jenkins.ps1** - Jenkins startup script (auto-starts keep-alive task)
+
+---
+
+## Next Steps
+
+Once Jenkins is successfully building and running locally:
+
+1. **Test Pipeline Stages** - Verify each stage works correctly
+2. **Configure AWS Credentials** - Add credentials for ECR/ECS deployment
+3. **Test ECR Push** - Verify Docker images can be pushed to ECR
+4. **Test ECS Deployment** - Deploy to dev environment from Jenkins
+5. **Set Up Monitoring** - Configure build notifications and monitoring
+6. **Document Customizations** - Keep track of any environment-specific changes
+
+Refer to the main Jenkinsfile for production deployment configuration.
+
+---
 
 ### Troubleshooting
 
