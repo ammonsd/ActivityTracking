@@ -32,8 +32,21 @@ param(
     [switch]$Status
 )
 
-Write-Host "`n=== Jenkins Management Script ===" -ForegroundColor Cyan
-Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n" -ForegroundColor Gray
+# Ensure proper console output for batch execution
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Force console buffer width to prevent wrapping issues
+try {
+    $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(200, $host.UI.RawUI.BufferSize.Height)
+} catch {
+    # Ignore if we can't set buffer size (e.g., in ISE or other hosts)
+}
+
+Write-Host ""
+Write-Host "=== Jenkins Management Script ===" -ForegroundColor Cyan
+Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
+Write-Host ""
 
 # Function to get WSL IP address
 function Get-WslIpAddress {
@@ -71,7 +84,7 @@ function Wait-JenkinsReady {
     
     while (((Get-Date) - $startTime).TotalSeconds -lt $TimeoutSeconds) {
         try {
-            $response = Invoke-WebRequest -Uri "http://${IpAddress}:8080/login" -TimeoutSec 2 -UseBasicParsing -ErrorAction SilentlyContinue
+            $response = Invoke-WebRequest -Uri "http://${IpAddress}:8081/login" -TimeoutSec 2 -UseBasicParsing -ErrorAction SilentlyContinue
             if ($response.StatusCode -eq 200) {
                 $ready = $true
                 break
@@ -114,7 +127,7 @@ if ($Status) {
     Write-Host "`nJenkins Connection Information:" -ForegroundColor Cyan
     $wslIp = Get-WslIpAddress
     if ($wslIp) {
-        Write-Host "  Jenkins URL: http://${wslIp}:8080" -ForegroundColor White
+        Write-Host "  Jenkins URL: http://${wslIp}:8081" -ForegroundColor White
         Write-Host "  WSL IP Address: $wslIp" -ForegroundColor Gray
     }
     
@@ -171,34 +184,63 @@ if ($jenkinsReady) {
 }
 
 # Display connection information
-Write-Host "`n=== Jenkins Connection Information ===" -ForegroundColor Cyan
-Write-Host "  Jenkins URL:     http://${wslIp}:8080" -ForegroundColor White
-Write-Host "  WSL IP Address:  $wslIp" -ForegroundColor Gray
-Write-Host "  App Access URL:  http://${wslIp}:8081/task-activity" -ForegroundColor White
-Write-Host "                   (when container is running)" -ForegroundColor Gray
+Write-Host ""
+Write-Host "=== Jenkins Connection Information ===" -ForegroundColor Cyan
+Write-Host "Jenkins URL:     http://${wslIp}:8081" -ForegroundColor White
+Write-Host "WSL IP Address:  $wslIp" -ForegroundColor Gray
+Write-Host "App Access URL:  http://${wslIp}:8080/task-activity" -ForegroundColor White
+Write-Host "                 (when container is running)" -ForegroundColor Gray
 
 # Display Docker information
-Write-Host "`n=== Docker Information ===" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "=== Docker Information ===" -ForegroundColor Cyan
 $latestImage = Get-LatestDockerImage
 if ($latestImage) {
-    Write-Host "  Most Recent Build Image:" -ForegroundColor White
-    Write-Host "    $latestImage" -ForegroundColor Gray
+    # Parse the docker image output more reliably
+    $imageString = $latestImage.ToString()
+    $parts = $imageString -split '\s+', 3
     
-    Write-Host "`n  To run the latest build:" -ForegroundColor White
-    Write-Host "    wsl docker run -p 8081:8080 --env-file .env.local -e DATABASE_URL=`"jdbc:postgresql://172.27.80.1:5432/AmmoP1DB`" taskactivity:latest" -ForegroundColor Gray
+    Write-Host "Most Recent Build Image:" -ForegroundColor White
+    if ($parts.Count -ge 1) {
+        Write-Host "  Image: $($parts[0])" -ForegroundColor Yellow
+    }
+    if ($parts.Count -ge 2) {
+        Write-Host "  ID:    $($parts[1])" -ForegroundColor Yellow
+    }
+    if ($parts.Count -ge 3) {
+        Write-Host "  Date:  $($parts[2])" -ForegroundColor Yellow
+    }
+    
+    Write-Host ""
+    Write-Host "To run the latest build:" -ForegroundColor White
+    Write-Host "  wsl docker run -p 8080:8080 --env-file .env.local -e DATABASE_URL=`"jdbc:postgresql://172.27.80.1:5432/AmmoP1DB`" taskactivity:latest" -ForegroundColor Gray
 }
 
 # Display helpful commands
-Write-Host "`n=== Helpful Commands ===" -ForegroundColor Cyan
-Write-Host "  Check Jenkins status: " -NoNewline -ForegroundColor White
-Write-Host "wsl -u root systemctl status jenkins" -ForegroundColor Gray
-Write-Host "  View Jenkins logs:    " -NoNewline -ForegroundColor White
-Write-Host "wsl -u root journalctl -u jenkins -f" -ForegroundColor Gray
-Write-Host "  List Docker images:   " -NoNewline -ForegroundColor White
-Write-Host "wsl docker images | Select-String taskactivity" -ForegroundColor Gray
-Write-Host "  Stop Jenkins:         " -NoNewline -ForegroundColor White
-Write-Host "wsl -u root systemctl stop jenkins" -ForegroundColor Gray
-Write-Host "wsl sudo systemctl stop jenkins" -ForegroundColor Gray
+Write-Host ""
+Write-Host "=== Helpful Commands ===" -ForegroundColor Cyan
+Write-Host "Check Jenkins status:  wsl -u root systemctl status jenkins" -ForegroundColor Gray
+Write-Host "View Jenkins logs:     wsl -u root journalctl -u jenkins -f" -ForegroundColor Gray
+Write-Host "List Docker images:    wsl docker images | Select-String taskactivity" -ForegroundColor Gray
+Write-Host "Stop Jenkins:          wsl -u root systemctl stop jenkins" -ForegroundColor Gray
+Write-Host "                       wsl sudo systemctl stop jenkins" -ForegroundColor Gray
 
-Write-Host "`n=== Ready to Build! ===" -ForegroundColor Green
+Write-Host ""
+Write-Host "=== Ready to Build! ===" -ForegroundColor Green
+
+# Ensure the KeepWSLAlive scheduled task is running
+$task = Get-ScheduledTask -TaskName "KeepWSLAlive" -ErrorAction SilentlyContinue
+if ($task) {
+    if ($task.State -ne "Running") {
+        Start-ScheduledTask -TaskName "KeepWSLAlive" -ErrorAction SilentlyContinue
+        Write-Host "Started KeepWSLAlive task to keep WSL running." -ForegroundColor Green
+    } else {
+        Write-Host "KeepWSLAlive task is already running." -ForegroundColor Gray
+    }
+} else {
+    Write-Host "Note: KeepWSLAlive scheduled task not found." -ForegroundColor Yellow
+    Write-Host "Run scripts\setup-wsl-keepalive-task.ps1 as Administrator to set it up." -ForegroundColor Yellow
+}
+
+Write-Host "WSL will stay running. Use 'wsl --shutdown' to stop." -ForegroundColor Gray
 Write-Host ""
