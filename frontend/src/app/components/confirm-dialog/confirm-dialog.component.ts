@@ -1,3 +1,10 @@
+/**
+ * Description: Confirm Dialog component - provides a reusable confirmation dialog for user actions
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

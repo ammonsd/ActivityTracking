@@ -1,3 +1,10 @@
+/**
+ * Description: Receipt Upload Dialog component - provides a dialog for uploading expense receipts
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

@@ -1,3 +1,10 @@
+/**
+ * Description: Profile component - displays and allows editing of user profile information
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';

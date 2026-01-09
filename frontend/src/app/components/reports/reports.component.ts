@@ -1,3 +1,10 @@
+/**
+ * Description: Reports component - displays various analytics and reports for task activities
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

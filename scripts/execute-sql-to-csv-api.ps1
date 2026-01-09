@@ -1,3 +1,10 @@
+/**
+ * Description: Execute SQL and Export to CSV via API - executes SQL from a file by calling the Task Activity API endpoint and saves the CSV results to a file
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 ###############################################################################
 # Execute SQL and Export to CSV via API
 # 

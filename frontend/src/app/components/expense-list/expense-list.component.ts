@@ -1,3 +1,10 @@
+/**
+ * Description: Expense List component - displays and manages expenses with filtering and receipt upload capabilities
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

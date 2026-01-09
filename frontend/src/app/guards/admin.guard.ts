@@ -1,3 +1,10 @@
+/**
+ * Description: Admin guard - protects routes by checking if user has admin role
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';

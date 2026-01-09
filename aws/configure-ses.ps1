@@ -1,4 +1,12 @@
 #!/usr/bin/env pwsh
+
+/**
+ * Description: Configure AWS SES for Task Activity Email Notifications - helps configure AWS Simple Email Service (SES) for email notifications
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 ###############################################################################
 # Configure AWS SES for Task Activity Email Notifications
 #

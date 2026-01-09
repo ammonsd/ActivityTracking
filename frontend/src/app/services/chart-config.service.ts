@@ -1,3 +1,10 @@
+/**
+ * Description: Chart Configuration service - provides Chart.js configuration and helper functions for generating charts
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { ChartOptions } from 'chart.js';
 

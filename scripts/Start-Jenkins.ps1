@@ -1,4 +1,12 @@
 #!/usr/bin/env pwsh
+
+/**
+ * Description: Manages Jenkins service in WSL and displays connection information
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 <#
 .SYNOPSIS
     Manages Jenkins service in WSL and displays connection information.

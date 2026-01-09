@@ -1,3 +1,10 @@
+/**
+ * Description: Dropdown service - provides HTTP client methods for managing dropdown values (clients, projects, phases, etc.)
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';

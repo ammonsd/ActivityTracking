@@ -1,3 +1,10 @@
+/**
+ * Description: AWS Billing Check Script - retrieves current AWS billing information using Cost Explorer API
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 # ============================================================================
 # AWS Billing Check Script
 # ============================================================================

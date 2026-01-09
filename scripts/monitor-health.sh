@@ -1,5 +1,12 @@
 #!/bin/bash
 
+/**
+ * Description: Health Monitoring Script - provides comprehensive monitoring of application health, secrets, and infrastructure
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 # Health Monitoring Script for Task Activity Management System
 # Provides comprehensive monitoring of application health, secrets, and infrastructure
 

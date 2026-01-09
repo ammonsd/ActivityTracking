@@ -1,3 +1,10 @@
+/**
+ * Description: Expense Edit Dialog component - provides a dialog for creating and editing expenses
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

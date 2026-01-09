@@ -1,3 +1,10 @@
+/**
+ * Description: Database schema creation script - creates tables, indexes, and constraints for the Task Activity application
+ *
+ * Author: Dean Ammons
+ * Date: October January 2026
+ */
+
 --------------------------------
 -- Schema Creation and Table Setup
 --

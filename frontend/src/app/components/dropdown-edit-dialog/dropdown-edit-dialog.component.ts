@@ -1,3 +1,10 @@
+/**
+ * Description: Dropdown Edit Dialog component - provides a dialog for creating and editing dropdown values
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

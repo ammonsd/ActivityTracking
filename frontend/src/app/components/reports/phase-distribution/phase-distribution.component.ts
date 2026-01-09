@@ -1,3 +1,10 @@
+/**
+ * Description: Phase Distribution report component - displays distribution of hours across different phases
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

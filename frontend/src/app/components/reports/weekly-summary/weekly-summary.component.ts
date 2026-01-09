@@ -1,3 +1,10 @@
+/**
+ * Description: Weekly Summary report component - displays weekly summary of task activities
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

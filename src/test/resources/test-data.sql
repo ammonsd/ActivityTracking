@@ -1,3 +1,10 @@
+/**
+ * Description: Test data for H2 database - provides test data for unit and integration tests
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 -- Test data for H2 database using database-driven authorization
 -- Based on main data.sql but simplified for testing
 

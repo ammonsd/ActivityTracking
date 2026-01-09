@@ -1,3 +1,10 @@
+/**
+ * Description: User Summary report component - displays summary of hours and activities by user
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

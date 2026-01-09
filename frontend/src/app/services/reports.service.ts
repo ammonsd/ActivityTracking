@@ -1,3 +1,10 @@
+/**
+ * Description: Reports service - provides HTTP client methods for fetching report data and analytics
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { Observable, map, forkJoin } from 'rxjs';
 import {

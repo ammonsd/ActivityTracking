@@ -1,3 +1,10 @@
+/**
+ * Description: Authentication interceptor - adds authentication headers to HTTP requests and handles authentication errors
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 

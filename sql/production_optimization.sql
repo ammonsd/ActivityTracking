@@ -1,3 +1,10 @@
+/**
+ * Description: Production Database Optimization Script - creates indexes to optimize database performance after deploying to production
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 -- Production Database Optimization Script
 -- Run this after deploying to production
 

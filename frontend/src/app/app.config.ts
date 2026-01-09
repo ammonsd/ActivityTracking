@@ -1,3 +1,10 @@
+/**
+ * Description: Application configuration - provides Angular application configuration including routing, HTTP client, and interceptors
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import {

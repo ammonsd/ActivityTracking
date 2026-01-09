@@ -1,5 +1,12 @@
 #!/bin/bash
 
+/**
+ * Description: Docker Secrets Setup Script - helps create and manage Docker secrets for production deployment
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 # Docker Secrets Setup Script for Task Activity Management System
 # This script helps create and manage Docker secrets for production deployment
 

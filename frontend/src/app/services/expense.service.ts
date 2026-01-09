@@ -1,3 +1,10 @@
+/**
+ * Description: Expense service - provides HTTP client methods for managing expenses and receipts
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';

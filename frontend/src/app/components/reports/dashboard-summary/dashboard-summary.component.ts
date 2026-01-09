@@ -1,3 +1,10 @@
+/**
+ * Description: Dashboard Summary report component - displays summary statistics for the dashboard
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

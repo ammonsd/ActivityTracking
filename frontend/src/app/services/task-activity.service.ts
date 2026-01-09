@@ -1,3 +1,10 @@
+/**
+ * Description: Task Activity service - provides HTTP client methods for managing task activities
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';

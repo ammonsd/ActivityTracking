@@ -1,4 +1,12 @@
 #!/bin/bash
+
+/**
+ * Description: Docker entrypoint script for Task Activity Application - handles startup and configuration
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 set -e
 
 echo "=========================================="

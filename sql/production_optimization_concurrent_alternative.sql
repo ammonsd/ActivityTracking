@@ -1,3 +1,10 @@
+/**
+ * Description: Production Database Concurrent Index Creation - alternative to production_optimization.sql for zero-downtime index creation
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 -- ALTERNATIVE: Production Database Concurrent Index Creation
 -- Use this INSTEAD of production_optimization.sql if you need zero-downtime index creation
 -- These commands must be run individually (NOT in a transaction block)

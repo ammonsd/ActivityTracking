@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+/**
+ * Description: Verify Environment Configuration - verifies that all required AWS resources are properly configured
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 ################################################################################
 # Verify Environment Configuration
 #

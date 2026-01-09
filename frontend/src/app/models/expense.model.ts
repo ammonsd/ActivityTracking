@@ -1,3 +1,10 @@
+/**
+ * Description: Expense models - defines TypeScript interfaces for expense tracking and management
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 export interface Expense {
   id?: number;
   expenseDate: string;

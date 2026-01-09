@@ -1,3 +1,10 @@
+/**
+ * Description: Application routes - defines the routing configuration for all application pages and guards
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Routes } from '@angular/router';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { TaskListComponent } from './components/task-list/task-list.component';

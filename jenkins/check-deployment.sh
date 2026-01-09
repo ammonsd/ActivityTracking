@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+/**
+ * Description: Check ECS Deployment Status - checks the status of an ECS deployment including task count and health
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 ################################################################################
 # Check ECS Deployment Status
 #

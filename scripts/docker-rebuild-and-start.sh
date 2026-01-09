@@ -1,4 +1,12 @@
 #!/bin/bash
+
+/**
+ * Description: Full rebuild and restart script for WSL2 - rebuilds Docker containers and restarts the application
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 # Full rebuild and restart script for WSL2
 # Usage: wsl -u root, then ./rebuild-and-start.sh
 # Optional: Add --no-cache to force complete rebuild

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+/**
+ * Description: Production Docker Swarm Setup - sets up a production-ready Docker Swarm environment with secrets
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 # Production Docker Swarm Setup for Task Activity Management System
 # This script sets up a production-ready Docker Swarm environment with secrets
 

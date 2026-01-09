@@ -1,3 +1,10 @@
+/**
+ * Description: Task List component - displays and manages task activities with filtering and editing capabilities
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

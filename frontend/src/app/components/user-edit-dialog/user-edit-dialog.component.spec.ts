@@ -1,3 +1,10 @@
+/**
+ * Description: User Edit Dialog unit tests - tests for the user edit dialog component
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { UserEditDialogComponent } from './user-edit-dialog.component';
@@ -8,9 +15,8 @@ describe('UserEditDialogComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UserEditDialogComponent]
-    })
-    .compileComponents();
+      imports: [UserEditDialogComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(UserEditDialogComponent);
     component = fixture.componentInstance;

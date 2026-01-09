@@ -1,3 +1,10 @@
+/**
+ * Description: Authentication service - handles user login, logout, session management, and authentication state
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';

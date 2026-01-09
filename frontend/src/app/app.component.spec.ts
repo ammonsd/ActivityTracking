@@ -1,3 +1,10 @@
+/**
+ * Description: App Component unit tests - tests for the main application component
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { TestBed } from '@angular/core/testing';
 
 /**

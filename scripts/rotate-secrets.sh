@@ -1,5 +1,12 @@
 #!/bin/bash
 
+/**
+ * Description: Secrets Rotation Script - safely rotates Docker secrets with zero-downtime deployment
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 # Secrets Rotation Script for Task Activity Management System
 # This script safely rotates Docker secrets with zero-downtime deployment
 

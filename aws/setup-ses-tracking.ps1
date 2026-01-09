@@ -1,3 +1,10 @@
+/**
+ * Description: AWS SES Email Tracking Setup Script - configures AWS SES to track email events and publish them to CloudWatch for monitoring
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 ###############################################################################
 # AWS SES Email Tracking Setup Script
 # 

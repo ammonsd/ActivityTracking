@@ -1,3 +1,10 @@
+/**
+ * Description: Dashboard component - displays main dashboard with task and expense summaries
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';

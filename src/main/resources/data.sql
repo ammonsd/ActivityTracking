@@ -1,3 +1,10 @@
+/**
+ * Description: Database initialization data - inserts dropdown values, roles, permissions, and default users for the application
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 -- Insert dropdown values (skip if already exists)
 -- Structure: category=TASK, subcategory=CLIENT/PROJECT/PHASE
 -- This allows for future EXPENSE category with its own subcategories

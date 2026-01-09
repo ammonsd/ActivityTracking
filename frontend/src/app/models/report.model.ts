@@ -1,3 +1,10 @@
+/**
+ * Description: Report Data Models for Analytics and Reporting - defines TypeScript interfaces for various report data structures
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 // Report Data Models for Analytics and Reporting
 
 export interface TimeByClientDto {

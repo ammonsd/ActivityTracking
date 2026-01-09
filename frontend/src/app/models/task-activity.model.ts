@@ -1,3 +1,10 @@
+/**
+ * Description: Task Activity and User models - defines TypeScript interfaces for task activities, users, and related entities
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 export interface TaskActivity {
   id?: number;
   taskDate: string;

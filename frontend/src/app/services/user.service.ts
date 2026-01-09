@@ -1,3 +1,10 @@
+/**
+ * Description: User service - provides HTTP client methods for managing users and user-related operations
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';

@@ -1,3 +1,10 @@
+/**
+ * Description: Main application component - provides the root component with navigation, toolbar, and layout structure
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, ViewChild } from '@angular/core';
 import {
   RouterOutlet,

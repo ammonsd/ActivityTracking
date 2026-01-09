@@ -1,3 +1,10 @@
+/**
+ * Description: User List component - displays and manages users with admin capabilities
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';

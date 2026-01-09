@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+/**
+ * Description: Trigger Jenkins Build via CLI - triggers Jenkins builds for deployment, build-only, or rollback actions
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 ################################################################################
 # Trigger Jenkins Build via CLI
 #

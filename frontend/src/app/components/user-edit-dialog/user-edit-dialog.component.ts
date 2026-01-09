@@ -1,3 +1,10 @@
+/**
+ * Description: User Edit Dialog component - provides a dialog for creating and editing users
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

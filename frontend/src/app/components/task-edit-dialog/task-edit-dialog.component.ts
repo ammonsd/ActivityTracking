@@ -1,3 +1,10 @@
+/**
+ * Description: Task Edit Dialog component - provides a dialog for creating and editing task activities
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+/**
+ * Description: Cleanup Old Docker Images from ECR - removes old Docker images from ECR to save storage costs
+ *
+ * Author: Dean Ammons
+ * Date: October 2025
+ */
+
 ################################################################################
 # Cleanup Old Docker Images from ECR
 #

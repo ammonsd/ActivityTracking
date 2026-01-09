@@ -1,3 +1,10 @@
+/**
+ * Description: Dropdown Management component - manages dropdown values for clients, projects, phases, and expense types
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

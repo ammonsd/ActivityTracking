@@ -1,3 +1,10 @@
+/**
+ * Description: Configure AWS SES for TaskActivity - updates the ECS task IAM role and deploys with email notifications enabled
+ *
+ * Author: Dean Ammons
+ * Date: December 2025
+ */
+
 # Configure AWS SES for TaskActivity
 # This script updates the ECS task IAM role and deploys with email notifications enabled
 

@@ -1,4 +1,12 @@
 #!/bin/bash
+
+/**
+ * Description: Docker deployment script for starting application with correct database connection for WSL2
+ *
+ * Author: Dean Ammons
+ * Date: November 2025
+ */
+
 # Start application with correct database connection for WSL2
 #
 # Usage: 
