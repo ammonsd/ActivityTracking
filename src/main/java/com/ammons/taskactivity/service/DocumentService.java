@@ -21,6 +21,7 @@ import jakarta.annotation.PostConstruct;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @Service
 public class DocumentService {

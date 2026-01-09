@@ -23,6 +23,7 @@ import java.io.IOException;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

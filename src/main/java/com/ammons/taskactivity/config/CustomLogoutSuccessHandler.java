@@ -17,6 +17,7 @@ import java.io.IOException;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @Component
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {

@@ -24,6 +24,7 @@ import java.io.IOException;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {

@@ -12,6 +12,7 @@ import java.lang.annotation.*;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @Documented
 @Constraint(validatedBy = PasswordValidator.class)

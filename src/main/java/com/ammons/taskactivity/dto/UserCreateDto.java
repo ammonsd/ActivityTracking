@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 public class UserCreateDto {
 

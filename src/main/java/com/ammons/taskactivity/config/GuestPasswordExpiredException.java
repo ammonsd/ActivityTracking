@@ -8,6 +8,7 @@ import org.springframework.security.core.AuthenticationException;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 public class GuestPasswordExpiredException extends AuthenticationException {
 

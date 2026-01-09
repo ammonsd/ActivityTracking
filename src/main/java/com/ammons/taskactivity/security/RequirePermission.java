@@ -22,6 +22,10 @@ import java.lang.annotation.Target;
  * 
  * @see PermissionAspect
  * @see com.ammons.taskactivity.entity.Permission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -30,6 +34,10 @@ public @interface RequirePermission {
      * The resource being accessed (e.g., "TASK_ACTIVITY", "EXPENSE", "USER_MANAGEMENT").
      * 
      * @return the resource name
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     String resource();
 
@@ -37,6 +45,10 @@ public @interface RequirePermission {
      * The action being performed (e.g., "CREATE", "READ", "UPDATE", "DELETE").
      * 
      * @return the action name
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     String action();
 }

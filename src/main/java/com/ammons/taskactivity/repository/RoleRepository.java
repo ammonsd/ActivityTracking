@@ -14,6 +14,10 @@ import java.util.Optional;
  * 
  * @see Roles
  * @see com.ammons.taskactivity.entity.Permission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Repository
 public interface RoleRepository extends JpaRepository<Roles, Long> {
@@ -23,6 +27,10 @@ public interface RoleRepository extends JpaRepository<Roles, Long> {
      * 
      * @param name the role name (e.g., "ADMIN", "USER")
      * @return an Optional containing the role if found, or empty if not found
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     Optional<Roles> findByName(String name);
 
@@ -34,6 +42,10 @@ public interface RoleRepository extends JpaRepository<Roles, Long> {
      * @param resource the resource name (e.g., "TASK_ACTIVITY")
      * @param action the action name (e.g., "CREATE")
      * @return true if the role has the permission, false otherwise
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END "
             + "FROM Roles r JOIN r.permissions p "

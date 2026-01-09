@@ -8,6 +8,7 @@ import java.math.BigDecimal;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 public final class ValidationConstants {
 

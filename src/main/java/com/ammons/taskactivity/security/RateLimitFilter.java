@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {

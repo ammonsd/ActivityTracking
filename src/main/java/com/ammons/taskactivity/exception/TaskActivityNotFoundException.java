@@ -5,6 +5,7 @@ package com.ammons.taskactivity.exception;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 public class TaskActivityNotFoundException extends RuntimeException {
 

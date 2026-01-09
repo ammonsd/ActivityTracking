@@ -10,6 +10,7 @@ import java.io.InputStream;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 public interface ReceiptStorageService {
 

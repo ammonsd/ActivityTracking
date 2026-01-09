@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @Controller
 public class PasswordChangeController {

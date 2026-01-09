@@ -24,6 +24,7 @@ import java.util.function.Function;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @Component
 public class JwtUtil {

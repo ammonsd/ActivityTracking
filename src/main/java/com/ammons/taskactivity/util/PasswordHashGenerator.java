@@ -2,6 +2,14 @@ package com.ammons.taskactivity.util;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/**
+ * Description: Utility class for testing and generating BCrypt password hashes for development and
+ * testing purposes.
+ *
+ * @author Dean Ammons
+ * @version 1.0
+ * @since October 2025
+ */
 public class PasswordHashGenerator {
     public static void main(String[] args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

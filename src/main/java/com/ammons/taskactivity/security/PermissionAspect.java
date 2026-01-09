@@ -24,6 +24,10 @@ import org.springframework.stereotype.Component;
  * 
  * @see RequirePermission
  * @see PermissionService
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Aspect
 @Component
@@ -45,6 +49,10 @@ public class PermissionAspect {
      * @throws Throwable if the underlying method throws an exception
      * @throws AccessDeniedException if the user is not authenticated or lacks the required
      *         permission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     @Around("@annotation(requirePermission)")
     public Object checkPermission(ProceedingJoinPoint joinPoint,

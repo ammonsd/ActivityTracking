@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 @Component
 @ConfigurationProperties(prefix = "app.task-activity.list.sort")

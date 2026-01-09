@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @RestController
 @RequestMapping("/api/users")

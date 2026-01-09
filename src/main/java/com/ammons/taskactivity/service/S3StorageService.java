@@ -21,6 +21,7 @@ import java.util.UUID;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 public class S3StorageService implements ReceiptStorageService {
 

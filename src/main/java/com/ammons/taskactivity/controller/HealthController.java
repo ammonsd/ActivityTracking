@@ -18,6 +18,7 @@ import java.util.Map;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @RestController
 @RequestMapping("/api/health")

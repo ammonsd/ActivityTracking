@@ -20,6 +20,10 @@ import java.util.Set;
  * 
  * @see Permission
  * @see User
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Entity
 @Table(name = "roles")
@@ -97,6 +101,10 @@ public class Roles {
      * Adds a permission to this role.
      * 
      * @param permission the permission to add
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public void addPermission(Permission permission) {
         this.permissions.add(permission);
@@ -106,6 +114,10 @@ public class Roles {
      * Removes a permission from this role.
      * 
      * @param permission the permission to remove
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public void removePermission(Permission permission) {
         this.permissions.remove(permission);

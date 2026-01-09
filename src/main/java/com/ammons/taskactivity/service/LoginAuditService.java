@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @Service
 public class LoginAuditService {

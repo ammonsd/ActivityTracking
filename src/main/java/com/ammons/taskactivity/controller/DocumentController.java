@@ -26,6 +26,7 @@ import java.util.zip.GZIPInputStream;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @RestController
 @RequestMapping("/docs")

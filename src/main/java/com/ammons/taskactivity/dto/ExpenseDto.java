@@ -12,6 +12,7 @@ import java.time.LocalDate;
  *
  * @author Dean Ammons
  * @version 2.0
+ * @since December 2025
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExpenseDto {
