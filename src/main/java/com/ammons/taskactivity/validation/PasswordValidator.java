@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintValidatorContext;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 public class PasswordValidator implements ConstraintValidator<ValidPassword, String> {
 

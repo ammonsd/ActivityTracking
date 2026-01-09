@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
  *
  * @author Dean Ammons
  * @version 2.0
+ * @since December 2025
  */
 @Entity
 @Table(name = "expenses", schema = "public")

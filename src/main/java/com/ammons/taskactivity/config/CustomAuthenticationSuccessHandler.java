@@ -33,6 +33,7 @@ import java.util.Optional;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @Component
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {

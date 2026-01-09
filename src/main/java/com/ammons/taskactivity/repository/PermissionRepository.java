@@ -11,6 +11,10 @@ import java.util.Optional;
  * permissions by resource and action.
  * 
  * @see Permission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Long> {
@@ -21,6 +25,10 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
      * @param resource the resource name (e.g., "TASK_ACTIVITY")
      * @param action the action name (e.g., "CREATE")
      * @return an Optional containing the permission if found, or empty if not found
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     Optional<Permission> findByResourceAndAction(String resource, String action);
 
@@ -30,6 +38,10 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
      * @param resource the resource name
      * @param action the action name
      * @return true if a matching permission exists, false otherwise
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     boolean existsByResourceAndAction(String resource, String action);
 }

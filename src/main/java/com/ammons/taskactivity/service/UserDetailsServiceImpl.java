@@ -17,6 +17,7 @@ import java.time.ZoneOffset;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {

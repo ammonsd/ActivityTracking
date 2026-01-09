@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  * @param <T> The type of data contained in the response
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {

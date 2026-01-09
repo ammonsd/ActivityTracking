@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @Entity
 @Table(name = "dropdownvalues", schema = "public")

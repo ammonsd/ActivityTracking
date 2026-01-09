@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @Component
 public class PasswordValidationService {

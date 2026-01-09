@@ -22,6 +22,10 @@ import java.time.LocalDateTime;
  * 
  * @see Roles
  * @see com.ammons.taskactivity.security.RequirePermission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Entity
 @Table(name = "permissions")
@@ -99,6 +103,10 @@ public class Permission {
      * throughout the application for permission checks.
      * 
      * @return the permission key (e.g., "TASK_ACTIVITY:CREATE")
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public String getPermissionKey() {
         return resource + ":" + action;

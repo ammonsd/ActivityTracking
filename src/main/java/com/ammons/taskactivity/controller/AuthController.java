@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 @Controller
 public class AuthController {

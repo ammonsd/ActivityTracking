@@ -29,6 +29,10 @@ import java.util.Set;
  * 
  * @see com.ammons.taskactivity.entity.Permission
  * @see com.ammons.taskactivity.entity.Roles
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Service
 @Transactional(readOnly = true)
@@ -50,6 +54,10 @@ public class PermissionService {
      * @param username The username
      * @param permissionKey Permission in format "RESOURCE:ACTION" (e.g., "TASK_ACTIVITY:CREATE")
      * @return true if user has the permission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public boolean userHasPermission(String username, String permissionKey) {
         logger.debug("Checking permission {} for user {}", permissionKey, username);
@@ -86,6 +94,10 @@ public class PermissionService {
      * 
      * @param username the username to retrieve permissions for
      * @return a set of permissions, or an empty set if the user is not found or has no role
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public Set<Permission> getUserPermissions(String username) {
         User user = userRepository.findByUsername(username).orElse(null);
@@ -102,6 +114,10 @@ public class PermissionService {
      * @param resource the resource name (e.g., "TASK_ACTIVITY")
      * @param action the action name (e.g., "CREATE")
      * @return true if the role has the permission, false otherwise
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     public boolean roleHasPermission(Long roleId, String resource, String action) {
         return roleRepository.roleHasPermission(roleId, resource, action);

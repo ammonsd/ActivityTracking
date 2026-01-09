@@ -16,6 +16,7 @@ import java.util.List;
  *
  * @author Dean Ammons
  * @version 2.0
+ * @since December 2025
  */
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {

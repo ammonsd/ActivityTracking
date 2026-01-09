@@ -27,6 +27,7 @@ import java.util.Optional;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @RestController
 @RequestMapping("/api/task-activities") // Base URL for all endpoints in this controller

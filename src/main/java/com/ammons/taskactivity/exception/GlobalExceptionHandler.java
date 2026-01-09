@@ -25,6 +25,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since January 2026
  */
 @ControllerAdvice(annotations = org.springframework.stereotype.Controller.class)
 public class GlobalExceptionHandler {

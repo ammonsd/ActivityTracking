@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since October 2025
  */
 @Controller
 public class ErrorController {

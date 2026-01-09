@@ -12,6 +12,7 @@ import java.time.LocalDate;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskActivityDto {

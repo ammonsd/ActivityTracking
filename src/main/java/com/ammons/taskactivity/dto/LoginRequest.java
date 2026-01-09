@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @Schema(description = "Login credentials for authentication")
 public class LoginRequest {

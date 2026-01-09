@@ -24,6 +24,10 @@ import java.io.Serializable;
  * 
  * @see PermissionService
  * @see RequirePermission
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Component("permissionEvaluator")
 public class CustomPermissionEvaluator implements PermissionEvaluator {
@@ -41,6 +45,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
      * @param targetDomainObject the target domain object (not used in this implementation)
      * @param permission the permission key in "RESOURCE:ACTION" format
      * @return true if the user has the permission, false otherwise
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject,
@@ -65,6 +73,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
      * @param targetType the type of the target domain object
      * @param permission the permission key in "RESOURCE:ACTION" format
      * @return true if the user has the permission, false otherwise
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
      */
     @Override
     public boolean hasPermission(Authentication authentication, Serializable targetId,

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since November 2025
  */
 @Service
 public class GeoIpService {

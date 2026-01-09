@@ -17,6 +17,7 @@ import java.util.List;
  * 
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @RestController
 @RequestMapping("/api/admin/permissions")
