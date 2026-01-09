@@ -22,6 +22,12 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since October 2025
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WeeklyTimesheetService Tests")
 class WeeklyTimesheetServiceTest {

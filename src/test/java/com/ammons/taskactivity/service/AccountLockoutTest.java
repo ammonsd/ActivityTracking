@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * locking/unlocking
  * 
  * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Account Lockout Tests")

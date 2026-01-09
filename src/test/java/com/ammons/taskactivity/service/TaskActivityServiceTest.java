@@ -26,6 +26,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since October 2025
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TaskActivityService Tests")
 class TaskActivityServiceTest {

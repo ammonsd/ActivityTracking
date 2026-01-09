@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 /**
  * Data Transfer Object for User information Converts the Roles entity to a simple role name string
  * for Angular frontend
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
  */
 public class UserDto {
     private Long id;

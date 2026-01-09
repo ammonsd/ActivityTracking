@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Dean Ammons
  * @version 1.0
+ * @since December 2025
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExpenseService Tests")

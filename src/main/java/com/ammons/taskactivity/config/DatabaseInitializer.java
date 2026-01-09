@@ -11,6 +11,10 @@ import javax.sql.DataSource;
 
 /**
  * Database Initializer for AWS profile Runs schema.sql and data.sql after Spring Boot startup
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
  */
 @Configuration
 @Profile("aws")

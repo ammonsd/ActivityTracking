@@ -16,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * and basic authorization
  * 
  * @author Dean Ammons
+ * @version 1.0
+ * @since September 2025
  */
 @SpringBootTest
 @AutoConfigureMockMvc

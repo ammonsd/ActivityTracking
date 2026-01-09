@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for login audit information. Used to display login activity in admin dashboards.
+ * 
+ * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
  */
 public class LoginAuditDto {
     private Long id;

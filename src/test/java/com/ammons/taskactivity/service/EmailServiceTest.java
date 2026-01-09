@@ -26,6 +26,8 @@ import static org.mockito.Mockito.*;
  * Note: These tests are disabled for AWS deployment as they require SMTP configuration
  * 
  * @author Dean Ammons
+ * @version 1.0
+ * @since December 2025
  */
 @Disabled("Email tests require SMTP configuration - skip for AWS deployment")
 @ExtendWith(MockitoExtension.class)

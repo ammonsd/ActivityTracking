@@ -21,6 +21,8 @@ import static org.mockito.Mockito.*;
  * Unit tests for UserService Tests user management operations and validation
  * 
  * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
