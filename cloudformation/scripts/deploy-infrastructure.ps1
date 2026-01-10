@@ -1,9 +1,9 @@
-/**
+<#
  * Description: CloudFormation Infrastructure Deployment Script - manages CloudFormation stacks for the Task Activity application
  *
  * Author: Dean Ammons
  * Date: December 2025
- */
+ #>
 
 ###############################################################################
 # CloudFormation Infrastructure Deployment Script for Task Activity Application

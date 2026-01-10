@@ -1,9 +1,9 @@
-/**
+<#
  * Description: Update IAM Policy for S3 Docs Bucket Access - updates the IAM user/role policy to include permissions for the taskactivity-docs bucket
  *
  * Author: Dean Ammons
  * Date: December 2025
- */
+ #>
 
 # Update IAM Policy for S3 Docs Bucket Access
 # This script updates the IAM user/role policy to include permissions for the taskactivity-docs bucket

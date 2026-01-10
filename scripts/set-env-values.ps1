@@ -1,9 +1,9 @@
-/**
+<#
  * Description: Environment Variable Loader - loads environment variables from a .env file into the current PowerShell session
  *
  * Author: Dean Ammons
  * Date: December 2025
- */
+ #>
 
 ###############################################################################
 # Environment Variable Loader

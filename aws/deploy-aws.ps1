@@ -1,9 +1,9 @@
-/**
+<#
  * Description: AWS ECS Fargate Deployment Script - automates deployment of containerized applications to AWS using ECS Fargate
  *
  * Author: Dean Ammons
  * Date: December 2025
- */
+ #>
 
 ###############################################################################
 # AWS ECS Fargate Deployment Script

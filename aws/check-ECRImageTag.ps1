@@ -1,9 +1,9 @@
-/**
+<#
  * Description: Tests whether a specific image tag exists in an AWS ECR repository
  *
  * Author: Dean Ammons
  * Date: January 2026
- */
+ #>
 
 # Script parameter: The Docker image tag to check
 param([Parameter(Mandatory=$true)][string]$Tag)
