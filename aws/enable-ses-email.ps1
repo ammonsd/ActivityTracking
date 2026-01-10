@@ -1,12 +1,33 @@
 <#
- * Description: Configure AWS SES for TaskActivity - updates the ECS task IAM role and deploys with email notifications enabled
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    Configure AWS SES for TaskActivity.
 
-# Configure AWS SES for TaskActivity
-# This script updates the ECS task IAM role and deploys with email notifications enabled
+.DESCRIPTION
+    Updates the ECS task IAM role and deploys with email notifications enabled.
+    This script adds SES permissions to the ECS task role and configures the
+    TaskActivity application to send email notifications.
+
+.PARAMETER Region
+    AWS region where resources are deployed. Defaults to us-east-1.
+
+.PARAMETER TaskRoleName
+    Name of the ECS task IAM role. Defaults to ecsTaskRole.
+
+.PARAMETER PolicyName
+    Name for the SES policy to attach. Defaults to TaskActivitySESPolicy.
+
+.EXAMPLE
+    .\enable-ses-email.ps1
+    Enables SES email with default configuration.
+
+.EXAMPLE
+    .\enable-ses-email.ps1 -Region "us-west-2" -TaskRoleName "myTaskRole"
+    Enables SES email with custom region and task role name.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 
 param(
     [Parameter(Mandatory=$false)]

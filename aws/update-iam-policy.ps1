@@ -1,13 +1,29 @@
 <#
- * Description: Update IAM Policy for S3 Docs Bucket Access - updates the IAM user/role policy to include permissions for the taskactivity-docs bucket
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    Update IAM Policy for S3 Docs Bucket Access.
 
-# Update IAM Policy for S3 Docs Bucket Access
-# This script updates the IAM user/role policy to include permissions for the taskactivity-docs bucket
-# Run this script after updating the taskactivity-developer-policy.json file
+.DESCRIPTION
+    Updates the IAM user/role policy to include permissions for the taskactivity-docs bucket.
+    Run this script after updating the taskactivity-developer-policy.json file.
+
+.PARAMETER UserName
+    IAM user name to update the policy for. Defaults to "Dean".
+
+.PARAMETER PolicyName
+    Name of the IAM policy to update. Defaults to "TaskActivityDeveloperPolicy".
+
+.EXAMPLE
+    .\update-iam-policy.ps1
+    Updates IAM policy with default user and policy names.
+
+.EXAMPLE
+    .\update-iam-policy.ps1 -UserName "john" -PolicyName "MyPolicy"
+    Updates IAM policy with custom user and policy names.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 
 param(
     [Parameter(Mandatory=$false)]

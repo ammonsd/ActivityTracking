@@ -1,30 +1,39 @@
 <#
- * Description: Environment Variable Loader - loads environment variables from a .env file into the current PowerShell session
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    Environment Variable Loader - loads environment variables from a .env file.
 
-###############################################################################
-# Environment Variable Loader
-# 
-# Loads environment variables from a .env file into the current PowerShell session.
-# Features:
-#	� Supports comments (#) and empty lines
-#	� Handles quoted values (VARIABLE="value" or VARIABLE='value')
-#	� Optional override mode for existing environment variables
-#	� Error handling for missing files
-#	� Graceful warnings instead of failures
-#
-# Usage:
-#   .\set-env-values.ps1
-#   .\set-env-values.ps1 -envFile "path/to/.env"
-#   .\set-env-values.ps1 -overrideExisting $true
-#
-# Author: Dean Ammons
-# Date: December 2025
-#
-###############################################################################
+.DESCRIPTION
+    Loads environment variables from a .env file into the current PowerShell session.
+    
+    Features:
+    • Supports comments (#) and empty lines
+    • Handles quoted values (VARIABLE="value" or VARIABLE='value')
+    • Optional override mode for existing environment variables
+    • Error handling for missing files
+    • Graceful warnings instead of failures
+
+.PARAMETER envFile
+    Optional path to the .env file. Defaults to ".env" in the current directory if not provided.
+
+.PARAMETER overrideExisting
+    If true, overwrites existing environment variables. Defaults to false.
+
+.EXAMPLE
+    .\set-env-values.ps1
+    Loads variables from .env in current directory.
+
+.EXAMPLE
+    .\set-env-values.ps1 -envFile "path/to/.env"
+    Loads variables from specified .env file.
+
+.EXAMPLE
+    .\set-env-values.ps1 -overrideExisting $true
+    Loads variables and overrides existing ones.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 
 param(
     # Optional input argument for the .env file path

@@ -1,33 +1,39 @@
 <#
- * Description: AWS SES Email Tracking Setup Script - configures AWS SES to track email events and publish them to CloudWatch for monitoring
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    AWS SES Email Tracking Setup Script.
 
-###############################################################################
-# AWS SES Email Tracking Setup Script
-# 
-# This script configures AWS SES to track email events (sends, deliveries, 
-# bounces, complaints) and publish them to CloudWatch for monitoring.
-#
-# What this provides:
-# - Tracks all email sends with delivery status
-# - CloudWatch metrics for email health monitoring
-# - Alternative to Gmail's "Sent" folder for AWS SES
-#
-# Prerequisites:
-# - AWS CLI installed and configured
-# - AWS SES already configured and verified
-# - Appropriate IAM permissions for SES and CloudWatch
-#
-# Usage:
-#   .\setup-ses-tracking.ps1
-#
-# Author: Dean Ammons
-# Date: December 2025
-#
-###############################################################################
+.DESCRIPTION
+    Configures AWS SES to track email events (sends, deliveries, bounces,
+    complaints) and publish them to CloudWatch for monitoring.
+    
+    What this provides:
+    • Tracks all email sends with delivery status
+    • CloudWatch metrics for email health monitoring
+    • Alternative to Gmail's "Sent" folder for AWS SES
+    
+    Prerequisites:
+    • AWS CLI installed and configured
+    • AWS SES already configured and verified
+    • Appropriate IAM permissions for SES and CloudWatch
+
+.PARAMETER Region
+    AWS region where SES is configured. Defaults to us-east-1.
+
+.PARAMETER ConfigurationSetName
+    Name for the SES configuration set. Defaults to taskactivity-tracking.
+
+.EXAMPLE
+    .\setup-ses-tracking.ps1
+    Sets up SES tracking with default configuration.
+
+.EXAMPLE
+    .\setup-ses-tracking.ps1 -Region "us-west-2" -ConfigurationSetName "my-tracking"
+    Sets up SES tracking in specific region with custom configuration set name.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 
 param(
     [Parameter(Mandatory=$false)]

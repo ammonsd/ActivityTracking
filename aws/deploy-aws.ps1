@@ -1,63 +1,89 @@
 <#
- * Description: AWS ECS Fargate Deployment Script - automates deployment of containerized applications to AWS using ECS Fargate
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    AWS ECS Fargate Deployment Script.
 
-###############################################################################
-# AWS ECS Fargate Deployment Script
-# 
-# This script automates deployment of containerized applications to AWS using ECS Fargate.
-#
-# Prerequisites:
-# • AWS CLI installed and configured with IAM user credentials (do NOT use the root account)
-#	   Note: IAM user must have appropriate ECS, ECR, and related service permissions
-#            Consult your project's IAM setup documentation for details
-# • Appropriate AWS IAM permissions for ECS, ECR, and related services
-# • ECR repository created for your application
-# • RDS database created and initialized (if applicable)
-# • Application secrets stored in AWS Secrets Manager
-#
-# Deployment Process:
-# The script performs the following steps:
-#   1. Clean old Angular builds from source tree (prevents duplicate files in JAR)
-#   2. Kill any stuck Node.js processes
-#   3. Clean Angular build cache
-#   4. Prune Docker build cache (WSL2 only)
-#   5. Build the Spring Boot JAR with Maven (includes Angular production build)
-#   6. Build the Docker image with multi-stage build
-#   7. Push the Docker image to AWS ECR (Elastic Container Registry)
-#   8. Update the ECS service with new task definition
-#   9. Wait for the new task to become healthy and stable
-#
-# Usage:
-#   .\deploy-aws.ps1 [-Environment <env>] [-Rollback] [-Status] [-NoCache] [-RunTests] [-SkipEnvFile]
-#   
-# Examples:
-#   .\deploy-aws.ps1 -Environment dev
-#   .\deploy-aws.ps1 -Environment production -RunTests
-#   .\deploy-aws.ps1 -NoCache
-#   .\deploy-aws.ps1 -Status
-#   .\deploy-aws.ps1 -Rollback
-#   .\deploy-aws.ps1 -EnableEmail -MailFrom "noreply@example.com" -AdminEmail "admin@example.com" -SkipEnvFile
-#
-# Parameters:
-#   -Environment  : Target environment (default: dev)
-#   -RunTests     : Run all Maven tests before building (default: skips tests)
-#   -NoCache      : Build Docker image without cache
-#   -Status       : Check current deployment status
-#   -Rollback     : Rollback to previous task definition
-#   -EnableEmail  : Enable email notifications (requires -MailFrom and -AdminEmail)
-#   -UseAwsSdk    : Use AWS SES SDK instead of SMTP (only applies when -EnableEmail is set)
-#   -MailFrom     : Email address to send from (defaults to MAIL_FROM env var)
-#   -AdminEmail   : Administrator email address (defaults to ADMIN_EMAIL env var)
-#   -SkipEnvFile  : Skip loading environment variables from .env file
-#
-# Author: Dean Ammons
-# Date: October 2025
-#
-###############################################################################
+.DESCRIPTION
+    Automates deployment of containerized applications to AWS using ECS Fargate.
+    
+    Prerequisites:
+    • AWS CLI installed and configured with IAM user credentials (do NOT use root account)
+      Note: IAM user must have appropriate ECS, ECR, and related service permissions
+            Consult your project's IAM setup documentation for details
+    • Appropriate AWS IAM permissions for ECS, ECR, and related services
+    • ECR repository created for your application
+    • RDS database created and initialized (if applicable)
+    • Application secrets stored in AWS Secrets Manager
+    
+    Deployment Process:
+    The script performs the following steps:
+    1. Clean old Angular builds from source tree (prevents duplicate files in JAR)
+    2. Kill any stuck Node.js processes
+    3. Clean Angular build cache
+    4. Prune Docker build cache (WSL2 only)
+    5. Build the Spring Boot JAR with Maven (includes Angular production build)
+    6. Build the Docker image with multi-stage build
+    7. Push the Docker image to AWS ECR (Elastic Container Registry)
+    8. Update the ECS service with new task definition
+    9. Wait for the new task to become healthy and stable
+
+.PARAMETER Environment
+    Target environment (default: dev).
+
+.PARAMETER RunTests
+    Run all Maven tests before building (default: skips tests).
+
+.PARAMETER NoCache
+    Build Docker image without cache.
+
+.PARAMETER Status
+    Check current deployment status.
+
+.PARAMETER Rollback
+    Rollback to previous task definition.
+
+.PARAMETER EnableEmail
+    Enable email notifications (requires -MailFrom and -AdminEmail).
+
+.PARAMETER UseAwsSdk
+    Use AWS SES SDK instead of SMTP (only applies when -EnableEmail is set).
+
+.PARAMETER MailFrom
+    Email address to send from (defaults to MAIL_FROM env var).
+
+.PARAMETER AdminEmail
+    Administrator email address (defaults to ADMIN_EMAIL env var).
+
+.PARAMETER SkipEnvFile
+    Skip loading environment variables from .env file.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -Environment dev
+    Deploy to development environment.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -Environment production -RunTests
+    Deploy to production with tests.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -NoCache
+    Build without Docker cache.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -Status
+    Check deployment status.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -Rollback
+    Rollback to previous version.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -EnableEmail -MailFrom "noreply@example.com" -AdminEmail "admin@example.com" -SkipEnvFile
+    Deploy with email notifications enabled.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 
 param(
     [Parameter(Mandatory=$false)]

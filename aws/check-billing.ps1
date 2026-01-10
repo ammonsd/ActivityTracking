@@ -1,27 +1,50 @@
 <#
- * Description: AWS Billing Check Script - retrieves current AWS billing information using Cost Explorer API
- *
- * Author: Dean Ammons
- * Date: January 2026
- #>
+.SYNOPSIS
+    AWS Billing Check Script.
 
-# ============================================================================
-# AWS Billing Check Script
-# ============================================================================
-# This script retrieves current AWS billing information using Cost Explorer API
-#
-# Prerequisites:
-# 1. AWS CLI installed and configured
-# 2. Cost Explorer enabled in AWS account
-# 3. IAM permissions (see cost-explorer-policy.json)
-#
-# Usage:
-#   .\check-billing.ps1                      # Current month total only
-#   .\check-billing.ps1 -Detailed            # Current month with service breakdown
-#   .\check-billing.ps1 -Detailed -Forecast  # Include forecast for rest of month
-#   .\check-billing.ps1 -LastMonth           # Previous month total only
-#   .\check-billing.ps1 -LastMonth -Detailed # Previous month with service breakdown
-# ============================================================================
+.DESCRIPTION
+    Retrieves current AWS billing information using Cost Explorer API.
+    Can display current month costs, previous month costs, detailed service
+    breakdowns, and forecasts for the remainder of the current month.
+    
+    Prerequisites:
+    1. AWS CLI installed and configured
+    2. Cost Explorer enabled in AWS account
+    3. IAM permissions (see cost-explorer-policy.json)
+
+.PARAMETER Detailed
+    If specified, displays detailed service breakdown.
+
+.PARAMETER Forecast
+    If specified, includes forecast for rest of month (current month only).
+
+.PARAMETER LastMonth
+    If specified, displays previous month's costs instead of current month.
+
+.EXAMPLE
+    .\check-billing.ps1
+    Current month total only.
+
+.EXAMPLE
+    .\check-billing.ps1 -Detailed
+    Current month with service breakdown.
+
+.EXAMPLE
+    .\check-billing.ps1 -Detailed -Forecast
+    Include forecast for rest of month.
+
+.EXAMPLE
+    .\check-billing.ps1 -LastMonth
+    Previous month total only.
+
+.EXAMPLE
+    .\check-billing.ps1 -LastMonth -Detailed
+    Previous month with service breakdown.
+
+.NOTES
+    Author: Dean Ammons
+    Date: January 2026
+#>
 
 param(
     [switch]$Detailed,

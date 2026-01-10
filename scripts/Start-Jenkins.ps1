@@ -1,23 +1,16 @@
 #!/usr/bin/env pwsh
 
 <#
- * Description: Manages Jenkins service in WSL and displays connection information
- *
- * Author: Dean Ammons
- * Date: January 2026
- #>
-
-<#
 .SYNOPSIS
     Manages Jenkins service in WSL and displays connection information.
 
 .DESCRIPTION
     This script provides a one-step solution to start Jenkins in WSL, including:
-    - Stopping Jenkins if already running
-    - Starting Jenkins service
-    - Waiting for Jenkins to be ready
-    - Displaying WSL IP address and Jenkins URL
-    - Showing the most recent Docker image for running the app
+    • Stopping Jenkins if already running
+    • Starting Jenkins service
+    • Waiting for Jenkins to be ready
+    • Displaying WSL IP address and Jenkins URL
+    • Showing the most recent Docker image for running the app
 
 .PARAMETER Restart
     If specified, restarts Jenkins even if it's already running.
@@ -26,8 +19,13 @@
     If specified, only displays Jenkins status without starting/stopping.
 
 .EXAMPLE
-    .\Start-Jenkins.ps1
+    .\start-jenkins.ps1
     Starts Jenkins if not running, or restarts if already running.
+
+.NOTES
+    Author: Dean Ammons
+    Date: January 2026
+#>
 
 .EXAMPLE
     .\Start-Jenkins.ps1 -Status

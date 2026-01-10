@@ -1,14 +1,4 @@
 <#
- * Description: Tests whether a specific image tag exists in an AWS ECR repository
- *
- * Author: Dean Ammons
- * Date: January 2026
- #>
-
-# Script parameter: The Docker image tag to check
-param([Parameter(Mandatory=$true)][string]$Tag)
-
-<#
 .SYNOPSIS
     Tests whether a specific image tag exists in an AWS ECR repository.
 
@@ -21,12 +11,19 @@ param([Parameter(Mandatory=$true)][string]$Tag)
     The Docker image tag to search for in the ECR repository.
 
 .EXAMPLE
-    Check-ECRImageTag -Tag "v1.2.3"
+    .\check-ECRImageTag.ps1 -Tag "v1.2.3"
     Checks if the tag 'v1.2.3' exists in the taskactivity ECR repository.
 
 .EXAMPLE
-    Check-ECRImageTag -Tag "latest"
+    .\check-ECRImageTag.ps1 -Tag "latest"
     Checks if the 'latest' tag exists in the repository.
+
+.NOTES
+    Author: Dean Ammons
+    Date: January 2026
+#>
+
+param([Parameter(Mandatory=$true)][string]$Tag)
 
 .OUTPUTS
     Boolean - Returns $true if the tag exists, $false otherwise.

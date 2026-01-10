@@ -1,33 +1,44 @@
 <#
- * Description: CloudFormation Infrastructure Deployment Script - manages CloudFormation stacks for the Task Activity application
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    CloudFormation Infrastructure Deployment Script.
 
-###############################################################################
-# CloudFormation Infrastructure Deployment Script for Task Activity Application
-#
-# This script manages CloudFormation stacks for the Task Activity application.
-# It handles stack creation, updates, deletion, and validation.
-#
-# Prerequisites:
-# - AWS CLI installed and configured
-# - Appropriate AWS IAM permissions for CloudFormation
-# - Parameters configured in cloudformation/parameters/*.json
-#
-# Usage:
-#   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment <env> -Action <action>
-#
-# Examples:
-#   # Create new infrastructure stack
-#   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment dev -Action create
-#
-#   # Update existing infrastructure
-#   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment prod -Action update
-#
-#   # Preview changes before applying
-#   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment dev -Action preview
+.DESCRIPTION
+    Manages CloudFormation stacks for the Task Activity application.
+    Handles stack creation, updates, deletion, and validation.
+    
+    Prerequisites:
+    • AWS CLI installed and configured
+    • Appropriate AWS IAM permissions for CloudFormation
+    • Parameters configured in cloudformation/parameters/*.json
+
+.PARAMETER Environment
+    Target environment (dev, staging, prod).
+
+.PARAMETER Action
+    Action to perform (create, update, delete, preview, validate).
+
+.PARAMETER StackName
+    Optional custom stack name. Defaults to taskactivity-{environment}.
+
+.PARAMETER Region
+    AWS region for deployment. Defaults to us-east-1.
+
+.EXAMPLE
+    .\deploy-infrastructure.ps1 -Environment dev -Action create
+    Create new infrastructure stack.
+
+.EXAMPLE
+    .\deploy-infrastructure.ps1 -Environment prod -Action update
+    Update existing infrastructure.
+
+.EXAMPLE
+    .\deploy-infrastructure.ps1 -Environment dev -Action preview
+    Preview changes before applying.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 #
 #   # Delete infrastructure (careful!)
 #   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment dev -Action delete
@@ -35,8 +46,6 @@
 #   # Check stack status
 #   .\cloudformation\scripts\deploy-infrastructure.ps1 -Environment dev -Action status
 #
-# Author: Dean Ammons
-# Date: October 2025
 ###############################################################################
 
 param(

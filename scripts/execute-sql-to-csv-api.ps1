@@ -1,36 +1,49 @@
 <#
- * Description: Execute SQL and Export to CSV via API - executes SQL from a file by calling the Task Activity API endpoint and saves the CSV results to a file
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    Execute SQL and Export to CSV via API.
 
-###############################################################################
-# Execute SQL and Export to CSV via API
-# 
-# This script executes SQL from a file by calling the Task Activity API endpoint
-# and saves the CSV results to a file.
-#
-# Prerequisites:
-# • Task Activity application running (locally or on AWS)
-# • Admin credentials for authentication configured in .env file
-#
-# Usage:
-#   .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv"
-#   .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -EnvFile ".env.local"
-#   .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -ApiUrl "http://your-alb-endpoint"
-#
-# Parameters:
-#   -SqlFile      : Path to SQL file to execute (required)
-#   -OutputCsv    : Path to output CSV file (required)
-#   -EnvFile      : Path to .env file (defaults to .env in workspace root)
-#   -ApiUrl       : Base URL of the API (overrides API_URL from .env)
-#   -Username     : Admin username (overrides ADMIN_USERNAME from .env)
-#   -Password     : Admin password (overrides ADMIN_PASSWORD from .env)
-#
-# Author: Dean Ammons
-# Date: December 2025
-#
+.DESCRIPTION
+    Executes SQL from a file by calling the Task Activity API endpoint
+    and saves the CSV results to a file.
+    
+    Prerequisites:
+    • Task Activity application running (locally or on AWS)
+    • Admin credentials for authentication configured in .env file
+
+.PARAMETER SqlFile
+    Path to SQL file to execute (required).
+
+.PARAMETER OutputCsv
+    Path to output CSV file (required).
+
+.PARAMETER EnvFile
+    Path to .env file (defaults to .env in workspace root).
+
+.PARAMETER ApiUrl
+    Base URL of the API (overrides API_URL from .env).
+
+.PARAMETER Username
+    Admin username (overrides ADMIN_USERNAME from .env).
+
+.PARAMETER Password
+    Admin password (overrides ADMIN_PASSWORD from .env).
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv"
+    Execute SQL from query.sql and save results to results.csv.
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -EnvFile ".env.local"
+    Execute SQL using credentials from .env.local file.
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -ApiUrl "http://your-alb-endpoint"
+    Execute SQL against custom API endpoint.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 ###############################################################################
 
 param(

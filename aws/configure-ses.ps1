@@ -1,33 +1,43 @@
 #!/usr/bin/env pwsh
 
 <#
- * Description: Configure AWS SES for Task Activity Email Notifications - helps configure AWS Simple Email Service (SES) for email notifications
- *
- * Author: Dean Ammons
- * Date: December 2025
- #>
+.SYNOPSIS
+    Configure AWS SES for Task Activity Email Notifications.
 
-###############################################################################
-# Configure AWS SES for Task Activity Email Notifications
-#
-# This script helps configure AWS Simple Email Service (SES) for the 
-# Task Activity application. It can verify email addresses, configure
-# identities, and update ECS task definitions with email settings.
-#
-# Prerequisites:
-# • AWS CLI installed and configured
-# • Appropriate AWS IAM permissions for SES and ECS
-# • Email address or domain to verify
-#
-# Usage:
-#   .\configure-ses.ps1 -Email <address> [-Domain <domain>] [-UpdateECS]
-#
-# Examples:
-#   # Verify single email address
-#   .\configure-ses.ps1 -Email noreply@taskactivitytracker.com
-#
-#   # Verify domain and update ECS
-#   .\configure-ses.ps1 -Domain taskactivitytracker.com -AdminEmail admin@company.com -UpdateECS
+.DESCRIPTION
+    Helps configure AWS Simple Email Service (SES) for the Task Activity application.
+    Can verify email addresses, configure identities, and update ECS task definitions
+    with email settings.
+    
+    Prerequisites:
+    • AWS CLI installed and configured
+    • Appropriate AWS IAM permissions for SES and ECS
+    • Email address or domain to verify
+
+.PARAMETER Email
+    Email address to verify for sending notifications.
+
+.PARAMETER Domain
+    Domain to verify for sending notifications.
+
+.PARAMETER AdminEmail
+    Admin email address for notifications.
+
+.PARAMETER UpdateECS
+    If specified, updates ECS task definitions with email settings.
+
+.EXAMPLE
+    .\configure-ses.ps1 -Email noreply@taskactivitytracker.com
+    Verify single email address.
+
+.EXAMPLE
+    .\configure-ses.ps1 -Domain taskactivitytracker.com -AdminEmail admin@company.com -UpdateECS
+    Verify domain and update ECS.
+
+.NOTES
+    Author: Dean Ammons
+    Date: December 2025
+#>
 #
 #   # Request production access
 #   .\configure-ses.ps1 -RequestProductionAccess
@@ -40,8 +50,6 @@
 #   -RequestProductionAccess : Show instructions for requesting production access
 #   -Region               : AWS region (default: us-east-1)
 #
-# Author: Dean Ammons
-# Date: December 2025
 ###############################################################################
 
 param(
