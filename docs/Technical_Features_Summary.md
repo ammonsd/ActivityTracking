@@ -809,7 +809,13 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### User Interface
 
-- Responsive web design
+- Responsive web design with mobile-friendly layouts
+- **Sidebar Menu Navigation** (January 2026):
+  - Floating toggle button (☰/✕) for accessing administrative functions
+  - Slide-in sidebar menu with role-based item visibility
+  - Menu items: Manage Users, Guest Activity, Manage Dropdowns, Export CSV
+  - Auto-close on Export CSV selection for improved UX
+  - CSRF token management for secure logout functionality
 - Compact CSS Grid layouts for filters
 - Modal-based data entry
 - AJAX form submissions

@@ -510,14 +510,14 @@ export class ExpenseListComponent implements OnInit {
     this.expenseService.downloadReceipt(expense.id).subscribe({
       next: (blob) => {
         // Create a download link
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         // Extract filename from receiptPath or use default
         const filename = expense.receiptPath?.split('/').pop() || 'receipt';
         link.download = filename;
         link.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       },
       error: (err) => {
         console.error('Error downloading receipt:', err);
