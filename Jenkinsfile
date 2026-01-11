@@ -280,13 +280,11 @@ pipeline {
                 echo "Pushing Docker image to ECR: ${ECR_REGISTRY}/${ECR_REPOSITORY}"
                 script {
                     withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
-                        // Login to ECR
-                        sh """
-                            aws ecr get-login-password --region ${AWS_REGION} | \
-                            docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                        """
+                        // Using ECR credential helper for automatic authentication
+                        // No manual docker login required - credentials handled securely by helper
+                        echo "Authenticating to ECR using credential helper..."
                         
-                        // Push images
+                        // Push images - credential helper handles authentication automatically
                         sh "docker push ${IMAGE_FULL}"
                         sh "docker push ${IMAGE_LATEST}"
                         

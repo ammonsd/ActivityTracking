@@ -320,6 +320,7 @@ For issues with these scripts:
 ## Additional Resources
 
 -   [Jenkins Setup Guide](Jenkins_Setup.md)
+-   [Docker Credential Security Guide](Docker_Credential_Security_Guide.md) - Secure Docker credential storage
 -   [Environment Configuration](Jenkins_Environments.md)
 -   [Quick Reference](Jenkins_Quick_Reference.md)
 -   [AWS CLI Documentation](https://docs.aws.amazon.com/cli/)
