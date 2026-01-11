@@ -600,16 +600,6 @@
                     <div class="sidebar-header"></div>
                     
                     <ul class="sidebar-menu-list">
-                        <!-- Dashboard - Visible for all -->
-                        <li>
-                            <a 
-                                th:href="@{/app}"
-                                title="Angular Admin Dashboard"
-                            >
-                                <span class="menu-icon">📊</span>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
                         <!-- Manage Users - ADMIN active, GUEST read-only, others hidden -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}">
                             <a 
@@ -653,6 +643,16 @@
                                 <span class="menu-icon">📋</span>
                                 <span>Export CSV</span>
                             </button>
+                        </li>
+                        <!-- Dashboard - Visible for all -->
+                        <li>
+                            <a 
+                                th:href="@{/app}"
+                                title="Angular Admin Dashboard"
+                            >
+                                <span class="menu-icon">📊</span>
+                                <span>Dashboard</span>
+                            </a>
                         </li>
                     </ul>
                 </div>
