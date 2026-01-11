@@ -8,6 +8,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +20,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TaskActivityService } from '../../services/task-activity.service';
 import { AuthService } from '../../services/auth.service';
 import { TaskActivity } from '../../models/task-activity.model';
@@ -41,247 +45,397 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatSidenavModule,
+    MatListModule,
+    MatTooltipModule,
   ],
   template: `
-    <div class="task-list-container">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Task Activities</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <!-- Filter Section -->
-          <div class="filter-section">
-            <mat-form-field appearance="outline">
-              <mat-label>Client</mat-label>
-              <mat-select
-                [(ngModel)]="selectedClient"
-                (selectionChange)="applyFilters()"
+    <div class="task-list-wrapper">
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Task Activities</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Action Buttons Section -->
+            <div class="action-buttons">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="navigateToDashboard()"
               >
-                <mat-option value="">All Clients</mat-option>
-                <mat-option
-                  *ngFor="let client of uniqueClients"
-                  [value]="client"
-                >
-                  {{ client }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Project</mat-label>
-              <mat-select
-                [(ngModel)]="selectedProject"
-                (selectionChange)="applyFilters()"
+                <mat-icon>dashboard</mat-icon> Dashboard
+              </button>
+              <button
+                mat-raised-button
+                color="accent"
+                (click)="navigateToWeeklyTimesheet()"
               >
-                <mat-option value="">All Projects</mat-option>
-                <mat-option
-                  *ngFor="let project of uniqueProjects"
-                  [value]="project"
-                >
-                  {{ project }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Phase</mat-label>
-              <mat-select
-                [(ngModel)]="selectedPhase"
-                (selectionChange)="applyFilters()"
+                <mat-icon>calendar_today</mat-icon> Weekly Timesheet
+              </button>
+              <button
+                mat-raised-button
+                color="accent"
+                (click)="navigateToExpenses()"
+                *ngIf="canAccessExpenses || currentRole === 'GUEST'"
+                [disabled]="currentRole === 'GUEST'"
+                [matTooltip]="
+                  currentRole === 'GUEST'
+                    ? 'Read-only for guests'
+                    : 'View expense tracking'
+                "
               >
-                <mat-option value="">All Phases</mat-option>
-                <mat-option *ngFor="let phase of uniquePhases" [value]="phase">
-                  {{ phase }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Start Date</mat-label>
-              <input
-                matInput
-                [matDatepicker]="startPicker"
-                [(ngModel)]="startDate"
-                (dateChange)="applyFilters()"
-                (click)="startPicker.open()"
-                placeholder="MM/DD/YYYY"
-              />
-              <mat-datepicker-toggle
-                matSuffix
-                [for]="startPicker"
-              ></mat-datepicker-toggle>
-              <mat-datepicker #startPicker></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>End Date</mat-label>
-              <input
-                matInput
-                [matDatepicker]="endPicker"
-                [(ngModel)]="endDate"
-                (dateChange)="applyFilters()"
-                (click)="endPicker.open()"
-                placeholder="MM/DD/YYYY"
-              />
-              <mat-datepicker-toggle
-                matSuffix
-                [for]="endPicker"
-              ></mat-datepicker-toggle>
-              <mat-datepicker #endPicker></mat-datepicker>
-            </mat-form-field>
-          </div>
-
-          <div class="table-actions">
-            <button mat-raised-button color="primary" (click)="addTask()">
-              <mat-icon>add</mat-icon> Add Task
-            </button>
-            <button mat-raised-button color="accent" (click)="clearFilters()">
-              <mat-icon>clear</mat-icon> Clear Filters
-            </button>
-          </div>
-
-          <!-- Pagination Controls -->
-          <div *ngIf="totalElements > 0 && !loading" class="pagination">
-            <button
-              *ngIf="totalPages > 1"
-              mat-icon-button
-              [disabled]="currentPage === 0"
-              (click)="goToPage(0)"
-              title="First Page"
-            >
-              <mat-icon>first_page</mat-icon>
-            </button>
-            <button
-              *ngIf="totalPages > 1"
-              mat-icon-button
-              [disabled]="currentPage === 0"
-              (click)="goToPage(currentPage - 1)"
-              title="Previous Page"
-            >
-              <mat-icon>chevron_left</mat-icon>
-            </button>
-
-            <span class="pagination-info">
-              {{ startEntry }} to {{ endEntry }} of {{ totalElements }}
-            </span>
-
-            <button
-              *ngIf="totalPages > 1"
-              mat-icon-button
-              [disabled]="currentPage === totalPages - 1"
-              (click)="goToPage(currentPage + 1)"
-              title="Next Page"
-            >
-              <mat-icon>chevron_right</mat-icon>
-            </button>
-            <button
-              *ngIf="totalPages > 1"
-              mat-icon-button
-              [disabled]="currentPage === totalPages - 1"
-              (click)="goToPage(totalPages - 1)"
-              title="Last Page"
-            >
-              <mat-icon>last_page</mat-icon>
-            </button>
-          </div>
-
-          <div *ngIf="loading" class="loading-spinner">
-            <mat-spinner></mat-spinner>
-          </div>
-
-          <div *ngIf="error" class="error-message">
-            {{ error }}
-          </div>
-
-          <table
-            mat-table
-            [dataSource]="filteredTasks"
-            *ngIf="!loading && !error"
-            class="task-table"
-          >
-            <ng-container matColumnDef="taskDate">
-              <th mat-header-cell *matHeaderCellDef>Date</th>
-              <td mat-cell *matCellDef="let task">
-                {{ task.taskDate | date : 'M/d/yy' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="client">
-              <th mat-header-cell *matHeaderCellDef>Client</th>
-              <td mat-cell *matCellDef="let task">{{ task.client }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="project">
-              <th mat-header-cell *matHeaderCellDef>Project</th>
-              <td mat-cell *matCellDef="let task">{{ task.project }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="phase">
-              <th mat-header-cell *matHeaderCellDef>Phase</th>
-              <td mat-cell *matCellDef="let task">{{ task.phase }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="hours">
-              <th mat-header-cell *matHeaderCellDef>Hours</th>
-              <td mat-cell *matCellDef="let task">{{ task.hours }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="details">
-              <th mat-header-cell *matHeaderCellDef>Details</th>
-              <td mat-cell *matCellDef="let task">{{ task.details }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="username">
-              <th mat-header-cell *matHeaderCellDef>Username</th>
-              <td mat-cell *matCellDef="let task">{{ task.username }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
-              <td mat-cell *matCellDef="let task" class="actions-cell">
-                <button
-                  mat-icon-button
-                  color="primary"
-                  (click)="editTask(task)"
-                  title="Edit Task"
+                <mat-icon>receipt</mat-icon> Expenses
+              </button>
+              <button mat-raised-button color="primary" (click)="addTask()">
+                <mat-icon>add</mat-icon> Add New Task
+              </button>
+            </div>
+            <!-- Filter Section -->
+            <div class="filter-section">
+              <mat-form-field appearance="outline">
+                <mat-label>Client</mat-label>
+                <mat-select
+                  [(ngModel)]="selectedClient"
+                  (selectionChange)="applyFilters()"
                 >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="accent"
-                  (click)="cloneTask(task)"
-                  title="Clone Task"
-                >
-                  <mat-icon>content_copy</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="warn"
-                  (click)="deleteTask(task)"
-                  title="Delete Task"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
+                  <mat-option value="">All Clients</mat-option>
+                  <mat-option
+                    *ngFor="let client of uniqueClients"
+                    [value]="client"
+                  >
+                    {{ client }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
+              <mat-form-field appearance="outline">
+                <mat-label>Project</mat-label>
+                <mat-select
+                  [(ngModel)]="selectedProject"
+                  (selectionChange)="applyFilters()"
+                >
+                  <mat-option value="">All Projects</mat-option>
+                  <mat-option
+                    *ngFor="let project of uniqueProjects"
+                    [value]="project"
+                  >
+                    {{ project }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <div
-            *ngIf="filteredTasks.length === 0 && !loading && !error"
-            class="no-data"
-          >
-            <p>No tasks found matching the selected filters.</p>
+              <mat-form-field appearance="outline">
+                <mat-label>Phase</mat-label>
+                <mat-select
+                  [(ngModel)]="selectedPhase"
+                  (selectionChange)="applyFilters()"
+                >
+                  <mat-option value="">All Phases</mat-option>
+                  <mat-option
+                    *ngFor="let phase of uniquePhases"
+                    [value]="phase"
+                  >
+                    {{ phase }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="startPicker"
+                  [(ngModel)]="startDate"
+                  (dateChange)="applyFilters()"
+                  (click)="startPicker.open()"
+                  placeholder="MM/DD/YYYY"
+                />
+                <mat-datepicker-toggle
+                  matSuffix
+                  [for]="startPicker"
+                ></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>End Date</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="endPicker"
+                  [(ngModel)]="endDate"
+                  (dateChange)="applyFilters()"
+                  (click)="endPicker.open()"
+                  placeholder="MM/DD/YYYY"
+                />
+                <mat-datepicker-toggle
+                  matSuffix
+                  [for]="endPicker"
+                ></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="table-actions">
+              <button mat-raised-button color="primary" (click)="addTask()">
+                <mat-icon>add</mat-icon> Add Task
+              </button>
+              <button mat-raised-button color="accent" (click)="clearFilters()">
+                <mat-icon>clear</mat-icon> Clear Filters
+              </button>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div *ngIf="totalElements > 0 && !loading" class="pagination">
+              <button
+                *ngIf="totalPages > 1"
+                mat-icon-button
+                [disabled]="currentPage === 0"
+                (click)="goToPage(0)"
+                title="First Page"
+              >
+                <mat-icon>first_page</mat-icon>
+              </button>
+              <button
+                *ngIf="totalPages > 1"
+                mat-icon-button
+                [disabled]="currentPage === 0"
+                (click)="goToPage(currentPage - 1)"
+                title="Previous Page"
+              >
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+
+              <span class="pagination-info">
+                {{ startEntry }} to {{ endEntry }} of {{ totalElements }}
+              </span>
+
+              <button
+                *ngIf="totalPages > 1"
+                mat-icon-button
+                [disabled]="currentPage === totalPages - 1"
+                (click)="goToPage(currentPage + 1)"
+                title="Next Page"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+              <button
+                *ngIf="totalPages > 1"
+                mat-icon-button
+                [disabled]="currentPage === totalPages - 1"
+                (click)="goToPage(totalPages - 1)"
+                title="Last Page"
+              >
+                <mat-icon>last_page</mat-icon>
+              </button>
+            </div>
+
+            <div *ngIf="loading" class="loading-spinner">
+              <mat-spinner></mat-spinner>
+            </div>
+
+            <div *ngIf="error" class="error-message">
+              {{ error }}
+            </div>
+
+            <table
+              mat-table
+              [dataSource]="filteredTasks"
+              *ngIf="!loading && !error"
+              class="task-table"
+            >
+              <ng-container matColumnDef="taskDate">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let task">
+                  {{ task.taskDate | date : 'M/d/yy' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="client">
+                <th mat-header-cell *matHeaderCellDef>Client</th>
+                <td mat-cell *matCellDef="let task">{{ task.client }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="project">
+                <th mat-header-cell *matHeaderCellDef>Project</th>
+                <td mat-cell *matCellDef="let task">{{ task.project }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="phase">
+                <th mat-header-cell *matHeaderCellDef>Phase</th>
+                <td mat-cell *matCellDef="let task">{{ task.phase }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="hours">
+                <th mat-header-cell *matHeaderCellDef>Hours</th>
+                <td mat-cell *matCellDef="let task">{{ task.hours }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="details">
+                <th mat-header-cell *matHeaderCellDef>Details</th>
+                <td mat-cell *matCellDef="let task">{{ task.details }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="username">
+                <th mat-header-cell *matHeaderCellDef>Username</th>
+                <td mat-cell *matCellDef="let task">{{ task.username }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let task" class="actions-cell">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="editTask(task)"
+                    title="Edit Task"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    (click)="cloneTask(task)"
+                    title="Clone Task"
+                  >
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="deleteTask(task)"
+                    title="Delete Task"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            <div
+              *ngIf="filteredTasks.length === 0 && !loading && !error"
+              class="no-data"
+            >
+              <p>No tasks found matching the selected filters.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Right Sidebar Menu -->
+      <div
+        class="sidebar-menu"
+        *ngIf="currentRole === 'ADMIN' || showSidebarForNonAdmin"
+      >
+        <button
+          mat-icon-button
+          class="sidebar-toggle"
+          (click)="sidebarOpen = !sidebarOpen"
+          [matTooltip]="sidebarOpen ? 'Close menu' : 'Open menu'"
+        >
+          <mat-icon>{{ sidebarOpen ? 'close' : 'menu' }}</mat-icon>
+        </button>
+
+        <div class="sidebar-content" [class.open]="sidebarOpen">
+          <div class="sidebar-header">
+            <h3>Admin Menu</h3>
           </div>
-        </mat-card-content>
-      </mat-card>
+
+          <mat-nav-list>
+            <!-- Manage Users - ADMIN only or read-only for non-admin -->
+            <a
+              mat-list-item
+              (click)="navigateToManageUsers()"
+              [class.disabled]="currentRole !== 'ADMIN'"
+              [matTooltip]="
+                currentRole === 'ADMIN'
+                  ? 'Manage system users'
+                  : 'Read-only access'
+              "
+            >
+              <mat-icon matListItemIcon>people</mat-icon>
+              <span matListItemTitle>Manage Users</span>
+            </a>
+
+            <!-- Guest Activity - ADMIN only -->
+            <a
+              mat-list-item
+              (click)="navigateToGuestActivity()"
+              *ngIf="currentRole === 'ADMIN'"
+              matTooltip="View guest user activity"
+            >
+              <mat-icon matListItemIcon>analytics</mat-icon>
+              <span matListItemTitle>Guest Activity</span>
+            </a>
+
+            <!-- Manage Dropdowns - ADMIN only or read-only for non-admin -->
+            <a
+              mat-list-item
+              (click)="navigateToManageDropdowns()"
+              [class.disabled]="currentRole !== 'ADMIN'"
+              [matTooltip]="
+                currentRole === 'ADMIN'
+                  ? 'Manage dropdown options'
+                  : 'Read-only access'
+              "
+            >
+              <mat-icon matListItemIcon>settings</mat-icon>
+              <span matListItemTitle>Manage Dropdowns</span>
+            </a>
+
+            <!-- Export CSV - Show for all if non-admin access is enabled -->
+            <a
+              mat-list-item
+              (click)="exportToCSV()"
+              *ngIf="showSidebarForNonAdmin || currentRole === 'ADMIN'"
+              [class.disabled]="currentRole === 'GUEST'"
+              [matTooltip]="
+                currentRole === 'GUEST'
+                  ? 'Export disabled for guests'
+                  : 'Export tasks to CSV'
+              "
+            >
+              <mat-icon matListItemIcon>file_download</mat-icon>
+              <span matListItemTitle>Export CSV</span>
+            </a>
+          </mat-nav-list>
+        </div>
+      </div>
     </div>
   `,
   styles: [
     `
+      .task-list-wrapper {
+        display: flex;
+        height: calc(100vh - 120px);
+        position: relative;
+      }
+
+      .main-content {
+        flex: 1;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+        overflow-y: auto;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .action-buttons button {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
       .task-list-container {
         padding: 20px;
         max-width: 1400px;
@@ -385,6 +539,80 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
         color: #333;
         font-weight: bold;
       }
+
+      /* Sidebar Styles */
+      .sidebar-menu {
+        position: fixed;
+        right: 0;
+        top: 64px;
+        height: calc(100vh - 64px);
+        z-index: 1000;
+        pointer-events: none;
+      }
+
+      .sidebar-toggle {
+        position: fixed;
+        right: 10px;
+        top: 80px;
+        background-color: #3f51b5;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1001;
+        pointer-events: auto;
+      }
+
+      .sidebar-toggle:hover {
+        background-color: #303f9f;
+      }
+
+      .sidebar-content {
+        width: 0;
+        height: 100%;
+        background-color: #fafafa;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        transition: width 0.3s ease;
+        pointer-events: auto;
+      }
+
+      .sidebar-content.open {
+        width: 280px;
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        background-color: #3f51b5;
+        color: white;
+      }
+
+      .sidebar-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .sidebar-content mat-nav-list {
+        padding-top: 8px;
+      }
+
+      .sidebar-content a[mat-list-item] {
+        cursor: pointer;
+        min-height: 48px;
+      }
+
+      .sidebar-content a[mat-list-item]:hover:not(.disabled) {
+        background-color: #e8eaf6;
+      }
+
+      .sidebar-content a[mat-list-item].disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .sidebar-content mat-icon {
+        color: #3f51b5;
+      }
     `,
   ],
 })
@@ -397,6 +625,9 @@ export class TaskListComponent implements OnInit {
   currentUser = '';
   currentRole = '';
   currentDate = new Date();
+  canAccessExpenses = false;
+  sidebarOpen = false;
+  showSidebarForNonAdmin = false; // Set to true to show sidebar for non-admin roles
 
   // Pagination properties
   currentPage = 0;
@@ -426,12 +657,16 @@ export class TaskListComponent implements OnInit {
   constructor(
     private readonly taskService: TaskActivityService,
     private readonly authService: AuthService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUsername();
     this.currentRole = this.authService.getCurrentRole();
+
+    // Check expense access
+    this.checkExpenseAccess();
 
     // Set displayed columns based on role
     // ADMIN sees username column, others don't
@@ -459,6 +694,86 @@ export class TaskListComponent implements OnInit {
     }
 
     this.loadTasks();
+  }
+
+  checkExpenseAccess(): void {
+    // Import ExpenseService if needed and check access
+    // For now, set based on role
+    this.canAccessExpenses =
+      this.currentRole === 'ADMIN' ||
+      this.currentRole === 'USER' ||
+      this.currentRole === 'EXPENSE_ADMIN';
+  }
+
+  // Navigation methods
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  navigateToWeeklyTimesheet(): void {
+    // Navigate to the Java/Thymeleaf weekly timesheet page
+    globalThis.location.href = '/task-activity/weekly-timesheet';
+  }
+
+  navigateToExpenses(): void {
+    if (this.currentRole !== 'GUEST') {
+      this.router.navigate(['/expenses']);
+    }
+  }
+
+  navigateToManageUsers(): void {
+    if (this.currentRole === 'ADMIN') {
+      // Navigate to the Java/Thymeleaf manage users page
+      globalThis.location.href = '/task-activity/manage-users';
+    }
+  }
+
+  navigateToGuestActivity(): void {
+    if (this.currentRole === 'ADMIN') {
+      // Navigate to the Java/Thymeleaf guest activity page
+      globalThis.location.href = '/task-activity/manage-users/guest-activity';
+    }
+  }
+
+  navigateToManageDropdowns(): void {
+    if (this.currentRole === 'ADMIN') {
+      this.router.navigate(['/dropdowns']);
+    }
+  }
+
+  exportToCSV(): void {
+    if (this.currentRole === 'GUEST') {
+      return; // Guests cannot export
+    }
+
+    // Build export parameters based on current filters
+    const params = new URLSearchParams();
+
+    if (this.selectedClient) {
+      params.append('client', this.selectedClient);
+    }
+    if (this.selectedProject) {
+      params.append('project', this.selectedProject);
+    }
+    if (this.selectedPhase) {
+      params.append('phase', this.selectedPhase);
+    }
+    if (this.startDate) {
+      const year = this.startDate.getFullYear();
+      const month = String(this.startDate.getMonth() + 1).padStart(2, '0');
+      const day = String(this.startDate.getDate()).padStart(2, '0');
+      params.append('startDate', `${year}-${month}-${day}`);
+    }
+    if (this.endDate) {
+      const year = this.endDate.getFullYear();
+      const month = String(this.endDate.getMonth() + 1).padStart(2, '0');
+      const day = String(this.endDate.getDate()).padStart(2, '0');
+      params.append('endDate', `${year}-${month}-${day}`);
+    }
+
+    // Trigger CSV download
+    const exportUrl = `/task-activity/list/export-csv?${params.toString()}`;
+    globalThis.location.href = exportUrl;
   }
 
   loadTasks(): void {

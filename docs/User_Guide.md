@@ -42,6 +42,25 @@ Use the filter controls at the top of the task list to narrow down your view:
 - Click **"Filter"** button
 - To reset: Click **"Clear"** button
 
+### Using the Sidebar Menu
+
+The Task Activity List page includes a **floating sidebar menu** for quick access to administrative functions and export features.
+
+**To Access the Menu:**
+
+1. Click the **☰** (hamburger menu) button in the upper-right corner of the page
+2. The sidebar menu will slide in from the right side
+3. Click the **✕** button or click the menu button again to close
+
+**Menu Items:**
+
+- **👥 Manage Users** (Admin only): Manage user accounts
+- **📊 Guest Activity** (Admin only): View guest user activity reports
+- **🔧 Manage Dropdowns** (Admin only): Configure dropdown options for clients, projects, and phases
+- **📋 Export CSV**: Export filtered task list to CSV format
+
+**Note:** Guest users can see the menu but administrative options will be disabled.
+
 ### Exporting Task List to CSV
 
 You can export your filtered task list to CSV format for reporting or import into spreadsheets.
@@ -49,7 +68,9 @@ You can export your filtered task list to CSV format for reporting or import int
 **To Export Tasks:**
 
 1. **Apply Filters** (optional): Filter the task list to show only the tasks you want to export
-2. **Click Export Button**: Click **"📋 Export CSV"** in the header
+2. **Click Export Button**: 
+   - Option 1: Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
+   - The menu will automatically close after selecting Export CSV
 3. **Wait for Data**: The system will fetch ALL filtered tasks (not just the current page)
 4. **Choose Action**:
    - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.

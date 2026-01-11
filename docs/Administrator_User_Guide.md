@@ -21,6 +21,28 @@ The Task Activity Management System provides two user interface options:
 
 Both interfaces connect to the same backend and share the same data and authentication.
 
+## Navigation
+
+### Sidebar Menu (Thymeleaf UI)
+
+The Task Activity List page includes a **floating sidebar menu** for quick access to administrative functions:
+
+**To Access the Menu:**
+1. Click the **☰** (hamburger menu) button in the upper-right corner
+2. The sidebar menu slides in from the right
+3. Click **✕** or the menu button again to close
+
+**Menu Items (Admin View):**
+- **👥 Manage Users**: Create, edit, and manage user accounts
+- **📊 Guest Activity**: View login activity reports for GUEST users
+- **🔧 Manage Dropdowns**: Configure clients, projects, phases, and expense types
+- **📋 Export CSV**: Export filtered task list to CSV format (auto-closes menu after selection)
+
+**Role-Based Visibility:**
+- **ADMIN**: All menu items enabled
+- **GUEST**: Menu visible but administrative options disabled
+- **USER**: Export CSV available, administrative functions hidden
+
 ## Administrator Features
 
 ### User Roles Overview
@@ -87,7 +109,9 @@ For detailed information on managing roles and permissions, see the "Managing Ro
 
 Administrators can create, edit, and delete user accounts:
 
-1. **Access User Management**: Click **"👥 Manage Users"** from the header
+1. **Access User Management**: 
+   - Option 1: Click **"☰"** to open the sidebar menu, then click **"👥 Manage Users"**
+   - Option 2: Navigate directly from the Angular Dashboard
 2. **View All Users**: See a list of all system users with their full names, company, role, and last login time
 3. **Filter Users**: Use the filter section to find specific users:
     - **Username**: Filter by username (partial match)
@@ -615,7 +639,9 @@ Administrators can view and manage receipt attachments:
 
 Dropdown management has been consolidated into a single, dynamic interface that supports multiple categories from one screen.
 
-1. **Access Dropdown Management**: Click **"🔧 Manage Dropdowns"** from the navigation header
+1. **Access Dropdown Management**: 
+   - Option 1: Click **"☰"** to open the sidebar menu, then click **"🔧 Manage Dropdowns"**
+   - Option 2: Navigate directly from the Angular Dashboard
 
 2. **Select Category**: Use the dropdown filter to choose which category to manage:
     - **All Categories**: View all dropdown values across all categories
@@ -710,7 +736,9 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 Administrators have access to a dedicated dashboard for monitoring GUEST user login activity. This feature helps track who's accessing the system as a guest and provides security visibility.
 
 **Accessing the Dashboard:**
-1. **Navigate**: From any admin page, click **"📊 Guest Activity"** button next to "👥 Manage Users" in the header
+1. **Navigate**: 
+   - Option 1: Click **"☰"** to open the sidebar menu, then click **"📊 Guest Activity"**
+   - Option 2: Navigate from Manage Users page
 2. **View Statistics**: The dashboard displays key metrics at the top:
    - **Total Logins**: Count of all GUEST login attempts (successful and failed)
    - **Unique Locations**: Number of distinct IP addresses that accessed the account

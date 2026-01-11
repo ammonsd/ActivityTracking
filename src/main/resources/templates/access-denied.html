@@ -180,14 +180,19 @@
             </div>
         </div>
 
-        <script>
+        <script th:inline="javascript">
             // Clear the session attributes after displaying them
             setTimeout(function () {
+                // Get CSRF token from Thymeleaf
+                var csrfToken = /*[[${_csrf.token}]]*/ '';
+                var csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+                
                 fetch("/clear-access-denied-session", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "X-Requested-With": "XMLHttpRequest",
+                        [csrfHeader]: csrfToken
                     },
                 }).catch(function (error) {
                     console.log("Session cleanup request failed:", error);
