@@ -565,13 +565,6 @@
             <div class="header">
                 <h1>Task Activity List</h1>
                 <div>
-                    <!-- Angular Dashboard - Visible for all -->
-                    <a
-                        th:href="@{/app}"
-                        class="btn btn-success"
-                        title="Angular Admin Dashboard"
-                        >📊 Dashboard</a
-                    >
                     <!-- Weekly Timesheet - USER, GUEST, ADMIN, and EXPENSE_ADMIN -->
                     <a
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
@@ -607,6 +600,16 @@
                     <div class="sidebar-header"></div>
                     
                     <ul class="sidebar-menu-list">
+                        <!-- Dashboard - Visible for all -->
+                        <li>
+                            <a 
+                                th:href="@{/app}"
+                                title="Angular Admin Dashboard"
+                            >
+                                <span class="menu-icon">📊</span>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
                         <!-- Manage Users - ADMIN active, GUEST read-only, others hidden -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}">
                             <a 
