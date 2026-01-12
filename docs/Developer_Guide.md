@@ -2757,6 +2757,103 @@ GET /api/health
 }
 ```
 
+### CSV Import API
+
+The CSV Import API provides bulk data import capabilities for TaskActivity and Expense records. This feature enables efficient migration of data from other systems and simplifies large-scale data entry.
+
+**Access Control:** Requires ADMIN or MANAGER role
+
+**Implementation:** 
+- Service: `CsvImportService.java`
+- Controller: `CsvImportController.java`
+- PowerShell Script: `scripts/Import-CsvData.ps1`
+
+**Key Features:**
+- Validates CSV format and data integrity
+- Supports multiple date formats (YYYY-MM-DD, MM/DD/YYYY, DD-MMM-YYYY)
+- Handles duplicate records gracefully (silently skips existing records)
+- Provides detailed import results (total processed, success count, error messages)
+- Case-insensitive column name matching
+
+**Detailed Documentation:**
+- **User Guide**: `scripts/CSV_Import_User_Guide.md` - Complete usage instructions and troubleshooting
+- **Quick Reference**: `scripts/CSV_Import_Quick_Reference.md` - Command syntax and examples
+- **CSV Templates**: `scripts/CSV_Templates.md` - Format specifications and sample files
+- **PowerShell Script**: `scripts/Import-CsvData.ps1` - Automated import tool
+
+#### Import TaskActivities
+
+```http
+POST /api/import/taskactivities
+Content-Type: multipart/form-data
+Authorization: Bearer <accessToken>
+
+file: taskactivity-data.csv
+```
+
+**CSV Format Requirements:**
+- UTF-8 encoding
+- Header row with column names: `taskdate`, `client`, `project`, `phase`, `taskhours`, `details`, `username`
+- Date format: YYYY-MM-DD, MM/DD/YYYY, or DD-MMM-YYYY (e.g., "11-Jun-2018")
+- Details column is optional (can be empty)
+- Username column required for ADMIN/MANAGER imports
+
+**Response:**
+
+```json
+{
+    "totalProcessed": 100,
+    "successCount": 95,
+    "errorCount": 5,
+    "errors": [
+        "Line 23: Invalid date format: '13/32/2025'",
+        "Line 47: Missing required field: client"
+    ]
+}
+```
+
+#### Import Expenses
+
+```http
+POST /api/import/expenses
+Content-Type: multipart/form-data
+Authorization: Bearer <accessToken>
+
+file: expense-data.csv
+```
+
+**CSV Format Requirements:**
+- UTF-8 encoding
+- Header row with column names: `expense_date`, `client`, `project`, `expense_type`, `expense_amount`, `expense_description`, `username`
+- Date format: YYYY-MM-DD, MM/DD/YYYY, or DD-MMM-YYYY
+- Amount format: Decimal number (e.g., 45.00)
+- Username column required for ADMIN/MANAGER imports
+
+**Response:** Same format as TaskActivities import
+
+**PowerShell Script Usage:**
+
+```powershell
+# Local import
+.\scripts\Import-CsvData.ps1 -FilePath "taskactivity-data.csv" -Type TaskActivity
+
+# AWS production import
+.\scripts\Import-CsvData.ps1 -FilePath "taskactivity-data.csv" -Type TaskActivity `
+    -BaseUrl "https://taskactivitytracker.com" -Username "admin"
+```
+
+**Duplicate Handling:**
+- TaskActivities: Detected by unique constraint (taskdate, client, project, phase, details, username)
+- Expenses: Detected by unique constraint (expense_date, client, project, expense_type, expense_amount, username)
+- Duplicates are silently skipped without errors
+- Success count reflects only new records inserted
+- Safe to re-run imports or merge data from multiple sources
+
+**Performance:**
+- Processes approximately 130 records/second
+- Individual record saves for reliable duplicate handling
+- Suitable for imports up to 10,000+ records
+
 ### Dropdown Management API
 
 The Dropdown Management API provides consolidated endpoints for managing dropdown values across multiple categories (CLIENT, PROJECT, PHASE, etc.). This API supports the Angular frontend and follows a dynamic, extensible design that automatically adapts to new categories added to the database.

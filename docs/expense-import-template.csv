@@ -1,0 +1,6 @@
+username,client,project,expense_date,expense_type,description,amount,currency,payment_method,vendor,reference_number,expense_status
+john.doe,Acme Corp,Website Redesign,2026-01-15,Travel,Flight to client site,450.00,USD,Corporate Card,United Airlines,UA12345,Submitted
+jane.smith,Tech Solutions,Mobile App,2026-01-15,Meals,Client dinner meeting,125.50,USD,Personal Card,The Steakhouse,INV-001,Draft
+john.doe,Acme Corp,Website Redesign,01/16/2026,Lodging,Hotel stay for 2 nights,380.00,USD,Corporate Card,Hilton Hotels,RES-789,Submitted
+jane.smith,Tech Solutions,Mobile App,1/17/2026,Transportation,Taxi to/from airport,65.00,USD,Personal Card,Yellow Cab,TRIP-456,Approved
+john.doe,Global Industries,,2026-01-18,Office Supplies,Printer ink and paper,45.00,USD,Corporate Card,Office Depot,ORD-222,Draft

@@ -14,7 +14,8 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - ADMIN-only user performance analytics
 - 📊 Weekly timesheet view (Monday-Sunday format)
 - 📥 Export filtered tasks and weekly timesheets to CSV format
-- 🔍 Filter and search capabilities
+- � **Bulk CSV import** for TaskActivity records (ADMIN/MANAGER roles)
+- �🔍 Filter and search capabilities
 
 ### Expense Management
 
@@ -33,7 +34,8 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - **ADMIN**: Full expense management and approval authority
 - 📊 Expense filtering by client, project, type, status, and date range
 - 💵 Automatic expense totals and status tracking
-- 🔒 Users can only modify Draft, Submitted, or Resubmitted status
+- � **Bulk CSV import** for Expense records (ADMIN/MANAGER roles)
+- �🔒 Users can only modify Draft, Submitted, or Resubmitted status
 - 🚫 Non-admins cannot modify approval/reimbursement fields
 
 ### Profile Management
@@ -205,6 +207,8 @@ Interactive API documentation is available via Swagger UI when enabled:
 **Time Tracking:**
 
 - `/api/task-activities` - Task CRUD operations, filtering, and reports
+- `/api/import/taskactivities` - Bulk import TaskActivity records from CSV
+- `/api/import/taskactivities/template` - Get CSV template information
 - `/api/dropdowns` - Client, project, and phase management
 
 **Expense Management:**
@@ -212,6 +216,8 @@ Interactive API documentation is available via Swagger UI when enabled:
 - `/api/expenses` - Expense CRUD operations, filtering, and status management
 - `/api/expenses/{id}/submit` - Submit expense for approval
 - `/api/expenses/{id}/approve` - Approve expense (Admin/Expense Admin only)
+- `/api/import/expenses` - Bulk import Expense records from CSV
+- `/api/import/expenses/template` - Get CSV template information
 
 **User Profile Management:**
 
@@ -231,7 +237,8 @@ Interactive API documentation is available via Swagger UI when enabled:
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
 - 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking and expense management
 - 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, expense approvals, and 12-Factor App compliance
-- 🔒 [Security Measures and Best Practices](docs/Security_Measures_and_Best_Practices.md) - Comprehensive security documentation (NEW)
+- � [CSV Import User Guide](docs/CSV_Import_User_Guide.md) - Bulk data import via CSV files (NEW)
+- 🔒 [Security Measures and Best Practices](docs/Security_Measures_and_Best_Practices.md) - Comprehensive security documentation
 
 ### Docker & Containerization
 

@@ -1,0 +1,6 @@
+taskdate,client,project,phase,taskhours,details,username
+2026-01-15,Acme Corp,Website Redesign,Development,8.00,Implemented user authentication,john.doe
+2026-01-15,Tech Solutions,Mobile App,Testing,6.50,Performed regression testing,jane.smith
+2026-01-16,Acme Corp,Website Redesign,Design,4.00,Created mockups for dashboard,john.doe
+01/16/2026,Tech Solutions,Mobile App,Development,7.00,Fixed bug in payment module,jane.smith
+1/17/2026,Global Industries,Data Migration,Analysis,5.50,Analyzed source data structure,john.doe
