@@ -433,9 +433,33 @@
             }
             
             .sidebar-header {
-                padding: 10px;
+                padding: 15px;
                 background-color: #007bff;
                 border-bottom: 1px solid #0056b3;
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+            }
+            
+            .sidebar-close {
+                background-color: #000000;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.2s;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            
+            .sidebar-close:hover {
+                background-color: #333333;
             }
             
             .sidebar-menu-list {
@@ -597,7 +621,11 @@
             
             <!-- Right Sidebar Content -->
             <div class="sidebar-content" id="sidebarContent">
-                    <div class="sidebar-header"></div>
+                    <div class="sidebar-header">
+                        <button class="sidebar-close" onclick="return toggleSidebar(event);" title="Close" type="button">
+                            ✕
+                        </button>
+                    </div>
                     
                     <ul class="sidebar-menu-list">
                         <!-- Manage Users - ADMIN active, GUEST read-only, others hidden -->
