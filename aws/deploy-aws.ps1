@@ -684,8 +684,8 @@ function Get-DeploymentStatus {
                 }
                 
                 if ($publicIp) {
-                    Write-Success "Application URL:    http://${publicIp}:8080"
-                    Write-Info "Health Check:       http://${publicIp}:8080/actuator/health"
+                    Write-Host "Application URL:    http://${publicIp}:8080"
+                    Write-Host "Health Check:       http://${publicIp}:8080/actuator/health"
                 }
                 else {
                     Write-Warning "No public IP found for task. Check security group and task configuration."

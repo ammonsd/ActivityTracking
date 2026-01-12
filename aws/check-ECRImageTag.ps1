@@ -10,6 +10,9 @@
 .PARAMETER Tag
     The Docker image tag to search for in the ECR repository.
 
+.OUTPUTS
+    Displays tag existence information to the console with color-coded output.
+
 .EXAMPLE
     .\check-ECRImageTag.ps1 -Tag "v1.2.3"
     Checks if the tag 'v1.2.3' exists in the taskactivity ECR repository.
@@ -21,17 +24,12 @@
 .NOTES
     Author: Dean Ammons
     Date: January 2026
-#>
-
-param([Parameter(Mandatory=$true)][string]$Tag)
-
-.OUTPUTS
-    Boolean - Returns $true if the tag exists, $false otherwise.
-
-.NOTES
+    
     Requires AWS CLI to be installed and configured with appropriate credentials.
     The IAM user/role must have ecr:ListImages permission for the repository.
 #>
+
+param([Parameter(Mandatory=$true)][string]$Tag)
 function Check-ECRImageTag {
     param([string]$Tag)
     
