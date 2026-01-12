@@ -24,7 +24,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 /**
@@ -75,11 +74,11 @@ class CsvImportServiceTest {
         assertThat(result.getErrorCount()).isEqualTo(0);
         assertThat(result.hasErrors()).isFalse();
 
-        // Verify repository was called
-        ArgumentCaptor<List<TaskActivity>> captor = ArgumentCaptor.forClass(List.class);
-        verify(taskActivityRepository).saveAll(captor.capture());
+        // Verify repository was called twice (once per record)
+        ArgumentCaptor<TaskActivity> captor = ArgumentCaptor.forClass(TaskActivity.class);
+        verify(taskActivityRepository, times(2)).save(captor.capture());
 
-        List<TaskActivity> savedActivities = captor.getValue();
+        List<TaskActivity> savedActivities = captor.getAllValues();
         assertThat(savedActivities).hasSize(2);
 
         // Verify first record
@@ -115,11 +114,11 @@ class CsvImportServiceTest {
         assertThat(result.getSuccessCount()).isEqualTo(2);
         assertThat(result.getErrorCount()).isEqualTo(0);
 
-        // Verify repository was called
-        ArgumentCaptor<List<Expense>> captor = ArgumentCaptor.forClass(List.class);
-        verify(expenseRepository).saveAll(captor.capture());
+        // Verify repository was called twice (once per record)
+        ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
+        verify(expenseRepository, times(2)).save(captor.capture());
 
-        List<Expense> savedExpenses = captor.getValue();
+        List<Expense> savedExpenses = captor.getAllValues();
         assertThat(savedExpenses).hasSize(2);
 
         // Verify first record
@@ -157,10 +156,10 @@ class CsvImportServiceTest {
         assertThat(result.getSuccessCount()).isEqualTo(4);
         assertThat(result.getErrorCount()).isEqualTo(0);
 
-        ArgumentCaptor<List<TaskActivity>> captor = ArgumentCaptor.forClass(List.class);
-        verify(taskActivityRepository).saveAll(captor.capture());
+        ArgumentCaptor<TaskActivity> captor = ArgumentCaptor.forClass(TaskActivity.class);
+        verify(taskActivityRepository, times(4)).save(captor.capture());
 
-        List<TaskActivity> savedActivities = captor.getValue();
+        List<TaskActivity> savedActivities = captor.getAllValues();
         assertThat(savedActivities.get(0).getTaskDate()).isEqualTo(LocalDate.of(2026, 1, 15));
         assertThat(savedActivities.get(1).getTaskDate()).isEqualTo(LocalDate.of(2026, 1, 16));
         assertThat(savedActivities.get(2).getTaskDate()).isEqualTo(LocalDate.of(2026, 1, 17));
@@ -210,10 +209,10 @@ class CsvImportServiceTest {
         assertThat(result.getProcessedCount()).isEqualTo(1);
         assertThat(result.getSuccessCount()).isEqualTo(1);
 
-        ArgumentCaptor<List<TaskActivity>> captor = ArgumentCaptor.forClass(List.class);
-        verify(taskActivityRepository).saveAll(captor.capture());
+        ArgumentCaptor<TaskActivity> captor = ArgumentCaptor.forClass(TaskActivity.class);
+        verify(taskActivityRepository).save(captor.capture());
 
-        TaskActivity saved = captor.getValue().get(0);
+        TaskActivity saved = captor.getValue();
         assertThat(saved.getProject()).isEqualTo("Website, Mobile");
         assertThat(saved.getDetails()).isEqualTo("Implementation, testing");
     }
@@ -238,10 +237,10 @@ class CsvImportServiceTest {
         assertThat(result.getProcessedCount()).isEqualTo(1);
         assertThat(result.getSuccessCount()).isEqualTo(1);
 
-        ArgumentCaptor<List<Expense>> captor = ArgumentCaptor.forClass(List.class);
-        verify(expenseRepository).saveAll(captor.capture());
+        ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
+        verify(expenseRepository).save(captor.capture());
 
-        Expense saved = captor.getValue().get(0);
+        Expense saved = captor.getValue();
         assertThat(saved.getProject()).isNull();
         assertThat(saved.getCurrency()).isEqualTo("USD"); // Default
         assertThat(saved.getVendor()).isNull();
@@ -273,7 +272,7 @@ class CsvImportServiceTest {
         assertThat(result.getSuccessCount()).isEqualTo(150);
         assertThat(result.getErrorCount()).isEqualTo(0);
 
-        // Verify saveAll was called twice (100 + 50)
-        verify(taskActivityRepository, times(2)).saveAll(anyList());
+        // Verify save was called 150 times (individual saves for duplicate handling)
+        verify(taskActivityRepository, times(150)).save(any(TaskActivity.class));
     }
 }
