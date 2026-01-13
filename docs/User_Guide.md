@@ -320,6 +320,15 @@ To protect your account from unauthorized access, the system automatically locks
 5. **Modify Other Fields**: Update any other details as needed
 6. **Save**: Click **"Save Task Activity"**
 
+**Important: Inactive Dropdown Values**
+
+When cloning a task that contains inactive dropdown values (Client, Project, or Phase), these values will be automatically cleared:
+
+- **Inactive Values Cleared**: If the original task has a Client, Project, or Phase that has been marked inactive by an administrator, that field will be empty in the clone form
+- **You Must Select Active Values**: Before saving, you'll need to select from the available active values in the dropdown lists
+- **Why This Happens**: This ensures you're using current, active categories and prevents propagation of outdated or discontinued values
+- **View/Edit Still Shows Inactive Values**: When viewing or editing existing tasks, you can still see any inactive values that were previously assigned - they just won't be available when creating new tasks or cloning
+
 ## Weekly Timesheet
 
 The weekly timesheet gives you a comprehensive view of your time across an entire week.
@@ -570,6 +579,29 @@ Use the filter controls at the top of the expense list to find specific expenses
 4. **Save Changes**: Click **"Update Expense"**
 
 **Note:** You can only edit expenses with status "Draft". Once submitted, you cannot edit them.
+
+### Cloning an Expense
+
+To quickly create a similar expense:
+
+1. **Find Original Expense**: Locate an expense similar to what you want to create
+2. **Click "Clone"**: Press the clone button on the expense row
+3. **Review Pre-filled Data**: All fields except date and receipt are copied from the original
+4. **Update Details**: 
+   - Change the expense date to the new date
+   - Modify amount if different
+   - Update description as needed
+   - Upload a receipt for the new expense
+5. **Save**: Click **"Save Expense"**
+
+**Important: Inactive Dropdown Values**
+
+When cloning an expense that contains inactive dropdown values, these values will be automatically cleared:
+
+- **Inactive Values Cleared**: If the original expense has a Client, Project, Expense Type, Payment Method, Vendor, or Currency that has been marked inactive by an administrator, that field will be empty in the clone form
+- **You Must Select Active Values**: Before saving, you'll need to select from the available active values in the dropdown lists
+- **Why This Happens**: This ensures you're using current, active categories and prevents propagation of outdated or discontinued values
+- **View/Edit Still Shows Inactive Values**: When viewing or editing existing expenses, you can still see any inactive values that were previously assigned - they just won't be available when creating new expenses or cloning
 
 ### Submitting an Expense for Approval
 

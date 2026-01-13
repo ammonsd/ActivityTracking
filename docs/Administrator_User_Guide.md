@@ -713,8 +713,14 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 
 10. **Active/Inactive Toggle**:
     - Values can be marked as active or inactive via the Edit dialog
-    - Inactive values don't appear in dropdown lists when creating/editing tasks
-    - Use this instead of deleting values that are still referenced by existing tasks
+    - **How Inactive Values Work**:
+      - **Add Mode**: Inactive values do NOT appear in dropdown lists when creating new tasks or expenses
+      - **Clone Mode**: Inactive values do NOT appear in dropdown lists, and any inactive values from the original task/expense are automatically cleared
+      - **View Mode**: Inactive values ARE displayed if they were previously assigned to the task/expense (read-only)
+      - **Edit Mode**: Inactive values ARE displayed if currently assigned, allowing you to see what was selected, but you cannot select other inactive values
+    - **Best Practice**: Use the inactive status instead of deleting values that are still referenced by existing tasks or expenses
+    - **Impact on Users**: When users clone a task/expense with inactive values, those fields will be empty and they must select from active values before saving
+    - **Historical Data Preserved**: Marking a value inactive doesn't affect existing records - they still display the original value when viewed or edited
 
 **Benefits of Consolidated Dropdown Management:**
 - ✅ Single interface for all dropdown categories
