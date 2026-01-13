@@ -330,7 +330,7 @@
                             th:field="*{details}"
                             rows="4"
                             maxlength="255"
-                            placeholder="Enter task details (optional)..."
+                            th:placeholder="${isReadOnly ? '' : 'Enter task details (optional)...'}"
                             th:readonly="${isReadOnly}"
                             th:disabled="${isReadOnly}"
                         ></textarea>

@@ -357,6 +357,7 @@ process {
             [PSCustomObject]@{
                 FilePath = $file.FullName
                 ImportType = $importType
+                BaseUrl = $BaseUrl
                 TotalProcessed = $result.totalProcessed
                 SuccessCount = $result.successCount
                 ErrorCount = $result.errorCount
@@ -371,6 +372,7 @@ process {
         [PSCustomObject]@{
             FilePath = $FilePath
             ImportType = $Type
+            BaseUrl = $BaseUrl
             TotalProcessed = 0
             SuccessCount = 0
             ErrorCount = 1
