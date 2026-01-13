@@ -62,6 +62,13 @@
         - Header row with column names
         - Valid data in all required fields
         
+    Date Format Options (for date fields in TaskActivity and Expense):
+        - YYYY-MM-DD (recommended, ISO 8601): 2026-01-15
+        - MM/dd/yyyy: 01/15/2026
+        - M/d/yyyy: 1/15/2026
+        - yyyy-MM-dd: 2026-01-15
+        - dd-MMM-yyyy (English month abbreviations): 15-Jan-2026
+        
     For detailed CSV format specifications, see CSV_Import_User_Guide.md
 #>
 
