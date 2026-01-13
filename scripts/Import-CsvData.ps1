@@ -72,7 +72,7 @@ param(
     [string]$FilePath,
     
     [Parameter(Mandatory = $false)]
-    [ValidateSet('TaskActivity', 'Expense', 'Auto')]
+    [ValidateSet('TaskActivity', 'Expense', 'DropdownValue', 'Auto')]
     [string]$Type = 'Auto',
     
     [Parameter(Mandatory = $false)]
@@ -115,6 +115,9 @@ begin {
         }
         elseif ($FileName -match 'expense') {
             return 'Expense'
+        }
+        elseif ($FileName -match 'dropdown|value') {
+            return 'DropdownValue'
         }
         else {
             return $null
@@ -176,6 +179,7 @@ begin {
         $endpoint = switch ($ImportType) {
             'TaskActivity' { "$BaseUrl/api/import/taskactivities" }
             'Expense' { "$BaseUrl/api/import/expenses" }
+            'DropdownValue' { "$BaseUrl/api/import/dropdownvalues" }
             default { throw "Unknown import type: $ImportType" }
         }
         
@@ -200,10 +204,28 @@ begin {
             }
             catch {
                 $errorMessage = $_.Exception.Message
+                
+                # Try to extract detailed error message from response
                 if ($_.ErrorDetails.Message) {
-                    $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
-                    $errorMessage = $errorDetails.message
+                    try {
+                        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+                        if ($errorDetails.message) {
+                            $errorMessage = $errorDetails.message
+                        }
+                    }
+                    catch {
+                        # If JSON parsing fails, use raw error details
+                        $errorMessage = $_.ErrorDetails.Message
+                    }
                 }
+                
+                # Include HTTP status if available
+                if ($_.Exception.Response) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                    $statusDescription = $_.Exception.Response.StatusDescription
+                    $errorMessage = "HTTP $statusCode $statusDescription - $errorMessage"
+                }
+                
                 throw "Import failed: $errorMessage"
             }
         }
@@ -236,10 +258,28 @@ begin {
             }
             catch {
                 $errorMessage = $_.Exception.Message
+                
+                # Try to extract detailed error message from response
                 if ($_.ErrorDetails.Message) {
-                    $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
-                    $errorMessage = $errorDetails.message
+                    try {
+                        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+                        if ($errorDetails.message) {
+                            $errorMessage = $errorDetails.message
+                        }
+                    }
+                    catch {
+                        # If JSON parsing fails, use raw error details
+                        $errorMessage = $_.ErrorDetails.Message
+                    }
                 }
+                
+                # Include HTTP status if available
+                if ($_.Exception.Response) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                    $statusDescription = $_.Exception.Response.StatusDescription
+                    $errorMessage = "HTTP $statusCode $statusDescription - $errorMessage"
+                }
+                
                 throw "Import failed: $errorMessage"
             }
         }

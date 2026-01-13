@@ -1,0 +1,16 @@
+category,subcategory,itemvalue,displayorder,isactive
+TASK,CLIENT,Acme Corporation,1,true
+TASK,CLIENT,XYZ Industries,2,true
+TASK,CLIENT,TechCorp Solutions,3,true
+TASK,CLIENT,Finance Plus Ltd,4,true
+TASK,PROJECT,Website Redesign,1,true
+TASK,PROJECT,Mobile App,2,true
+TASK,PROJECT,Cloud Migration,3,true
+TASK,PROJECT,Business Analysis,4,true
+TASK,PHASE,Requirements,1,true
+TASK,PHASE,Design,2,true
+TASK,PHASE,Implementation,3,true
+TASK,PHASE,Testing,4,true
+TASK,PHASE,Deployment,5,true
+TASK,PHASE,Documentation,6,true
+TASK,PHASE,Support,7,true

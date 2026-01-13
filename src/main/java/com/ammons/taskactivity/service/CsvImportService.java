@@ -1,7 +1,9 @@
 package com.ammons.taskactivity.service;
 
+import com.ammons.taskactivity.entity.DropdownValue;
 import com.ammons.taskactivity.entity.Expense;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.repository.DropdownValueRepository;
 import com.ammons.taskactivity.repository.ExpenseRepository;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
 import jakarta.validation.ConstraintViolation;
@@ -53,6 +55,9 @@ public class CsvImportService {
 
     @Autowired
     private ExpenseRepository expenseRepository;
+
+    @Autowired
+    private DropdownValueRepository dropdownValueRepository;
 
     @Autowired
     private Validator validator;
@@ -216,6 +221,143 @@ public class CsvImportService {
         logger.info("Expense import completed. Success: {}, Errors: {}", result.getSuccessCount(),
                 result.getErrorCount());
         return result;
+    }
+
+    /**
+     * Import DropdownValue records from CSV file.
+     * 
+     * Expected CSV format (with header): category,subcategory,itemvalue,displayorder,isactive
+     * CLIENT,General,Acme Corp,1,true PROJECT,Development,Website Redesign,1,true
+     * 
+     * Note: Duplicates (same category, subcategory, itemvalue) are silently skipped. The unique
+     * constraint is on (category, subcategory, itemvalue).
+     *
+     * @param file CSV file to import
+     * @return Import result with statistics
+     * @throws IOException if file reading fails
+     */
+    public CsvImportResult importDropdownValues(MultipartFile file) throws IOException {
+        logger.info("Starting DropdownValue CSV import from file: {}", file.getOriginalFilename());
+
+        CsvImportResult result = new CsvImportResult();
+        int skippedDuplicates = 0;
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String line;
+            int lineNumber = 0;
+            String[] headers = null;
+
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+
+                // Skip empty lines
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                // First non-empty line is the header
+                if (headers == null) {
+                    headers = parseCsvLine(line);
+                    continue;
+                }
+
+                try {
+                    String[] values = parseCsvLine(line);
+                    DropdownValue dropdownValue = parseDropdownValue(headers, values);
+
+                    // Validate entity
+                    Set<ConstraintViolation<DropdownValue>> violations =
+                            validator.validate(dropdownValue);
+                    if (!violations.isEmpty()) {
+                        String errors = violations.stream()
+                                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                                .reduce((a, b) -> a + "; " + b).orElse("Unknown validation error");
+                        result.addError(lineNumber, "Validation failed: " + errors);
+                        continue;
+                    }
+
+                    result.incrementProcessed();
+
+                    // Save record individually with duplicate handling
+                    try {
+                        dropdownValueRepository.save(dropdownValue);
+                        result.addSuccess(1);
+                    } catch (DataIntegrityViolationException e) {
+                        // Duplicate record - skip it silently
+                        skippedDuplicates++;
+                        logger.debug("Skipping duplicate DropdownValue record at line {}: {}",
+                                lineNumber, e.getMessage());
+                    }
+
+                } catch (Exception e) {
+                    result.addError(lineNumber, "Parse error: " + e.getMessage());
+                    logger.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
+                }
+            }
+        }
+
+        if (skippedDuplicates > 0) {
+            logger.info("Skipped {} duplicate DropdownValue records", skippedDuplicates);
+        }
+        logger.info("DropdownValue import completed. Success: {}, Errors: {}",
+                result.getSuccessCount(), result.getErrorCount());
+        return result;
+    }
+
+    /**
+     * Parse DropdownValue from CSV row using header mapping.
+     */
+    private DropdownValue parseDropdownValue(String[] headers, String[] values) {
+        Map<String, String> fieldMap = createFieldMap(headers, values);
+
+        DropdownValue dropdownValue = new DropdownValue();
+
+        // Category is required and converted to uppercase
+        String category = fieldMap.get("category");
+        if (category != null) {
+            dropdownValue.setCategory(category.toUpperCase());
+        } else {
+            throw new IllegalArgumentException("Missing required field: category");
+        }
+
+        // Subcategory is required
+        String subcategory = fieldMap.get("subcategory");
+        if (subcategory == null) {
+            throw new IllegalArgumentException("Missing required field: subcategory");
+        }
+        dropdownValue.setSubcategory(subcategory);
+
+        // ItemValue is required
+        String itemValue = fieldMap.get("itemvalue");
+        if (itemValue == null) {
+            throw new IllegalArgumentException("Missing required field: itemvalue");
+        }
+        dropdownValue.setItemValue(itemValue);
+
+        // DisplayOrder is optional, defaults to 0
+        String displayOrderStr = fieldMap.get("displayorder");
+        if (displayOrderStr != null && !displayOrderStr.trim().isEmpty()) {
+            try {
+                dropdownValue.setDisplayOrder(Integer.parseInt(displayOrderStr));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Invalid displayorder format: " + displayOrderStr);
+            }
+        } else {
+            dropdownValue.setDisplayOrder(0);
+        }
+
+        // IsActive is optional, defaults to true
+        String isActiveStr = fieldMap.get("isactive");
+        if (isActiveStr != null && !isActiveStr.trim().isEmpty()) {
+            dropdownValue.setIsActive(Boolean.parseBoolean(isActiveStr));
+        } else {
+            dropdownValue.setIsActive(true);
+        }
+
+        return dropdownValue;
     }
 
     /**

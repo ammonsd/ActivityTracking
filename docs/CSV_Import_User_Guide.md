@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CSV Import feature allows you to bulk load TaskActivity and Expense records into the database using CSV (Comma-Separated Values) files. This is much more efficient than manual entry, especially for large datasets or when migrating from other systems.
+The CSV Import feature allows you to bulk load TaskActivity, Expense, and DropdownValue records into the database using CSV (Comma-Separated Values) files. This is much more efficient than manual entry, especially for large datasets or when migrating from other systems.
 
 **Author:** Dean Ammons  
 **Date:** January 2026
@@ -11,10 +11,10 @@ The CSV Import feature allows you to bulk load TaskActivity and Expense records 
 
 ## Features
 
--   ✅ Bulk import of TaskActivity and Expense records
+-   ✅ Bulk import of TaskActivity, Expense, and DropdownValue records
 -   ✅ Automatic validation of all records before import
--   ✅ Batch processing for optimal performance (100 records per batch)
--   ✅ Flexible date format support
+-   ✅ Individual record processing with duplicate detection
+-   ✅ Flexible date format support (for TaskActivity and Expense)
 -   ✅ Detailed error reporting for failed records
 -   ✅ **Duplicate handling: Re-importing the same data file will skip existing records without errors**
 -   ✅ RESTful API endpoints for programmatic access
@@ -37,7 +37,20 @@ The CSV Import feature allows you to bulk load TaskActivity and Expense records 
 -   `details`
 -   `username`
 
-**Expense records** are considered duplicates based on their unique ID (if already imported).
+**Expense records** are considered duplicates if they have the same combination of:
+
+-   `expense_date`
+-   `client`
+-   `project`
+-   `expense_type`
+-   `expense_amount`
+-   `username`
+
+**DropdownValue records** are considered duplicates if they have the same combination of:
+
+-   `category`
+-   `subcategory`
+-   `itemvalue`
 
 ### What Happens When Duplicates Are Found
 
@@ -294,6 +307,39 @@ The import service supports multiple date formats for flexibility:
 
 ---
 
+### Import DropdownValue Records
+
+**Endpoint:** `POST /api/import/dropdownvalues`  
+**Content-Type:** `multipart/form-data`  
+**Required Role:** ADMIN or MANAGER  
+**Parameter:** `file` (CSV file)
+
+**Purpose:** Import dropdown values for client, project, phase, and other categorized data used throughout the application.
+
+**CSV Format:**
+```csv
+category,subcategory,itemvalue,displayorder,isactive
+TASK,CLIENT,Acme Corporation,1,true
+TASK,CLIENT,XYZ Industries,2,true
+TASK,PROJECT,Website Redesign,1,true
+TASK,PROJECT,Cloud Migration,2,true
+TASK,PHASE,Requirements,1,true
+TASK,PHASE,Design,2,true
+```
+
+**Field Specifications:**
+- **category** (Required): Category name, max 50 chars - automatically converted to uppercase
+- **subcategory** (Required): Subcategory name, max 50 chars
+- **itemvalue** (Required): The actual dropdown value, max 100 chars
+- **displayorder** (Optional): Display order (integer), defaults to 0
+- **isactive** (Optional): Active status (true/false), defaults to true
+
+**Response format:** Same as TaskActivity import
+
+**Note:** Duplicates are detected based on the combination of category, subcategory, and itemvalue. Re-importing the same values will skip existing records without errors.
+
+---
+
 ### Get Import Templates
 
 **TaskActivity Template:**
@@ -306,6 +352,12 @@ GET /api/import/taskactivities/template
 
 ```bash
 GET /api/import/expenses/template
+```
+
+**DropdownValue Template:**
+
+```bash
+GET /api/import/dropdownvalues/template
 ```
 
 Returns template structure, example data, and field specifications.

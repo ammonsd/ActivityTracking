@@ -126,7 +126,7 @@ public class TaskActivityWebController {
 
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
-                addDropdownOptions(model);
+                addDropdownOptions(model, dto);
                 addFilterAttributes(model, client, project, phase, username, startDate, endDate);
                 return TASK_ACTIVITY_FORM_VIEW;
             } else {
@@ -324,7 +324,7 @@ public class TaskActivityWebController {
                 boolean isReadOnly = !taskActivity.get().getUsername().equals(currentUsername);
                 model.addAttribute("isReadOnly", isReadOnly);
 
-                addDropdownOptions(model);
+                addDropdownOptions(model, dto);
                 addFilterAttributes(model, client, project, phase, username, startDate, endDate);
                 return TASK_DETAIL_VIEW;
             } else {
@@ -365,7 +365,7 @@ public class TaskActivityWebController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute(TASK_ID_ATTR, id);
-            addDropdownOptions(model);
+            addDropdownOptions(model, taskActivityDto);
             return TASK_DETAIL_VIEW;
         }
 
@@ -453,9 +453,42 @@ public class TaskActivityWebController {
     }
 
     private void addDropdownOptions(Model model) {
-        model.addAttribute("clients", dropdownConfig.getClientsList());
-        model.addAttribute("projects", dropdownConfig.getProjectsList());
-        model.addAttribute("phases", dropdownConfig.getPhasesList());
+        addDropdownOptions(model, null);
+    }
+
+    /**
+     * Add dropdown options to model, including inactive values if they're currently selected
+     * 
+     * @param model the model to add attributes to
+     * @param dto the current task activity (null for new tasks)
+     */
+    private void addDropdownOptions(Model model, TaskActivityDto dto) {
+        List<String> clients = dropdownConfig.getClientsList();
+        List<String> projects = dropdownConfig.getProjectsList();
+        List<String> phases = dropdownConfig.getPhasesList();
+
+        // When editing existing task, include its values even if they're inactive
+        if (dto != null) {
+            if (dto.getClient() != null && !clients.contains(dto.getClient())) {
+                clients = new java.util.ArrayList<>(clients);
+                clients.add(dto.getClient());
+                clients.sort(String::compareTo);
+            }
+            if (dto.getProject() != null && !projects.contains(dto.getProject())) {
+                projects = new java.util.ArrayList<>(projects);
+                projects.add(dto.getProject());
+                projects.sort(String::compareTo);
+            }
+            if (dto.getPhase() != null && !phases.contains(dto.getPhase())) {
+                phases = new java.util.ArrayList<>(phases);
+                phases.add(dto.getPhase());
+                phases.sort(String::compareTo);
+            }
+        }
+
+        model.addAttribute("clients", clients);
+        model.addAttribute("projects", projects);
+        model.addAttribute("phases", phases);
     }
 
     /**

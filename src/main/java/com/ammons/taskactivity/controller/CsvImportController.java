@@ -151,6 +151,64 @@ public class CsvImportController {
     }
 
     /**
+     * Import DropdownValue records from CSV file.
+     * 
+     * Requires ADMIN or MANAGER role.
+     * 
+     * Expected CSV format: category,subcategory,itemvalue,displayorder,isactive CLIENT,General,Acme
+     * Corp,1,true PROJECT,Development,Website Redesign,1,true
+     * 
+     * Duplicates (same category, subcategory, itemvalue) are silently skipped.
+     *
+     * @param file CSV file to import
+     * @return Import result with statistics and any errors
+     */
+    @PostMapping(value = "/dropdownvalues", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Map<String, Object>> importDropdownValues(
+            @RequestParam("file") MultipartFile file) {
+
+        logger.info("Received DropdownValue import request. File: {}, Size: {} bytes",
+                file.getOriginalFilename(), file.getSize());
+
+        // Validate file
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("File is empty"));
+        }
+
+        if (!file.getOriginalFilename().toLowerCase().endsWith(".csv")) {
+            return ResponseEntity.badRequest().body(createErrorResponse("File must be a CSV file"));
+        }
+
+        try {
+            CsvImportResult result = csvImportService.importDropdownValues(file);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Import completed");
+            response.put("totalProcessed", result.getProcessedCount());
+            response.put("successCount", result.getSuccessCount());
+            response.put("errorCount", result.getErrorCount());
+
+            if (result.hasErrors()) {
+                response.put("errors", result.getErrors());
+            }
+
+            HttpStatus status = result.hasErrors() ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
+            return ResponseEntity.status(status).body(response);
+
+        } catch (IOException e) {
+            logger.error("IO error during DropdownValue import", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to read file: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error during DropdownValue import", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Import failed: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Get CSV template information for TaskActivity imports.
      *
      * @return Template information and example
@@ -201,6 +259,27 @@ public class CsvImportController {
                 "vendor: Optional, max 100 characters",
                 "reference_number: Optional, max 50 characters",
                 "expense_status: Optional, defaults to Draft, max 50 characters"});
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get CSV template information for DropdownValue imports.
+     *
+     * @return Template information and example
+     */
+    @GetMapping("/dropdownvalues/template")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Map<String, Object>> getDropdownValueTemplate() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("headers",
+                new String[] {"category", "subcategory", "itemvalue", "displayorder", "isactive"});
+        response.put("example", "TASK,CLIENT,Acme Corporation,1,true");
+        response.put("notes",
+                new String[] {"category: Required, max 50 characters (auto-converted to uppercase)",
+                        "subcategory: Required, max 50 characters",
+                        "itemvalue: Required, max 100 characters",
+                        "displayorder: Optional, defaults to 0, integer",
+                        "isactive: Optional, defaults to true, boolean (true/false)"});
         return ResponseEntity.ok(response);
     }
 

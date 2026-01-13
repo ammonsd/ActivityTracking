@@ -384,9 +384,7 @@
             /* Right Sidebar Menu Styles */
             
             .sidebar-toggle {
-                position: fixed;
-                right: 10px;
-                top: 80px;
+                position: relative;
                 width: 50px;
                 height: 50px;
                 background-color: #007bff;
@@ -395,13 +393,14 @@
                 border-radius: 50%;
                 cursor: pointer;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                z-index: 9999;
+                z-index: 1;
                 pointer-events: auto;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 24px;
                 transition: all 0.3s;
+                margin-left: auto;
             }
             
             .sidebar-toggle:hover {

@@ -22,6 +22,9 @@
 # Import with explicit type
 .\scripts\Import-CsvData.ps1 -FilePath "expense-data.csv" -Type Expense -Token "your_jwt_token"
 
+# Import DropdownValues
+.\scripts\Import-CsvData.ps1 -FilePath "dropdownvalue-data.csv" -Type DropdownValue -Username "admin"
+
 # Batch import all CSV files in a directory
 Get-ChildItem -Path "C:\imports" -Filter "*.csv" | .\scripts\Import-CsvData.ps1 -Username "admin"
 ```
@@ -38,6 +41,11 @@ curl -X POST http://localhost:8080/api/import/taskactivities \
 curl -X POST http://localhost:8080/api/import/expenses \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@expense-data.csv"
+
+# Import DropdownValues
+curl -X POST http://localhost:8080/api/import/dropdownvalues \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@dropdownvalue-data.csv"
 ```
 
 ### Using PowerShell Invoke-RestMethod
@@ -53,6 +61,10 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/import/taskactivities" `
 # Import Expense
 Invoke-RestMethod -Uri "http://localhost:8080/api/import/expenses" `
   -Method Post -Headers $headers -Form @{ file = Get-Item "expense-data.csv" }
+
+# Import DropdownValues
+Invoke-RestMethod -Uri "http://localhost:8080/api/import/dropdownvalues" `
+  -Method Post -Headers $headers -Form @{ file = Get-Item "dropdownvalue-data.csv" }
 ```
 
 ---
@@ -76,6 +88,19 @@ john.doe,Acme Corp,Website,2026-01-15,Travel,Flight,450.00,USD,Corporate Card,Un
 ```
 
 **Required fields:** username, client, expense_date, expense_type, description, amount, payment_method
+
+### DropdownValue Template
+
+```csv
+category,subcategory,itemvalue,displayorder,isactive
+TASK,CLIENT,Acme Corporation,1,true
+TASK,PROJECT,Website Redesign,1,true
+TASK,PHASE,Requirements,1,true
+```
+
+**Required fields:** category, subcategory, itemvalue  
+**Optional fields:** displayorder (default: 0), isactive (default: true)  
+**Note:** Category is automatically converted to uppercase
 
 ---
 
