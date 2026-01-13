@@ -49,6 +49,32 @@
                 max-width: 1800px;
             }
             
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .header h1 {
+                margin-right: 15px;
+            }
+            
+            .header > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                align-items: center;
+            }
+            
+            .header .btn {
+                margin: 0 !important;
+                padding: 8px 12px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+            
             /* Compact filter layout for expense list */
             .filters .filter-row {
                 display: grid;
@@ -241,6 +267,129 @@
                 display: flex;
                 gap: 10px;
                 justify-content: flex-end;
+            }
+            
+            /* Right Sidebar Menu Styles */
+            
+            .sidebar-toggle {
+                width: 50px;
+                height: 38px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                transition: all 0.3s;
+                padding: 8px 12px;
+                margin: 0;
+            }
+            
+            .sidebar-toggle:hover {
+                background-color: #0056b3;
+                transform: scale(1.05);
+            }
+            
+            .sidebar-content {
+                position: fixed;
+                right: -280px;
+                top: 70px;
+                width: 280px;
+                height: calc(100vh - 70px);
+                background-color: #f8f9fa;
+                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+                overflow-y: auto;
+                transition: right 0.3s ease;
+                z-index: 100;
+                pointer-events: none;
+                visibility: hidden;
+                display: none;
+            }
+            
+            .sidebar-content.open {
+                right: 0;
+                pointer-events: auto;
+                visibility: visible;
+                display: block;
+            }
+            
+            .sidebar-header {
+                padding: 15px;
+                background-color: #007bff;
+                border-bottom: 1px solid #0056b3;
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+            }
+            
+            .sidebar-close {
+                background-color: #007bff;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.2s;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            
+            .sidebar-close:hover {
+                background-color: #0056b3;
+            }
+            
+            .sidebar-menu-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .sidebar-menu-list li {
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            .sidebar-menu-list a,
+            .sidebar-menu-list button {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #333;
+                text-decoration: none;
+                background: none;
+                border: none;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
+                font-size: 15px;
+                transition: background-color 0.2s;
+            }
+            
+            .sidebar-menu-list a:hover:not(.disabled),
+            .sidebar-menu-list button:hover:not(.disabled) {
+                background-color: #e9ecef;
+            }
+            
+            .sidebar-menu-list a.disabled,
+            .sidebar-menu-list button.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+            
+            .sidebar-menu-list .menu-icon {
+                margin-right: 12px;
+                font-size: 18px;
+                width: 24px;
+                display: inline-block;
             }
 
             /* Common table styles */
@@ -437,45 +586,64 @@
             <div class="header">
                 <h1>Expense List</h1>
                 <div>
-                    <!-- Angular Dashboard - Visible for all -->
-                    <a
-                        th:href="@{/app}"
-                        class="btn btn-success"
-                        style="margin-right: 10px"
-                        title="Angular Admin Dashboard"
-                        >📊 Dashboard</a
-                    >
                     <!-- Task Activity List - Hidden for EXPENSE_ADMIN -->
                     <a
                         th:href="@{/task-activity/list}"
                         class="btn btn-success"
-                        style="margin-right: 10px"
                         title="Task Activity List"
                         >📋 Task Activity List</a
                     >
-                    <!-- Export CSV Button - Hide for GUEST users and users without email -->
-                    <button
-                        th:if="${!isGuest and userHasEmail}"
-                        type="button"
-                        class="btn btn-secondary"
-                        id="exportCsvBtn"
-                        title="Export to CSV"
-                        style="margin-right: 10px"
-                    >
-                        📋 Export CSV
-                    </button>
                     <!-- Weekly Expense Sheet - Hide for GUEST users and users without email -->
                     <a
                         th:if="${!isGuest and userHasEmail}"
                         th:href="@{/expenses/weekly-sheet}"
                         class="btn btn-info"
-                        style="margin-right: 10px"
                         >📊 Weekly Expense Sheet</a
                     >
                     <!-- Add New Expense - Hide for GUEST users and users without email -->
                     <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
                         >➕ Add New Expense</a
                     >
+                    <!-- Right Sidebar Toggle Button -->
+                    <button class="sidebar-toggle" onclick="return toggleSidebar(event);" id="sidebarToggle" title="Menu" type="button">
+                        ☰
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar Content -->
+            <div class="sidebar-content" id="sidebarContent">
+                    <div class="sidebar-header">
+                        <button class="sidebar-close" onclick="return toggleSidebar(event);" title="Close" type="button">
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <ul class="sidebar-menu-list">
+                        <!-- Export CSV - visible for all, disabled for GUEST -->
+                        <li th:if="${userHasEmail}">
+                            <button 
+                                type="button" 
+                                id="exportCsvBtnSidebar" 
+                                title="Export to CSV"
+                                th:classappend="${isGuest} ? 'disabled' : ''"
+                                th:disabled="${isGuest}"
+                            >
+                                <span class="menu-icon">📋</span>
+                                <span>Export CSV</span>
+                            </button>
+                        </li>
+                        <!-- Dashboard - Visible for all -->
+                        <li>
+                            <a 
+                                th:href="@{/app}"
+                                title="Angular Admin Dashboard"
+                            >
+                                <span class="menu-icon">📊</span>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -810,6 +978,29 @@
         </div>
 
         <script>
+            // Sidebar toggle functionality
+            function toggleSidebar(event) {
+                // Prevent any default behavior or propagation
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                const sidebar = document.getElementById("sidebarContent");
+                const toggle = document.getElementById("sidebarToggle");
+                
+                if (!sidebar || !toggle) {
+                    console.error('Sidebar elements not found!');
+                    return false;
+                }
+                
+                sidebar.classList.toggle("open");
+                const isNowOpen = sidebar.classList.contains("open");
+                toggle.innerHTML = isNowOpen ? "✕" : "☰";
+                
+                return false;
+            }
+        
             // CSV Export Functionality
             function generateCSV() {
                 const exportParams = new URLSearchParams();
@@ -846,6 +1037,7 @@
             document.addEventListener("DOMContentLoaded", function () {
                 const modal = document.getElementById("csvModal");
                 const exportBtn = document.getElementById("exportCsvBtn");
+                const exportBtnSidebar = document.getElementById("exportCsvBtnSidebar");
                 const closeBtn = document.getElementById("csvCloseBtn");
                 const closeCsvBtn = document.getElementById("closeCsvBtn");
                 const copyCsvBtn = document.getElementById("copyCsvBtn");
@@ -855,6 +1047,24 @@
 
                 if (exportBtn) {
                     exportBtn.addEventListener("click", function () {
+                        csvOutput.value = "Loading data...";
+                        modal.style.display = "block";
+
+                        generateCSV().then((csv) => {
+                            csvOutput.value = csv;
+                        });
+                    });
+                }
+                
+                if (exportBtnSidebar) {
+                    exportBtnSidebar.addEventListener("click", function () {
+                        // Close sidebar first
+                        const sidebar = document.getElementById("sidebarContent");
+                        if (sidebar) {
+                            sidebar.classList.remove("open");
+                            const toggle = document.getElementById("sidebarToggle");
+                            if (toggle) toggle.innerHTML = "☰";
+                        }
                         csvOutput.value = "Loading data...";
                         modal.style.display = "block";
 

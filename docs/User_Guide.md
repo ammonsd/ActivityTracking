@@ -509,6 +509,23 @@ The expense list shows all your recorded expenses with the following information
 - **Receipt**: Indicator if receipt is attached
 - **Actions**: View, Edit, Submit, Delete buttons
 
+### Using the Sidebar Menu
+
+The Expense List page includes a **floating sidebar menu** for quick access to export and navigation features.
+
+**To Access the Menu:**
+
+1. Click the **☰** (hamburger menu) button in the upper-right corner of the page
+2. The sidebar menu will slide in from the right side
+3. Click the **✕** button or click the menu button again to close
+
+**Menu Items:**
+
+- **📋 Export CSV**: Export filtered expense list to CSV format (read-only for Guest users)
+- **📊 Dashboard**: Return to Admin Dashboard
+
+**Note:** Guest users can see the menu but the Export CSV option will be disabled.
+
 ### Filtering Expenses
 
 Use the filter controls at the top of the expense list to find specific expenses:
@@ -693,11 +710,22 @@ Similar to the weekly timesheet, the expense sheet shows your expenses for the c
 Export your filtered expense list for reporting or record-keeping:
 
 1. **Apply Filters** (optional): Filter expenses as needed
-2. **Click Export**: Click **"📋 Export CSV"** button
-3. **Choose Action**:
-   - Copy to Clipboard for pasting into Excel
-   - Download CSV file with intelligent filename
-4. **CSV Includes**: All filtered expenses with complete details
+2. **Click Export Button**: 
+   - Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
+   - The menu will automatically close after selecting Export CSV
+3. **Wait for Data**: The system will fetch ALL filtered expenses (not just the current page)
+4. **Choose Action**:
+   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **💾 Download CSV**: Downloads a CSV file with an intelligent filename
+   - **Close**: Close the export window
+
+**CSV Export Features:**
+
+- **Exports ALL filtered expenses** - not limited to the visible entries on the current page
+- Filename includes active filters and timestamp
+- Example filename: `Expenses_Acme_Corp_Travel_20260113.csv`
+
+**Note:** The export includes all expenses matching your current filters, regardless of pagination. Guest users cannot export CSV data.
 
 ---
 
