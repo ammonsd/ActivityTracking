@@ -124,6 +124,22 @@ public class TaskActivityWebController {
                 // Set today's date as default for cloned task
                 dto.setTaskDate(LocalDate.now());
 
+                // Clear out inactive dropdown values for clone (only active values should be
+                // available)
+                List<String> activeClients = dropdownConfig.getClientsList();
+                List<String> activeProjects = dropdownConfig.getProjectsList();
+                List<String> activePhases = dropdownConfig.getPhasesList();
+
+                if (dto.getClient() != null && !activeClients.contains(dto.getClient())) {
+                    dto.setClient(null);
+                }
+                if (dto.getProject() != null && !activeProjects.contains(dto.getProject())) {
+                    dto.setProject(null);
+                }
+                if (dto.getPhase() != null && !activePhases.contains(dto.getPhase())) {
+                    dto.setPhase(null);
+                }
+
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
                 addDropdownOptions(model, dto);

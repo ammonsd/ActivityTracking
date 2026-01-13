@@ -364,6 +364,46 @@ public class ExpenseViewController {
                 dto.setReceiptPath(null);
                 dto.setReceiptStatus(null);
 
+                // Clear out inactive dropdown values for clone (only active values should be
+                // available)
+                List<String> activeClients = dropdownValueService
+                        .getActiveValuesByCategoryAndSubcategory("TASK", "CLIENT").stream()
+                        .map(dv -> dv.getItemValue()).toList();
+                List<String> activeProjects = dropdownValueService
+                        .getActiveValuesByCategoryAndSubcategory("TASK", "PROJECT").stream()
+                        .map(dv -> dv.getItemValue()).toList();
+                List<String> activeExpenseTypes = dropdownValueService.getActiveExpenseTypes()
+                        .stream().map(dv -> dv.getItemValue()).toList();
+                List<String> activePaymentMethods = dropdownValueService.getActivePaymentMethods()
+                        .stream().map(dv -> dv.getItemValue()).toList();
+                List<String> activeVendors = dropdownValueService
+                        .getActiveValuesByCategoryAndSubcategory("EXPENSE", "VENDOR").stream()
+                        .map(dv -> dv.getItemValue()).toList();
+                List<String> activeCurrencies = dropdownValueService
+                        .getActiveValuesByCategoryAndSubcategory("EXPENSE", "CURRENCY").stream()
+                        .map(dv -> dv.getItemValue()).toList();
+
+                if (dto.getClient() != null && !activeClients.contains(dto.getClient())) {
+                    dto.setClient(null);
+                }
+                if (dto.getProject() != null && !activeProjects.contains(dto.getProject())) {
+                    dto.setProject(null);
+                }
+                if (dto.getExpenseType() != null
+                        && !activeExpenseTypes.contains(dto.getExpenseType())) {
+                    dto.setExpenseType(null);
+                }
+                if (dto.getPaymentMethod() != null
+                        && !activePaymentMethods.contains(dto.getPaymentMethod())) {
+                    dto.setPaymentMethod(null);
+                }
+                if (dto.getVendor() != null && !activeVendors.contains(dto.getVendor())) {
+                    dto.setVendor(null);
+                }
+                if (dto.getCurrency() != null && !activeCurrencies.contains(dto.getCurrency())) {
+                    dto.setCurrency(null);
+                }
+
                 addUserInfo(model, authentication);
                 model.addAttribute(EXPENSE_DTO_ATTR, dto);
                 model.addAttribute(IS_EDIT_ATTR, false);
@@ -474,10 +514,11 @@ public class ExpenseViewController {
                     endDate);
         }
 
+        ExpenseDto dto = convertToDto(expense);
         model.addAttribute("expense", expense);
-        model.addAttribute(EXPENSE_DTO_ATTR, convertToDto(expense));
+        model.addAttribute(EXPENSE_DTO_ATTR, dto);
         model.addAttribute(EXPENSE_ID_ATTR, id);
-        addDropdownOptions(model);
+        addDropdownOptions(model, dto);
         addFileUploadConfig(model);
 
         // Pass filter parameters to the detail view so they can be used when going back
@@ -505,7 +546,7 @@ public class ExpenseViewController {
             addUserInfo(model, authentication);
             model.addAttribute(EXPENSE_ID_ATTR, id);
             model.addAttribute(IS_EDIT_ATTR, true);
-            addDropdownOptions(model);
+            addDropdownOptions(model, expenseDto);
             addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
@@ -1140,39 +1181,90 @@ public class ExpenseViewController {
     }
 
     private void addDropdownOptions(Model model) {
-        model.addAttribute("clients",
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "CLIENT")
-                        .stream().map(dv -> dv.getItemValue()).toList());
-        model.addAttribute("projects",
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "PROJECT")
-                        .stream().map(dv -> dv.getItemValue()).toList());
-        model.addAttribute("expenseTypes", dropdownValueService.getActiveExpenseTypes().stream()
-                .map(dv -> dv.getItemValue()).toList());
-        model.addAttribute("paymentMethods", dropdownValueService.getActivePaymentMethods().stream()
-                .map(dv -> dv.getItemValue()).toList());
-        model.addAttribute("statuses", dropdownValueService.getActiveExpenseStatuses().stream()
-                .map(dv -> dv.getItemValue()).toList());
+        addDropdownOptions(model, null);
+    }
 
-        // Add vendors and currencies for form pages (wrapped in try-catch for safety)
+    /**
+     * Add dropdown options to model, including inactive values if they're currently selected
+     * 
+     * @param model the model to add attributes to
+     * @param dto the current expense (null for new expenses)
+     */
+    private void addDropdownOptions(Model model, ExpenseDto dto) {
+        List<String> clients =
+                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "CLIENT")
+                        .stream().map(dv -> dv.getItemValue()).toList();
+        List<String> projects =
+                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "PROJECT")
+                        .stream().map(dv -> dv.getItemValue()).toList();
+        List<String> expenseTypes = dropdownValueService.getActiveExpenseTypes().stream()
+                .map(dv -> dv.getItemValue()).toList();
+        List<String> paymentMethods = dropdownValueService.getActivePaymentMethods().stream()
+                .map(dv -> dv.getItemValue()).toList();
+        List<String> statuses = dropdownValueService.getActiveExpenseStatuses().stream()
+                .map(dv -> dv.getItemValue()).toList();
+
+        List<String> vendors = java.util.Collections.emptyList();
+        List<String> currencies = java.util.Collections.emptyList();
+
         try {
-            model.addAttribute("vendors",
-                    dropdownValueService
-                            .getActiveValuesByCategoryAndSubcategory("EXPENSE", "VENDOR").stream()
-                            .map(dv -> dv.getItemValue()).toList());
+            vendors = dropdownValueService
+                    .getActiveValuesByCategoryAndSubcategory("EXPENSE", "VENDOR").stream()
+                    .map(dv -> dv.getItemValue()).toList();
         } catch (Exception e) {
             logger.warn("Unable to load vendor dropdown values", e);
-            model.addAttribute("vendors", java.util.Collections.emptyList());
         }
 
         try {
-            model.addAttribute("currencies",
-                    dropdownValueService
-                            .getActiveValuesByCategoryAndSubcategory("EXPENSE", "CURRENCY").stream()
-                            .map(dv -> dv.getItemValue()).toList());
+            currencies = dropdownValueService
+                    .getActiveValuesByCategoryAndSubcategory("EXPENSE", "CURRENCY").stream()
+                    .map(dv -> dv.getItemValue()).toList();
         } catch (Exception e) {
             logger.warn("Unable to load currency dropdown values", e);
-            model.addAttribute("currencies", java.util.Collections.emptyList());
         }
+
+        // When editing/viewing existing expense, include its values even if they're inactive
+        if (dto != null) {
+            if (dto.getClient() != null && !clients.contains(dto.getClient())) {
+                clients = new java.util.ArrayList<>(clients);
+                clients.add(dto.getClient());
+                clients.sort(String::compareTo);
+            }
+            if (dto.getProject() != null && !projects.contains(dto.getProject())) {
+                projects = new java.util.ArrayList<>(projects);
+                projects.add(dto.getProject());
+                projects.sort(String::compareTo);
+            }
+            if (dto.getExpenseType() != null && !expenseTypes.contains(dto.getExpenseType())) {
+                expenseTypes = new java.util.ArrayList<>(expenseTypes);
+                expenseTypes.add(dto.getExpenseType());
+                expenseTypes.sort(String::compareTo);
+            }
+            if (dto.getPaymentMethod() != null
+                    && !paymentMethods.contains(dto.getPaymentMethod())) {
+                paymentMethods = new java.util.ArrayList<>(paymentMethods);
+                paymentMethods.add(dto.getPaymentMethod());
+                paymentMethods.sort(String::compareTo);
+            }
+            if (dto.getVendor() != null && !vendors.contains(dto.getVendor())) {
+                vendors = new java.util.ArrayList<>(vendors);
+                vendors.add(dto.getVendor());
+                vendors.sort(String::compareTo);
+            }
+            if (dto.getCurrency() != null && !currencies.contains(dto.getCurrency())) {
+                currencies = new java.util.ArrayList<>(currencies);
+                currencies.add(dto.getCurrency());
+                currencies.sort(String::compareTo);
+            }
+        }
+
+        model.addAttribute("clients", clients);
+        model.addAttribute("projects", projects);
+        model.addAttribute("expenseTypes", expenseTypes);
+        model.addAttribute("paymentMethods", paymentMethods);
+        model.addAttribute("statuses", statuses);
+        model.addAttribute("vendors", vendors);
+        model.addAttribute("currencies", currencies);
     }
 
     private void addFilterAttributes(Model model, String client, String project, String expenseType,
