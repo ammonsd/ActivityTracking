@@ -149,13 +149,15 @@ All users (except GUEST) must have a valid email address configured in their pro
 **ADMIN (Full Access)**
 
 - ✅ All USER permissions
-- ✅ View and manage all users' tasks
-- ✅ Filter tasks by any username
+- ✅ View and manage all users' tasks (in Task List view)
+- ✅ Filter tasks by any username (in Task List view)
 - ✅ Create, edit, and delete user accounts
 - ✅ Manage roles and permissions - create custom roles and assign permissions via web UI
 - ✅ Manage dropdown values (clients, projects, phases)
 - ✅ Change other users' passwords
 - ✅ All EXPENSE_ADMIN permissions for expenses
+
+**Note:** The Weekly Timesheet view shows only your own tasks, regardless of role. Use the Task List with username filter to view other users' activities.
 
 **Note:** Contact your administrator if you need different access permissions. Administrators can create custom roles tailored to your organization's needs.
 

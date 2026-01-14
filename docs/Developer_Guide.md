@@ -3301,8 +3301,8 @@ GET /task-activity/weekly-timesheet
 
 **Access Control:**
 
-- Regular users: View only their own tasks
-- Administrators: View all tasks across all users
+- All users (including administrators): View only their own tasks
+- The weekly timesheet is a personal view for each user
 
 **Response:** Renders `weekly-timesheet.html` with tasks grouped by day
 
