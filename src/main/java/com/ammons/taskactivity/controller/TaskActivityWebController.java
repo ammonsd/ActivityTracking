@@ -713,24 +713,12 @@ public class TaskActivityWebController {
 
             WeeklyTimesheetService.WeeklyTimesheetData weeklyData;
 
-            // Check if user is admin - admins see all tasks, regular users see only their own
-            boolean isUserAdmin = isAdmin(authentication);
-
-            if (isUserAdmin) {
-                // Admin sees all tasks
-                if (date != null) {
-                    weeklyData = weeklyTimesheetService.getWeeklyTimesheet(date);
-                } else {
-                    weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet();
-                }
+            // All users (including admins) see only their own tasks
+            String username = getUsername(authentication);
+            if (date != null) {
+                weeklyData = weeklyTimesheetService.getWeeklyTimesheet(date, username);
             } else {
-                // Regular users see only their own tasks
-                String username = getUsername(authentication);
-                if (date != null) {
-                    weeklyData = weeklyTimesheetService.getWeeklyTimesheet(date, username);
-                } else {
-                    weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet(username);
-                }
+                weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet(username);
             }
 
             model.addAttribute("weeklyData", weeklyData);
