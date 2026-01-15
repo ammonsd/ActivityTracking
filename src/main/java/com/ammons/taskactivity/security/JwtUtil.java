@@ -1,5 +1,7 @@
 package com.ammons.taskactivity.security;
 
+import com.ammons.taskactivity.entity.Permission;
+import com.ammons.taskactivity.service.PermissionService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -36,6 +39,8 @@ public class JwtUtil {
     private static final String KEY_GENERATION_HELP =
             "Generate a secure key: openssl rand -base64 32";
 
+    private final PermissionService permissionService;
+
     @Value("${jwt.secret:}")
     private String secret;
 
@@ -44,6 +49,10 @@ public class JwtUtil {
 
     @Value("${jwt.refresh.expiration:604800000}") // 7 days in milliseconds
     private Long refreshExpiration;
+
+    public JwtUtil(PermissionService permissionService) {
+        this.permissionService = permissionService;
+    }
 
     /**
      * Validate JWT secret configuration on application startup Prevents application from starting
@@ -144,12 +153,19 @@ public class JwtUtil {
     }
 
     /**
-     * Generate JWT token for user
+     * Generate JWT token for user with roles and permissions
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles",
                 userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+
+        // Add user permissions to JWT claims for @RequirePermission annotation validation
+        Set<Permission> permissions =
+                permissionService.getUserPermissions(userDetails.getUsername());
+        claims.put("permissions",
+                permissions.stream().map(p -> p.getResource() + ":" + p.getAction()).toList());
+
         // SECURITY FIX: Add token_type claim to distinguish access tokens
         claims.put("token_type", "access");
         return createToken(claims, userDetails.getUsername(), expiration);
