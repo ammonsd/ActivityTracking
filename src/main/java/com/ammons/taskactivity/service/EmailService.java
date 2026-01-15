@@ -688,5 +688,140 @@ public class EmailService {
                         """,
                 greeting, urgencyMessage, appName, appName);
     }
+
+    /**
+     * Send Jenkins build success notification.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch that was built
+     * @param commit the Git commit hash
+     * @param buildUrl the URL to view the build
+     */
+    public void sendBuildSuccessNotification(String buildNumber, String branch, String commit,
+            String buildUrl) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping build success notification");
+            return;
+        }
+
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn("No admin email configured - cannot send build success notification");
+            return;
+        }
+
+        String subject = String.format("✅ Jenkins Build %s - SUCCESS", buildNumber);
+        String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null);
+
+        String[] adminEmails = adminEmail.split(",");
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Build success notification sent to {} for build: {}", trimmedEmail,
+                        buildNumber);
+            } catch (Exception e) {
+                logger.error("Failed to send build success notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Send Jenkins build failure notification.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch that was built
+     * @param commit the Git commit hash
+     * @param buildUrl the URL to view the build
+     * @param consoleUrl the URL to view console logs
+     */
+    public void sendBuildFailureNotification(String buildNumber, String branch, String commit,
+            String buildUrl, String consoleUrl) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping build failure notification");
+            return;
+        }
+
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn("No admin email configured - cannot send build failure notification");
+            return;
+        }
+
+        String subject = String.format("❌ Jenkins Build %s - FAILED", buildNumber);
+        String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, false,
+                consoleUrl);
+
+        String[] adminEmails = adminEmail.split(",");
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Build failure notification sent to {} for build: {}", trimmedEmail,
+                        buildNumber);
+            } catch (Exception e) {
+                logger.error("Failed to send build failure notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Builds the email body for Jenkins build notifications.
+     * 
+     * @param buildNumber the build number
+     * @param branch the Git branch
+     * @param commit the Git commit hash
+     * @param buildUrl the URL to view the build
+     * @param success whether the build succeeded
+     * @param consoleUrl optional console log URL (for failures)
+     * @return formatted email body text
+     */
+    private String buildJenkinsBuildEmailBody(String buildNumber, String branch, String commit,
+            String buildUrl, boolean success, String consoleUrl) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+        String status = success ? "SUCCESS" : "FAILURE";
+        String emoji = success ? "✅" : "❌";
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("%s JENKINS BUILD %s%n%n", emoji, status));
+
+        body.append("Build Details:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("Build Number:       %s%n", buildNumber));
+        body.append(String.format("Branch:             %s%n", branch));
+        body.append(String.format("Commit:             %s%n", commit));
+        body.append(String.format("Status:             %s%n", status));
+        body.append(String.format("Timestamp:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+
+        body.append("Links:\n");
+        body.append(String.format("View build: %s%n", buildUrl));
+        if (!success && consoleUrl != null && !consoleUrl.trim().isEmpty()) {
+            body.append(String.format("View logs:  %s%n", consoleUrl));
+        }
+
+        body.append("\n---\n");
+        body.append(String.format("This is an automated notification from %s CI/CD Pipeline.%n",
+                appName));
+        body.append("Do not reply to this email. This email is sent from an unattended mailbox.");
+
+        return body.toString();
+    }
 }
 

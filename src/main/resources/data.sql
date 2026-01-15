@@ -153,6 +153,11 @@ INSERT INTO permissions (resource, action, description) VALUES
     ('EXPENSE', 'MANAGE_RECEIPTS', 'Upload and manage receipt files')
 ON CONFLICT (resource, action) DO NOTHING;
 
+-- Define permissions for Jenkins CI/CD notifications
+INSERT INTO permissions (resource, action, description) VALUES
+    ('JENKINS', 'NOTIFY', 'Send build notifications from Jenkins CI/CD pipeline')
+ON CONFLICT (resource, action) DO NOTHING;
+
 -- Assign permissions to ADMIN role (has everything)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id

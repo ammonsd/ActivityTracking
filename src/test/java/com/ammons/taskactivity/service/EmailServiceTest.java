@@ -208,5 +208,154 @@ class EmailServiceTest {
         assertTrue(body.contains("User Management"));
         assertTrue(body.contains("Account is locked"));
     }
+
+    @Test
+    @DisplayName("Should send build success notification")
+    void testSendBuildSuccessNotification() {
+            // Arrange
+            String buildNumber = "72";
+            String branch = "main";
+            String commit = "abc1234";
+            String buildUrl = "https://jenkins.example.com/job/taskactivity/72/";
+
+            ReflectionTestUtils.setField(emailService, "mailEnabled", true);
+            ReflectionTestUtils.setField(emailService, "useAwsSdk", false);
+            ReflectionTestUtils.setField(emailService, "adminEmail", TEST_ADMIN_EMAIL);
+            ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
+            ReflectionTestUtils.setField(emailService, "appName",
+                            "Task Activity Management System");
+
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                            ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+            // Act
+            emailService.sendBuildSuccessNotification(buildNumber, branch, commit, buildUrl);
+
+            // Assert
+            verify(mailSender, times(1)).send(messageCaptor.capture());
+
+            SimpleMailMessage sentMessage = messageCaptor.getValue();
+            assertEquals(TEST_ADMIN_EMAIL, sentMessage.getTo()[0]);
+            assertEquals(TEST_FROM_EMAIL, sentMessage.getFrom());
+            assertTrue(sentMessage.getSubject().contains("✅"));
+            assertTrue(sentMessage.getSubject().contains("SUCCESS"));
+            assertTrue(sentMessage.getSubject().contains(buildNumber));
+
+            String body = sentMessage.getText();
+            assertTrue(body.contains("SUCCESS"));
+            assertTrue(body.contains(buildNumber));
+            assertTrue(body.contains(branch));
+            assertTrue(body.contains(commit));
+            assertTrue(body.contains(buildUrl));
+            assertTrue(body.contains("✅"));
+    }
+
+    @Test
+    @DisplayName("Should send build failure notification")
+    void testSendBuildFailureNotification() {
+            // Arrange
+            String buildNumber = "73";
+            String branch = "develop";
+            String commit = "def5678";
+            String buildUrl = "https://jenkins.example.com/job/taskactivity/73/";
+            String consoleUrl = "https://jenkins.example.com/job/taskactivity/73/console";
+
+            ReflectionTestUtils.setField(emailService, "mailEnabled", true);
+            ReflectionTestUtils.setField(emailService, "useAwsSdk", false);
+            ReflectionTestUtils.setField(emailService, "adminEmail", TEST_ADMIN_EMAIL);
+            ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
+            ReflectionTestUtils.setField(emailService, "appName",
+                            "Task Activity Management System");
+
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                            ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+            // Act
+            emailService.sendBuildFailureNotification(buildNumber, branch, commit, buildUrl,
+                            consoleUrl);
+
+            // Assert
+            verify(mailSender, times(1)).send(messageCaptor.capture());
+
+            SimpleMailMessage sentMessage = messageCaptor.getValue();
+            assertEquals(TEST_ADMIN_EMAIL, sentMessage.getTo()[0]);
+            assertEquals(TEST_FROM_EMAIL, sentMessage.getFrom());
+            assertTrue(sentMessage.getSubject().contains("❌"));
+            assertTrue(sentMessage.getSubject().contains("FAILED"));
+            assertTrue(sentMessage.getSubject().contains(buildNumber));
+
+            String body = sentMessage.getText();
+            assertTrue(body.contains("FAILURE"));
+            assertTrue(body.contains(buildNumber));
+            assertTrue(body.contains(branch));
+            assertTrue(body.contains(commit));
+            assertTrue(body.contains(buildUrl));
+            assertTrue(body.contains(consoleUrl));
+            assertTrue(body.contains("View logs"));
+            assertTrue(body.contains("❌"));
 }
+
+    @Test
+    @DisplayName("Should not send build notification when email disabled")
+    void testSendBuildNotification_EmailDisabled() {
+            // Arrange
+            ReflectionTestUtils.setField(emailService, "mailEnabled", false);
+            ReflectionTestUtils.setField(emailService, "adminEmail", TEST_ADMIN_EMAIL);
+
+            // Act
+            emailService.sendBuildSuccessNotification("72", "main", "abc1234",
+                            "https://jenkins.example.com/job/taskactivity/72/");
+
+            // Assert
+            verify(mailSender, never()).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should not send build notification when no admin email configured")
+    void testSendBuildNotification_NoAdminEmail() {
+            // Arrange
+            ReflectionTestUtils.setField(emailService, "mailEnabled", true);
+            ReflectionTestUtils.setField(emailService, "adminEmail", "");
+
+            // Act
+            emailService.sendBuildFailureNotification("73", "develop", "def5678",
+                            "https://jenkins.example.com/job/taskactivity/73/",
+                            "https://jenkins.example.com/job/taskactivity/73/console");
+
+            // Assert
+            verify(mailSender, never()).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should send build notification to multiple admin emails")
+    void testSendBuildNotification_MultipleAdmins() {
+            // Arrange
+            String multipleAdmins = "admin1@test.com,admin2@test.com,admin3@test.com";
+
+            ReflectionTestUtils.setField(emailService, "mailEnabled", true);
+            ReflectionTestUtils.setField(emailService, "useAwsSdk", false);
+            ReflectionTestUtils.setField(emailService, "adminEmail", multipleAdmins);
+            ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
+            ReflectionTestUtils.setField(emailService, "appName",
+                            "Task Activity Management System");
+
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                            ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+            // Act
+            emailService.sendBuildSuccessNotification("74", "main", "ghi9012",
+                            "https://jenkins.example.com/job/taskactivity/74/");
+
+            // Assert
+            verify(mailSender, times(3)).send(messageCaptor.capture());
+
+            // Verify emails were sent to all three admins
+            var sentMessages = messageCaptor.getAllValues();
+            assertEquals(3, sentMessages.size());
+            assertTrue(sentMessages.stream().anyMatch(m -> "admin1@test.com".equals(m.getTo()[0])));
+            assertTrue(sentMessages.stream().anyMatch(m -> "admin2@test.com".equals(m.getTo()[0])));
+            assertTrue(sentMessages.stream().anyMatch(m -> "admin3@test.com".equals(m.getTo()[0])));
+    }
+}
+
 
