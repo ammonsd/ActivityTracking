@@ -8,6 +8,7 @@ import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
+import com.ammons.taskactivity.service.PasswordExpirationNotificationService;
 import jakarta.validation.Valid;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
@@ -51,12 +52,15 @@ public class UserManagementController {
     private final UserService userService;
     private final TaskActivityService taskActivityService;
     private final RoleRepository roleRepository;
+    private final PasswordExpirationNotificationService passwordExpirationNotificationService;
 
     public UserManagementController(UserService userService,
-            TaskActivityService taskActivityService, RoleRepository roleRepository) {
+            TaskActivityService taskActivityService, RoleRepository roleRepository,
+            PasswordExpirationNotificationService passwordExpirationNotificationService) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
+        this.passwordExpirationNotificationService = passwordExpirationNotificationService;
     }
 
     /**
@@ -478,6 +482,34 @@ public class UserManagementController {
         logger.info("Displaying guest activity dashboard");
         addUserDisplayInfo(model, authentication);
         return "admin/guest-activity";
+    }
+
+    /**
+     * Manually trigger password expiration check and send notifications (ADMIN only). This endpoint
+     * is useful for testing the notification system without waiting for the scheduled run.
+     */
+    @PostMapping("/trigger-password-expiration-check")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "ADMIN")
+    @ResponseBody
+    public Map<String, Object> triggerPasswordExpirationCheck(Authentication authentication) {
+        logger.info("Admin {} manually triggered password expiration check",
+                authentication.getName());
+
+        try {
+            passwordExpirationNotificationService.checkExpiringPasswordsAndNotify();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Password expiration check completed successfully");
+            return response;
+        } catch (Exception e) {
+            logger.error("Error during manual password expiration check", e);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Error: " + e.getMessage());
+            return response;
+        }
     }
 }
 

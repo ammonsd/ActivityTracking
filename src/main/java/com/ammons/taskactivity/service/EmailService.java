@@ -593,5 +593,100 @@ public class EmailService {
                 Do not reply to this email. This email is sent from an unattended mailbox.
                 """, statusMessage, details.toString(), notesSection.toString(), appName);
     }
+
+    /**
+     * Send password expiration warning notification to user.
+     * 
+     * @param userEmail the user's email address
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @param daysUntilExpiration number of days until password expires
+     */
+    public void sendPasswordExpirationWarning(String userEmail, String username, String fullName,
+            long daysUntilExpiration) {
+        if (!mailEnabled) {
+            logger.debug(
+                    "Email notifications disabled - skipping password expiration warning for user: {}",
+                    username);
+            return;
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            logger.warn("Cannot send password expiration warning - user {} has no email address",
+                    username);
+            return;
+        }
+
+        String subject = String.format("[%s] Password Expiration Warning", appName);
+        String body =
+                buildPasswordExpirationWarningEmailBody(username, fullName, daysUntilExpiration);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(userEmail, subject, body);
+            } else {
+                sendEmailViaSmtp(userEmail, subject, body);
+            }
+            logger.info("Password expiration warning sent to {} for user: {}", userEmail, username);
+        } catch (Exception e) {
+            logger.error("Failed to send password expiration warning to {}: {}", userEmail,
+                    e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Builds the email body for password expiration warning notifications.
+     * 
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @param daysUntilExpiration number of days until password expires
+     * @return formatted email body text
+     */
+    private String buildPasswordExpirationWarningEmailBody(String username, String fullName,
+            long daysUntilExpiration) {
+        String greeting = fullName != null && !fullName.trim().isEmpty() ? fullName : username;
+
+        String urgencyMessage;
+        if (daysUntilExpiration <= 1) {
+            urgencyMessage = "⚠️ URGENT: Your password expires in 1 day!";
+        } else if (daysUntilExpiration <= 3) {
+            urgencyMessage = String.format("⚠️ IMPORTANT: Your password expires in %d days!",
+                    daysUntilExpiration);
+        } else {
+            urgencyMessage =
+                    String.format("Your password will expire in %d days.", daysUntilExpiration);
+        }
+
+        return String.format(
+                """
+                        Hello %s,
+
+                        %s
+
+                        For security purposes, all passwords must be changed every 90 days.
+                        Please change your password before it expires to avoid being locked out of your account.
+
+                        HOW TO CHANGE YOUR PASSWORD:
+                        ----------------------------------------
+                        1. Log in to %s
+                        2. Click the "🔒 Update Password" button in the header
+                        3. Enter your current password and new password
+                        4. Your new password must:
+                           - Be at least 8 characters long
+                           - Not be the same as your current password
+
+                        WHAT HAPPENS IF MY PASSWORD EXPIRES:
+                        ----------------------------------------
+                        If your password expires, you will be prompted to change it immediately upon login.
+                        You will not be able to access the system until you change your password.
+
+                        If you have any questions, please contact your system administrator.
+
+                        ---
+                        This is an automated notification from %s.
+                        Do not reply to this email. This email is sent from an unattended mailbox.
+                        """,
+                greeting, urgencyMessage, appName, appName);
+    }
 }
 

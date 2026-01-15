@@ -28,6 +28,10 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - Automatic notifications when expense status changes (submitted, approved, rejected, reimbursed)
   - Includes expense details, status change reason, and approval notes
   - Requires user email address configured in profile
+- 🔔 **Automated password expiration warnings** via email:
+  - Daily scheduled check at 8:00 AM for passwords expiring within 1-7 days
+  - Urgency-based messaging (URGENT for 1 day, IMPORTANT for 2-3 days)
+  - Manual trigger endpoint for admin testing
 - 👔 Role-based access control:
   - **USER/GUEST**: Create, view, and submit own expenses
   - **EXPENSE_ADMIN**: Approve/reject expenses and mark as reimbursed
@@ -48,8 +52,8 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - Password changes available via dedicated Change Password page
   - Profile updates return to My Profile with confirmation message
   - Password changes redirect back to My Profile after completion
-- 🔐 Secure password management with 90-day expiration policy
-- 🔒 Account lockout protection (5 failed login attempts)
+- 🔐 Secure password management with 90-day expiration policy and automated email warnings
+- 🔒 Account lockout protection (5 failed login attempts) with admin email notifications
 
 ### General Features
 

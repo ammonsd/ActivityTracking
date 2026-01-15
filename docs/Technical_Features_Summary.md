@@ -96,8 +96,9 @@ This document provides a comprehensive summary of all technical features, framew
 - **Custom access denied handler** for authorization failures
 - **Force password update filter** for administrative password resets
 - **Automatic password expiration** with 90-day policy and advance warnings
+- **Automated password expiration notifications** - scheduled daily checks at 8:00 AM for passwords expiring within 1-7 days
 - **Account lockout protection** - automatic lockout after 5 failed login attempts
-- **Email notifications** for security events (account lockouts), expense submissions, and expense status changes
+- **Email notifications** for security events (account lockouts, password expiration warnings), expense submissions, and expense status changes
 - **Email-based authorization** - users must have valid email address to access expense features
 - **Security Headers** (Enhanced January 2026):
   - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
@@ -144,6 +145,16 @@ This document provides a comprehensive summary of all technical features, framew
 - **Application metrics** and monitoring capabilities
 - **Production-ready features** for operational visibility
 
+### Spring Scheduling & Background Tasks
+
+- **@EnableScheduling** - Application-level scheduling configuration
+- **@Scheduled** - Cron-based task execution
+- **Password expiration notification service** - Daily scheduled check at 8:00 AM
+- **Token revocation service** - Daily cleanup at 2:00 AM for expired tokens
+- **Manual trigger endpoints** - Admin endpoints for testing scheduled tasks without waiting
+- **Comprehensive logging** - Detailed logs for scheduled task execution and results
+- **Production-ready** - Scheduling works across multiple ECS Fargate instances
+
 ### Email Notification System
 
 - **Email requirement for expense access** - users must have valid email to access expense features
@@ -152,6 +163,9 @@ This document provides a comprehensive summary of all technical features, framew
 - **Multiple approver support** - comma-separated list of approver emails in configuration
 - **Status-specific messaging** - custom email content based on status change type
 - **Processor identification** - displays full name of approver/reimbursor in emails
+- **Password expiration warnings** - automated daily scheduled task (8:00 AM) sends warnings to users 1-7 days before password expires
+- **Urgency-based password warnings** - email messaging adapts based on days until expiration (URGENT, IMPORTANT, standard)
+- **Account lockout notifications** - automated alerts sent to administrators when accounts are locked due to failed login attempts
 - **Email validation** - @Email annotation on User entity and DTOs
 - **Authorization checks** - UserService.userHasEmail() validates access to expense features
 - **UI access control** - expense buttons/links hidden for users without email addresses
