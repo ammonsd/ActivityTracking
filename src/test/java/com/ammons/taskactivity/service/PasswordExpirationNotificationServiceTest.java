@@ -57,7 +57,8 @@ class PasswordExpirationNotificationServiceTest {
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User user = createUser("testuser", "test@example.com", expiresIn5Days, userRole);
-        user.setFullName("Test User");
+        user.setFirstname("Test");
+        user.setLastname("User");
 
         when(userRepository.findAll()).thenReturn(List.of(user));
 
@@ -149,7 +150,7 @@ class PasswordExpirationNotificationServiceTest {
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User lockedUser = createUser("testuser", "test@example.com", expiresIn5Days, userRole);
-        lockedUser.setLocked(true);
+        lockedUser.setAccountLocked(true);
 
         when(userRepository.findAll()).thenReturn(List.of(lockedUser));
 
@@ -208,8 +209,9 @@ class PasswordExpirationNotificationServiceTest {
         user.setExpirationDate(expirationDate);
         user.setRole(role);
         user.setEnabled(true);
-        user.setLocked(false);
-        user.setFullName("Full Name");
+        user.setAccountLocked(false);
+        user.setFirstname("First");
+        user.setLastname("Name");
         return user;
     }
 }
