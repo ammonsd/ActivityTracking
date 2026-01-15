@@ -79,6 +79,10 @@ pipeline {
         
         // Application version from pom.xml
         APP_VERSION = readMavenPom().getVersion()
+        
+        // Build Notifications Configuration
+        APP_URL = 'https://taskactivitytracker.com'
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')  // JWT token with JENKINS:NOTIFY permission
     }
     
     options {
@@ -490,10 +494,38 @@ pipeline {
                 echo "Image: ${IMAGE_FULL}"
                 echo "========================================="
                 
-                // Send success notification (configure as needed)
-                // emailext subject: "SUCCESS: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                //          body: "Build completed successfully",
-                //          to: "team@example.com"
+                // Send success notification to Task Activity application
+                try {
+                    def response = sh(
+                        script: """
+                            curl -s -w '\\n%{http_code}' -X POST ${APP_URL}/api/jenkins/build-success \\
+                                 -H "Content-Type: application/json" \\
+                                 -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
+                                 -d '{
+                                     "buildNumber": "${BUILD_NUMBER}",
+                                     "branch": "${env.GIT_BRANCH ?: 'main'}",
+                                     "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                                     "buildUrl": "${BUILD_URL}"
+                                 }'
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    def lines = response.split('\n')
+                    def httpCode = lines[-1]
+                    def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
+                    
+                    if (httpCode == '200') {
+                        echo "✓ Build success notification sent successfully"
+                        echo "Response: ${body}"
+                    } else {
+                        echo "⚠ Build success notification failed with HTTP ${httpCode}"
+                        echo "Response: ${body}"
+                    }
+                } catch (Exception e) {
+                    echo "⚠ Failed to send build success notification: ${e.message}"
+                    // Don't fail the build if notification fails
+                }
             }
         }
         
@@ -507,10 +539,39 @@ pipeline {
                 echo "Check console output for details"
                 echo "========================================="
                 
-                // Send failure notification (configure as needed)
-                // emailext subject: "FAILURE: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                //          body: "Build failed - please check console output",
-                //          to: "team@example.com"
+                // Send failure notification to Task Activity application
+                try {
+                    def response = sh(
+                        script: """
+                            curl -s -w '\\n%{http_code}' -X POST ${APP_URL}/api/jenkins/build-failure \\
+                                 -H "Content-Type: application/json" \\
+                                 -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
+                                 -d '{
+                                     "buildNumber": "${BUILD_NUMBER}",
+                                     "branch": "${env.GIT_BRANCH ?: 'main'}",
+                                     "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                                     "buildUrl": "${BUILD_URL}",
+                                     "consoleUrl": "${BUILD_URL}console"
+                                 }'
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    def lines = response.split('\n')
+                    def httpCode = lines[-1]
+                    def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
+                    
+                    if (httpCode == '200') {
+                        echo "✓ Build failure notification sent successfully"
+                        echo "Response: ${body}"
+                    } else {
+                        echo "⚠ Build failure notification failed with HTTP ${httpCode}"
+                        echo "Response: ${body}"
+                    }
+                } catch (Exception e) {
+                    echo "⚠ Failed to send build failure notification: ${e.message}"
+                    // Don't fail the build if notification fails
+                }
             }
         }
         
