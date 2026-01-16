@@ -620,6 +620,30 @@
                     </div>
                     
                     <ul class="sidebar-menu-list">
+                        <!-- Update Password - visible for all, disabled for GUEST -->
+                        <li>
+                            <a 
+                                th:href="${isGuest} ? '#' : @{/change-password}"
+                                title="Update Password"
+                                th:classappend="${isGuest} ? 'disabled' : ''"
+                                th:onclick="${isGuest} ? 'event.preventDefault(); return false;' : ''"
+                            >
+                                <span class="menu-icon">🔒</span>
+                                <span>Update Password</span>
+                            </a>
+                        </li>
+                        <!-- Update Profile - visible for all, disabled for GUEST -->
+                        <li>
+                            <a 
+                                th:href="${isGuest} ? '#' : @{/profile}"
+                                title="Update Profile"
+                                th:classappend="${isGuest} ? 'disabled' : ''"
+                                th:onclick="${isGuest} ? 'event.preventDefault(); return false;' : ''"
+                            >
+                                <span class="menu-icon">👤</span>
+                                <span>Update Profile</span>
+                            </a>
+                        </li>
                         <!-- Export CSV - visible for all, disabled for GUEST -->
                         <li th:if="${userHasEmail}">
                             <button 

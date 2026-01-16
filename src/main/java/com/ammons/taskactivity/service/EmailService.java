@@ -672,7 +672,7 @@ public class EmailService {
                         HOW TO CHANGE YOUR PASSWORD:
                         ----------------------------------------
                         1. Log in to %s
-                        2. Click the "🔒 Update Password" button in the header
+                        2. Open the sidebar menu and click "🔒 Update Password"
                         3. Enter your current password and new password
                         4. Your new password must:
                            - Be at least 8 characters long
