@@ -1,6 +1,10 @@
 package com.ammons.taskactivity.exception;
 
 import com.ammons.taskactivity.dto.ApiResponse;
+import com.ammons.taskactivity.entity.Permission;
+import com.ammons.taskactivity.entity.Roles;
+import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -8,6 +12,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * REST API Exception Handler for centralized error handling. Handles exceptions thrown by REST
@@ -30,6 +37,11 @@ import java.util.Map;
 public class RestExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(RestExceptionHandler.class);
+    private final UserRepository userRepository;
+
+    public RestExceptionHandler(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /**
      * Handle validation errors from @Valid annotations
@@ -78,15 +90,59 @@ public class RestExceptionHandler {
     }
 
     /**
-     * Handle AccessDeniedException - authorization failures
+     * Handle AccessDeniedException - authorization failures Includes detailed debugging information
+     * for permission issues
      */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleAccessDenied(
+            AccessDeniedException ex) {
 
         logger.warn("Access denied: {}", ex.getMessage());
 
-        ApiResponse<Void> response =
-                ApiResponse.error("You don't have permission to access this resource");
+        // Get detailed debugging information
+        Map<String, Object> debugInfo = new HashMap<>();
+        debugInfo.put("error", "Access Denied");
+        debugInfo.put("message", "You don't have permission to access this resource");
+
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                String username = authentication.getName();
+                debugInfo.put("username", username);
+                debugInfo.put("authenticated", authentication.isAuthenticated());
+                debugInfo.put("authorities", authentication.getAuthorities().stream()
+                        .map(a -> a.getAuthority()).collect(Collectors.toList()));
+
+                // Get user details from database
+                User user = userRepository.findByUsername(username).orElse(null);
+                if (user != null) {
+                    debugInfo.put("userFound", true);
+                    debugInfo.put("userEnabled", user.isEnabled());
+                    debugInfo.put("userLocked", user.isAccountLocked());
+
+                    Roles role = user.getRole();
+                    if (role != null) {
+                        debugInfo.put("roleName", role.getName());
+                        debugInfo.put("permissionCount", role.getPermissions().size());
+                        debugInfo.put("permissions",
+                                role.getPermissions().stream()
+                                        .map(p -> p.getResource() + ":" + p.getAction())
+                                        .collect(Collectors.toList()));
+                    } else {
+                        debugInfo.put("roleAssigned", false);
+                    }
+                } else {
+                    debugInfo.put("userFound", false);
+                }
+            } else {
+                debugInfo.put("authenticated", false);
+            }
+        } catch (Exception e) {
+            debugInfo.put("debugError", "Failed to gather debug info: " + e.getMessage());
+            logger.error("Error gathering debug info", e);
+        }
+
+        ApiResponse<Map<String, Object>> response = ApiResponse.error("Access Denied", debugInfo);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
