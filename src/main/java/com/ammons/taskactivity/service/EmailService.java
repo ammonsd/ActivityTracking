@@ -675,9 +675,10 @@ public class EmailService {
                         HOW TO CHANGE YOUR PASSWORD:
                         ----------------------------------------
                         1. Log in to %s
-                        2. Open the sidebar menu and click "🔒 Update Password"
-                        3. Enter your current password and new password
-                        4. Your new password must:
+                        2. Click "👤 Update Profile" in the sidebar menu
+                        3. Click the "🔒 Update Password" button at the bottom of the page
+                        4. Enter your current password and new password
+                        5. Your new password must:
                            - Be at least 8 characters long
                            - Not be the same as your current password
 

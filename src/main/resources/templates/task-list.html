@@ -624,22 +624,10 @@
                     </div>
                     
                     <ul class="sidebar-menu-list">
-                        <!-- Update Password - visible for all, disabled for GUEST -->
-                        <li>
-                            <a 
-                                th:href="${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/change-password}"
-                                title="Update Password"
-                                th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
-                                th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
-                            >
-                                <span class="menu-icon">🔒</span>
-                                <span>Update Password</span>
-                            </a>
-                        </li>
                         <!-- Update Profile - visible for all, disabled for GUEST -->
                         <li>
                             <a 
-                                th:href="${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/profile}"
+                                th:href="${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/profile/edit}"
                                 title="Update Profile"
                                 th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                                 th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
