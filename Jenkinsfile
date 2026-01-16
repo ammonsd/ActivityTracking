@@ -497,17 +497,34 @@ pipeline {
                 
                 // Send success notification to Task Activity application
                 try {
+                    def endpoint = params.DEPLOY_ACTION == 'deploy' ? 
+                        "${APP_URL}/api/jenkins/deploy-success" : 
+                        "${APP_URL}/api/jenkins/build-success"
+                    
+                    def payload = params.DEPLOY_ACTION == 'deploy' ? """
+                        {
+                            "buildNumber": "${BUILD_NUMBER}",
+                            "branch": "${env.GIT_BRANCH ?: 'main'}",
+                            "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                            "deployUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                            "environment": "${params.ENVIRONMENT}"
+                        }
+                    """ : """
+                        {
+                            "buildNumber": "${BUILD_NUMBER}",
+                            "branch": "${env.GIT_BRANCH ?: 'main'}",
+                            "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                            "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                            "environment": "${params.ENVIRONMENT}"
+                        }
+                    """
+                    
                     def response = sh(
                         script: """
-                            curl -s -w '\\n%{http_code}' -X POST ${APP_URL}/api/jenkins/build-success \\
+                            curl -s -w '\\n%{http_code}' -X POST ${endpoint} \\
                                  -H "Content-Type: application/json" \\
                                  -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
-                                 -d '{
-                                     "buildNumber": "${BUILD_NUMBER}",
-                                     "branch": "${env.GIT_BRANCH ?: 'main'}",
-                                     "commit": "${env.GIT_COMMIT ?: 'unknown'}",
-                                     "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/"
-                                 }'
+                                 -d '${payload}'
                         """,
                         returnStdout: true
                     ).trim()
@@ -517,14 +534,15 @@ pipeline {
                     def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
                     
                     if (httpCode == '200') {
-                        echo "✓ Build success notification sent successfully"
+                        def notificationType = params.DEPLOY_ACTION == 'deploy' ? 'Deploy' : 'Build'
+                        echo "✓ ${notificationType} success notification sent successfully"
                         echo "Response: ${body}"
                     } else {
-                        echo "⚠ Build success notification failed with HTTP ${httpCode}"
+                        echo "⚠ Notification failed with HTTP ${httpCode}"
                         echo "Response: ${body}"
                     }
                 } catch (Exception e) {
-                    echo "⚠ Failed to send build success notification: ${e.message}"
+                    echo "⚠ Failed to send notification: ${e.message}"
                     // Don't fail the build if notification fails
                 }
             }
@@ -542,18 +560,35 @@ pipeline {
                 
                 // Send failure notification to Task Activity application
                 try {
+                    def endpoint = params.DEPLOY_ACTION == 'deploy' ? 
+                        "${APP_URL}/api/jenkins/deploy-failure" : 
+                        "${APP_URL}/api/jenkins/build-failure"
+                    
+                    def payload = params.DEPLOY_ACTION == 'deploy' ? """
+                        {
+                            "buildNumber": "${BUILD_NUMBER}",
+                            "branch": "${env.GIT_BRANCH ?: 'main'}",
+                            "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                            "deployUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                            "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console",
+                            "environment": "${params.ENVIRONMENT}"
+                        }
+                    """ : """
+                        {
+                            "buildNumber": "${BUILD_NUMBER}",
+                            "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                            "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                            "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console",
+                            "environment": "${params.ENVIRONMENT}"
+                        }
+                    """
+                    
                     def response = sh(
                         script: """
-                            curl -s -w '\\n%{http_code}' -X POST ${APP_URL}/api/jenkins/build-failure \\
+                            curl -s -w '\\n%{http_code}' -X POST ${endpoint} \\
                                  -H "Content-Type: application/json" \\
                                  -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
-                                 -d '{
-                                     "buildNumber": "${BUILD_NUMBER}",
-                                    //  "branch": "${env.GIT_BRANCH ?: 'main'}",
-                                     "commit": "${env.GIT_COMMIT ?: 'unknown'}",
-                                     "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
-                                     "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console"
-                                 }'
+                                 -d '${payload}'
                         """,
                         returnStdout: true
                     ).trim()
@@ -563,14 +598,15 @@ pipeline {
                     def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
                     
                     if (httpCode == '200') {
-                        echo "✓ Build failure notification sent successfully"
+                        def notificationType = params.DEPLOY_ACTION == 'deploy' ? 'Deploy' : 'Build'
+                        echo "✓ ${notificationType} failure notification sent successfully"
                         echo "Response: ${body}"
                     } else {
-                        echo "⚠ Build failure notification failed with HTTP ${httpCode}"
+                        echo "⚠ Notification failed with HTTP ${httpCode}"
                         echo "Response: ${body}"
                     }
                 } catch (Exception e) {
-                    echo "⚠ Failed to send build failure notification: ${e.message}"
+                    echo "⚠ Failed to send notification: ${e.message}"
                     // Don't fail the build if notification fails
                 }
             }

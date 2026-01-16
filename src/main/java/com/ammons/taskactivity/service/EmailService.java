@@ -703,9 +703,10 @@ public class EmailService {
      * @param branch the Git branch that was built
      * @param commit the Git commit hash
      * @param buildUrl the URL to view the build
+     * @param environment the build environment (e.g., dev, staging, production)
      */
     public void sendBuildSuccessNotification(String buildNumber, String branch, String commit,
-            String buildUrl) {
+            String buildUrl, String environment) {
         if (!mailEnabled) {
             logger.debug("Email notifications disabled - skipping build success notification");
             return;
@@ -719,7 +720,8 @@ public class EmailService {
         }
 
         String subject = String.format("✅ Jenkins Build %s - SUCCESS", buildNumber);
-        String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null);
+        String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null,
+                environment);
 
         String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
         for (String email : jenkinsEmails) {
@@ -751,9 +753,10 @@ public class EmailService {
      * @param commit the Git commit hash
      * @param buildUrl the URL to view the build
      * @param consoleUrl the URL to view console logs
+     * @param environment the build environment (e.g., dev, staging, production)
      */
     public void sendBuildFailureNotification(String buildNumber, String branch, String commit,
-            String buildUrl, String consoleUrl) {
+            String buildUrl, String consoleUrl, String environment) {
         if (!mailEnabled) {
             logger.debug("Email notifications disabled - skipping build failure notification");
             return;
@@ -768,7 +771,7 @@ public class EmailService {
 
         String subject = String.format("❌ Jenkins Build %s - FAILED", buildNumber);
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, false,
-                consoleUrl);
+                consoleUrl, environment);
 
         String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
         for (String email : jenkinsEmails) {
@@ -902,10 +905,11 @@ public class EmailService {
      * @param buildUrl the URL to view the build
      * @param success whether the build succeeded
      * @param consoleUrl optional console log URL (for failures)
+     * @param environment the build environment
      * @return formatted email body text
      */
     private String buildJenkinsBuildEmailBody(String buildNumber, String branch, String commit,
-            String buildUrl, boolean success, String consoleUrl) {
+            String buildUrl, boolean success, String consoleUrl, String environment) {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
         String status = success ? "SUCCESS" : "FAILURE";
         String emoji = success ? "✅" : "❌";
@@ -917,6 +921,8 @@ public class EmailService {
         body.append("----------------------------------------\n");
         body.append(String.format("Action Type:        BUILD%n"));
         body.append(String.format("Build Number:       %s%n", buildNumber));
+        body.append(String.format("Environment:        %s%n",
+                environment != null ? environment.toUpperCase() : "UNKNOWN"));
         body.append(String.format("Branch:             %s%n", branch));
         body.append(String.format("Commit:             %s%n", commit));
         body.append(String.format("Status:             %s%n", status));
@@ -966,15 +972,6 @@ public class EmailService {
                 environment != null ? environment.toUpperCase() : "UNKNOWN"));
         body.append(String.format("Status:             %s%n", status));
         body.append(String.format("Timestamp:          %s%n", timestamp));
-        body.append("----------------------------------------\n\n");
-
-        body.append("Git Information:\n");
-        body.append("----------------------------------------\n");
-        body.append(String.format("Branch:%n"));
-        body.append(String.format("    %s%n", branch));
-        body.append(String.format("%n"));
-        body.append(String.format("Commit Hash:%n"));
-        body.append(String.format("    %s%n", commit));
         body.append("----------------------------------------\n\n");
 
         body.append("Links:\n");
