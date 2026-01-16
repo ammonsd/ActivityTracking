@@ -179,6 +179,13 @@ public class SecurityConfig {
                                                 // JWT Authentication endpoints - public access
                                                 .requestMatchers("/api/auth/**").permitAll()
 
+                                                // Jenkins API endpoints - require JENKINS_SERVICE
+                                                // role
+                                                // Method-level @RequirePermission annotations
+                                                // control granular access
+                                                .requestMatchers("/api/jenkins/**")
+                                                .hasRole("JENKINS_SERVICE")
+
                                                 // Admin API endpoints - require authentication
                                                 // Method-level @RequirePermission annotations
                                                 // control
