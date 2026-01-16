@@ -964,10 +964,17 @@ public class EmailService {
         body.append(String.format("Build Number:       %s%n", buildNumber));
         body.append(String.format("Environment:        %s%n",
                 environment != null ? environment.toUpperCase() : "UNKNOWN"));
-        body.append(String.format("Branch:             %s%n", branch));
-        body.append(String.format("Commit:             %s%n", commit));
         body.append(String.format("Status:             %s%n", status));
         body.append(String.format("Timestamp:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+
+        body.append("Git Information:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("Branch:%n"));
+        body.append(String.format("    %s%n", branch));
+        body.append(String.format("%n"));
+        body.append(String.format("Commit Hash:%n"));
+        body.append(String.format("    %s%n", commit));
         body.append("----------------------------------------\n\n");
 
         body.append("Links:\n");
