@@ -1,13 +1,23 @@
 package com.ammons.taskactivity.config;
 
+import com.ammons.taskactivity.entity.Permission;
+import com.ammons.taskactivity.entity.Roles;
+import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Custom Access Denied Handler that provides intelligent response handling based on request type
@@ -28,6 +38,14 @@ import java.io.IOException;
  */
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
+
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
+
+    public CustomAccessDeniedHandler(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        this.objectMapper = new ObjectMapper();
+    }
 
     /**
      * Handles access denied scenarios with intelligent response routing based on request type.
@@ -67,11 +85,53 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                 && !accept.contains("text/html");
 
         if (isAjaxRequest || isApiRequest || requestsJson) {
-            // For AJAX/API requests, return JSON response
+            // For AJAX/API requests, return JSON response with debug info
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"error\":\"Access Denied\",\"message\":\"You don't have permission to access this resource\"}");
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Access Denied");
+            errorResponse.put("message", "You don't have permission to access this resource");
+
+            try {
+                Authentication authentication =
+                        SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null) {
+                    String username = authentication.getName();
+                    errorResponse.put("username", username);
+                    errorResponse.put("authenticated", authentication.isAuthenticated());
+                    errorResponse.put("authorities", authentication.getAuthorities().stream()
+                            .map(a -> a.getAuthority()).collect(Collectors.toList()));
+
+                    // Get user details from database
+                    User user = userRepository.findByUsername(username).orElse(null);
+                    if (user != null) {
+                        errorResponse.put("userFound", true);
+                        errorResponse.put("userEnabled", user.isEnabled());
+                        errorResponse.put("userLocked", user.isAccountLocked());
+
+                        Roles role = user.getRole();
+                        if (role != null) {
+                            errorResponse.put("roleName", role.getName());
+                            errorResponse.put("permissionCount", role.getPermissions().size());
+                            errorResponse.put("permissions",
+                                    role.getPermissions().stream()
+                                            .map(p -> p.getResource() + ":" + p.getAction())
+                                            .collect(Collectors.toList()));
+                        } else {
+                            errorResponse.put("roleAssigned", false);
+                        }
+                    } else {
+                        errorResponse.put("userFound", false);
+                    }
+                } else {
+                    errorResponse.put("authenticated", false);
+                }
+            } catch (Exception e) {
+                errorResponse.put("debugError", "Failed to gather debug info: " + e.getMessage());
+            }
+
+            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         } else {
             // For regular web requests, redirect to friendly error page
             String targetUrl = request.getRequestURI();
