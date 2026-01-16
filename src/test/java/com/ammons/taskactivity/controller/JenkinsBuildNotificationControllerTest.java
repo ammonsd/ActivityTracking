@@ -51,7 +51,9 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_Success() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
-                        "abc1234", "https://jenkins.example.com/job/taskactivity/72/", null);
+                                        "abc1234",
+                                        "https://jenkins.example.com/job/taskactivity/72/", null,
+                                        "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
@@ -59,7 +61,8 @@ class JenkinsBuildNotificationControllerTest {
                         .value("Build success notification sent for build: 72"));
 
         verify(emailService, times(1)).sendBuildSuccessNotification(eq("72"), eq("main"),
-                eq("abc1234"), eq("https://jenkins.example.com/job/taskactivity/72/"));
+                        eq("abc1234"), eq("https://jenkins.example.com/job/taskactivity/72/"),
+                        eq("production"));
     }
 
     @Test
@@ -68,7 +71,8 @@ class JenkinsBuildNotificationControllerTest {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("73", "develop",
                         "def5678", "https://jenkins.example.com/job/taskactivity/73/",
-                        "https://jenkins.example.com/job/taskactivity/73/console");
+                                        "https://jenkins.example.com/job/taskactivity/73/console",
+                                        "staging");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
@@ -77,7 +81,8 @@ class JenkinsBuildNotificationControllerTest {
 
         verify(emailService, times(1)).sendBuildFailureNotification(eq("73"), eq("develop"),
                 eq("def5678"), eq("https://jenkins.example.com/job/taskactivity/73/"),
-                eq("https://jenkins.example.com/job/taskactivity/73/console"));
+                        eq("https://jenkins.example.com/job/taskactivity/73/console"),
+                        eq("staging"));
     }
 
     @Test
@@ -85,14 +90,16 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildFailure_DefaultConsoleUrl() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("74", "main",
-                        "ghi9012", "https://jenkins.example.com/job/taskactivity/74/", null);
+                                        "ghi9012",
+                                        "https://jenkins.example.com/job/taskactivity/74/", null,
+                                        "dev");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
         verify(emailService, times(1)).sendBuildFailureNotification(eq("74"), eq("main"),
                 eq("ghi9012"), eq("https://jenkins.example.com/job/taskactivity/74/"),
-                eq("https://jenkins.example.com/job/taskactivity/74/console"));
+                        eq("https://jenkins.example.com/job/taskactivity/74/console"), eq("dev"));
     }
 
     @Test
@@ -100,14 +107,17 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_MissingBuildNumber() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest(null, "main",
-                        "abc1234", "https://jenkins.example.com/job/taskactivity/72/", null);
+                                        "abc1234",
+                                        "https://jenkins.example.com/job/taskactivity/72/", null,
+                                        "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Build number is required"));
 
-        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any(),
+                        any());
     }
 
     @Test
@@ -115,14 +125,17 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_EmptyBuildNumber() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("", "main",
-                        "abc1234", "https://jenkins.example.com/job/taskactivity/72/", null);
+                                        "abc1234",
+                                        "https://jenkins.example.com/job/taskactivity/72/", null,
+                                        "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Build number is required"));
 
-        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any(),
+                        any());
     }
 
     @Test
@@ -130,14 +143,15 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_MissingBuildUrl() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
-                        "abc1234", null, null);
+                                        "abc1234", null, null, "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Build URL is required"));
 
-        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any(),
+                        any());
     }
 
     @Test
@@ -145,7 +159,7 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildFailure_MissingBuildUrl() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("73", "develop",
-                        "def5678", "", null);
+                                        "def5678", "", null, "staging");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -153,7 +167,7 @@ class JenkinsBuildNotificationControllerTest {
                 .andExpect(jsonPath("$.message").value("Build URL is required"));
 
         verify(emailService, never()).sendBuildFailureNotification(any(), any(), any(), any(),
-                any());
+                        any(), any());
     }
 
     @Test
@@ -161,26 +175,32 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_InsufficientPermissions() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
-                        "abc1234", "https://jenkins.example.com/job/taskactivity/72/", null);
+                                        "abc1234",
+                                        "https://jenkins.example.com/job/taskactivity/72/", null,
+                                        "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any(),
+                        any());
     }
 
     @Test
     void testNotifyBuildSuccess_Unauthenticated() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
-                        "abc1234", "https://jenkins.example.com/job/taskactivity/72/", null);
+                                        "abc1234",
+                                        "https://jenkins.example.com/job/taskactivity/72/", null,
+                                        "production");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
 
-        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendBuildSuccessNotification(any(), any(), any(), any(),
+                        any());
     }
 
     @Test
@@ -188,13 +208,14 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_OptionalFieldsNull() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("75", null, null,
-                        "https://jenkins.example.com/job/taskactivity/75/", null);
+                                        "https://jenkins.example.com/job/taskactivity/75/", null,
+                                        null);
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
         verify(emailService, times(1)).sendBuildSuccessNotification(eq("75"), isNull(), isNull(),
-                eq("https://jenkins.example.com/job/taskactivity/75/"));
+                        eq("https://jenkins.example.com/job/taskactivity/75/"), isNull());
     }
 }

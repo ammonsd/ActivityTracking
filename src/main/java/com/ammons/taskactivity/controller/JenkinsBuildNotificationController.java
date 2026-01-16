@@ -102,7 +102,7 @@ public class JenkinsBuildNotificationController {
         }
 
         emailService.sendBuildSuccessNotification(request.buildNumber(), request.branch(),
-                request.commit(), request.buildUrl());
+                        request.commit(), request.buildUrl(), request.environment());
 
         return ResponseEntity.ok(ApiResponse
                 .success("Build success notification sent for build: " + request.buildNumber()));
@@ -149,7 +149,7 @@ public class JenkinsBuildNotificationController {
                 : request.buildUrl() + "console";
 
         emailService.sendBuildFailureNotification(request.buildNumber(), request.branch(),
-                request.commit(), request.buildUrl(), consoleUrl);
+                        request.commit(), request.buildUrl(), consoleUrl, request.environment());
 
         return ResponseEntity.ok(ApiResponse
                 .success("Build failure notification sent for build: " + request.buildNumber()));
@@ -282,7 +282,9 @@ public class JenkinsBuildNotificationController {
                     example = "https://jenkins.example.com/job/taskactivity/72/",
                     required = true) String buildUrl,
             @Schema(description = "Console log URL (optional, defaults to buildUrl/console)",
-                    example = "https://jenkins.example.com/job/taskactivity/72/console") String consoleUrl) {
+                                    example = "https://jenkins.example.com/job/taskactivity/72/console") String consoleUrl,
+                    @Schema(description = "Build environment",
+                                    example = "production") String environment) {
     }
 
     /**

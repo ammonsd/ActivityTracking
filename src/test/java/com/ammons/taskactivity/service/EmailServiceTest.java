@@ -229,7 +229,8 @@ class EmailServiceTest {
                             ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
-            emailService.sendBuildSuccessNotification(buildNumber, branch, commit, buildUrl);
+            emailService.sendBuildSuccessNotification(buildNumber, branch, commit, buildUrl,
+                            "production");
 
             // Assert
             verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -272,7 +273,7 @@ class EmailServiceTest {
 
             // Act
             emailService.sendBuildFailureNotification(buildNumber, branch, commit, buildUrl,
-                            consoleUrl);
+                            consoleUrl, "staging");
 
             // Assert
             verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -304,7 +305,7 @@ class EmailServiceTest {
 
             // Act
             emailService.sendBuildSuccessNotification("72", "main", "abc1234",
-                            "https://jenkins.example.com/job/taskactivity/72/");
+                            "https://jenkins.example.com/job/taskactivity/72/", "dev");
 
             // Assert
             verify(mailSender, never()).send(any(SimpleMailMessage.class));
@@ -320,7 +321,7 @@ class EmailServiceTest {
             // Act
             emailService.sendBuildFailureNotification("73", "develop", "def5678",
                             "https://jenkins.example.com/job/taskactivity/73/",
-                            "https://jenkins.example.com/job/taskactivity/73/console");
+                            "https://jenkins.example.com/job/taskactivity/73/console", "staging");
 
             // Assert
             verify(mailSender, never()).send(any(SimpleMailMessage.class));
@@ -344,7 +345,7 @@ class EmailServiceTest {
 
             // Act
             emailService.sendBuildSuccessNotification("74", "main", "ghi9012",
-                            "https://jenkins.example.com/job/taskactivity/74/");
+                            "https://jenkins.example.com/job/taskactivity/74/", "production");
 
             // Assert
             verify(mailSender, times(3)).send(messageCaptor.capture());
