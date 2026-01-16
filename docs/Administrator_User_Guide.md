@@ -33,6 +33,7 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 3. Click **✕** or the menu button again to close
 
 **Menu Items (Admin View):**
+- **� Update Profile**: Access your profile to update your information and password
 - **👥 Manage Users**: Create, edit, and manage user accounts
 - **📊 Guest Activity**: View login activity reports for GUEST users
 - **🔧 Manage Dropdowns**: Configure clients, projects, phases, and expense types
@@ -40,8 +41,8 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 **Role-Based Visibility:**
 - **ADMIN**: All menu items enabled
-- **GUEST**: Menu visible but administrative options disabled
-- **USER**: Export CSV available, administrative functions hidden
+- **GUEST**: Menu visible but all options disabled (read-only)
+- **USER**: Update Profile and Export CSV available, administrative functions hidden
 
 ## Administrator Features
 
@@ -333,8 +334,9 @@ Users can access their profile through:
 
 **Password Management:**
 
-- Users can change their own password via the "Update Password" button in My Profile
-- Password changes redirect back to My Profile after completion
+- Users can change their own password via the **"🔒 Update Password"** button in their profile page
+- To access: Click **"👤 Update Profile"** in the sidebar menu, then click **"🔒 Update Password"** at the bottom
+- Password changes redirect back to the profile page after completion
 - Passwords must meet security requirements:
   - Minimum 10 characters
   - At least 1 uppercase letter

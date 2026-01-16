@@ -54,13 +54,13 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 **Menu Items:**
 
-- **📊 Dashboard**: Return to Admin Dashboard
-- **�👥 Manage Users** (Admin only): Manage user accounts
+- **👤 Update Profile**: Access your profile to update your information and password
+- **👥 Manage Users** (Admin only): Manage user accounts
 - **📊 Guest Activity** (Admin only): View guest user activity reports
 - **🔧 Manage Dropdowns** (Admin only): Configure dropdown options for clients, projects, and phases
 - **📋 Export CSV**: Export filtered task list to CSV format
 
-**Note:** Guest users can see the menu but administrative options will be disabled.
+**Note:** Guest users can see the menu but administrative options (including Update Profile) will be disabled.
 
 ### Exporting Task List to CSV
 
@@ -251,9 +251,10 @@ To protect your account from unauthorized access, the system automatically locks
 
 **What to Do:**
 
-1. Click the **"🔒 Update Password"** button in the header
-2. Follow the password change process (see "Changing Your Password" section below)
-3. Your new password will be valid for another 90 days
+1. Click **"👤 Update Profile"** in the sidebar menu
+2. Click the **"🔒 Update Password"** button at the bottom of the profile page
+3. Follow the password change process (see "Changing Your Password" section below)
+4. Your new password will be valid for another 90 days
 
 **Expired Password:**
 
@@ -523,10 +524,10 @@ The Expense List page includes a **floating sidebar menu** for quick access to e
 
 **Menu Items:**
 
+- **� Update Profile**: Access your profile to update your information and password
 - **📋 Export CSV**: Export filtered expense list to CSV format (read-only for Guest users)
-- **📊 Dashboard**: Return to Admin Dashboard
 
-**Note:** Guest users can see the menu but the Export CSV option will be disabled.
+**Note:** Guest users can see the menu but Update Profile and Export CSV options will be disabled.
 
 ### Filtering Expenses
 
