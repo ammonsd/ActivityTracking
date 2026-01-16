@@ -75,7 +75,10 @@
                 "logs:DescribeLogStreams",
                 "logs:GetLogEvents",
                 "logs:FilterLogEvents",
-                "logs:PutRetentionPolicy"
+                "logs:PutRetentionPolicy",
+                "logs:CreateExportTask",
+                "logs:DescribeExportTasks",
+                "logs:CancelExportTask"
             ],
             "Resource": "*"
         },

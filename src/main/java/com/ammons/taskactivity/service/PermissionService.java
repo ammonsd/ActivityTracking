@@ -90,9 +90,11 @@ public class PermissionService {
         logger.info("Role {} has {} permissions loaded", role.getName(),
                 role.getPermissions().size());
 
-        // Log all permissions for debugging
-        role.getPermissions()
-                .forEach(p -> logger.info("  Permission: {}:{}", p.getResource(), p.getAction()));
+        // Log all permissions at DEBUG level to avoid performance impact
+        if (logger.isDebugEnabled()) {
+            role.getPermissions()
+                    .forEach(p -> logger.debug("  Permission: {}:{}", p.getResource(), p.getAction()));
+        }
 
         boolean hasPermission = role.getPermissions().stream()
                 .anyMatch(p -> p.getResource().equals(resource) && p.getAction().equals(action));
