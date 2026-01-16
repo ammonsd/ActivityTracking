@@ -60,11 +60,16 @@ public class PermissionService {
  * @since December 2025
      */
     public boolean userHasPermission(String username, String permissionKey) {
-        logger.debug("Checking permission {} for user {}", permissionKey, username);
+        logger.info("Checking permission {} for user {}", permissionKey, username);
 
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null || user.getRole() == null) {
-            logger.warn("User {} not found or has no role", username);
+        if (user == null) {
+            logger.warn("User {} not found in database", username);
+            return false;
+        }
+
+        if (user.getRole() == null) {
+            logger.warn("User {} has no role assigned", username);
             return false;
         }
 
@@ -80,10 +85,19 @@ public class PermissionService {
 
         // Check if user's role has this permission
         Roles role = user.getRole();
+        logger.info("User {} has role: {}, checking for permission {}:{}", username, role.getName(),
+                resource, action);
+        logger.info("Role {} has {} permissions loaded", role.getName(),
+                role.getPermissions().size());
+
+        // Log all permissions for debugging
+        role.getPermissions()
+                .forEach(p -> logger.info("  Permission: {}:{}", p.getResource(), p.getAction()));
+
         boolean hasPermission = role.getPermissions().stream()
                 .anyMatch(p -> p.getResource().equals(resource) && p.getAction().equals(action));
 
-        logger.debug("User {} {} permission {} (role: {})", username,
+        logger.info("User {} {} permission {} (role: {})", username,
                 hasPermission ? "HAS" : "LACKS", permissionKey, role.getName());
 
         return hasPermission;
