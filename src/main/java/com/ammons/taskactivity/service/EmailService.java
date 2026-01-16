@@ -916,8 +916,8 @@ public class EmailService {
         body.append("Build Details:\n");
         body.append("----------------------------------------\n");
         body.append(String.format("Build Number:       %s%n", buildNumber));
-        body.append(String.format("Branch:             %s%n", branch));
-        // body.append(String.format("Commit: %s%n", commit));
+        // body.append(String.format("Branch: %s%n", branch));
+        body.append(String.format("Commit: %s%n", commit));
         body.append(String.format("Status:             %s%n", status));
         body.append(String.format("Timestamp:          %s%n", timestamp));
         body.append("----------------------------------------\n\n");
