@@ -182,7 +182,8 @@ AWS SES provides reliable, scalable email delivery without requiring SMTP creden
     {"name": "MAIL_FROM", "value": "noreply@taskactivitytracker.com"},
     {"name": "ADMIN_EMAIL", "value": "admin@yourdomain.com"},
     {"name": "EXPENSE_APPROVERS", "value": "approver1@yourdomain.com,approver2@yourdomain.com"},
-    {"name": "JENKINS_NOTIFICATION_EMAIL", "value": "dev-team@yourdomain.com,ba-team@yourdomain.com"}
+    {"name": "JENKINS_BUILD_NOTIFICATION_EMAIL", "value": "dev-team@yourdomain.com"},
+    {"name": "JENKINS_DEPLOY_NOTIFICATION_EMAIL", "value": "dev-team@yourdomain.com,ba-team@yourdomain.com"}
 ]
 ```
 
@@ -215,7 +216,8 @@ Configure email settings in your `.env` file (recommended) or pass as CLI parame
 # MAIL_FROM=noreply@taskactivitytracker.com
 # ADMIN_EMAIL=admin@yourdomain.com
 # EXPENSE_APPROVERS=approver1@yourdomain.com,approver2@yourdomain.com
-# JENKINS_NOTIFICATION_EMAIL=dev-team@yourdomain.com,ba-team@yourdomain.com
+# JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@yourdomain.com
+# JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@yourdomain.com,ba-team@yourdomain.com
 
 .\aws\deploy-aws.ps1
 
@@ -457,7 +459,8 @@ The deployment script automatically loads these variables at startup using `scri
 - `MAIL_FROM` - Email sender address (must be verified in AWS SES)
 - `ADMIN_EMAIL` - Admin email address for system notifications (account lockouts, security alerts)
 - `EXPENSE_APPROVERS` - Comma-separated list of email addresses for expense approval notifications
-- `JENKINS_NOTIFICATION_EMAIL` - Comma-separated list of email addresses for Jenkins build notifications (dev team, BA team)
+- `JENKINS_BUILD_NOTIFICATION_EMAIL` - Comma-separated list of email addresses for Jenkins build notifications (developers only)
+- `JENKINS_DEPLOY_NOTIFICATION_EMAIL` - Comma-separated list of email addresses for Jenkins deployment notifications (developers + business analysts)
 
 ### Deploy New Version
 

@@ -70,8 +70,11 @@ public class EmailService {
     @Value("${app.mail.expense-approvers:}")
     private String expenseApprovers;
 
-    @Value("${app.mail.jenkins-notification-email:}")
-    private String jenkinsNotificationEmail;
+    @Value("${app.mail.jenkins-build-notification-email:}")
+    private String jenkinsBuildNotificationEmail;
+
+    @Value("${app.mail.jenkins-deploy-notification-email:}")
+    private String jenkinsDeployNotificationEmail;
 
     @Value("${app.name:Task Activity Management System}")
     private String appName;
@@ -707,16 +710,17 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsNotificationEmail == null || jenkinsNotificationEmail.trim().isEmpty()) {
+        if (jenkinsBuildNotificationEmail == null
+                || jenkinsBuildNotificationEmail.trim().isEmpty()) {
             logger.warn(
-                    "No Jenkins notification email configured - cannot send build success notification");
+                    "No Jenkins build notification email configured - cannot send build success notification");
             return;
         }
 
         String subject = String.format("✅ Jenkins Build %s - SUCCESS", buildNumber);
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null);
 
-        String[] jenkinsEmails = jenkinsNotificationEmail.split(",");
+        String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
         for (String email : jenkinsEmails) {
             String trimmedEmail = email.trim();
             if (trimmedEmail.isEmpty()) {
@@ -754,9 +758,10 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsNotificationEmail == null || jenkinsNotificationEmail.trim().isEmpty()) {
+        if (jenkinsBuildNotificationEmail == null
+                || jenkinsBuildNotificationEmail.trim().isEmpty()) {
             logger.warn(
-                    "No Jenkins notification email configured - cannot send build failure notification");
+                    "No Jenkins build notification email configured - cannot send build failure notification");
             return;
         }
 
@@ -764,7 +769,7 @@ public class EmailService {
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, false,
                 consoleUrl);
 
-        String[] jenkinsEmails = jenkinsNotificationEmail.split(",");
+        String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
         for (String email : jenkinsEmails) {
             String trimmedEmail = email.trim();
             if (trimmedEmail.isEmpty()) {
@@ -781,6 +786,107 @@ public class EmailService {
                         buildNumber);
             } catch (Exception e) {
                 logger.error("Failed to send build failure notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Send Jenkins deploy success notification.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch that was deployed
+     * @param commit the Git commit hash
+     * @param deployUrl the URL to view the deployment
+     * @param environment the deployment environment (e.g., staging, production)
+     */
+    public void sendDeploySuccessNotification(String buildNumber, String branch, String commit,
+            String deployUrl, String environment) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping deploy success notification");
+            return;
+        }
+
+        if (jenkinsDeployNotificationEmail == null
+                || jenkinsDeployNotificationEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No Jenkins deploy notification email configured - cannot send deploy success notification");
+            return;
+        }
+
+        String subject =
+                String.format("✅ Jenkins Deploy %s - SUCCESS (%s)", buildNumber, environment);
+        String body = buildJenkinsDeployEmailBody(buildNumber, branch, commit, deployUrl, true,
+                null, environment);
+
+        String[] jenkinsEmails = jenkinsDeployNotificationEmail.split(",");
+        for (String email : jenkinsEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Deploy success notification sent to {} for build: {}", trimmedEmail,
+                        buildNumber);
+            } catch (Exception e) {
+                logger.error("Failed to send deploy success notification to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Send Jenkins deploy failure notification.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch that was deployed
+     * @param commit the Git commit hash
+     * @param deployUrl the URL to view the deployment
+     * @param consoleUrl the URL to view console logs
+     * @param environment the deployment environment (e.g., staging, production)
+     */
+    public void sendDeployFailureNotification(String buildNumber, String branch, String commit,
+            String deployUrl, String consoleUrl, String environment) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping deploy failure notification");
+            return;
+        }
+
+        if (jenkinsDeployNotificationEmail == null
+                || jenkinsDeployNotificationEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No Jenkins deploy notification email configured - cannot send deploy failure notification");
+            return;
+        }
+
+        String subject =
+                String.format("❌ Jenkins Deploy %s - FAILED (%s)", buildNumber, environment);
+        String body = buildJenkinsDeployEmailBody(buildNumber, branch, commit, deployUrl, false,
+                consoleUrl, environment);
+
+        String[] jenkinsEmails = jenkinsDeployNotificationEmail.split(",");
+        for (String email : jenkinsEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("Deploy failure notification sent to {} for build: {}", trimmedEmail,
+                        buildNumber);
+            } catch (Exception e) {
+                logger.error("Failed to send deploy failure notification to {}: {}", trimmedEmail,
                         e.getMessage(), e);
             }
         }
@@ -819,6 +925,51 @@ public class EmailService {
         body.append(String.format("View build: %s%n", buildUrl));
         if (!success && consoleUrl != null && !consoleUrl.trim().isEmpty()) {
             body.append(String.format("View logs:  %s%n", consoleUrl));
+        }
+
+        body.append("\n---\n");
+        body.append(String.format("This is an automated notification from %s CI/CD Pipeline.%n",
+                appName));
+        body.append("Do not reply to this email. This email is sent from an unattended mailbox.");
+
+        return body.toString();
+    }
+
+    /**
+     * Builds the email body for Jenkins deploy notifications.
+     * 
+     * @param buildNumber the build number
+     * @param branch the Git branch
+     * @param commit the Git commit hash
+     * @param deployUrl the URL to view the deployment
+     * @param success whether the deployment succeeded
+     * @param consoleUrl optional console log URL (for failures)
+     * @param environment the deployment environment
+     * @return formatted email body text
+     */
+    private String buildJenkinsDeployEmailBody(String buildNumber, String branch, String commit,
+            String deployUrl, boolean success, String consoleUrl, String environment) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+        String status = success ? "SUCCESS" : "FAILURE";
+        String emoji = success ? "✅" : "❌";
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("%s JENKINS DEPLOYMENT %s%n%n", emoji, status));
+
+        body.append("Deployment Details:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("Build Number:       %s%n", buildNumber));
+        body.append(String.format("Environment:        %s%n",
+                environment != null ? environment : "Unknown"));
+        body.append(String.format("Branch:             %s%n", branch));
+        body.append(String.format("Status:             %s%n", status));
+        body.append(String.format("Timestamp:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+
+        body.append("Links:\n");
+        body.append(String.format("View deployment: %s%n", deployUrl));
+        if (!success && consoleUrl != null && !consoleUrl.trim().isEmpty()) {
+            body.append(String.format("View logs:       %s%n", consoleUrl));
         }
 
         body.append("\n---\n");

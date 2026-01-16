@@ -24,14 +24,24 @@ This document describes the Jenkins build notification feature that sends email 
 
 #### Email Recipients
 
-Build notifications are sent to the addresses configured in `application.properties`:
+Notifications are sent to different recipient lists based on the notification type:
 
+**Build Notifications** (developers only):
 ```properties
 # Jenkins build notification recipients (comma-separated for multiple recipients)
-# Typically includes development team and business analysts
-app.mail.jenkins-notification-email=dev-team@example.com,ba-team@example.com
+# Typically includes development team only - notified on build success/failure
+app.mail.jenkins-build-notification-email=dev-team@example.com
+```
 
-# Note: Jenkins notifications use a separate property from admin and expense notifications
+**Deploy Notifications** (developers and business analysts):
+```properties
+# Jenkins deploy notification recipients (comma-separated for multiple recipients)
+# Typically includes development team AND business analysts - notified on deployment success/failure
+app.mail.jenkins-deploy-notification-email=dev-team@example.com,ba-team@example.com
+```
+
+**Note**: Jenkins notifications use separate properties from admin and expense notifications:
+```properties
 # app.mail.admin-email=admin@example.com           # System/security notifications
 # app.mail.expense-approvers=approver@example.com  # Expense approval notifications
 ```
@@ -274,10 +284,11 @@ Add the notification calls to your Jenkinsfile's `post` section. See the **Jenki
     - Add/Update these variables:
         ```
         MAIL_ENABLED=true
-        JENKINS_NOTIFICATION_EMAIL=dev-team@company.com,ba-team@company.com
+        JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@company.com
+        JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@company.com,ba-team@company.com
         MAIL_FROM=noreply@taskactivity.com
         ```
-    - Note: `JENKINS_NOTIFICATION_EMAIL` is a separate property from `ADMIN_EMAIL` and `EXPENSE_APPROVERS`
+    - Note: `JENKINS_BUILD_NOTIFICATION_EMAIL` (developers only) and `JENKINS_DEPLOY_NOTIFICATION_EMAIL` (developers + BAs) are separate properties from `ADMIN_EMAIL` and `EXPENSE_APPROVERS`
     - Supports comma-separated list for multiple recipients
     - Click **Create** to save new revision
 
@@ -297,7 +308,9 @@ Add the notification calls to your Jenkinsfile's `post` section. See the **Jenki
 
 1. **Trigger a Jenkins build**
 2. **Check Jenkins console output** for the curl command execution
-3. **Verify email received** at the configured `JENKINS_NOTIFICATION_EMAIL` addresses
+3. **Verify email received** at the configured email addresses:
+    - Build notifications: Check `JENKINS_BUILD_NOTIFICATION_EMAIL` addresses (developers)
+    - Deploy notifications: Check `JENKINS_DEPLOY_NOTIFICATION_EMAIL` addresses (developers + BAs)
 4. **Check application logs** in CloudWatch:
     ```
     Build success notification sent to dev-team@company.com for build: 123
