@@ -82,6 +82,7 @@ pipeline {
         
         // Build Notifications Configuration
         APP_URL = 'https://taskactivitytracker.com'
+        JENKINS_URL = 'http://172.27.85.228:8081'  // Jenkins base URL
         JENKINS_API_TOKEN = credentials('jenkins-api-token')  // JWT token with JENKINS:NOTIFY permission
     }
     
@@ -505,7 +506,7 @@ pipeline {
                                      "buildNumber": "${BUILD_NUMBER}",
                                      "branch": "${env.GIT_BRANCH ?: 'main'}",
                                      "commit": "${env.GIT_COMMIT ?: 'unknown'}",
-                                     "buildUrl": "${BUILD_URL}"
+                                     "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/"
                                  }'
                         """,
                         returnStdout: true
@@ -548,10 +549,10 @@ pipeline {
                                  -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
                                  -d '{
                                      "buildNumber": "${BUILD_NUMBER}",
-                                     "branch": "${env.GIT_BRANCH ?: 'main'}",
+                                    //  "branch": "${env.GIT_BRANCH ?: 'main'}",
                                      "commit": "${env.GIT_COMMIT ?: 'unknown'}",
-                                     "buildUrl": "${BUILD_URL}",
-                                     "consoleUrl": "${BUILD_URL}console"
+                                     "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                                     "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console"
                                  }'
                         """,
                         returnStdout: true
