@@ -576,6 +576,7 @@ pipeline {
                     """ : """
                         {
                             "buildNumber": "${BUILD_NUMBER}",
+                            "branch": "${env.GIT_BRANCH ?: 'main'}",
                             "commit": "${env.GIT_COMMIT ?: 'unknown'}",
                             "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
                             "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console",
