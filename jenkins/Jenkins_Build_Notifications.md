@@ -477,11 +477,49 @@ curl -X POST https://taskactivity.example.com/api/jenkins/build-failure \
     grep "Build.*notification sent" /var/log/taskactivity.log
     ```
 
+### HTTP 403 Forbidden Errors
+
+**Symptom**: Jenkins webhook returns HTTP 403 with "Access Denied" message
+
+**Root Cause**: Spring Security authorization rules blocking access before permission checks execute
+
+**Solution**: Ensure `SecurityConfig.java` includes role authorization for Jenkins endpoints
+
+1. **Verify SecurityConfig has Jenkins role authorization**:
+
+    ```java
+    // In SecurityConfig.java, ensure this rule exists BEFORE general /api/** rules
+    .requestMatchers("/api/jenkins/**").hasRole("JENKINS_SERVICE")
+    ```
+
+2. **Important**: The order matters! This rule must appear BEFORE the general API pattern:
+    ```java
+    // Correct order:
+    .requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/api/jenkins/**").hasRole("JENKINS_SERVICE")  // ← Must be here
+    .requestMatchers("/api/admin/**").authenticated()
+    .requestMatchers("/api/**").hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE)
+    ```
+
+3. **Why this is needed**:
+    - Spring Security evaluates authorization rules BEFORE method-level annotations
+    - The `@RequirePermission` annotation only runs if Spring Security allows the request through
+    - Without explicit role authorization, Spring Security blocks access to `/api/**` endpoints
+    - The user must have both:
+        - **Role authorization** (hasRole) in SecurityConfig ← checked first
+        - **Permission authorization** (@RequirePermission) in controller ← checked second
+
+4. **Debugging tip**: If you see HTTP 403 despite correct permissions in database:
+    - User authentication may be successful (JWT valid)
+    - But Spring Security role authorization is blocking access
+    - Check SecurityConfig.java authorization rules first
+    - Then verify @RequirePermission annotations
+
 ### Authentication Failures
 
 1. **Verify JWT token**:
 
-    - Check token is not expired (15-minute default)
+    - Check token is not expired (default 24 hours, configurable via `jwt.expiration`)
     - Verify token has `JENKINS:NOTIFY` permission
     - Ensure `Authorization: Bearer TOKEN` header format is correct
 
@@ -489,6 +527,22 @@ curl -X POST https://taskactivity.example.com/api/jenkins/build-failure \
     ```sql
     SELECT * FROM permissions WHERE resource = 'JENKINS' AND action = 'NOTIFY';
     SELECT * FROM role_permissions WHERE permission_id = (SELECT id FROM permissions WHERE resource = 'JENKINS' AND action = 'NOTIFY');
+    ```
+
+3. **Verify user role**:
+    ```sql
+    -- Check jenkins-service user has JENKINS_SERVICE role
+    SELECT u.username, r.name as role_name
+    FROM users u
+    JOIN roles r ON u.role_id = r.id
+    WHERE u.username = 'jenkins-service';
+    
+    -- Check JENKINS_SERVICE role has JENKINS:NOTIFY permission
+    SELECT r.name, p.resource, p.action
+    FROM roles r
+    JOIN role_permissions rp ON r.id = rp.role_id
+    JOIN permissions p ON rp.permission_id = p.id
+    WHERE r.name = 'JENKINS_SERVICE';
     ```
 
 ## Benefits
