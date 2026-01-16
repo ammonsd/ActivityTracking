@@ -24,11 +24,16 @@ This document describes the Jenkins build notification feature that sends email 
 
 #### Email Recipients
 
-Build notifications are sent to the admin email addresses configured in `application.properties`:
+Build notifications are sent to the addresses configured in `application.properties`:
 
 ```properties
-# Admin email (comma-separated for multiple recipients)
-app.mail.admin-email=admin@example.com,devops@example.com
+# Jenkins build notification recipients (comma-separated for multiple recipients)
+# Typically includes development team and business analysts
+app.mail.jenkins-notification-email=dev-team@example.com,ba-team@example.com
+
+# Note: Jenkins notifications use a separate property from admin and expense notifications
+# app.mail.admin-email=admin@example.com           # System/security notifications
+# app.mail.expense-approvers=approver@example.com  # Expense approval notifications
 ```
 
 #### Jenkinsfile Integration
@@ -269,9 +274,11 @@ Add the notification calls to your Jenkinsfile's `post` section. See the **Jenki
     - Add/Update these variables:
         ```
         MAIL_ENABLED=true
-        ADMIN_EMAIL=deanammons@gmail.com
+        JENKINS_NOTIFICATION_EMAIL=dev-team@company.com,ba-team@company.com
         MAIL_FROM=noreply@taskactivity.com
         ```
+    - Note: `JENKINS_NOTIFICATION_EMAIL` is a separate property from `ADMIN_EMAIL` and `EXPENSE_APPROVERS`
+    - Supports comma-separated list for multiple recipients
     - Click **Create** to save new revision
 
 2. **Update ECS Service to use new task definition revision**:
@@ -290,10 +297,11 @@ Add the notification calls to your Jenkinsfile's `post` section. See the **Jenki
 
 1. **Trigger a Jenkins build**
 2. **Check Jenkins console output** for the curl command execution
-3. **Verify email received** at `deanammons@gmail.com`
+3. **Verify email received** at the configured `JENKINS_NOTIFICATION_EMAIL` addresses
 4. **Check application logs** in CloudWatch:
     ```
-    Build success notification sent to deanammons@gmail.com for build: 123
+    Build success notification sent to dev-team@company.com for build: 123
+    Build success notification sent to ba-team@company.com for build: 123
     ```
 
 #### Troubleshooting Token Expiration

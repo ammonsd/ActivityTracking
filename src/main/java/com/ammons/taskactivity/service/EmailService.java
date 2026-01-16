@@ -70,6 +70,9 @@ public class EmailService {
     @Value("${app.mail.expense-approvers:}")
     private String expenseApprovers;
 
+    @Value("${app.mail.jenkins-notification-email:}")
+    private String jenkinsNotificationEmail;
+
     @Value("${app.name:Task Activity Management System}")
     private String appName;
 
@@ -704,16 +707,17 @@ public class EmailService {
             return;
         }
 
-        if (adminEmail == null || adminEmail.trim().isEmpty()) {
-            logger.warn("No admin email configured - cannot send build success notification");
+        if (jenkinsNotificationEmail == null || jenkinsNotificationEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No Jenkins notification email configured - cannot send build success notification");
             return;
         }
 
         String subject = String.format("✅ Jenkins Build %s - SUCCESS", buildNumber);
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null);
 
-        String[] adminEmails = adminEmail.split(",");
-        for (String email : adminEmails) {
+        String[] jenkinsEmails = jenkinsNotificationEmail.split(",");
+        for (String email : jenkinsEmails) {
             String trimmedEmail = email.trim();
             if (trimmedEmail.isEmpty()) {
                 continue;
@@ -750,8 +754,9 @@ public class EmailService {
             return;
         }
 
-        if (adminEmail == null || adminEmail.trim().isEmpty()) {
-            logger.warn("No admin email configured - cannot send build failure notification");
+        if (jenkinsNotificationEmail == null || jenkinsNotificationEmail.trim().isEmpty()) {
+            logger.warn(
+                    "No Jenkins notification email configured - cannot send build failure notification");
             return;
         }
 
@@ -759,8 +764,8 @@ public class EmailService {
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, false,
                 consoleUrl);
 
-        String[] adminEmails = adminEmail.split(",");
-        for (String email : adminEmails) {
+        String[] jenkinsEmails = jenkinsNotificationEmail.split(",");
+        for (String email : jenkinsEmails) {
             String trimmedEmail = email.trim();
             if (trimmedEmail.isEmpty()) {
                 continue;
