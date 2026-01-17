@@ -390,7 +390,9 @@ The pipeline sends notifications to the Task Activity application with additiona
 2. **Pipeline → SCM:** Git
 3. **Pipeline → Repository URL:** Your Git repository
 4. **Pipeline → Branch:** `*/main` (or your default branch)
-5. **Do NOT check "Lightweight checkout"** (needed for proper triggering)
+5. **⚠️ CRITICAL: Do NOT check "Lightweight checkout"** (required for SCM polling to detect changes)
+
+**Why this matters:** Lightweight checkout only downloads the Jenkinsfile, not the full repository history, which prevents SCM polling from detecting changes. If polling doesn't trigger builds after commits, this is the most common cause.
 
 **Build Triggers:**
 
@@ -573,9 +575,12 @@ echo "Should Deploy: ${shouldDeploy}"
 
 **Issue:** SCM builds not triggering
 
-- **Check:** Poll SCM configuration
+- **Check:** "Lightweight checkout" is UNCHECKED in job configuration (most common cause)
+- **Check:** Poll SCM configuration in Jenkinsfile
 - **Check:** Git repository connectivity
+- **Check:** View "Git Polling Log" in Jenkins job menu for errors
 - **Fix:** Verify `pollSCM('H/5 * * * *')` in pipeline
+- **Fix:** Uncheck "Lightweight checkout" in Pipeline → SCM configuration
 
 **Issue:** Deployment runs when it shouldn't
 

@@ -26,7 +26,8 @@ pipeline {
         pollSCM(env.BRANCH_NAME == 'main' ? 'H/5 * * * *' : '')
         
         // Daily deployment at 4pm (only if there are new builds)
-        cron('0 16 * * *')
+        // Using H notation to spread load evenly across the hour
+        cron('H 16 * * *')
     }
     
     parameters {
