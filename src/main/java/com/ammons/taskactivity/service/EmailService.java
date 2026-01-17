@@ -191,13 +191,43 @@ public class EmailService {
     }
 
     /**
-     * Send email using traditional SMTP. Requires SMTP username/password configuration.
+     * Send email via AWS SES SDK to multiple recipients in the "To" field.
      * 
-     * @param to recipient email address
+     * @param subject email subject
+     * @param body email body text
+     * @param to recipient email addresses (varargs)
+     */
+    private void sendEmailViaAwsSdk(String subject, String body, String... to) {
+        try {
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .destination(Destination.builder().toAddresses(to).build())
+                    .message(Message.builder()
+                            .subject(Content.builder().data(subject).charset("UTF-8").build())
+                            .body(Body.builder()
+                                    .text(Content.builder().data(body).charset("UTF-8").build())
+                                    .build())
+                            .build())
+                    .source(fromAddress).build();
+
+            SendEmailResponse response = sesClient.sendEmail(request);
+            logger.info("Email sent successfully via AWS SES to {} recipient(s). MessageId: {}",
+                    to.length, response.messageId());
+
+        } catch (Exception e) {
+            logger.error("Failed to send email via AWS SES to: {}", String.join(", ", to), e);
+            // Don't throw exception - email failure should not prevent login processing
+        }
+    }
+
+    /**
+     * Send email using traditional SMTP. Requires SMTP username/password configuration. Supports
+     * multiple recipients in the "To" field.
+     * 
+     * @param to recipient email address(es)
      * @param subject email subject
      * @param body email body text
      */
-    private void sendEmailViaSmtp(String to, String subject, String body) {
+    private void sendEmailViaSmtp(String subject, String body, String... to) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);
@@ -206,11 +236,73 @@ public class EmailService {
             message.setText(body);
 
             mailSender.send(message);
-            logger.info("Email sent successfully via SMTP to: {}", to);
+            logger.info("Email sent successfully via SMTP to {} recipient(s): {}", to.length,
+                    String.join(", ", to));
 
         } catch (MailException e) {
-            logger.error("Failed to send email via SMTP to: {}", to, e);
+            logger.error("Failed to send email via SMTP to: {}", String.join(", ", to), e);
             // Don't throw exception - email failure should not prevent login processing
+        }
+    }
+
+    /**
+     * Send emails to recipients with support for grouping.
+     * 
+     * Format: - Comma (,) separates distinct email groups - each group receives a separate email -
+     * Semicolon (;) separates recipients within a group - they all appear in the "To" field of one
+     * email
+     * 
+     * Examples: - "email1@example.com" -> One email to email1 -
+     * "email1@example.com,email2@example.com" -> Two separate emails -
+     * "email1@example.com;email2@example.com" -> One email with both in "To" field -
+     * "email1@example.com,email2@example.com;email3@example.com" -> Two emails: Email 1 to:
+     * email1@example.com Email 2 to: email2@example.com, email3@example.com
+     * 
+     * @param recipientsConfig recipient configuration string
+     * @param subject email subject
+     * @param body email body text
+     * @param emailType description of email type for logging (e.g., "build success", "deploy
+     *        failure")
+     */
+    private void sendEmailsWithGrouping(String recipientsConfig, String subject, String body,
+            String emailType) {
+        if (recipientsConfig == null || recipientsConfig.trim().isEmpty()) {
+            logger.warn("No recipients configured for {} notification", emailType);
+            return;
+        }
+
+        // Split by comma to get separate email groups
+        String[] emailGroups = recipientsConfig.split(",");
+
+        for (String group : emailGroups) {
+            String trimmedGroup = group.trim();
+            if (trimmedGroup.isEmpty()) {
+                continue;
+            }
+
+            // Split by semicolon to get individual recipients within this group
+            String[] recipients = trimmedGroup.split(";");
+
+            // Trim each recipient email and filter out empty strings
+            String[] trimmedRecipients = java.util.Arrays.stream(recipients).map(String::trim)
+                    .filter(email -> !email.isEmpty()).toArray(String[]::new);
+
+            if (trimmedRecipients.length == 0) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(subject, body, trimmedRecipients);
+                } else {
+                    sendEmailViaSmtp(subject, body, trimmedRecipients);
+                }
+                logger.info("{} notification sent to {} recipient(s): {}", emailType,
+                        trimmedRecipients.length, String.join(", ", trimmedRecipients));
+            } catch (Exception e) {
+                logger.error("Failed to send {} notification to: {}", emailType,
+                        String.join(", ", trimmedRecipients), e);
+            }
         }
     }
 
@@ -712,37 +804,11 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsBuildNotificationEmail == null
-                || jenkinsBuildNotificationEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No Jenkins build notification email configured - cannot send build success notification");
-            return;
-        }
-
         String subject = String.format("✅ Jenkins Build %s - SUCCESS", buildNumber);
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, true, null,
                 environment);
 
-        String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
-        for (String email : jenkinsEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("Build success notification sent to {} for build: {}", trimmedEmail,
-                        buildNumber);
-            } catch (Exception e) {
-                logger.error("Failed to send build success notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendEmailsWithGrouping(jenkinsBuildNotificationEmail, subject, body, "build success");
     }
 
     /**
@@ -762,37 +828,11 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsBuildNotificationEmail == null
-                || jenkinsBuildNotificationEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No Jenkins build notification email configured - cannot send build failure notification");
-            return;
-        }
-
         String subject = String.format("❌ Jenkins Build %s - FAILED", buildNumber);
         String body = buildJenkinsBuildEmailBody(buildNumber, branch, commit, buildUrl, false,
                 consoleUrl, environment);
 
-        String[] jenkinsEmails = jenkinsBuildNotificationEmail.split(",");
-        for (String email : jenkinsEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("Build failure notification sent to {} for build: {}", trimmedEmail,
-                        buildNumber);
-            } catch (Exception e) {
-                logger.error("Failed to send build failure notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendEmailsWithGrouping(jenkinsBuildNotificationEmail, subject, body, "build failure");
     }
 
     /**
@@ -811,38 +851,12 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsDeployNotificationEmail == null
-                || jenkinsDeployNotificationEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No Jenkins deploy notification email configured - cannot send deploy success notification");
-            return;
-        }
-
         String subject =
                 String.format("✅ Jenkins Deploy %s - SUCCESS (%s)", buildNumber, environment);
         String body = buildJenkinsDeployEmailBody(buildNumber, branch, commit, deployUrl, true,
                 null, environment);
 
-        String[] jenkinsEmails = jenkinsDeployNotificationEmail.split(",");
-        for (String email : jenkinsEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("Deploy success notification sent to {} for build: {}", trimmedEmail,
-                        buildNumber);
-            } catch (Exception e) {
-                logger.error("Failed to send deploy success notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendEmailsWithGrouping(jenkinsDeployNotificationEmail, subject, body, "deploy success");
     }
 
     /**
@@ -862,38 +876,12 @@ public class EmailService {
             return;
         }
 
-        if (jenkinsDeployNotificationEmail == null
-                || jenkinsDeployNotificationEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No Jenkins deploy notification email configured - cannot send deploy failure notification");
-            return;
-        }
-
         String subject =
                 String.format("❌ Jenkins Deploy %s - FAILED (%s)", buildNumber, environment);
         String body = buildJenkinsDeployEmailBody(buildNumber, branch, commit, deployUrl, false,
                 consoleUrl, environment);
 
-        String[] jenkinsEmails = jenkinsDeployNotificationEmail.split(",");
-        for (String email : jenkinsEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("Deploy failure notification sent to {} for build: {}", trimmedEmail,
-                        buildNumber);
-            } catch (Exception e) {
-                logger.error("Failed to send deploy failure notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendEmailsWithGrouping(jenkinsDeployNotificationEmail, subject, body, "deploy failure");
     }
 
     /**
