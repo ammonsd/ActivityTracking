@@ -21,6 +21,14 @@
 pipeline {
     agent any
     
+    triggers {
+        // Build on main branch commits (auto-build with no-cache)
+        pollSCM(env.BRANCH_NAME == 'main' ? 'H/5 * * * *' : '')
+        
+        // Daily deployment at 4pm (only if there are new builds)
+        cron('0 16 * * *')
+    }
+    
     parameters {
         choice(
             name: 'ENVIRONMENT',
@@ -51,6 +59,11 @@ pipeline {
             name: 'INFRASTRUCTURE_ACTION',
             choices: ['update', 'create', 'preview'],
             description: 'CloudFormation action (only used if DEPLOY_INFRASTRUCTURE is true)'
+        )
+        booleanParam(
+            name: 'MANUAL_TRIGGER',
+            defaultValue: false,
+            description: 'Set to true for manual deployments (affects scheduled deployment logic)'
         )
     }
     
@@ -113,12 +126,94 @@ pipeline {
                     echo "Branch: ${env.GIT_BRANCH}"
                     echo "Commit: ${env.GIT_COMMIT?.take(7)}"
                     echo "Application Version: ${APP_VERSION}"
+                    echo "Trigger: ${currentBuild.getBuildCauses()[0]._class}"
                     echo "========================================="
+                    
+                    // Determine if this is a scheduled build
+                    def isScheduledBuild = currentBuild.getBuildCauses().toString().contains('TimerTrigger')
+                    def isSCMBuild = currentBuild.getBuildCauses().toString().contains('SCMTrigger')
+                    
+                    // Store build trigger information
+                    env.IS_SCHEDULED_BUILD = isScheduledBuild.toString()
+                    env.IS_SCM_BUILD = isSCMBuild.toString()
+                    env.IS_MANUAL_BUILD = params.MANUAL_TRIGGER.toString()
+                    
+                    echo "Scheduled Build: ${env.IS_SCHEDULED_BUILD}"
+                    echo "SCM Triggered Build: ${env.IS_SCM_BUILD}"
+                    echo "Manual Build: ${env.IS_MANUAL_BUILD}"
+                    
+                    // Auto-enable NO_CACHE for SCM builds on main branch
+                    if (isSCMBuild && env.GIT_BRANCH?.contains('main')) {
+                        env.BUILD_NO_CACHE = 'true'
+                        echo "Auto-enabled NO_CACHE for main branch build"
+                    } else {
+                        env.BUILD_NO_CACHE = params.NO_CACHE.toString()
+                    }
+                    
+                    // Check deployment eligibility for scheduled builds
+                    if (isScheduledBuild) {
+                        echo "========================================="
+                        echo "Checking scheduled deployment eligibility..."
+                        echo "========================================="
+                        
+                        // Get the last successful build number
+                        def lastBuildNumber = getLastSuccessfulBuildNumber('build-only')
+                        def lastDeployNumber = getLastSuccessfulBuildNumber('deploy')
+                        
+                        echo "Last successful build: ${lastBuildNumber ?: 'none'}"
+                        echo "Last successful deploy: ${lastDeployNumber ?: 'none'}"
+                        
+                        // Determine if we should deploy
+                        def shouldDeploy = false
+                        
+                        if (lastBuildNumber == null) {
+                            echo "No successful builds found - skipping deployment"
+                        } else if (lastDeployNumber == null) {
+                            echo "No previous deployments found - will deploy latest build"
+                            shouldDeploy = true
+                        } else if (lastBuildNumber > lastDeployNumber) {
+                            echo "New builds available since last deployment - will deploy"
+                            shouldDeploy = true
+                        } else {
+                            echo "No new builds since last deployment - skipping deployment"
+                        }
+                        
+                        env.SHOULD_DEPLOY = shouldDeploy.toString()
+                        
+                        if (shouldDeploy) {
+                            // Override deploy action for scheduled builds
+                            env.SCHEDULED_DEPLOY_ACTION = 'deploy'
+                            echo "This scheduled build will perform deployment"
+                        } else {
+                            env.SCHEDULED_DEPLOY_ACTION = 'skip'
+                            echo "This scheduled build will be skipped (no new builds)"
+                            currentBuild.result = 'NOT_BUILT'
+                            currentBuild.description = 'Skipped: No new builds since last deployment'
+                        }
+                        
+                        echo "========================================="
+                    }
                     
                     // Validation
                     if (params.ENVIRONMENT == 'production' && params.SKIP_TESTS) {
                         error("Cannot skip tests for production deployments!")
                     }
+                }
+            }
+        }
+        
+        stage('Skip Scheduled Build') {
+            when {
+                expression { 
+                    return env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false'
+                }
+            }
+            steps {
+                script {
+                    echo "========================================="
+                    echo "Scheduled deployment skipped"
+                    echo "Reason: No new builds since last deployment"
+                    echo "========================================="
                 }
             }
         }
@@ -187,7 +282,13 @@ pipeline {
         
         stage('Build & Test') {
             when {
-                expression { params.DEPLOY_ACTION != 'rollback' }
+                allOf {
+                    expression { params.DEPLOY_ACTION != 'rollback' }
+                    expression { 
+                        // Skip if scheduled build determined deployment is not needed
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo 'Building application with Maven...'
@@ -224,7 +325,12 @@ pipeline {
         
         stage('Code Quality Analysis') {
             when {
-                expression { params.DEPLOY_ACTION != 'rollback' && !params.SKIP_TESTS }
+                allOf {
+                    expression { params.DEPLOY_ACTION != 'rollback' && !params.SKIP_TESTS }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo 'Running code quality checks...'
@@ -238,12 +344,22 @@ pipeline {
         
         stage('Build Docker Image') {
             when {
-                expression { params.DEPLOY_ACTION != 'rollback' }
+                allOf {
+                    expression { params.DEPLOY_ACTION != 'rollback' }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo "Building Docker image: ${IMAGE_FULL}"
                 script {
-                    def buildArgs = params.NO_CACHE ? '--no-cache' : ''
+                    // Use cached value from Initialize stage for NO_CACHE setting
+                    def buildArgs = env.BUILD_NO_CACHE == 'true' ? '--no-cache' : ''
+                    
+                    if (env.BUILD_NO_CACHE == 'true') {
+                        echo "Building with NO_CACHE enabled"
+                    }
                     
                     // Build Docker image
                     docker.build(
@@ -265,7 +381,12 @@ pipeline {
         
         stage('Security Scan') {
             when {
-                expression { params.DEPLOY_ACTION != 'rollback' }
+                allOf {
+                    expression { params.DEPLOY_ACTION != 'rollback' }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo 'Scanning Docker image for vulnerabilities...'
@@ -279,7 +400,12 @@ pipeline {
         
         stage('Push to ECR') {
             when {
-                expression { params.DEPLOY_ACTION != 'rollback' && params.DEPLOY_ACTION != 'build-only' }
+                allOf {
+                    expression { params.DEPLOY_ACTION != 'rollback' && params.DEPLOY_ACTION != 'build-only' }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo "Pushing Docker image to ECR: ${ECR_REGISTRY}/${ECR_REPOSITORY}"
@@ -301,7 +427,19 @@ pipeline {
         
         stage('Deploy to ECS') {
             when {
-                expression { params.DEPLOY_ACTION == 'deploy' }
+                allOf {
+                    anyOf {
+                        // Manual deploy action
+                        expression { params.DEPLOY_ACTION == 'deploy' }
+                        // Scheduled deployment that passed eligibility check
+                        expression { 
+                            env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true'
+                        }
+                    }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo "Deploying to ECS cluster: ${ECS_CLUSTER}"
@@ -415,7 +553,17 @@ pipeline {
         
         stage('Verify Deployment') {
             when {
-                expression { params.DEPLOY_ACTION == 'deploy' }
+                allOf {
+                    anyOf {
+                        expression { params.DEPLOY_ACTION == 'deploy' }
+                        expression { 
+                            env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true'
+                        }
+                    }
+                    expression { 
+                        return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
+                    }
+                }
             }
             steps {
                 echo 'Verifying deployment...'
@@ -486,6 +634,12 @@ pipeline {
     post {
         success {
             script {
+                // Skip success notification if scheduled build was skipped
+                if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false') {
+                    echo "Skipped deployment - no notification sent"
+                    return
+                }
+                
                 echo "========================================="
                 echo "✓ BUILD SUCCESSFUL"
                 echo "========================================="
@@ -493,21 +647,38 @@ pipeline {
                 echo "Action: ${params.DEPLOY_ACTION}"
                 echo "Build Number: ${env.BUILD_NUMBER}"
                 echo "Image: ${IMAGE_FULL}"
+                
+                // Mark this build with description based on type
+                if (env.IS_SCHEDULED_BUILD == 'true') {
+                    currentBuild.description = "Scheduled deployment at 4pm"
+                } else if (env.IS_SCM_BUILD == 'true') {
+                    currentBuild.description = "Auto-build from main branch (no-cache)"
+                } else if (env.IS_MANUAL_BUILD == 'true') {
+                    currentBuild.description = "Manual ${params.DEPLOY_ACTION}"
+                }
+                
                 echo "========================================="
                 
                 // Send success notification to Task Activity application
                 try {
-                    def endpoint = params.DEPLOY_ACTION == 'deploy' ? 
+                    // Determine actual action that was performed
+                    def actualAction = params.DEPLOY_ACTION
+                    if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true') {
+                        actualAction = 'deploy'
+                    }
+                    
+                    def endpoint = actualAction == 'deploy' ? 
                         "${APP_URL}/api/jenkins/deploy-success" : 
                         "${APP_URL}/api/jenkins/build-success"
                     
-                    def payload = params.DEPLOY_ACTION == 'deploy' ? """
+                    def payload = actualAction == 'deploy' ? """
                         {
                             "buildNumber": "${BUILD_NUMBER}",
                             "branch": "${env.GIT_BRANCH ?: 'main'}",
                             "commit": "${env.GIT_COMMIT ?: 'unknown'}",
                             "deployUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
-                            "environment": "${params.ENVIRONMENT}"
+                            "environment": "${params.ENVIRONMENT}",
+                            "triggeredBy": "${env.IS_SCHEDULED_BUILD == 'true' ? 'scheduled' : (env.IS_SCM_BUILD == 'true' ? 'scm' : 'manual')}"
                         }
                     """ : """
                         {
@@ -515,7 +686,9 @@ pipeline {
                             "branch": "${env.GIT_BRANCH ?: 'main'}",
                             "commit": "${env.GIT_COMMIT ?: 'unknown'}",
                             "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
-                            "environment": "${params.ENVIRONMENT}"
+                            "environment": "${params.ENVIRONMENT}",
+                            "triggeredBy": "${env.IS_SCHEDULED_BUILD == 'true' ? 'scheduled' : (env.IS_SCM_BUILD == 'true' ? 'scm' : 'manual')}",
+                            "noCache": "${env.BUILD_NO_CACHE}"
                         }
                     """
                     
@@ -534,7 +707,7 @@ pipeline {
                     def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
                     
                     if (httpCode == '200') {
-                        def notificationType = params.DEPLOY_ACTION == 'deploy' ? 'Deploy' : 'Build'
+                        def notificationType = actualAction == 'deploy' ? 'Deploy' : 'Build'
                         echo "✓ ${notificationType} success notification sent successfully"
                         echo "Response: ${body}"
                     } else {
@@ -550,6 +723,11 @@ pipeline {
         
         failure {
             script {
+                // Skip failure notification if scheduled build was skipped
+                if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false') {
+                    return
+                }
+                
                 echo "========================================="
                 echo "✗ BUILD FAILED"
                 echo "========================================="
@@ -560,18 +738,25 @@ pipeline {
                 
                 // Send failure notification to Task Activity application
                 try {
-                    def endpoint = params.DEPLOY_ACTION == 'deploy' ? 
+                    // Determine actual action that was attempted
+                    def actualAction = params.DEPLOY_ACTION
+                    if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true') {
+                        actualAction = 'deploy'
+                    }
+                    
+                    def endpoint = actualAction == 'deploy' ? 
                         "${APP_URL}/api/jenkins/deploy-failure" : 
                         "${APP_URL}/api/jenkins/build-failure"
                     
-                    def payload = params.DEPLOY_ACTION == 'deploy' ? """
+                    def payload = actualAction == 'deploy' ? """
                         {
                             "buildNumber": "${BUILD_NUMBER}",
                             "branch": "${env.GIT_BRANCH ?: 'main'}",
                             "commit": "${env.GIT_COMMIT ?: 'unknown'}",
                             "deployUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
                             "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console",
-                            "environment": "${params.ENVIRONMENT}"
+                            "environment": "${params.ENVIRONMENT}",
+                            "triggeredBy": "${env.IS_SCHEDULED_BUILD == 'true' ? 'scheduled' : (env.IS_SCM_BUILD == 'true' ? 'scm' : 'manual')}"
                         }
                     """ : """
                         {
@@ -580,7 +765,8 @@ pipeline {
                             "commit": "${env.GIT_COMMIT ?: 'unknown'}",
                             "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
                             "consoleUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/console",
-                            "environment": "${params.ENVIRONMENT}"
+                            "environment": "${params.ENVIRONMENT}",
+                            "triggeredBy": "${env.IS_SCHEDULED_BUILD == 'true' ? 'scheduled' : (env.IS_SCM_BUILD == 'true' ? 'scm' : 'manual')}"
                         }
                     """
                     
@@ -599,7 +785,7 @@ pipeline {
                     def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
                     
                     if (httpCode == '200') {
-                        def notificationType = params.DEPLOY_ACTION == 'deploy' ? 'Deploy' : 'Build'
+                        def notificationType = actualAction == 'deploy' ? 'Deploy' : 'Build'
                         echo "✓ ${notificationType} failure notification sent successfully"
                         echo "Response: ${body}"
                     } else {
@@ -627,5 +813,80 @@ pipeline {
                 ]
             )
         }
+    }
+}
+
+/**
+ * Helper function to get the last successful build number for a specific action type.
+ * This is used to determine if there are new builds since the last deployment.
+ * 
+ * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
+ * @return The build number of the last successful build, or null if none found
+ * 
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+def getLastSuccessfulBuildNumber(String actionType) {
+    try {
+        def job = Jenkins.instance.getItem(env.JOB_NAME)
+        if (job == null) {
+            echo "WARNING: Could not find job ${env.JOB_NAME}"
+            return null
+        }
+        
+        // Search through the last 50 builds
+        def builds = job.getBuilds().limit(50)
+        
+        for (build in builds) {
+            // Skip current build
+            if (build.number >= env.BUILD_NUMBER.toInteger()) {
+                continue
+            }
+            
+            // Check if build was successful
+            if (build.result != hudson.model.Result.SUCCESS) {
+                continue
+            }
+            
+            // Get the parameters for this build
+            def paramsAction = build.getAction(hudson.model.ParametersAction)
+            if (paramsAction == null) {
+                continue
+            }
+            
+            // Check if this build had the matching DEPLOY_ACTION
+            def deployAction = paramsAction.getParameter('DEPLOY_ACTION')
+            if (deployAction != null && deployAction.value == actionType) {
+                echo "Found last successful ${actionType} at build #${build.number}"
+                return build.number
+            }
+            
+            // For scheduled builds, also check if it was a deployment
+            def buildCauses = build.getCauses()
+            def wasScheduledDeploy = false
+            
+            for (cause in buildCauses) {
+                if (cause instanceof hudson.triggers.TimerTrigger.TimerTriggerCause) {
+                    // Check if this scheduled build resulted in a deployment
+                    def envVars = build.getEnvironment(null)
+                    if (envVars['SHOULD_DEPLOY'] == 'true' && actionType == 'deploy') {
+                        wasScheduledDeploy = true
+                        break
+                    }
+                }
+            }
+            
+            if (wasScheduledDeploy) {
+                echo "Found last successful scheduled deployment at build #${build.number}"
+                return build.number
+            }
+        }
+        
+        echo "No successful ${actionType} builds found in last 50 builds"
+        return null
+        
+    } catch (Exception e) {
+        echo "ERROR: Exception while searching for last successful build: ${e.message}"
+        return null
     }
 }
