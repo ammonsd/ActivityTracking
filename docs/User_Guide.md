@@ -1,8 +1,8 @@
-# Task Activity & Expense Management System - User Guide
+# Task Activity Management System - User Guide
 
 ## Welcome
 
-Welcome to the Task Activity & Expense Management System! This comprehensive application helps you track both time spent on tasks and project-related expenses. Whether you're logging daily work activities, reviewing your weekly timesheet, submitting expenses for reimbursement, or managing expense approvals, this guide will help you make the most of the system.
+Welcome to the Task Activity Management System! This comprehensive application helps you track both time spent on tasks and project-related expenses. Whether you're logging daily work activities, reviewing your weekly timesheet, submitting expenses for reimbursement, or managing expense approvals, this guide will help you make the most of the system.
 
 **Key Features:**
 

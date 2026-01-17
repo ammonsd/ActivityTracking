@@ -1,4 +1,4 @@
-# Task Activity Tracking & Expense Management
+# Task Activity Tracking Management
 
 A comprehensive web application built with Spring Boot, Angular, and PostgreSQL for tracking billable hours and managing business expenses. Designed for consultants, contractors, and teams who need professional time tracking with integrated expense management and receipt storage.
 

@@ -223,7 +223,7 @@ class EmailServiceTest {
             ReflectionTestUtils.setField(emailService, "adminEmail", TEST_ADMIN_EMAIL);
             ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
             ReflectionTestUtils.setField(emailService, "appName",
-                            "Task Activity & Expense Management System");
+                            "Task Activity Management System");
 
             ArgumentCaptor<SimpleMailMessage> messageCaptor =
                             ArgumentCaptor.forClass(SimpleMailMessage.class);
@@ -266,7 +266,7 @@ class EmailServiceTest {
             ReflectionTestUtils.setField(emailService, "adminEmail", TEST_ADMIN_EMAIL);
             ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
             ReflectionTestUtils.setField(emailService, "appName",
-                            "Task Activity & Expense Management System");
+                            "Task Activity Management System");
 
             ArgumentCaptor<SimpleMailMessage> messageCaptor =
                             ArgumentCaptor.forClass(SimpleMailMessage.class);
@@ -338,7 +338,7 @@ class EmailServiceTest {
             ReflectionTestUtils.setField(emailService, "adminEmail", multipleAdmins);
             ReflectionTestUtils.setField(emailService, "fromAddress", TEST_FROM_EMAIL);
             ReflectionTestUtils.setField(emailService, "appName",
-                            "Task Activity & Expense Management System");
+                            "Task Activity Management System");
 
             ArgumentCaptor<SimpleMailMessage> messageCaptor =
                             ArgumentCaptor.forClass(SimpleMailMessage.class);

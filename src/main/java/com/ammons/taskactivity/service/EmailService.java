@@ -76,7 +76,7 @@ public class EmailService {
     @Value("${app.mail.jenkins-deploy-notification-email:}")
     private String jenkinsDeployNotificationEmail;
 
-    @Value("${app.name:Task Activity & Expense Management System}")
+    @Value("${app.name:Task Activity Management System}")
     private String appName;
 
     public EmailService(JavaMailSender mailSender) {
