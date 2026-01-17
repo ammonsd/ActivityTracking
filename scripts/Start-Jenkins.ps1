@@ -22,14 +22,13 @@
     .\start-jenkins.ps1
     Starts Jenkins if not running, or restarts if already running.
 
+.EXAMPLE
+    .\start-jenkins.ps1 -Status
+    Displays current Jenkins status and connection info.
+
 .NOTES
     Author: Dean Ammons
     Date: January 2026
-#>
-
-.EXAMPLE
-    .\Start-Jenkins.ps1 -Status
-    Displays current Jenkins status and connection info.
 #>
 
 [CmdletBinding()]
