@@ -2,21 +2,30 @@
 
 ## Overview
 
-The system automatically sends email notifications to users when their passwords are approaching expiration. This feature helps ensure users change their passwords before expiration and reduces lockouts.
+The system automatically sends email notifications to users about their password status. There are two types of notifications:
+
+1. **Password Expiring Soon Warning**: Sent when passwords will expire within 7 days
+2. **Password Has Expired Notice**: Sent once when a password actually expires
+
+This feature helps ensure users change their passwords proactively and are informed when their password has expired.
 
 ## How It Works
 
 ### Automatic Daily Check
 
-The system runs an automated check **every day at 8:00 AM** server time to identify users whose passwords are expiring soon and sends them email notifications.
+The system runs an automated check **every day at 8:00 AM** server time to:
+- Identify users whose passwords are expiring soon and send warning emails
+- Identify users whose passwords have expired and send expired notifications (once only)
 
-### Notification Window
+### Notification Types
+
+#### 1. Password Expiring Soon (Warning)
 
 Email warnings are sent when passwords will expire within the next **7 days**.
 
-### Email Content
+These warnings are sent **daily** during the 7-day window, so users may receive multiple reminders as the expiration date approaches.
 
-Users receive an email with:
+**Email Content - Expiring Warning:**
 
 -   **Subject**: `[Task Activity Management System] Password Expiration Warning`
 -   **Urgency level** based on days remaining:
@@ -25,6 +34,29 @@ Users receive an email with:
     -   4-7 days: "Your password will expire in X days."
 -   **Instructions** on how to change the password
 -   **Consequences** if the password expires
+
+#### 2. Password Has Expired (Expired Notice)
+
+When a password expires, the system sends **one notification** on the **first day after expiration**. 
+
+**How It Works:**
+- If password expires on 01/17/2026, the expired email is sent on 01/18/2026 (when expiration_date = yesterday)
+- On 01/19/2026 and beyond, no additional emails are sent
+- No database tracking needed - the logic uses the expiration date itself
+
+**Email Content - Expired Notice:**
+
+-   **Subject**: `[Task Activity Management System] Password Has Expired - Action Required`
+-   **Message**: "🔒 YOUR PASSWORD HAS EXPIRED"
+-   **Instructions** on how to log in and change the expired password
+-   **Important notes**:
+    -   User cannot access the system until password is changed
+    -   Expired password still works ONE TIME to log in and change it
+    -   New password will be valid for 90 days
+
+**Why Only Once:**
+
+The system checks if `expiration_date = yesterday`. This condition is only true on the first day after expiration, ensuring the notification is sent exactly once without requiring database flags or tracking.
 
 ### Who Gets Notified
 
@@ -73,6 +105,10 @@ The check runs daily at 8:00 AM server time. This is configured in `PasswordExpi
 @Scheduled(cron = "0 0 8 * * *") // Daily at 8 AM
 public void checkExpiringPasswordsAndNotify()
 ```
+
+This single scheduled job checks for **both**:
+1. Passwords expiring within 7 days → sends warnings (can repeat daily)
+2. Passwords expired yesterday → sends expired notification (once only, because today it's no longer "yesterday")
 
 To change the schedule, modify the cron expression:
 
@@ -214,19 +250,23 @@ This should not happen - GUEST users are explicitly skipped. If it occurs:
 grep -i "scheduled tasks" application.log
 ```
 
-### Issue: Emails Sent Multiple Times
+### Issue: Emails Sent Multiple Times for Expired Passwords
 
-This should not happen - each user is checked once per daily run.
+**This should not happen** - expired notifications are sent only when `expiration_date = yesterday`.
 
 **Possible causes**:
 
-1. Multiple application instances running (e.g., multiple ECS tasks)
-2. Manual trigger endpoint being called repeatedly
+1. Multiple application instances running (e.g., multiple ECS tasks) - each checks independently
+2. Manual trigger endpoint being called multiple times
+3. Server timezone issues causing "yesterday" calculation to be inconsistent
 
 **Solution**:
 
 -   For multiple instances, consider using distributed locking (e.g., AWS DynamoDB, Redis)
--   Add idempotency checks (e.g., track last notification sent date)
+-   Ensure all application instances use the same timezone (UTC recommended)
+-   Check logs to see if multiple instances are sending notifications
+
+**Note**: Expiring warnings (1-7 days) are sent daily by design, but expired notifications should only occur once.
 
 ## Future Enhancements
 
@@ -251,8 +291,10 @@ Potential improvements to consider:
 
 2. **Email Service**: `com.ammons.taskactivity.service.EmailService`
 
-    - `sendPasswordExpirationWarning()` method
-    - `buildPasswordExpirationWarningEmailBody()` helper
+    - `sendPasswordExpirationWarning()` - Send warning email (1-7 days)
+    - `sendPasswordExpiredNotification()` - Send expired notification (once only)
+    - `buildPasswordExpirationWarningEmailBody()` - Format warning email
+    - `buildPasswordExpiredEmailBody()` - Format expired notification
 
 3. **Controller**: `com.ammons.taskactivity.controller.UserManagementController`
 
@@ -271,20 +313,22 @@ No additional dependencies required - uses existing:
 
 ### Database Schema
 
-Uses existing `users` table with `expiration_date` column (DATE type):
+Uses existing `users` table columns - **no schema changes required**:
 
 ```sql
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255),
-    expiration_date DATE,
+    expiration_date DATE,          -- Used to determine if password expired yesterday
     role_id BIGINT NOT NULL REFERENCES roles(id),
     enabled BOOLEAN DEFAULT TRUE,
-    locked BOOLEAN DEFAULT FALSE,
+    account_locked BOOLEAN DEFAULT FALSE,
     ...
 );
 ```
+
+**Key Point**: The `expiration_date = yesterday` logic eliminates the need for additional tracking columns.
 
 ## Security Considerations
 
@@ -305,6 +349,6 @@ For questions or issues:
 
 ---
 
-**Last Updated**: January 15, 2026  
-**Version**: 1.0  
+**Last Updated**: January 17, 2026  
+**Version**: 1.1  
 **Author**: Dean Ammons

@@ -52,18 +52,21 @@ public class PasswordExpirationNotificationService {
      * Check for expiring passwords and send email notifications.
      * 
      * Runs daily at 8:00 AM server time. Sends warnings to users whose passwords will expire within
-     * the next 7 days.
+     * the next 7 days, and sends expired notification on the first day after expiration
+     * (yesterday).
      */
     @Scheduled(cron = "0 0 8 * * *") // Daily at 8 AM
     public void checkExpiringPasswordsAndNotify() {
         logger.info("Starting daily password expiration check...");
 
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate yesterday = today.minusDays(1);
         LocalDate sevenDaysFromNow = today.plusDays(7);
 
         // Find all users with expiration dates in the warning window
         List<User> allUsers = userRepository.findAll();
-        int notificationsSent = 0;
+        int expiringNotificationsSent = 0;
+        int expiredNotificationsSent = 0;
         int skippedUsers = 0;
 
         for (User user : allUsers) {
@@ -94,18 +97,33 @@ public class PasswordExpirationNotificationService {
                     continue;
                 }
 
-                // Check if password expires within warning window (7 days)
                 LocalDate expirationDate = user.getExpirationDate();
-                if (expirationDate.isAfter(today) && !expirationDate.isAfter(sevenDaysFromNow)) {
+
+                // Check if password expired YESTERDAY (first day after expiration)
+                // This sends the expired notification only once - on the day after expiration
+                if (expirationDate.isEqual(yesterday)) {
+                    // Send expired notification (only once, because tomorrow it won't equal
+                    // yesterday)
+                    String fullName = buildFullName(user);
+                    emailService.sendPasswordExpiredNotification(user.getEmail(),
+                            user.getUsername(), fullName);
+
+                    expiredNotificationsSent++;
+                    logger.info("Sent password EXPIRED notification to user: {} (expired on: {})",
+                            user.getUsername(), expirationDate);
+                }
+                // Check if password expires within warning window (1-7 days from now)
+                else if (expirationDate.isAfter(today)
+                        && !expirationDate.isAfter(sevenDaysFromNow)) {
                     long daysUntilExpiration =
                             java.time.temporal.ChronoUnit.DAYS.between(today, expirationDate);
 
-                    // Send notification
+                    // Send warning notification
                     String fullName = buildFullName(user);
                     emailService.sendPasswordExpirationWarning(user.getEmail(), user.getUsername(),
                             fullName, daysUntilExpiration);
 
-                    notificationsSent++;
+                    expiringNotificationsSent++;
                     logger.info("Sent password expiration warning to user: {} ({} days remaining)",
                             user.getUsername(), daysUntilExpiration);
                 }
@@ -117,8 +135,8 @@ public class PasswordExpirationNotificationService {
         }
 
         logger.info(
-                "Password expiration check complete. Notifications sent: {}, Skipped users: {}, Total checked: {}",
-                notificationsSent, skippedUsers, allUsers.size());
+                "Password expiration check complete. Expiring warnings sent: {}, Expired notifications sent: {}, Skipped users: {}, Total checked: {}",
+                expiringNotificationsSent, expiredNotificationsSent, skippedUsers, allUsers.size());
     }
 
     /**

@@ -789,6 +789,94 @@ public class EmailService {
     }
 
     /**
+     * Send password expired notification to user.
+     * 
+     * This notification is sent ONCE when a password actually expires, informing the user that
+     * their password has expired and they must change it upon next login.
+     * 
+     * @param userEmail the user's email address
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     */
+    public void sendPasswordExpiredNotification(String userEmail, String username,
+            String fullName) {
+        if (!mailEnabled) {
+            logger.debug(
+                    "Email notifications disabled - skipping password expired notification for user: {}",
+                    username);
+            return;
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            logger.warn("Cannot send password expired notification - user {} has no email address",
+                    username);
+            return;
+        }
+
+        String subject = String.format("[%s] Password Has Expired - Action Required", appName);
+        String body = buildPasswordExpiredEmailBody(username, fullName);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(userEmail, subject, body);
+            } else {
+                sendEmailViaSmtp(userEmail, subject, body);
+            }
+            logger.info("Password expired notification sent to {} for user: {}", userEmail,
+                    username);
+        } catch (Exception e) {
+            logger.error("Failed to send password expired notification to {}: {}", userEmail,
+                    e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Builds the email body for password expired notifications.
+     * 
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @return formatted email body text
+     */
+    private String buildPasswordExpiredEmailBody(String username, String fullName) {
+        String greeting = fullName != null && !fullName.trim().isEmpty() ? fullName : username;
+
+        return String.format(
+                """
+                        Hello %s,
+
+                        🔒 YOUR PASSWORD HAS EXPIRED
+
+                        Your password has expired and must be changed before you can continue using the system.
+                        For security purposes, all passwords must be changed every 90 days.
+
+                        WHAT TO DO NEXT:
+                        ----------------------------------------
+                        1. Go to %s login page
+                        2. Enter your username and current (expired) password
+                        3. You will be automatically redirected to the password change page
+                        4. Enter your current password and a new password
+                        5. Your new password must:
+                           - Be at least 8 characters long
+                           - Not be the same as your current password
+
+                        IMPORTANT:
+                        ----------------------------------------
+                        - You will NOT be able to access the system until you change your password
+                        - Your expired password will still work ONE TIME to log in and change it
+                        - After changing your password, your new password will be valid for 90 days
+
+                        NEED HELP?
+                        ----------------------------------------
+                        If you have any questions or need assistance, please contact your system administrator.
+
+                        ---
+                        This is an automated notification from %s.
+                        Do not reply to this email. This email is sent from an unattended mailbox.
+                        """,
+                greeting, appName, appName);
+    }
+
+    /**
      * Send Jenkins build success notification.
      * 
      * @param buildNumber the Jenkins build number
