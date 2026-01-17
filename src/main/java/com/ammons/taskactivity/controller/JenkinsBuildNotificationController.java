@@ -286,7 +286,9 @@ public class JenkinsBuildNotificationController {
                     @Schema(description = "Build environment",
                                     example = "production") String environment,
             @Schema(description = "What triggered the build",
-                                    example = "scm") String triggeredBy) {
+                                    example = "scm") String triggeredBy,
+                    @Schema(description = "Force no-cache build flag",
+                                    example = "true") String noCache) {
     }
 
     /**
