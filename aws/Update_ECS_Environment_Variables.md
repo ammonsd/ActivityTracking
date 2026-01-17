@@ -11,6 +11,7 @@ Common variables that may need updating:
 - `EXPENSE_APPROVERS` - Expense approval notification recipients
 - `JENKINS_BUILD_NOTIFICATION_EMAIL` - Build notification recipients
 - `JENKINS_DEPLOY_NOTIFICATION_EMAIL` - Deployment notification recipients
+- `JWT_EXPIRATION` - JWT token lifetime in milliseconds (default: 30 days)
 
 ## Method 1: AWS Console (Recommended for Simple Updates)
 
@@ -132,6 +133,15 @@ aws ecs update-service `
 | `JENKINS_BUILD_NOTIFICATION_EMAIL` | Build notifications | `deanammons@gmail.com` |
 | `JENKINS_DEPLOY_NOTIFICATION_EMAIL` | Deploy notifications | `deanammons@gmail.com,deanammons48@gmail.com;ammonsd@gmail.com` |
 
+### JWT Token Configuration
+
+| Variable | Purpose | Default Value | Recommended Value |
+|----------|---------|---------------|-------------------|
+| `JWT_EXPIRATION` | Access token lifetime (milliseconds) | 86400000 (24 hours) | 2592000000 (30 days) |
+| `JWT_REFRESH_EXPIRATION` | Refresh token lifetime (milliseconds) | 604800000 (7 days) | 604800000 (7 days) |
+
+**Note**: JWT_EXPIRATION controls how long Jenkins API tokens remain valid. Setting to 30 days reduces maintenance burden while maintaining reasonable security. See [Jenkins Token Maintenance Guide](../jenkins/Jenkins_Token_Maintenance_Guide.md) for renewal procedures.
+
 ## Example: Updating Jenkins Email Addresses
 
 ### Scenario
@@ -178,6 +188,58 @@ aws ecs update-service `
    - ECS → Clusters → taskactivity-cluster → taskactivity service
    - Update service → Select new revision → Force new deployment
    - Click Update
+
+## Example: Extending JWT Token Lifetime
+
+### Scenario
+- Extend Jenkins API token lifetime from 24 hours to 30 days
+- Reduces maintenance burden for Jenkins notification tokens
+
+### Steps
+
+1. **Download current task definition:**
+   ```powershell
+   aws ecs describe-task-definition --task-definition taskactivity --region us-east-1 --query 'taskDefinition' > current-task-def.json
+   ```
+
+2. **Edit current-task-def.json:**
+   Find the environment variables section and add/update:
+   ```json
+   {
+       "name": "JWT_EXPIRATION",
+       "value": "2592000000"
+   }
+   ```
+   
+   **Value Explanation:**
+   - `86400000` = 24 hours (default)
+   - `2592000000` = 30 days (recommended for Jenkins)
+   - `604800000` = 7 days (alternative)
+
+3. **Remove read-only fields** (same as email example above)
+
+4. **Register new task definition:**
+   ```powershell
+   aws ecs register-task-definition `
+       --cli-input-json file://current-task-def.json `
+       --region us-east-1
+   ```
+
+5. **Update service with new task definition:**
+   ```powershell
+   aws ecs update-service `
+       --cluster taskactivity-cluster `
+       --service taskactivity `
+       --task-definition taskactivity `
+       --force-new-deployment `
+       --region us-east-1
+   ```
+
+6. **After deployment completes**:
+   - Wait ~5 minutes for new task to start and old task to drain
+   - Generate new Jenkins API token (see [Jenkins Token Maintenance Guide](../jenkins/Jenkins_Token_Maintenance_Guide.md))
+   - Update Jenkins credential with new token
+   - New tokens will now be valid for 30 days
 
 ## Verification
 

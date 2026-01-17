@@ -320,6 +320,7 @@ For issues with these scripts:
 ## Additional Resources
 
 -   [Jenkins Setup Guide](Jenkins_Setup.md)
+-   [Jenkins Token Maintenance Guide](Jenkins_Token_Maintenance_Guide.md) - JWT token renewal procedures
 -   [Docker Credential Security Guide](Docker_Credential_Security_Guide.md) - Secure Docker credential storage
 -   [Environment Configuration](Jenkins_Environments.md)
 -   [Quick Reference](Jenkins_Quick_Reference.md)
