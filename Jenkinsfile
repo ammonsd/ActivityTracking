@@ -23,7 +23,8 @@ pipeline {
     
     triggers {
         // Build on main branch commits (auto-build with no-cache)
-        pollSCM(env.BRANCH_NAME == 'main' ? 'H/5 * * * *' : '')
+        // Poll every 5 minutes for changes
+        pollSCM('H/5 * * * *')
         
         // Daily deployment at 4pm (only if there are new builds)
         // Using H notation to spread load evenly across the hour
