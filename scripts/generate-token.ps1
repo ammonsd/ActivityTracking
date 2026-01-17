@@ -49,7 +49,7 @@ $header = @{
 
 # Payload
 $payload = @{
-    sub = "JENKINS_SERVICE"
+    sub = "jenkins-service"
     iat = $now
     exp = $exp
     jti = $jti
@@ -82,7 +82,7 @@ Write-Host "Jenkins API Token"
 Write-Host "=" * 70
 Write-Host ""
 Write-Host "Token Details:" -ForegroundColor Cyan
-Write-Host "  Subject: JENKINS_SERVICE"
+Write-Host "  Subject: jenkins-service"
 Write-Host "  Permission: JENKINS:NOTIFY"
 Write-Host "  Expires: $([DateTimeOffset]::FromUnixTimeSeconds($exp).LocalDateTime)"
 Write-Host "  Lifetime: 30 days"
