@@ -162,7 +162,7 @@ Create environment-specific task definitions in `aws/` directory:
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "curl -f http://localhost:8080/actuator/health || exit 1"
+                    "curl -f http://localhost:8081/actuator/health || exit 1"
                 ],
                 "interval": 30,
                 "timeout": 5,
@@ -235,7 +235,7 @@ Create environment-specific task definitions in `aws/` directory:
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "curl -f http://localhost:8080/actuator/health || exit 1"
+                    "curl -f http://localhost:8081/actuator/health || exit 1"
                 ],
                 "interval": 30,
                 "timeout": 5,
@@ -316,7 +316,7 @@ Create environment-specific task definitions in `aws/` directory:
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "curl -f http://localhost:8080/actuator/health || exit 1"
+                    "curl -f http://localhost:8081/actuator/health || exit 1"
                 ],
                 "interval": 30,
                 "timeout": 5,

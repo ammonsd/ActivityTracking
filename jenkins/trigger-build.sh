@@ -24,7 +24,7 @@
 set -e
 
 # Configuration
-JENKINS_URL=${JENKINS_URL:-"http://localhost:8080"}
+JENKINS_URL=${JENKINS_URL:-"http://localhost:8081"}
 JENKINS_USER=${JENKINS_USER:-"admin"}
 JENKINS_TOKEN=${JENKINS_TOKEN:-""}
 JENKINS_CLI_JAR="jenkins-cli.jar"

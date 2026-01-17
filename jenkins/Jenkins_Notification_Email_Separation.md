@@ -284,7 +284,7 @@ Test the configuration:
 1. **Build Notifications:**
 
     ```bash
-    curl -X POST http://localhost:8080/api/jenkins/build-success \
+    curl -X POST http://localhost:8081/api/jenkins/build-success \
          -H "Content-Type: application/json" \
          -H "Authorization: Bearer YOUR_TOKEN" \
          -d '{"buildNumber":"1","buildUrl":"http://jenkins/job/1/"}'
@@ -292,7 +292,7 @@ Test the configuration:
 
 2. **Deploy Notifications:**
     ```bash
-    curl -X POST http://localhost:8080/api/jenkins/deploy-success \
+    curl -X POST http://localhost:8081/api/jenkins/deploy-success \
          -H "Content-Type: application/json" \
          -H "Authorization: Bearer YOUR_TOKEN" \
          -d '{"buildNumber":"1","deployUrl":"http://jenkins/deploy/1/","environment":"production"}'

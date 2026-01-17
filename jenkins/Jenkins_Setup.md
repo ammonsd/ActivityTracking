@@ -39,13 +39,13 @@ mkdir C:\jenkins_home
 # Run Jenkins in Docker with Docker socket mounted
 docker run -d `
   --name jenkins `
-  -p 8080:8080 -p 50000:50000 `
+  -p 8080:8081 -p 50000:50000 `
   -v C:\jenkins_home:/var/jenkins_home `
   -v /var/run/docker.sock:/var/run/docker.sock `
   jenkins/jenkins:lts-jdk21
 ```
 
-Access Jenkins at: http://localhost:8080
+Access Jenkins at: http://localhost:8081
 
 Get initial admin password:
 
@@ -58,7 +58,7 @@ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 1. Download Jenkins LTS from: https://www.jenkins.io/download/
 2. Install Java 21 (if not already installed)
 3. Run the Windows installer
-4. Access Jenkins at: http://localhost:8080
+4. Access Jenkins at: http://localhost:8081
 
 ### Option 3: AWS EC2 Installation
 
@@ -88,7 +88,7 @@ sudo systemctl enable jenkins
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
-Access Jenkins at: http://<ec2-public-ip>:8080
+Access Jenkins at: http://<ec2-public-ip>:8081
 
 **Security Group Rules:**
 
@@ -136,10 +136,10 @@ After initial Jenkins setup, install required plugins:
 
 ```bash
 # Download Jenkins CLI
-wget http://localhost:8080/jnlpJars/jenkins-cli.jar
+wget http://localhost:8081/jnlpJars/jenkins-cli.jar
 
 # Install plugins
-java -jar jenkins-cli.jar -s http://localhost:8080/ install-plugin \
+java -jar jenkins-cli.jar -s http://localhost:8081/ install-plugin \
   workflow-aggregator \
   git \
   github \
@@ -153,7 +153,7 @@ java -jar jenkins-cli.jar -s http://localhost:8080/ install-plugin \
   ws-cleanup
 
 # Restart Jenkins
-java -jar jenkins-cli.jar -s http://localhost:8080/ safe-restart
+java -jar jenkins-cli.jar -s http://localhost:8081/ safe-restart
 ```
 
 ## Tool Configuration
@@ -370,7 +370,7 @@ Configure GitHub to trigger Jenkins builds automatically on code commits.
 1. **Get Jenkins Webhook URL:**
 
     - URL format: `http://<jenkins-url>/github-webhook/`
-    - Example: `http://jenkins.example.com:8080/github-webhook/`
+    - Example: `http://jenkins.example.com:8081/github-webhook/`
 
 2. **Configure GitHub Webhook:**
 
@@ -601,16 +601,16 @@ steps {
 
 ```powershell
 # Restart Jenkins
-java -jar jenkins-cli.jar -s http://localhost:8080/ safe-restart
+java -jar jenkins-cli.jar -s http://localhost:8081/ safe-restart
 
 # List plugins
-java -jar jenkins-cli.jar -s http://localhost:8080/ list-plugins
+java -jar jenkins-cli.jar -s http://localhost:8081/ list-plugins
 
 # Get job status
-java -jar jenkins-cli.jar -s http://localhost:8080/ get-job TaskActivity-Pipeline
+java -jar jenkins-cli.jar -s http://localhost:8081/ get-job TaskActivity-Pipeline
 
 # Build job
-java -jar jenkins-cli.jar -s http://localhost:8080/ build TaskActivity-Pipeline
+java -jar jenkins-cli.jar -s http://localhost:8081/ build TaskActivity-Pipeline
 ```
 
 ## Next Steps

@@ -115,7 +115,7 @@ Expected output:
 
 ### Step 5: Add Credentials to Jenkins
 
-1. Open Jenkins: http://172.27.85.228:8080
+1. Open Jenkins: http://172.27.85.228:8081
 2. Navigate to: **Manage Jenkins** → **Credentials** → **System** → **Global credentials**
 3. Click **Add Credentials**
 4. Configure:
@@ -314,7 +314,7 @@ Complete CI/CD pipeline with AWS deployment:
 
 ### Phase 1: Test Build (Local Only)
 
-1. Open Jenkins: http://172.27.85.228:8080
+1. Open Jenkins: http://172.27.85.228:8081
 2. Click **TaskActivity-Pipeline**
 3. Click **Build with Parameters**
 4. Configure:

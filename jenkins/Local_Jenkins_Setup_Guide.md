@@ -101,7 +101,7 @@ sudo systemctl status jenkins
 
 ### Step 3: Access Jenkins
 
-1. Open browser and navigate to: `http://localhost:8080`
+1. Open browser and navigate to: `http://localhost:8081`
 2. Retrieve initial admin password:
 
 ```bash
@@ -123,7 +123,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
     - Password: Create a secure password
     - Full name: Your name
     - Email: Your email
-4. **Jenkins URL:** Accept default `http://localhost:8080/`
+4. **Jenkins URL:** Accept default `http://localhost:8081/`
 
 ### Step 2: Verify Installation
 
@@ -591,7 +591,7 @@ Save this IP - you'll use it in the next step.
 cd /mnt/c/Users/deana/GitHub/ActivityTracking
 
 # Run container with environment file and database override
-docker run -p 8081:8080 \
+docker run -p 8081:8081 \
   --env-file .env.local \
   -e DATABASE_URL="jdbc:postgresql://172.27.80.1:5432/AmmoP1DB" \
   taskactivity:latest
@@ -599,7 +599,7 @@ docker run -p 8081:8080 \
 
 **Key points:**
 
--   `-p 8081:8080` - Maps container port 8080 to host port 8081 (Jenkins uses 8080)
+-   `-p 8081:8081` - Maps container port 8080 to host port 8081 (Jenkins uses 8080)
 -   `--env-file .env.local` - Loads all environment variables from file
 -   `-e DATABASE_URL=...` - Overrides database URL to use Windows host IP (replace `172.27.80.1` with your actual IP)
 -   `taskactivity:latest` - Uses the most recent Jenkins-built image
@@ -645,7 +645,7 @@ hostname -I | awk '{print $1}'
 lsof -i :8081
 
 # Or use a different port
-docker run -p 8082:8080 \
+docker run -p 8082:8081 \
   --env-file .env.local \
   -e DATABASE_URL="jdbc:postgresql://172.27.80.1:5432/AmmoP1DB" \
   taskactivity:latest
@@ -717,7 +717,7 @@ echo "Access app at: http://$WSL_IP:8081/task-activity"
 echo ""
 
 # Run container
-docker run -p 8081:8080 \
+docker run -p 8081:8081 \
   --env-file .env.local \
   -e DATABASE_URL="jdbc:postgresql://$WIN_HOST_IP:5432/AmmoP1DB" \
   taskactivity:latest
@@ -746,7 +746,7 @@ sudo systemctl start jenkins
 sudo systemctl status jenkins
 
 # Access Jenkins in browser:
-# http://localhost:8080
+# http://localhost:8081
 ```
 
 ### Automatic Startup (Optional)
@@ -790,10 +790,10 @@ notepad $PROFILE
 # Add this function:
 function Start-Jenkins {
     wsl sudo systemctl start jenkins
-    Write-Host "Jenkins started. Access at http://localhost:8080"
+    Write-Host "Jenkins started. Access at http://localhost:8081"
     Write-Host "Waiting 30 seconds for Jenkins to fully start..."
     Start-Sleep -Seconds 30
-    Start-Process "http://localhost:8080"
+    Start-Process "http://localhost:8081"
 }
 
 # Save and close. Then run:
@@ -814,7 +814,7 @@ sudo systemctl start jenkins
 # 3. Wait 30-60 seconds for Jenkins to fully start
 
 # 4. Open browser to Jenkins
-# http://localhost:8080
+# http://localhost:8081
 
 # 5. Trigger a build or let it run automatically
 ```
@@ -840,7 +840,7 @@ sudo systemctl status jenkins
 netstat -tulpn | grep 8080
 
 # Or test with curl
-curl -I http://localhost:8080
+curl -I http://localhost:8081
 ```
 
 ### Troubleshooting Startup Issues
@@ -860,7 +860,7 @@ sudo systemctl start jenkins
 
 ```bash
 # Find what's using port 8080
-lsof -i :8080
+lsof -i :8081
 
 # If it's a zombie Jenkins process:
 sudo killall java
@@ -885,7 +885,7 @@ wsl
 
 You'll know Jenkins is ready when:
 
--   `http://localhost:8080` loads the dashboard
+-   `http://localhost:8081` loads the dashboard
 -   No "Jenkins is getting ready" message
 -   Your jobs are visible in the UI
 

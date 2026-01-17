@@ -13,7 +13,7 @@ Quick reference guide for common Jenkins CI/CD operations for the Task Activity 
 
 ### Trigger Build via UI
 
-1. Navigate to Jenkins: `http://your-jenkins-url:8080`
+1. Navigate to Jenkins: `http://your-jenkins-url:8081`
 2. Click on **TaskActivity-Pipeline**
 3. Click **Build with Parameters**
 4. Select options:
@@ -27,15 +27,15 @@ Quick reference guide for common Jenkins CI/CD operations for the Task Activity 
 
 ```bash
 # Install Jenkins CLI first
-curl -o jenkins-cli.jar http://your-jenkins-url:8080/jnlpJars/jenkins-cli.jar
+curl -o jenkins-cli.jar http://your-jenkins-url:8081/jnlpJars/jenkins-cli.jar
 
 # Deploy to dev
-java -jar jenkins-cli.jar -s http://your-jenkins-url:8080/ \
+java -jar jenkins-cli.jar -s http://your-jenkins-url:8081/ \
   -auth user:token build TaskActivity-Pipeline \
   -p ENVIRONMENT=dev -p DEPLOY_ACTION=deploy
 
 # Deploy to production
-java -jar jenkins-cli.jar -s http://your-jenkins-url:8080/ \
+java -jar jenkins-cli.jar -s http://your-jenkins-url:8081/ \
   -auth user:token build TaskActivity-Pipeline \
   -p ENVIRONMENT=production -p DEPLOY_ACTION=deploy
 ```
@@ -49,7 +49,7 @@ cd jenkins
 ./check-deployment.sh production
 
 # Trigger build
-export JENKINS_URL="http://your-jenkins-url:8080"
+export JENKINS_URL="http://your-jenkins-url:8081"
 export JENKINS_USER="your-username"
 export JENKINS_TOKEN="your-api-token"
 ./trigger-build.sh production deploy

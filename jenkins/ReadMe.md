@@ -44,7 +44,7 @@ Trigger a Jenkins build via CLI.
 **Example:**
 
 ```bash
-export JENKINS_URL="http://your-jenkins:8080"
+export JENKINS_URL="http://your-jenkins:8081"
 export JENKINS_USER="admin"
 export JENKINS_TOKEN="your-api-token"
 ./trigger-build.sh production deploy
@@ -137,7 +137,7 @@ cd jenkins
 
 ```bash
 # Set up credentials first
-export JENKINS_URL="http://your-jenkins:8080"
+export JENKINS_URL="http://your-jenkins:8081"
 export JENKINS_USER="your-username"
 export JENKINS_TOKEN="your-api-token"
 
@@ -184,10 +184,10 @@ aws configure
 
 ```bash
 # Download Jenkins CLI
-curl -o jenkins-cli.jar http://your-jenkins:8080/jnlpJars/jenkins-cli.jar
+curl -o jenkins-cli.jar http://your-jenkins:8081/jnlpJars/jenkins-cli.jar
 
 # Test connection
-java -jar jenkins-cli.jar -s http://your-jenkins:8080/ who-am-i
+java -jar jenkins-cli.jar -s http://your-jenkins:8081/ who-am-i
 ```
 
 ### Required Environment Variables
@@ -211,7 +211,7 @@ For all scripts:
 ./verify-environment.sh production
 
 # 2. Trigger deployment
-export JENKINS_URL="http://your-jenkins:8080"
+export JENKINS_URL="http://your-jenkins:8081"
 export JENKINS_USER="admin"
 export JENKINS_TOKEN="your-token"
 ./trigger-build.sh production deploy
