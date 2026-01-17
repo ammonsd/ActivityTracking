@@ -53,7 +53,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
                                         "abc1234",
                                         "https://jenkins.example.com/job/taskactivity/72/", null,
-                                        "production");
+                                        "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
@@ -72,7 +72,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("73", "develop",
                         "def5678", "https://jenkins.example.com/job/taskactivity/73/",
                                         "https://jenkins.example.com/job/taskactivity/73/console",
-                                        "staging");
+                                        "staging", "manual");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
@@ -92,7 +92,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("74", "main",
                                         "ghi9012",
                                         "https://jenkins.example.com/job/taskactivity/74/", null,
-                                        "dev");
+                                        "dev", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
@@ -109,7 +109,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest(null, "main",
                                         "abc1234",
                                         "https://jenkins.example.com/job/taskactivity/72/", null,
-                                        "production");
+                                        "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -127,7 +127,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("", "main",
                                         "abc1234",
                                         "https://jenkins.example.com/job/taskactivity/72/", null,
-                                        "production");
+                                        "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -143,7 +143,7 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildSuccess_MissingBuildUrl() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
-                                        "abc1234", null, null, "production");
+                                        "abc1234", null, null, "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -159,7 +159,7 @@ class JenkinsBuildNotificationControllerTest {
     void testNotifyBuildFailure_MissingBuildUrl() throws Exception {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("73", "develop",
-                                        "def5678", "", null, "staging");
+                                        "def5678", "", null, "staging", "manual");
 
         mockMvc.perform(post("/api/jenkins/build-failure").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -177,7 +177,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
                                         "abc1234",
                                         "https://jenkins.example.com/job/taskactivity/72/", null,
-                                        "production");
+                                        "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -193,7 +193,7 @@ class JenkinsBuildNotificationControllerTest {
                 new JenkinsBuildNotificationController.BuildNotificationRequest("72", "main",
                                         "abc1234",
                                         "https://jenkins.example.com/job/taskactivity/72/", null,
-                                        "production");
+                                        "production", "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -209,7 +209,7 @@ class JenkinsBuildNotificationControllerTest {
         JenkinsBuildNotificationController.BuildNotificationRequest request =
                 new JenkinsBuildNotificationController.BuildNotificationRequest("75", null, null,
                                         "https://jenkins.example.com/job/taskactivity/75/", null,
-                                        null);
+                                        null, "scm");
 
         mockMvc.perform(post("/api/jenkins/build-success").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk())
@@ -219,3 +219,4 @@ class JenkinsBuildNotificationControllerTest {
                         eq("https://jenkins.example.com/job/taskactivity/75/"), isNull());
     }
 }
+
