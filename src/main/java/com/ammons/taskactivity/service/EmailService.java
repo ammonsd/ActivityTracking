@@ -1,5 +1,6 @@
 package com.ammons.taskactivity.service;
 
+import com.ammons.taskactivity.util.StringUtil;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,37 +130,10 @@ public class EmailService {
             return;
         }
 
-        if (adminEmail == null || adminEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No admin email configured - skipping account lockout notification for user: {}",
-                    username);
-            return;
-        }
-
         String subject = String.format("[%s] Account Locked: %s", appName, username);
         String body = buildLockoutEmailBody(username, fullName, failedAttempts, ipAddress);
 
-        // Parse comma-separated admin emails
-        String[] adminEmails = adminEmail.split(",");
-        for (String email : adminEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("Account lockout notification sent to {} for user: {}", trimmedEmail,
-                        username);
-            } catch (Exception e) {
-                logger.error("Failed to send lockout notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendToCommaSeparatedRecipients(adminEmail, subject, body, "account lockout", username);
     }
 
     /**
@@ -307,6 +281,61 @@ public class EmailService {
     }
 
     /**
+     * Sends emails to comma-separated recipients.
+     * 
+     * Helper method to send the same email to multiple recipients specified in a comma-separated
+     * string. Each recipient receives a separate email.
+     * 
+     * @param recipientsConfig comma-separated list of email addresses
+     * @param subject email subject
+     * @param body email body text
+     * @param emailType description of email type for logging (e.g., "account lockout")
+     * @param contextInfo additional context for logging (e.g., username)
+     */
+    private void sendToCommaSeparatedRecipients(String recipientsConfig, String subject,
+            String body, String emailType, String contextInfo) {
+        if (recipientsConfig == null || recipientsConfig.trim().isEmpty()) {
+            logger.warn("No recipients configured for {} notification", emailType);
+            return;
+        }
+
+        String[] recipients = recipientsConfig.split(",");
+        for (String email : recipients) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
+                } else {
+                    sendEmailViaSmtp(trimmedEmail, subject, body);
+                }
+                logger.info("{} notification sent to {} for: {}", emailType, trimmedEmail,
+                        contextInfo);
+            } catch (Exception e) {
+                logger.error("Failed to send {} notification to {}: {}", emailType, trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Formats a user details header line for email bodies.
+     * 
+     * Helper method to build a consistent user identification line that prefers full name over
+     * username when available.
+     * 
+     * @param username the username
+     * @param fullName the full name (optional, can be null)
+     * @return formatted user details string
+     */
+    private String formatUserDetailsHeader(String username, String fullName) {
+        return StringUtil.getGreeting(fullName, username);
+    }
+
+    /**
      * Send notification when GUEST role user logs in.
      * 
      * @param username the username of the GUEST user
@@ -322,37 +351,10 @@ public class EmailService {
             return;
         }
 
-        if (adminEmail == null || adminEmail.trim().isEmpty()) {
-            logger.warn(
-                    "No admin email configured - skipping GUEST login notification for user: {}",
-                    username);
-            return;
-        }
-
         String subject = String.format("[%s] GUEST User Login", appName);
         String body = buildGuestLoginEmailBody(username, fullName, ipAddress, location);
 
-        // Parse comma-separated admin emails
-        String[] adminEmails = adminEmail.split(",");
-        for (String email : adminEmails) {
-            String trimmedEmail = email.trim();
-            if (trimmedEmail.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(trimmedEmail, subject, body);
-                } else {
-                    sendEmailViaSmtp(trimmedEmail, subject, body);
-                }
-                logger.info("GUEST login notification sent to {} for user: {}", trimmedEmail,
-                        username);
-            } catch (Exception e) {
-                logger.error("Failed to send GUEST login notification to {}: {}", trimmedEmail,
-                        e.getMessage(), e);
-            }
-        }
+        sendToCommaSeparatedRecipients(adminEmail, subject, body, "GUEST login", username);
     }
 
     /**
@@ -368,19 +370,13 @@ public class EmailService {
             String location) {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
 
-        StringBuilder details = new StringBuilder();
-        if (fullName != null) {
-            details.append(String.format("Name:               %s%n", fullName));
-        }
-        details.append(String.format("Username:           %s", username));
-
         return String
                 .format("""
                 A user with GUEST role has logged into the system.
 
                 Details:
                 ----------------------------------------
-                %s
+                Name/Username:      %s
                 Login Timestamp:    %s
                 IP Address:         %s
                 Location:           %s
@@ -388,7 +384,8 @@ public class EmailService {
 
                 This is an automated notification from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, details.toString(), timestamp, ipAddress != null ? ipAddress : "Unknown",
+                """, StringUtil.getGreeting(fullName, username), timestamp,
+                ipAddress != null ? ipAddress : "Unknown",
                 location != null ? location : "Unknown", appName);
     }
 
@@ -405,12 +402,6 @@ public class EmailService {
             String ipAddress) {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
 
-        StringBuilder details = new StringBuilder();
-        if (fullName != null) {
-            details.append(String.format("Name:               %s%n", fullName));
-        }
-        details.append(String.format("Username:           %s", username));
-
         return String.format("""
                 ACCOUNT LOCKOUT ALERT
 
@@ -418,7 +409,7 @@ public class EmailService {
 
                 Details:
                 ----------------------------------------
-                %s
+                Name/Username:      %s
                 Failed Attempts:    %d
                 Lockout Timestamp:  %s
                 IP Address:         %s
@@ -437,7 +428,7 @@ public class EmailService {
 
                 This is an automated message from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, details.toString(), failedAttempts, timestamp,
+                """, StringUtil.getGreeting(fullName, username), failedAttempts, timestamp,
                 ipAddress != null ? ipAddress : "Unknown", appName, username, appName);
     }
 
@@ -513,43 +504,12 @@ public class EmailService {
             return;
         }
 
-        if (expenseApprovers == null || expenseApprovers.trim().isEmpty()) {
-            logger.warn(
-                    "No expense approvers configured - skipping expense submission notification");
-            return;
-        }
-
-        // Parse comma-separated approver emails
-        String[] approverEmails = expenseApprovers.split(",");
-        if (approverEmails.length == 0) {
-            logger.warn("No valid expense approver emails found");
-            return;
-        }
-
         String subject = String.format("[%s] New Expense Submitted - %s", appName, expenseId);
         String body = buildExpenseSubmittedEmailBody(username, fullName, expenseId,
                 expenseDescription, amount, currency, expenseDate);
 
-        // Send to all configured approvers
-        for (String approverEmail : approverEmails) {
-            String email = approverEmail.trim();
-            if (email.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(email, subject, body);
-                } else {
-                    sendEmailViaSmtp(email, subject, body);
-                }
-                logger.info("Expense submission notification sent to {} for expense ID: {}", email,
-                        expenseId);
-            } catch (Exception e) {
-                logger.error("Failed to send expense submission notification to {}: {}", email,
-                        e.getMessage(), e);
-            }
-        }
+        sendToCommaSeparatedRecipients(expenseApprovers, subject, body, "expense submission",
+                "expense ID: " + expenseId);
     }
 
     /**
@@ -557,14 +517,11 @@ public class EmailService {
      */
     private String buildExpenseSubmittedEmailBody(String username, String fullName, Long expenseId,
             String expenseDescription, String amount, String currency, String expenseDate) {
-        String timestamp = LocalDateTime.now().format(DATE_FORMATTER); // Uses local time
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
 
         StringBuilder details = new StringBuilder();
-        if (fullName != null && !fullName.trim().isEmpty()) {
-            details.append(String.format("Submitted By:       %s (%s)%n", fullName, username));
-        } else {
-            details.append(String.format("Submitted By:       %s%n", username));
-        }
+        details.append(String.format("Submitted By:       %s%n",
+                StringUtil.getGreeting(fullName, username)));
         details.append(String.format("Description:        %s%n", expenseDescription));
         details.append(String.format("Amount:             %s %s%n", amount, currency));
         details.append(String.format("Expense Date:       %s%n", expenseDate));
@@ -640,9 +597,8 @@ public class EmailService {
         String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
 
         StringBuilder details = new StringBuilder();
-        if (fullName != null) {
-            details.append(String.format("User:               %s%n", fullName));
-        }
+        details.append(String.format("User:               %s%n",
+                StringUtil.getGreeting(fullName, username)));
         details.append(String.format("Description:        %s%n", expenseDescription));
         details.append(String.format("Amount:             %s %s%n", amount, currency));
         details.append(String.format("New Status:         %s%n", newStatus));
@@ -742,7 +698,7 @@ public class EmailService {
      */
     private String buildPasswordExpirationWarningEmailBody(String username, String fullName,
             long daysUntilExpiration) {
-        String greeting = fullName != null && !fullName.trim().isEmpty() ? fullName : username;
+        String greeting = StringUtil.getGreeting(fullName, username);
 
         String urgencyMessage;
         if (daysUntilExpiration <= 1) {
@@ -838,7 +794,7 @@ public class EmailService {
      * @return formatted email body text
      */
     private String buildPasswordExpiredEmailBody(String username, String fullName) {
-        String greeting = fullName != null && !fullName.trim().isEmpty() ? fullName : username;
+        String greeting = StringUtil.getGreeting(fullName, username);
 
         return String.format(
                 """

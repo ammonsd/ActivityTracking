@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,17 +26,23 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 /**
- * Service for importing CSV files into the database. Supports bulk import of TaskActivity and
- * Expense records with validation.
- * 
+ * Service for importing CSV files into the database. Supports bulk import of TaskActivity, Expense,
+ * and DropdownValue records with validation.
+ *
+ * <p>
  * CSV Column Name Flexibility: The service accepts both database column names (lowercase with
  * underscores) and camelCase variations for flexibility. For example, both "taskdate" and
  * "taskDate", or "expense_date" and "expenseDate" will work correctly. However, it's recommended to
  * use the actual database column names (taskdate, taskhours, expense_date, etc.) for consistency.
+ * </p>
  *
- * Author: Dean Ammons Date: January 2026
+ * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
  */
 @Service
 public class CsvImportService {
@@ -65,182 +72,82 @@ public class CsvImportService {
     /**
      * Import TaskActivity records from CSV file.
      * 
+     * <p>
      * Expected CSV format (with header): taskDate,client,project,phase,hours,details,username
      * 2026-01-15,ClientA,ProjectX,Development,8.00,Implementation work,john.doe
+     * </p>
      *
      * @param file CSV file to import
      * @return Import result with statistics
      * @throws IOException if file reading fails
      */
     public CsvImportResult importTaskActivities(MultipartFile file) throws IOException {
-        logger.info("Starting TaskActivity CSV import from file: {}", file.getOriginalFilename());
-
-        CsvImportResult result = new CsvImportResult();
-        int skippedDuplicates = 0;
-
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String line;
-            int lineNumber = 0;
-            String[] headers = null;
-
-            while ((line = reader.readLine()) != null) {
-                lineNumber++;
-
-                // Skip empty lines
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                // First non-empty line is the header
-                if (headers == null) {
-                    headers = parseCsvLine(line);
-                    continue;
-                }
-
-                try {
-                    String[] values = parseCsvLine(line);
-                    TaskActivity activity = parseTaskActivity(headers, values);
-
-                    // Validate entity
-                    Set<ConstraintViolation<TaskActivity>> violations =
-                            validator.validate(activity);
-                    if (!violations.isEmpty()) {
-                        String errors = violations.stream()
-                                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                                .reduce((a, b) -> a + "; " + b).orElse("Unknown validation error");
-                        result.addError(lineNumber, "Validation failed: " + errors);
-                        continue;
-                    }
-
-                    result.incrementProcessed();
-
-                    // Save record individually with duplicate handling
-                    try {
-                        taskActivityRepository.save(activity);
-                        result.addSuccess(1);
-                    } catch (DataIntegrityViolationException e) {
-                        // Duplicate record - skip it silently
-                        skippedDuplicates++;
-                        logger.debug("Skipping duplicate TaskActivity record at line {}: {}",
-                                lineNumber, e.getMessage());
-                    }
-
-                } catch (Exception e) {
-                    result.addError(lineNumber, "Parse error: " + e.getMessage());
-                    logger.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
-                }
-            }
-        }
-
-        if (skippedDuplicates > 0) {
-            logger.info("Skipped {} duplicate TaskActivity records", skippedDuplicates);
-        }
-        logger.info("TaskActivity import completed. Success: {}, Errors: {}",
-                result.getSuccessCount(), result.getErrorCount());
-        return result;
+        return importCsvGeneric(file, "TaskActivity", this::parseTaskActivity,
+                taskActivityRepository);
     }
 
     /**
      * Import Expense records from CSV file.
      * 
+     * <p>
      * Expected CSV format (with header):
      * username,client,project,expenseDate,expenseType,description,amount,currency,paymentMethod,vendor,referenceNumber,expenseStatus
      * john.doe,ClientA,ProjectX,2026-01-15,Travel,Flight to NYC,450.00,USD,Corporate Card,United
      * Airlines,ABC123,Submitted
+     * </p>
      *
      * @param file CSV file to import
      * @return Import result with statistics
      * @throws IOException if file reading fails
      */
     public CsvImportResult importExpenses(MultipartFile file) throws IOException {
-        logger.info("Starting Expense CSV import from file: {}", file.getOriginalFilename());
-
-        CsvImportResult result = new CsvImportResult();
-        int skippedDuplicates = 0;
-
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String line;
-            int lineNumber = 0;
-            String[] headers = null;
-
-            while ((line = reader.readLine()) != null) {
-                lineNumber++;
-
-                // Skip empty lines
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                // First non-empty line is the header
-                if (headers == null) {
-                    headers = parseCsvLine(line);
-                    continue;
-                }
-
-                try {
-                    String[] values = parseCsvLine(line);
-                    Expense expense = parseExpense(headers, values);
-
-                    // Validate entity
-                    Set<ConstraintViolation<Expense>> violations = validator.validate(expense);
-                    if (!violations.isEmpty()) {
-                        String errors = violations.stream()
-                                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                                .reduce((a, b) -> a + "; " + b).orElse("Unknown validation error");
-                        result.addError(lineNumber, "Validation failed: " + errors);
-                        continue;
-                    }
-
-                    result.incrementProcessed();
-
-                    // Save record individually with duplicate handling
-                    try {
-                        expenseRepository.save(expense);
-                        result.addSuccess(1);
-                    } catch (DataIntegrityViolationException e) {
-                        // Duplicate record - skip it silently
-                        skippedDuplicates++;
-                        logger.debug("Skipping duplicate Expense record at line {}: {}", lineNumber,
-                                e.getMessage());
-                    }
-
-                } catch (Exception e) {
-                    result.addError(lineNumber, "Parse error: " + e.getMessage());
-                    logger.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
-                }
-            }
-        }
-
-        if (skippedDuplicates > 0) {
-            logger.info("Skipped {} duplicate Expense records", skippedDuplicates);
-        }
-        logger.info("Expense import completed. Success: {}, Errors: {}", result.getSuccessCount(),
-                result.getErrorCount());
-        return result;
+        return importCsvGeneric(file, "Expense", this::parseExpense, expenseRepository);
     }
 
     /**
      * Import DropdownValue records from CSV file.
      * 
+     * <p>
      * Expected CSV format (with header): category,subcategory,itemvalue,displayorder,isactive
      * CLIENT,General,Acme Corp,1,true PROJECT,Development,Website Redesign,1,true
+     * </p>
      * 
+     * <p>
      * Note: Duplicates (same category, subcategory, itemvalue) are silently skipped. The unique
      * constraint is on (category, subcategory, itemvalue).
+     * </p>
      *
      * @param file CSV file to import
      * @return Import result with statistics
      * @throws IOException if file reading fails
      */
     public CsvImportResult importDropdownValues(MultipartFile file) throws IOException {
-        logger.info("Starting DropdownValue CSV import from file: {}", file.getOriginalFilename());
+        return importCsvGeneric(file, "DropdownValue", this::parseDropdownValue,
+                dropdownValueRepository);
+    }
+
+    /**
+     * Generic CSV import method supporting any entity type.
+     * 
+     * <p>
+     * This method centralizes the CSV reading, validation, and saving logic, reducing code
+     * duplication across all import methods.
+     * </p>
+     *
+     * @param <T> the entity type
+     * @param file CSV file to import
+     * @param entityName display name for logging (e.g., "TaskActivity")
+     * @param entityParser function to parse CSV row into entity
+     * @param repository repository to save the entity
+     * @return Import result with statistics
+     * @throws IOException if file reading fails
+     */
+    private <T> CsvImportResult importCsvGeneric(MultipartFile file, String entityName,
+            BiFunction<String[], String[], T> entityParser, Object repository) throws IOException {
+        logger.info("Starting {} CSV import from file: {}", entityName, file.getOriginalFilename());
 
         CsvImportResult result = new CsvImportResult();
-        int skippedDuplicates = 0;
+        AtomicInteger skippedDuplicates = new AtomicInteger(0);
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
@@ -252,58 +159,106 @@ public class CsvImportService {
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
 
-                // Skip empty lines
                 if (line.trim().isEmpty()) {
                     continue;
                 }
 
-                // First non-empty line is the header
                 if (headers == null) {
                     headers = parseCsvLine(line);
                     continue;
                 }
 
-                try {
-                    String[] values = parseCsvLine(line);
-                    DropdownValue dropdownValue = parseDropdownValue(headers, values);
-
-                    // Validate entity
-                    Set<ConstraintViolation<DropdownValue>> violations =
-                            validator.validate(dropdownValue);
-                    if (!violations.isEmpty()) {
-                        String errors = violations.stream()
-                                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                                .reduce((a, b) -> a + "; " + b).orElse("Unknown validation error");
-                        result.addError(lineNumber, "Validation failed: " + errors);
-                        continue;
-                    }
-
-                    result.incrementProcessed();
-
-                    // Save record individually with duplicate handling
-                    try {
-                        dropdownValueRepository.save(dropdownValue);
-                        result.addSuccess(1);
-                    } catch (DataIntegrityViolationException e) {
-                        // Duplicate record - skip it silently
-                        skippedDuplicates++;
-                        logger.debug("Skipping duplicate DropdownValue record at line {}: {}",
-                                lineNumber, e.getMessage());
-                    }
-
-                } catch (Exception e) {
-                    result.addError(lineNumber, "Parse error: " + e.getMessage());
-                    logger.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
-                }
+                processEntityImport(line, headers, lineNumber, entityName, entityParser, repository,
+                        result, skippedDuplicates);
             }
         }
 
-        if (skippedDuplicates > 0) {
-            logger.info("Skipped {} duplicate DropdownValue records", skippedDuplicates);
-        }
-        logger.info("DropdownValue import completed. Success: {}, Errors: {}",
-                result.getSuccessCount(), result.getErrorCount());
+        logImportCompletion(entityName, result, skippedDuplicates.get());
         return result;
+    }
+
+    /**
+     * Process import of a single CSV entity.
+     */
+    private <T> void processEntityImport(String line, String[] headers, int lineNumber,
+            String entityName, BiFunction<String[], String[], T> entityParser, Object repository,
+            CsvImportResult result, AtomicInteger skippedDuplicates) {
+        try {
+            String[] values = parseCsvLine(line);
+            T entity = entityParser.apply(headers, values);
+
+            if (!validateEntity(entity, lineNumber, result)) {
+                return;
+            }
+
+            result.incrementProcessed();
+            saveEntityWithDuplicateHandling(entity, repository, entityName, lineNumber,
+                    skippedDuplicates, result);
+
+        } catch (Exception e) {
+            result.addError(lineNumber, "Parse error: " + e.getMessage());
+            logger.warn("Error parsing line {}: {}", lineNumber, e.getMessage());
+        }
+    }
+
+    /**
+     * Validate entity using Bean Validation.
+     *
+     * @param entity the entity to validate
+     * @param lineNumber current line number for error reporting
+     * @param result import result to add errors to
+     * @return true if valid, false if validation errors exist
+     */
+    private <T> boolean validateEntity(T entity, int lineNumber, CsvImportResult result) {
+        Set<ConstraintViolation<T>> violations = validator.validate(entity);
+        if (!violations.isEmpty()) {
+            String errors =
+                    violations.stream().map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .reduce((a, b) -> a + "; " + b).orElse("Unknown validation error");
+            result.addError(lineNumber, "Validation failed: " + errors);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Save entity to repository with duplicate handling.
+     *
+     * @param entity the entity to save
+     * @param repository the repository to save to
+     * @param entityName entity name for logging
+     * @param lineNumber current line number for logging
+     * @param skippedDuplicates counter for duplicate records
+     * @param result import result to update
+     */
+    @SuppressWarnings("unchecked")
+    private <T, ID> void saveEntityWithDuplicateHandling(T entity, Object repository,
+            String entityName, int lineNumber, AtomicInteger skippedDuplicates,
+            CsvImportResult result) {
+        try {
+            ((org.springframework.data.repository.CrudRepository<T, ID>) repository).save(entity);
+            result.addSuccess(1);
+        } catch (DataIntegrityViolationException e) {
+            skippedDuplicates.incrementAndGet();
+            logger.debug("Skipping duplicate {} record at line {}: {}", entityName, lineNumber,
+                    e.getMessage());
+        }
+    }
+
+    /**
+     * Log final import completion statistics.
+     *
+     * @param entityName entity name for logging
+     * @param result import result
+     * @param skippedDuplicates number of skipped duplicate records
+     */
+    private void logImportCompletion(String entityName, CsvImportResult result,
+            int skippedDuplicates) {
+        if (skippedDuplicates > 0) {
+            logger.info("Skipped {} duplicate {} records", skippedDuplicates, entityName);
+        }
+        logger.info("{} import completed. Success: {}, Errors: {}", entityName,
+                result.getSuccessCount(), result.getErrorCount());
     }
 
     /**
