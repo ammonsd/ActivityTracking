@@ -28,14 +28,14 @@ Notifications are sent to different recipient lists based on the notification ty
 
 **Build Notifications** (developers only):
 ```properties
-# Jenkins build notification recipients (comma-separated for multiple recipients)
+# Jenkins build notification recipients
 # Typically includes development team only - notified on build success/failure
 app.mail.jenkins-build-notification-email=dev-team@example.com
 ```
 
 **Deploy Notifications** (developers and business analysts):
 ```properties
-# Jenkins deploy notification recipients (comma-separated for multiple recipients)
+# Jenkins deploy notification recipients
 # Typically includes development team AND business analysts - notified on deployment success/failure
 app.mail.jenkins-deploy-notification-email=dev-team@example.com,ba-team@example.com
 ```
@@ -45,6 +45,67 @@ app.mail.jenkins-deploy-notification-email=dev-team@example.com,ba-team@example.
 # app.mail.admin-email=admin@example.com           # System/security notifications
 # app.mail.expense-approvers=approver@example.com  # Expense approval notifications
 ```
+
+#### Email Format and Delimiters
+
+The application supports flexible email recipient configuration using two delimiters:
+
+**Comma (`,`)** - Separates email groups that receive **separate emails**:
+```properties
+# Each comma-separated address/group receives its own email
+app.mail.jenkins-deploy-notification-email=dev-team@example.com,ba-team@example.com
+```
+Result:
+- `dev-team@example.com` receives one email
+- `ba-team@example.com` receives a separate email
+
+**Semicolon (`;`)** - Groups multiple recipients in the **same email**:
+```properties
+# Semicolon-separated addresses receive a single shared email
+app.mail.jenkins-deploy-notification-email=developer1@example.com;developer2@example.com
+```
+Result:
+- Both `developer1@example.com` and `developer2@example.com` receive one email with both addresses in the "To" field
+
+**Combined Usage** - Mix both delimiters for complex scenarios:
+```properties
+# First group receives one email, second group shares another email
+app.mail.jenkins-deploy-notification-email=dev-team@example.com,ba1@example.com;ba2@example.com
+```
+Result:
+- `dev-team@example.com` receives one email
+- `ba1@example.com` AND `ba2@example.com` receive one shared email (both in "To" field)
+
+**Examples:**
+
+```properties
+# Single recipient
+app.mail.jenkins-build-notification-email=dev@example.com
+
+# Multiple recipients, separate emails
+app.mail.jenkins-build-notification-email=dev1@example.com,dev2@example.com
+
+# Multiple recipients, single shared email
+app.mail.jenkins-build-notification-email=dev1@example.com;dev2@example.com
+
+# Complex: separate email to lead, shared email to team
+app.mail.jenkins-deploy-notification-email=lead@example.com,dev1@example.com;dev2@example.com;dev3@example.com
+
+# Real-world production example
+app.mail.jenkins-deploy-notification-email=alerts@company.com,team-lead@company.com;developer1@company.com;developer2@company.com
+```
+
+**When to Use Which Delimiter:**
+
+| Scenario | Delimiter | Example |
+|----------|-----------|---------|
+| Each person should receive their own email | Comma (`,`) | `person1@ex.com,person2@ex.com` |
+| Team should see who else received the email | Semicolon (`;`) | `team1@ex.com;team2@ex.com` |
+| Alert one person, notify team together | Both | `alert@ex.com,team1@ex.com;team2@ex.com` |
+
+**AWS Configuration:**
+
+For AWS ECS deployments, these values are set as environment variables in the task definition. See [Update_ECS_Environment_Variables.md](../aws/Update_ECS_Environment_Variables.md) for detailed instructions on updating email configuration in AWS.
 
 #### Jenkinsfile Integration
 
