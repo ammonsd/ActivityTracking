@@ -284,7 +284,9 @@ public class JenkinsBuildNotificationController {
             @Schema(description = "Console log URL (optional, defaults to buildUrl/console)",
                                     example = "https://jenkins.example.com/job/taskactivity/72/console") String consoleUrl,
                     @Schema(description = "Build environment",
-                                    example = "production") String environment) {
+                                    example = "production") String environment,
+            @Schema(description = "What triggered the build",
+                                    example = "scm") String triggeredBy) {
     }
 
     /**
