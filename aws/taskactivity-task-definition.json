@@ -71,6 +71,14 @@
                 {
                     "name": "EXPENSE_APPROVERS",
                     "value": "deanammons@gmail.com;deanammons48@gmail.com"
+                },
+                {
+                    "name": "JENKINS_BUILD_NOTIFICATION_EMAIL",
+                    "value": "deanammons@gmail.com"
+                },
+                {
+                    "name": "JENKINS_DEPLOY_NOTIFICATION_EMAIL",
+                    "value": "deanammons@gmail.com;deanammons48@gmail.com;ammonsd@gmail.com"
                 }
             ],
             "secrets": [

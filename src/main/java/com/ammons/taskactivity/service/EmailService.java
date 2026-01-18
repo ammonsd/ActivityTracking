@@ -200,7 +200,8 @@ public class EmailService {
     private void sendEmailViaAwsSdk(String subject, String body, String... to) {
         try {
             SendEmailRequest request = SendEmailRequest.builder()
-                    .destination(Destination.builder().toAddresses(to).build())
+                    .destination(
+                            Destination.builder().toAddresses(java.util.Arrays.asList(to)).build())
                     .message(Message.builder()
                             .subject(Content.builder().data(subject).charset("UTF-8").build())
                             .body(Body.builder()
