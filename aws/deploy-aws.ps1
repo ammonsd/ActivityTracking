@@ -421,7 +421,7 @@ function Build-AndPushImage {
     
     # Tag images for ECR
     Write-Info "Tagging images for ECR..."
-    if ($useWSL) {
+    if ($script:useWSLDocker) {
         wsl -e docker tag "${APP_NAME}:${IMAGE_TAG}" "${ECR_REPOSITORY}:${IMAGE_TAG}"
         wsl -e docker tag "${APP_NAME}:latest" "${ECR_REPOSITORY}:latest"
     } else {
@@ -431,7 +431,7 @@ function Build-AndPushImage {
     
     # Push to ECR
     Write-Info "Pushing images to Amazon ECR..."
-    if ($useWSL) {
+    if ($script:useWSLDocker) {
         wsl -e docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
         wsl -e docker push "${ECR_REPOSITORY}:latest"
     } else {
