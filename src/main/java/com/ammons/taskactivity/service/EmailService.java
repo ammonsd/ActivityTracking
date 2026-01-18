@@ -520,37 +520,12 @@ public class EmailService {
             return;
         }
 
-        // Parse comma-separated approver emails
-        String[] approverEmails = expenseApprovers.split(",");
-        if (approverEmails.length == 0) {
-            logger.warn("No valid expense approver emails found");
-            return;
-        }
-
         String subject = String.format("[%s] New Expense Submitted - %s", appName, expenseId);
         String body = buildExpenseSubmittedEmailBody(username, fullName, expenseId,
                 expenseDescription, amount, currency, expenseDate);
 
-        // Send to all configured approvers
-        for (String approverEmail : approverEmails) {
-            String email = approverEmail.trim();
-            if (email.isEmpty()) {
-                continue;
-            }
-
-            try {
-                if (useAwsSdk && sesClient != null) {
-                    sendEmailViaAwsSdk(email, subject, body);
-                } else {
-                    sendEmailViaSmtp(email, subject, body);
-                }
-                logger.info("Expense submission notification sent to {} for expense ID: {}", email,
-                        expenseId);
-            } catch (Exception e) {
-                logger.error("Failed to send expense submission notification to {}: {}", email,
-                        e.getMessage(), e);
-            }
-        }
+        // Use sendEmailsWithGrouping to support semicolon grouping
+        sendEmailsWithGrouping(expenseApprovers, subject, body, "expense submission");
     }
 
     /**
