@@ -822,19 +822,15 @@ pipeline {
  * Helper function to get the last successful build number for a specific action type.
  * This is used to determine if there are new builds since the last deployment.
  * 
+ * Uses currentBuild.rawBuild.parent to access job without requiring admin approval.
+ * 
  * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
  * @return The build number of the last successful build, or null if none found
- * 
- * Author: Dean Ammons
- * Date: January 2026
  */
 def getLastSuccessfulBuildNumber(String actionType) {
     try {
-        def job = Jenkins.instance.getItem(env.JOB_NAME)
-        if (job == null) {
-            echo "WARNING: Could not find job ${env.JOB_NAME}"
-            return null
-        }
+        // Use currentBuild.rawBuild.parent to get job without needing Jenkins.instance
+        def job = currentBuild.rawBuild.parent
         
         // Search through the last 50 builds
         def builds = job.getBuilds().limit(50)

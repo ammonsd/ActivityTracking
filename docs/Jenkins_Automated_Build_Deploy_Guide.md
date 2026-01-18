@@ -100,12 +100,31 @@ options {
 
 ### 2. Time-Based Deployment (Daily at 4pm)
 
-**Trigger:** Daily at 4:00 PM  
-**Configuration:** `cron('0 16 * * *')`
+**Trigger:** Daily at 4:00 PM (with hash-based distribution)  
+**Configuration:** `cron('H 16 * * *')`
+
+**Understanding Jenkins H Notation:**
+
+Jenkins uses the "H" notation (for "hash") to distribute scheduled builds evenly across time slots:
+
+- **Syntax:** `H 16 * * *` means "once between 4:00 PM and 4:59 PM"
+- **How it works:** Jenkins calculates a consistent time based on the job name's hash
+- **Consistency:** The same job will ALWAYS run at the same time each day
+- **Example:** "TaskActivity-Pipeline" might hash to 4:51 PM, and will run at 4:51 PM every day
+- **Purpose:** Prevents all Jenkins jobs from starting at exactly 4:00 PM, which would overwhelm the server
+
+**Why use H notation instead of `0 16 * * *`?**
+
+- ✅ Spreads load across the hour rather than all at once
+- ✅ Reduces resource contention on Jenkins server
+- ✅ Still provides predictable, consistent scheduling per job
+- ✅ Better performance for multi-tenant Jenkins environments
+
+**Note:** While the time COULD be anywhere from 4:00-4:59 PM for different jobs, YOUR specific job will always run at the SAME time within that window based on its name hash.
 
 **Behavior:**
 
-- Runs every day at 4:00 PM server time
+- Runs every day at the hash-calculated time (consistently the same time daily)
 - **Automatically checks** if deployment should proceed
 - **Skips deployment** if:
     - No successful builds since last deployment
@@ -252,6 +271,35 @@ Searches through the last 50 builds to find the most recent successful build of 
 3. Checks `DEPLOY_ACTION` parameter
 4. Also checks for scheduled deployments by examining environment variables
 5. Returns first match found
+
+**Implementation Notes - Jenkins Script Security:**
+
+The function uses `currentBuild.rawBuild.parent` to access the job object rather than `Jenkins.instance.getItem()`:
+
+```groovy
+// ✅ CORRECT - Uses approved API
+def job = currentBuild.rawBuild.parent
+
+// ❌ INCORRECT - Requires admin approval in Jenkins Script Security
+def job = Jenkins.instance.getItem(env.JOB_NAME)
+```
+
+**Why this matters:**
+
+- Jenkins Script Security blocks unapproved method signatures by default
+- `Jenkins.instance` requires `staticMethod jenkins.model.Jenkins getInstance` to be approved
+- `currentBuild.rawBuild.parent` is an approved API that provides direct access to the job
+- Using approved APIs avoids security exceptions and "Scripts not permitted" errors
+
+**Troubleshooting:**
+
+If you see this error in console output:
+```
+Scripts not permitted to use staticMethod jenkins.model.Jenkins getInstance.
+Administrators can decide whether to approve or reject this signature.
+```
+
+This means the function is trying to use `Jenkins.instance`. Update to use `currentBuild.rawBuild.parent` instead.
 
 **Usage:**
 
