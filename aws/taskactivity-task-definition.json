@@ -70,7 +70,7 @@
                 },
                 {
                     "name": "EXPENSE_APPROVERS",
-                    "value": "deanammons@gmail.com,deanammons48@gmail.com"
+                    "value": "deanammons@gmail.com;deanammons48@gmail.com"
                 }
             ],
             "secrets": [
