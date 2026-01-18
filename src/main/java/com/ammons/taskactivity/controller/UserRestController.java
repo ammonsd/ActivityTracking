@@ -59,10 +59,15 @@ public class UserRestController {
                         Long daysUntilExpiration = userService.getDaysUntilExpiration(username);
                         dto.setDaysUntilExpiration(daysUntilExpiration);
                         if (daysUntilExpiration != null) {
-                            dto.setPasswordExpiringWarning(
-                                    "⚠️ Your password will expire in " + daysUntilExpiration
-                                            + " day" + (daysUntilExpiration == 1 ? "" : "s")
-                                            + ". Please change it soon.");
+                            if (daysUntilExpiration == 0) {
+                                dto.setPasswordExpiringWarning(
+                                        "🔴 Your password expires TODAY. Please change it immediately!");
+                            } else {
+                                dto.setPasswordExpiringWarning(
+                                        "⚠️ Your password will expire in " + daysUntilExpiration
+                                                + " day" + (daysUntilExpiration == 1 ? "" : "s")
+                                                + ". Please change it soon.");
+                            }
                         }
                     }
 

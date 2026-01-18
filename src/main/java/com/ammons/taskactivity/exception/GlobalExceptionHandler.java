@@ -56,6 +56,9 @@ public class GlobalExceptionHandler {
             if (userService.isPasswordExpiringSoon(username)) {
                 Long daysUntilExpiration = userService.getDaysUntilExpiration(username);
                 if (daysUntilExpiration != null) {
+                    if (daysUntilExpiration == 0) {
+                        return "🔴 Your password expires TODAY. Please change it immediately!";
+                    }
                     return "⚠️ Your password will expire in " + daysUntilExpiration + " day"
                             + (daysUntilExpiration == 1 ? "" : "s") + ". Please change it soon.";
                 }

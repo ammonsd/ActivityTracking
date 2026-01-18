@@ -406,9 +406,9 @@ public class UserService {
         LocalDate now = LocalDate.now(ZoneOffset.UTC);
         LocalDate sevenDaysFromNow = now.plusDays(7);
 
-        // Check if expiration date is between now and 7 days from now
-        boolean expiringSoon = user.getExpirationDate().isAfter(now)
-                && user.getExpirationDate().isBefore(sevenDaysFromNow);
+        // Check if expiration date is between now (inclusive) and 7 days from now (inclusive)
+        boolean expiringSoon = !user.getExpirationDate().isBefore(now)
+                && !user.getExpirationDate().isAfter(sevenDaysFromNow);
 
         logger.debug("Password expiring soon check for user '{}': {}", username,
                 expiringSoon ? "yes" : "no");

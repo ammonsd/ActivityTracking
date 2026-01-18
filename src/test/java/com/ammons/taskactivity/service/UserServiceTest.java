@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -254,5 +256,162 @@ class UserServiceTest {
         // repository
         assertThrows(IllegalArgumentException.class,
                         () -> userService.changePassword("testuser", "NoSpecial123", false));
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_ExpiringToday() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            user.setExpirationDate(today);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertTrue(result, "Password expiring today should trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_ExpiringInSevenDays() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate sevenDaysFromNow = LocalDate.now(ZoneOffset.UTC).plusDays(7);
+            user.setExpirationDate(sevenDaysFromNow);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertTrue(result, "Password expiring in 7 days should trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_ExpiringInThreeDays() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate threeDaysFromNow = LocalDate.now(ZoneOffset.UTC).plusDays(3);
+            user.setExpirationDate(threeDaysFromNow);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertTrue(result, "Password expiring in 3 days should trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_ExpiringInEightDays() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate eightDaysFromNow = LocalDate.now(ZoneOffset.UTC).plusDays(8);
+            user.setExpirationDate(eightDaysFromNow);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertFalse(result, "Password expiring in 8 days should not trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_AlreadyExpired() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+            user.setExpirationDate(yesterday);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertFalse(result, "Already expired password should not trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_NoExpirationDate() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            user.setExpirationDate(null);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertFalse(result, "No expiration date should not trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testIsPasswordExpiringSoon_UserNotFound() {
+            // Arrange
+            String username = "nonexistentuser";
+            when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+
+            // Act
+            boolean result = userService.isPasswordExpiringSoon(username);
+
+            // Assert
+            assertFalse(result, "Non-existent user should not trigger warning");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testGetDaysUntilExpiration_ExpiringToday() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            user.setExpirationDate(today);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            Long result = userService.getDaysUntilExpiration(username);
+
+            // Assert
+            assertEquals(0L, result, "Password expiring today should return 0 days");
+            verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void testGetDaysUntilExpiration_ExpiringInSevenDays() {
+            // Arrange
+            String username = "testuser";
+            User user = new User(username, "encodedPassword", new Roles("USER"));
+            LocalDate sevenDaysFromNow = LocalDate.now(ZoneOffset.UTC).plusDays(7);
+            user.setExpirationDate(sevenDaysFromNow);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+            // Act
+            Long result = userService.getDaysUntilExpiration(username);
+
+            // Assert
+            assertEquals(7L, result, "Password expiring in 7 days should return 7");
+            verify(userRepository).findByUsername(username);
     }
 }

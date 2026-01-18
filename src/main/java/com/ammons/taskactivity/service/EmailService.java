@@ -701,7 +701,9 @@ public class EmailService {
         String greeting = StringUtil.getGreeting(fullName, username);
 
         String urgencyMessage;
-        if (daysUntilExpiration <= 1) {
+        if (daysUntilExpiration == 0) {
+            urgencyMessage = "🔴 CRITICAL: Your password expires TODAY!";
+        } else if (daysUntilExpiration == 1) {
             urgencyMessage = "⚠️ URGENT: Your password expires in 1 day!";
         } else if (daysUntilExpiration <= 3) {
             urgencyMessage = String.format("⚠️ IMPORTANT: Your password expires in %d days!",
