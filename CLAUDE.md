@@ -65,6 +65,37 @@ In addition to memory banks, conversation-specific preferences are stored in `/m
 
 **Important**: When asked to commit changes, **exclude CLAUDE.md and all files in /ai/ and /memories/ from commits** unless explicitly updating them as part of documentation work.
 
+## Agent Skills
+
+This project includes GitHub Copilot Agent Skills for common workflows. Skills provide step-by-step guidance, templates, and troubleshooting for specific tasks.
+
+### Available Skills
+
+Skills are located in the `/skills/` directory:
+
+- **[csv-bulk-import](skills/csv-bulk-import/SKILL.md)** - CSV import automation with templates and validation
+- **[aws-deployment](skills/aws-deployment/SKILL.md)** - AWS ECS deployment workflows and monitoring
+- **[database-migration](skills/database-migration/SKILL.md)** - PostgreSQL schema migration patterns
+- **[spring-boot-entity](skills/spring-boot-entity/SKILL.md)** - Complete entity creation (entity, repository, service, controller, tests)
+- **[security-audit](skills/security-audit/SKILL.md)** - Comprehensive security checklist and scanning
+- **[docker-operations](skills/docker-operations/SKILL.md)** - Docker build strategies, troubleshooting, optimization
+- **[api-endpoint](skills/api-endpoint/SKILL.md)** - REST API endpoint creation with validation and documentation
+
+### When to Use Skills
+
+**Common workflow tasks:**
+- Creating new entities → Use `spring-boot-entity` skill
+- Building/troubleshooting Docker → Use `docker-operations` skill
+- Creating REST APIs → Use `api-endpoint` skill
+- Importing CSV data → Use `csv-bulk-import` skill
+
+**Deployment and operations:**
+- Deploying to AWS → Use `aws-deployment` skill
+- Database changes → Use `database-migration` skill
+- Security reviews → Use `security-audit` skill
+
+Each skill includes templates, checklists, troubleshooting guides, and references to relevant memory bank files.
+
 ## Prerequisites
 
 ### Required Software
