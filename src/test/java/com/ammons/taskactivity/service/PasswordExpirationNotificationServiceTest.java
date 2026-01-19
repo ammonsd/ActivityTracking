@@ -71,6 +71,25 @@ class PasswordExpirationNotificationServiceTest {
     }
 
     @Test
+    void shouldSendNotificationForPasswordExpiringToday() {
+        // Arrange
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+
+        User user = createUser("testuser", "test@example.com", today, userRole);
+        user.setFirstname("Test");
+        user.setLastname("User");
+
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        // Act
+        service.checkExpiringPasswordsAndNotify();
+
+        // Assert
+        verify(emailService, times(1)).sendPasswordExpirationWarning(eq("test@example.com"),
+                eq("testuser"), eq("Test User"), eq(0L));
+    }
+
+    @Test
     void shouldNotSendNotificationForPasswordExpiringBeyond7Days() {
         // Arrange
         LocalDate today = LocalDate.now(ZoneOffset.UTC);

@@ -112,8 +112,9 @@ public class PasswordExpirationNotificationService {
                     logger.info("Sent password EXPIRED notification to user: {} (expired on: {})",
                             user.getUsername(), expirationDate);
                 }
-                // Check if password expires within warning window (1-7 days from now)
-                else if (expirationDate.isAfter(today)
+                // Check if password expires within warning window (0-7 days from now)
+                // Include today (day 0) to ensure notification on expiration day
+                else if (!expirationDate.isBefore(today)
                         && !expirationDate.isAfter(sevenDaysFromNow)) {
                     long daysUntilExpiration =
                             java.time.temporal.ChronoUnit.DAYS.between(today, expirationDate);
