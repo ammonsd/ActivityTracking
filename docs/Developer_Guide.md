@@ -301,6 +301,55 @@ This guide is part of a comprehensive documentation set for the Task Activity Ma
 - **SQL Scripts**: Database schema files in `sql/` folder
 - **Local Documentation**: Additional guides in `localdocs/` folder (gitignored, environment-specific)
 
+### AI Assistance Resources
+
+This project includes resources for AI-assisted development with GitHub Copilot and Claude:
+
+#### CLAUDE.md
+- **Location**: Root directory
+- **Purpose**: Guidance file for Claude Code (claude.ai/code) when working with this repository
+- **Contents**: AI guidance rules, memory bank system documentation, prerequisites, setup instructions
+
+#### Memory Banks (`/ai/` directory)
+Structured context files for AI assistants:
+- `project-overview.md` - High-level project context, tech stack, architecture
+- `java-conventions.md` - Java/Spring Boot coding standards (CRITICAL: explicit access modifiers)
+- `devops-practices.md` - Infrastructure, deployment, AWS configuration
+- `architecture-patterns.md` - Design patterns, domain model, security architecture
+- `common-patterns.md` - Code templates and quick reference for common tasks
+- `memory-bank-maintenance.md` - Process for updating memory banks
+
+#### Conversation Memory (`/memories/` directory)
+Session-specific preferences for AI assistants:
+- `dean-preferences.md` - Developer coding preferences and working style
+- `recent-work.md` - Recent work, decisions, and to-do items
+
+#### GitHub Copilot Instructions (`/.github/instructions/` directory)
+Custom instructions that automatically guide GitHub Copilot:
+- `code-comment.instructions.md` - Code attribution and commenting standards
+- `code-review-generic.instructions.md` - Code review checklist and best practices
+- `copilot-thought-logging.instructions.md` - Process tracking for complex tasks
+- `devops-core-principles.instructions.md` - CALMS framework and DORA metrics
+- `java.instructions.md` - Java-specific coding standards
+- `markdown.instructions.md` - Documentation standards
+- `powershell.instructions.md` - PowerShell scripting guidelines
+- `python.instructions.md` - Python coding conventions
+- `self-explanatory-code-commenting.instructions.md` - Writing self-documenting code
+- `sql-sp-generation.instructions.md` - SQL and stored procedure guidelines
+- `update-docs-on-code-change.instructions.md` - Documentation synchronization rules
+
+#### Agent Skills (`/skills/` directory)
+GitHub Copilot Agent Skills for common workflows:
+- `csv-bulk-import/` - CSV import automation with templates and validation
+- `aws-deployment/` - AWS ECS deployment workflows and monitoring
+- `database-migration/` - PostgreSQL schema migration patterns
+- `spring-boot-entity/` - Complete entity creation (entity, repository, service, controller, tests)
+- `security-audit/` - Comprehensive security checklist and scanning
+- `docker-operations/` - Docker build strategies, troubleshooting, optimization
+- `api-endpoint/` - REST API endpoint creation with validation and documentation
+
+**Usage Note**: These resources are designed to help AI assistants understand project context, standards, and workflows. Developers can reference them for coding standards and best practices, but they are optimized for AI consumption.
+
 ## System Requirements
 
 ### Development Environment
