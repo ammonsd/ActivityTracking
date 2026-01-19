@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.List;
 
 /**
@@ -59,9 +58,12 @@ public class PasswordExpirationNotificationService {
     public void checkExpiringPasswordsAndNotify() {
         logger.info("Starting daily password expiration check...");
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        // Use server's local timezone for date calculations to match scheduled task timing
+        LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
         LocalDate sevenDaysFromNow = today.plusDays(7);
+
+        logger.info("Password expiration check running for date: {} (server local time)", today);
 
         // Find all users with expiration dates in the warning window
         List<User> allUsers = userRepository.findAll();
@@ -99,6 +101,10 @@ public class PasswordExpirationNotificationService {
 
                 LocalDate expirationDate = user.getExpirationDate();
 
+                logger.debug(
+                        "Processing user: {} | expiration: {} | today: {} | yesterday: {} | 7-days: {}",
+                        user.getUsername(), expirationDate, today, yesterday, sevenDaysFromNow);
+
                 // Check if password expired YESTERDAY (first day after expiration)
                 // This sends the expired notification only once - on the day after expiration
                 if (expirationDate.isEqual(yesterday)) {
@@ -119,6 +125,9 @@ public class PasswordExpirationNotificationService {
                     long daysUntilExpiration =
                             java.time.temporal.ChronoUnit.DAYS.between(today, expirationDate);
 
+                    logger.debug("User {} matches warning criteria: expires in {} days",
+                            user.getUsername(), daysUntilExpiration);
+
                     // Send warning notification
                     String fullName = buildFullName(user);
                     emailService.sendPasswordExpirationWarning(user.getEmail(), user.getUsername(),
@@ -127,6 +136,10 @@ public class PasswordExpirationNotificationService {
                     expiringNotificationsSent++;
                     logger.info("Sent password expiration warning to user: {} ({} days remaining)",
                             user.getUsername(), daysUntilExpiration);
+                } else {
+                    logger.debug(
+                            "User {} does not match warning criteria: expiration {} is outside window {}-{}",
+                            user.getUsername(), expirationDate, today, sevenDaysFromNow);
                 }
 
             } catch (Exception e) {
