@@ -156,14 +156,16 @@ pipeline {
                     if (isScheduledBuild) {
                         echo "========================================="
                         echo "Checking scheduled deployment eligibility..."
+                        echo "Current build number: ${env.BUILD_NUMBER}"
                         echo "========================================="
                         
                         // Get the last successful build number
                         def lastBuildNumber = getLastSuccessfulBuildNumber('build-only')
                         def lastDeployNumber = getLastSuccessfulBuildNumber('deploy')
                         
-                        echo "Last successful build: ${lastBuildNumber ?: 'none'}"
+                        echo "Last successful build-only: ${lastBuildNumber ?: 'none'}"
                         echo "Last successful deploy: ${lastDeployNumber ?: 'none'}"
+                        echo "Comparison: ${lastBuildNumber} > ${lastDeployNumber} = ${lastBuildNumber != null && lastDeployNumber != null ? (lastBuildNumber > lastDeployNumber) : 'N/A'}"
                         
                         // Determine if we should deploy
                         def shouldDeploy = false
