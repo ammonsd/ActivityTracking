@@ -840,7 +840,7 @@ pipeline {
 def getLastSuccessfulBuildNumber(String actionType) {
     try {
         def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
-        def s3Bucket = "taskactivity-deployments"
+        def s3Bucket = "taskactivity-logs-archive"
         
         // Try to read from S3
         def result = sh(
@@ -874,7 +874,7 @@ def getLastSuccessfulBuildNumber(String actionType) {
 def recordSuccessfulBuild(String actionType) {
     try {
         def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
-        def s3Bucket = "taskactivity-deployments"
+        def s3Bucket = "taskactivity-logs-archive"
         
         withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
             sh """
