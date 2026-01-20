@@ -254,7 +254,7 @@ when {
 
 ### getLastSuccessfulBuildNumber(actionType)
 
-Searches through the last 50 builds to find the most recent successful build of a specific type.
+Retrieves the last successful build number for a specific action type using S3-based persistent storage.
 
 **Parameters:**
 
@@ -264,42 +264,83 @@ Searches through the last 50 builds to find the most recent successful build of 
 
 - Build number of last successful build, or `null` if none found
 
-**Logic:**
+**Storage Architecture:**
 
-1. Iterates through last 50 builds in reverse order
-2. Skips current build and failed builds
-3. Checks `DEPLOY_ACTION` parameter
-4. Also checks for scheduled deployments by examining environment variables
-5. Returns first match found
+The function uses AWS S3 for durable build history tracking, which provides:
 
-**Implementation Notes - Jenkins Script Security:**
+- ✅ **Persistence across Jenkins restarts** - No data loss when Jenkins server restarts
+- ✅ **Survives container replacements** - Critical for ECS/Fargate deployments
+- ✅ **Works in any environment** - Local server, EC2, ECS, or Kubernetes
+- ✅ **Workspace-independent** - Not affected by workspace cleanup operations
+- ✅ **No Jenkins API security issues** - Uses standard AWS CLI instead of restricted Jenkins APIs
 
-The function uses `currentBuild.rawBuild.parent` to access the job object rather than `Jenkins.instance.getItem()`:
+**S3 Storage Details:**
+
+- **Bucket:** `taskactivity-logs-archive`
+- **Key Pattern:** `jenkins-build-history/TaskActivity-Pipeline-{actionType}-last-build.txt`
+- **Content:** Single line containing build number (e.g., `186`)
+- **Metadata:** `buildNumber`, `actionType`, `timestamp` (ISO 8601 format)
+
+**Files Created:**
+
+```
+s3://taskactivity-logs-archive/jenkins-build-history/
+├── TaskActivity-Pipeline-build-only-last-build.txt  (last build-only build number)
+└── TaskActivity-Pipeline-deploy-last-build.txt      (last deploy build number)
+```
+
+**Implementation:**
 
 ```groovy
-// ✅ CORRECT - Uses approved API
-def job = currentBuild.rawBuild.parent
+def getLastSuccessfulBuildNumber(String actionType) {
+    try {
+        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
+        def s3Bucket = "taskactivity-logs-archive"
+        
+        // Try to read from S3 (redirects stderr to suppress file-not-found errors)
+        def result = sh(
+            script: """
+                aws s3 cp s3://${s3Bucket}/${s3Key} - 2>/dev/null || echo ""
+            """,
+            returnStdout: true
+        ).trim()
+        
+        if (result && result.isInteger()) {
+            echo "Found last successful ${actionType} at build #${result} (from S3)"
+            return result.toInteger()
+        }
+        
+        echo "No successful ${actionType} builds found in S3 history"
+        return null
+        
+    } catch (Exception e) {
+        echo "ERROR: Exception while reading build history from S3: ${e.message}"
+        return null
+    }
+}
+```
 
-// ❌ INCORRECT - Requires admin approval in Jenkins Script Security
+**Why S3 Instead of Jenkins APIs?**
+
+Previous implementations attempted to use Jenkins internal APIs but encountered security restrictions:
+
+```groovy
+// ❌ FAILED APPROACH 1: Jenkins.instance (blocked by Script Security)
 def job = Jenkins.instance.getItem(env.JOB_NAME)
+// Error: Scripts not permitted to use staticMethod jenkins.model.Jenkins getInstance
+
+// ❌ FAILED APPROACH 2: currentBuild.rawBuild.parent (also blocked)
+def job = currentBuild.rawBuild.parent
+// Error: Scripts not permitted to use method org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper getRawBuild
+
+// ❌ FAILED APPROACH 3: Workspace files (lost in containers)
+new File("${WORKSPACE}/.jenkins-build-history").text
+// Problem: Files deleted when workspace is cleaned or container replaced
+
+// ✅ SUCCESSFUL APPROACH: S3 storage (no security restrictions)
+sh "aws s3 cp s3://bucket/key - 2>/dev/null"
+// Works everywhere, persists forever, no Jenkins API restrictions
 ```
-
-**Why this matters:**
-
-- Jenkins Script Security blocks unapproved method signatures by default
-- `Jenkins.instance` requires `staticMethod jenkins.model.Jenkins getInstance` to be approved
-- `currentBuild.rawBuild.parent` is an approved API that provides direct access to the job
-- Using approved APIs avoids security exceptions and "Scripts not permitted" errors
-
-**Troubleshooting:**
-
-If you see this error in console output:
-```
-Scripts not permitted to use staticMethod jenkins.model.Jenkins getInstance.
-Administrators can decide whether to approve or reject this signature.
-```
-
-This means the function is trying to use `Jenkins.instance`. Update to use `currentBuild.rawBuild.parent` instead.
 
 **Usage:**
 
@@ -307,10 +348,119 @@ This means the function is trying to use `Jenkins.instance`. Update to use `curr
 def lastBuildNumber = getLastSuccessfulBuildNumber('build-only')
 def lastDeployNumber = getLastSuccessfulBuildNumber('deploy')
 
-if (lastBuildNumber > lastDeployNumber) {
+if (lastBuildNumber && (!lastDeployNumber || lastBuildNumber > lastDeployNumber)) {
     // New builds available, proceed with deployment
+    env.SHOULD_DEPLOY = 'true'
+} else {
+    // No new builds, skip deployment
+    env.SHOULD_DEPLOY = 'false'
 }
 ```
+
+### recordSuccessfulBuild(actionType)
+
+Records successful build completion by writing to S3 for future deployment eligibility checks.
+
+**Parameters:**
+
+- `actionType`: Either `'build-only'` or `'deploy'`
+
+**When Called:**
+
+- After successful build-only builds (SCM-triggered or manual)
+- After successful deployments (scheduled or manual)
+- NOT called for skipped scheduled builds
+- NOT called for failed builds
+
+**Implementation:**
+
+```groovy
+def recordSuccessfulBuild(String actionType) {
+    try {
+        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
+        def s3Bucket = "taskactivity-logs-archive"
+        
+        withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+            sh """
+                echo "${env.BUILD_NUMBER}" | aws s3 cp - s3://${s3Bucket}/${s3Key} \
+                    --content-type text/plain \
+                    --metadata buildNumber=${env.BUILD_NUMBER},actionType=${actionType},timestamp=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            """
+            echo "Recorded successful ${actionType} build #${env.BUILD_NUMBER} to S3"
+        }
+    } catch (Exception e) {
+        echo "WARNING: Failed to record build history to S3: ${e.message}"
+        echo "This is non-critical - deployment eligibility checks may be affected on next scheduled build"
+    }
+}
+```
+
+**Object Metadata Stored:**
+
+- `buildNumber`: Jenkins build number (e.g., `186`)
+- `actionType`: Either `build-only` or `deploy`
+- `timestamp`: ISO 8601 UTC timestamp (e.g., `2026-01-20T16:51:32Z`)
+
+**Error Handling:**
+
+- Failures are logged as warnings but do NOT fail the build
+- Non-critical operation - primary impact is next scheduled build may not detect changes
+- Subsequent successful builds will update the tracking
+
+**Verifying S3 Storage:**
+
+```bash
+# List all build history files
+aws s3 ls s3://taskactivity-logs-archive/jenkins-build-history/
+
+# View last build-only build number
+aws s3 cp s3://taskactivity-logs-archive/jenkins-build-history/TaskActivity-Pipeline-build-only-last-build.txt -
+
+# View last deploy build number
+aws s3 cp s3://taskactivity-logs-archive/jenkins-build-history/TaskActivity-Pipeline-deploy-last-build.txt -
+
+# View object metadata
+aws s3api head-object \
+    --bucket taskactivity-logs-archive \
+    --key jenkins-build-history/TaskActivity-Pipeline-build-only-last-build.txt \
+    --query Metadata
+```
+
+**S3 Bucket Requirements:**
+
+- **Bucket must exist before first build** - S3 buckets are NOT auto-created
+- **IAM permissions required:**
+  - `s3:GetObject` - Read build history files
+  - `s3:PutObject` - Write build history files
+- **Bucket:** `taskactivity-logs-archive` (existing logs bucket, semantically appropriate)
+- **Region:** Must match `AWS_REGION` environment variable (typically `us-east-1`)
+
+**First-Time Setup:**
+
+No manual setup required! When the first build completes:
+
+1. ✅ Pipeline attempts to read from S3 (gracefully handles missing files)
+2. ✅ Pipeline writes build number to S3 (auto-creates subfolder structure)
+3. ✅ Subsequent builds can read the tracking files
+
+**Advantages of S3-Based Tracking:**
+
+| Feature | S3 Storage | Jenkins API | Workspace Files |
+|---------|------------|-------------|-----------------|
+| Survives restarts | ✅ Yes | ✅ Yes | ❌ No |
+| Works in containers | ✅ Yes | ✅ Yes | ❌ No |
+| No security restrictions | ✅ Yes | ❌ No | ✅ Yes |
+| Survives workspace cleanup | ✅ Yes | ✅ Yes | ❌ No |
+| Easy to inspect | ✅ Yes | ❌ No | ⚠️ Depends |
+| Version controlled | ⚠️ Separate | ❌ No | ❌ No |
+
+**Migration Note:**
+
+If you previously used Jenkins API-based tracking, no migration is needed:
+
+- First scheduled build after update will find no S3 files (returns `null`)
+- Logic handles `null` safely - will deploy if any builds exist
+- After first deployment, S3 tracking takes over completely
 
 ## Notifications
 
