@@ -835,49 +835,61 @@ pipeline {
 /**
  * Helper function to get the last successful build number for a specific action type.
  * 
- * WORKAROUND: Jenkins Script Security blocks access to build objects, so we use
- * a file-based approach to track build history without needing security approvals.
- * 
- * Each successful build writes its metadata to workspace files that can be read
- * by subsequent builds to determine deployment eligibility.
+ * Uses S3 to store build metadata, ensuring persistence across Jenkins restarts,
+ * container replacements, and workspace cleanups. Works in any environment (local, EC2, ECS).
  * 
  * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
  * @return The build number of the last successful build, or null if none found
  */
 def getLastSuccessfulBuildNumber(String actionType) {
     try {
-        def buildHistoryFile = "${WORKSPACE}/.jenkins-${actionType}-last-build.txt"
+        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
+        def s3Bucket = "taskactivity-deployments"
         
-        // Read the last build number from file if it exists
-        if (fileExists(buildHistoryFile)) {
-            def lastBuildNumber = readFile(buildHistoryFile).trim()
-            if (lastBuildNumber && lastBuildNumber.isInteger()) {
-                echo "Found last successful ${actionType} at build #${lastBuildNumber}"
-                return lastBuildNumber.toInteger()
-            }
+        // Try to read from S3
+        def result = sh(
+            script: """
+                aws s3 cp s3://${s3Bucket}/${s3Key} - 2>/dev/null || echo ""
+            """,
+            returnStdout: true
+        ).trim()
+        
+        if (result && result.isInteger()) {
+            echo "Found last successful ${actionType} at build #${result} (from S3)"
+            return result.toInteger()
         }
         
-        echo "No successful ${actionType} builds found in history"
+        echo "No successful ${actionType} builds found in S3 history"
         return null
         
     } catch (Exception e) {
-        echo "ERROR: Exception while reading build history: ${e.message}"
+        echo "ERROR: Exception while reading build history from S3: ${e.message}"
         return null
     }
 }
 
 /**
- * Record successful build in history file for future reference.
+ * Record successful build in S3 for future reference.
  * Called at the end of successful builds to track deployment state.
+ * S3 provides durable storage that persists across Jenkins restarts and container replacements.
  * 
  * @param actionType The DEPLOY_ACTION that was performed ('build-only' or 'deploy')
  */
 def recordSuccessfulBuild(String actionType) {
     try {
-        def buildHistoryFile = "${WORKSPACE}/.jenkins-${actionType}-last-build.txt"
-        writeFile(file: buildHistoryFile, text: "${env.BUILD_NUMBER}")
-        echo "Recorded successful ${actionType} build #${env.BUILD_NUMBER}"
+        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
+        def s3Bucket = "taskactivity-deployments"
+        
+        withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+            sh """
+                echo "${env.BUILD_NUMBER}" | aws s3 cp - s3://${s3Bucket}/${s3Key} \
+                    --content-type text/plain \
+                    --metadata buildNumber=${env.BUILD_NUMBER},actionType=${actionType},timestamp=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            """
+            echo "Recorded successful ${actionType} build #${env.BUILD_NUMBER} to S3"
+        }
     } catch (Exception e) {
-        echo "WARNING: Failed to record build history: ${e.message}"
+        echo "WARNING: Failed to record build history to S3: ${e.message}"
+        echo "This is non-critical - deployment eligibility checks may be affected on next scheduled build"
     }
 }
