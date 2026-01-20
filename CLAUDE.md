@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 * If you create any temporary new files, scripts, or helper files for iteration, clean up these files by removing them at the end of the task.
 * When you update or modify core context files, also update markdown documentation and memory banks (see Memory Bank System section below)
 * When asked to commit changes, exclude CLAUDE.md, all /ai/ memory bank files, and /memories/ conversation memory files from commits unless explicitly updating them as part of documentation work. Never delete these files.
+* **When a user request goes against established conventions or best practices (e.g., inverting standard exit codes, breaking naming conventions, skipping security measures), ALWAYS confirm the intent before implementing.** Ask: "Just to clarify - this goes against [standard convention/best practice]. Is that intentional?" Better to ask one clarifying question than to implement something incorrectly and have to redo it.
 
 <investigate_before_answering>
 Never speculate about code you have not opened. If the user references a specific file, you MUST read the file before answering. Make sure to investigate and read relevant files BEFORE answering questions about the codebase. Never make any claims about code before investigating unless you are certain of the correct answer - give grounded and hallucination-free answers.

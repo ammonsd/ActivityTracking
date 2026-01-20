@@ -4,6 +4,52 @@
 
 This guide is for administrators of the Task Activity Management System. As an administrator, you have access to additional features for managing users, viewing all tasks, and configuring system settings.
 
+## Table of Contents
+
+1. [Accessing the Application](#accessing-the-application)
+2. [Navigation](#navigation)
+3. [Administrator Features](#administrator-features)
+   - [User Roles Overview](#user-roles-overview)
+   - [Managing Users](#managing-users)
+   - [Managing Roles and Permissions](#managing-roles-and-permissions)
+   - [Viewing All User Tasks](#viewing-all-user-tasks)
+   - [User Self-Service Profile Management](#user-self-service-profile-management)
+   - [Managing Task Activities](#managing-task-activities)
+   - [Changing User Passwords](#changing-user-passwords)
+4. [Expense Management Administration](#expense-management-administration)
+   - [Managing User Expenses](#managing-user-expenses)
+   - [Expense Approval Process](#expense-approval-process)
+   - [Email Notifications](#email-notifications-for-expense-submissions)
+   - [Reimbursement Tracking](#reimbursement-tracking)
+   - [Receipt Management](#receipt-management)
+   - [Managing Dropdowns](#managing-dropdowns)
+5. [Guest Activity Dashboard](#guest-activity-dashboard)
+6. [User Analytics & Performance Monitoring](#user-analytics--performance-monitoring)
+7. [Security Features](#security-features)
+   - [Account Lockout Policy](#account-lockout-policy)
+   - [JWT Token Revocation Management](#jwt-token-revocation-management)
+8. [Administrative Processes and One-Off Tasks](#administrative-processes-and-one-off-tasks)
+9. [Database Query Tool (SQL to CSV Export)](#database-query-tool-sql-to-csv-export)
+10. [Email Configuration Management](#email-configuration-management)
+    - [Email Notification Types](#email-notification-types)
+    - [Email Configuration Variables](#email-configuration-variables)
+    - [Method 1: PowerShell Script](#method-1-update-via-powershell-script-recommended)
+    - [Method 2: AWS Console](#method-2-update-via-aws-console)
+    - [Method 3: AWS CLI](#method-3-update-via-aws-cli)
+    - [Testing Email Configuration](#testing-email-configuration)
+    - [Troubleshooting Email Issues](#troubleshooting-email-issues)
+11. [System Monitoring and Health Checks](#system-monitoring-and-health-checks)
+    - [Health Check Endpoints](#health-check-endpoints)
+    - [Health Monitoring Script](#health-monitoring-script)
+    - [AWS CloudWatch Monitoring](#aws-cloudwatch-monitoring)
+    - [Application Performance Monitoring](#application-performance-monitoring)
+    - [Common Monitoring Tasks](#common-monitoring-tasks)
+    - [Troubleshooting Common Issues](#troubleshooting-common-issues)
+    - [Deployment and Rollback Procedures](#deployment-and-rollback-procedures)
+    - [Backup and Disaster Recovery](#backup-and-disaster-recovery)
+    - [Performance Optimization Tips](#performance-optimization-tips)
+12. [12-Factor App Compliance](#12-factor-app-compliance)
+
 ## Accessing the Application
 
 The Task Activity Management System provides two user interface options:
@@ -1511,6 +1557,684 @@ Test-Path .\.env
 # Local: http://localhost:8080 → local database
 # AWS: https://taskactivitytracker.com → RDS database
 ```
+
+---
+
+## Email Configuration Management
+
+The system sends email notifications for various events including expense submissions, approvals, Jenkins builds/deployments, and account lockouts. This section explains how to configure and manage email addresses for all notification types.
+
+### Email Notification Types
+
+The application sends two categories of email notifications:
+
+**1. Jenkins CI/CD Notifications**
+- **Build Success/Failure**: Sent when Jenkins builds complete
+- **Deploy Success/Failure**: Sent when deployments to AWS complete
+- Recipients configured via: `JENKINS_BUILD_NOTIFICATION_EMAIL` and `JENKINS_DEPLOY_NOTIFICATION_EMAIL`
+
+**2. Application Notifications**
+- **Expense Submissions**: Sent to approvers when users submit expenses
+- **Expense Status Changes**: Sent to users when expenses are approved/rejected/reimbursed
+- **Password Expiration Warnings**: Sent to users before password expires
+- **Account Lockout Alerts**: Sent to administrators when accounts are locked
+- Recipients configured via: `ADMIN_EMAIL` and `EXPENSE_APPROVERS`
+
+**Note:** User notification emails (expense confirmations, password expiration) are sent to the email address configured in each user's profile. Only the administrator and approver notification addresses are configured at the system level.
+
+### Email Configuration Variables
+
+All email addresses are configured via environment variables:
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `MAIL_FROM` | Sender address for all outgoing emails | `noreply@taskactivitytracker.com` |
+| `ADMIN_EMAIL` | Administrator notifications (account lockouts, security alerts) | `admin@example.com` |
+| `EXPENSE_APPROVERS` | Expense submission notifications | `approver1@example.com,approver2@example.com` |
+| `JENKINS_BUILD_NOTIFICATION_EMAIL` | Jenkins build success/failure notifications | `dev-team@example.com` |
+| `JENKINS_DEPLOY_NOTIFICATION_EMAIL` | Jenkins deployment notifications | `ops-team@example.com,manager@example.com` |
+
+**Multiple Recipients:**
+- Use **commas** (`,`) or **semicolons** (`;`) to separate multiple email addresses
+- Example: `user1@example.com,user2@example.com` or `user1@example.com;user2@example.com`
+- Both separators are supported by AWS SES
+
+### Method 1: Update via PowerShell Script (Recommended)
+
+The `update-email-addresses.ps1` script automates updating email addresses from your `.env` file to the AWS ECS task definition.
+
+**Prerequisites:**
+- `.env` file in project root with email configuration
+- AWS CLI installed and configured (only if deploying to AWS)
+- PowerShell 5.1 or higher
+
+**Step 1: Edit Email Addresses in `.env` File**
+
+```ini
+# Email Application Settings
+MAIL_FROM=noreply@taskactivitytracker.com
+ADMIN_EMAIL=admin@example.com
+EXPENSE_APPROVERS=approver1@example.com,approver2@example.com
+JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@example.com
+JENKINS_DEPLOY_NOTIFICATION_EMAIL=ops-team@example.com,manager@example.com
+```
+
+**Step 2: Run the Update Script**
+
+```powershell
+# Update task definition JSON only (no AWS deployment)
+.\aws\update-email-addresses.ps1
+
+# Update task definition AND deploy to AWS ECS
+.\aws\update-email-addresses.ps1 -DeployToAws
+```
+
+**What the Script Does:**
+1. ✅ Loads email values from `.env` file
+2. ✅ Updates `taskactivity-task-definition.json` with new addresses
+3. ✅ Creates automatic backup before making changes
+4. ✅ Validates JSON format
+5. ✅ Shows comparison of old vs new values
+6. ✅ Optionally registers new task definition with AWS ECS
+7. ✅ Updates ECS service to use new configuration
+
+**Script Output Example:**
+
+```
+========================================
+ECS Task Definition Email Update Script
+========================================
+
+Loading environment variables from .env file...
+Exported MAIL_FROM=noreply@taskactivitytracker.com
+Exported ADMIN_EMAIL=admin@example.com
+Exported EXPENSE_APPROVERS=approver1@example.com,approver2@example.com
+Exported JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@example.com
+Exported JENKINS_DEPLOY_NOTIFICATION_EMAIL=ops-team@example.com,manager@example.com
+
+Email Configuration from .env file:
+  MAIL_FROM: noreply@taskactivitytracker.com
+  ADMIN_EMAIL: admin@example.com
+  EXPENSE_APPROVERS: approver1@example.com,approver2@example.com
+  JENKINS_BUILD_NOTIFICATION_EMAIL: dev-team@example.com
+  JENKINS_DEPLOY_NOTIFICATION_EMAIL: ops-team@example.com,manager@example.com
+
+Creating backup of task definition...
+  Backup saved to: C:\...\aws\taskactivity-task-definition.json.backup
+
+Updating task definition JSON file...
+
+Comparison Results:
+
+  Unchanged (already current):
+    ✓ MAIL_FROM: noreply@taskactivitytracker.com
+    ✓ ADMIN_EMAIL: admin@example.com
+
+  Updated 2 email configuration(s):
+    EXPENSE_APPROVERS:
+      Old: old-approver@example.com
+      New: approver1@example.com,approver2@example.com
+    JENKINS_DEPLOY_NOTIFICATION_EMAIL:
+      Old: single@example.com
+      New: ops-team@example.com,manager@example.com
+
+Task definition JSON file updated successfully
+  File: C:\...\aws\taskactivity-task-definition.json
+```
+
+**Deployment Timeline:**
+
+After running with `-DeployToAws`, changes take effect in **3-5 minutes**:
+1. New ECS task starts with updated environment variables (~30 seconds)
+2. Health check grace period (60 seconds)
+3. Health checks validate new task (1-2 minutes)
+4. Old task drains and stops (~30 seconds)
+
+**Monitor deployment progress:**
+- AWS Console: https://console.aws.amazon.com/ecs/v2/clusters/taskactivity-cluster/services/taskactivity-service
+- AWS CLI: `aws ecs describe-services --cluster taskactivity-cluster --services taskactivity-service`
+
+### Method 2: Update via AWS Console
+
+If you prefer using the AWS Console instead of the script:
+
+**Step 1: Navigate to ECS Task Definitions**
+1. Open AWS Console: https://console.aws.amazon.com/ecs
+2. Select **Task Definitions** from left sidebar
+3. Click on **taskactivity** task definition family
+4. Click **Create new revision** button
+
+**Step 2: Update Environment Variables**
+1. Scroll to **Container definitions**
+2. Click on the **taskactivity** container
+3. Scroll to **Environment variables** section
+4. Locate and update these variables:
+   - `MAIL_FROM`
+   - `ADMIN_EMAIL`
+   - `EXPENSE_APPROVERS`
+   - `JENKINS_BUILD_NOTIFICATION_EMAIL`
+   - `JENKINS_DEPLOY_NOTIFICATION_EMAIL`
+5. Use commas or semicolons to separate multiple emails
+6. Click **Update** button
+
+**Step 3: Create New Revision**
+1. Scroll to bottom of page
+2. Click **Create** button
+3. New revision number will be displayed (e.g., `taskactivity:5`)
+
+**Step 4: Update ECS Service**
+1. Navigate to **Clusters** → **taskactivity-cluster**
+2. Click **Services** tab
+3. Select **taskactivity-service**
+4. Click **Update** button
+5. In **Revision** dropdown, select the new revision number
+6. Click **Update** button at bottom
+7. Deployment will begin automatically
+
+**Step 5: Monitor Deployment**
+1. Stay on the service details page
+2. Click **Deployments** tab
+3. Watch for:
+   - ✅ **Running count** matches desired count
+   - ✅ **Status** shows "PRIMARY" deployment "COMPLETED"
+   - ✅ New task is **HEALTHY**
+
+### Method 3: Update via AWS CLI
+
+For command-line enthusiasts or automation:
+
+```bash
+# Get current task definition
+aws ecs describe-task-definition \
+  --task-definition taskactivity \
+  --query taskDefinition \
+  --region us-east-1 > temp-task-def.json
+
+# Edit temp-task-def.json to update email environment variables
+# Then register new task definition
+aws ecs register-task-definition \
+  --cli-input-json file://temp-task-def.json \
+  --region us-east-1
+
+# Update service to use new task definition
+aws ecs update-service \
+  --cluster taskactivity-cluster \
+  --service taskactivity-service \
+  --task-definition taskactivity \
+  --region us-east-1
+```
+
+### Testing Email Configuration
+
+After updating email addresses, verify they work correctly:
+
+**Test Jenkins Notifications:**
+1. Trigger a Jenkins build manually
+2. Wait for build completion (success or failure)
+3. Check configured email addresses for notification
+
+**Test Expense Notifications:**
+1. Create and submit a test expense as a regular user
+2. Check expense approver email addresses
+3. Approve or reject the expense as ADMIN/EXPENSE_ADMIN
+4. Check submitter's email for status notification
+
+**Test Account Lockout Notifications:**
+1. Attempt to log in with wrong password 5 times
+2. Account will be locked
+3. Check admin email address for lockout notification
+
+### Troubleshooting Email Issues
+
+**Emails Not Being Sent:**
+
+Check application logs for email-related errors:
+```bash
+# AWS CloudWatch Logs
+aws logs tail /ecs/taskactivity --follow --region us-east-1 | grep -i "email\|mail"
+
+# Or via AWS Console
+# CloudWatch → Log Groups → /ecs/taskactivity → Latest log stream
+```
+
+**Common Issues:**
+
+1. **`MAIL_ENABLED` not set to `true`**
+   - Check task definition: `MAIL_ENABLED` should be `true`
+   - Restart service after updating
+
+2. **AWS SES not configured**
+   - Verify `MAIL_USE_AWS_SDK=true` in task definition
+   - Ensure ECS task role has SES permissions
+   - Check AWS SES console for verified email addresses
+
+3. **Invalid email format**
+   - Emails must follow format: `username@domain.com`
+   - Check for typos or extra spaces
+   - Verify separator is comma or semicolon (not both mixed randomly)
+
+4. **Changes not taking effect**
+   - Verify new task is running (check ECS service deployments)
+   - Old task must fully stop before new config is active
+   - Wait 3-5 minutes for complete deployment
+
+**View Current Email Configuration:**
+
+```bash
+# Get running task's environment variables
+aws ecs describe-tasks \
+  --cluster taskactivity-cluster \
+  --tasks $(aws ecs list-tasks --cluster taskactivity-cluster --service-name taskactivity-service --query 'taskArns[0]' --output text) \
+  --query 'tasks[0].overrides.containerOverrides[0].environment' \
+  --region us-east-1
+```
+
+### Email Security Considerations
+
+- **Use AWS SES (recommended for production)**: More reliable than SMTP, uses IAM role credentials
+- **Sender Address Verification**: Ensure `MAIL_FROM` address is verified in AWS SES
+- **No Credentials Needed**: AWS SES SDK uses ECS task role, no username/password required
+- **Secure Environment Variables**: Email addresses in ECS task definition are not encrypted (not sensitive)
+- **Rate Limiting**: AWS SES has sending limits (check SES console for your account limits)
+
+### Related Documentation
+
+- **AWS SES Setup**: See `aws/AWS_SES_Setup_Guide.md` for detailed SES configuration
+- **Email Service Code**: See `src/main/java/com/ammons/taskactivity/service/EmailService.java`
+- **Jenkins Configuration**: See `Jenkinsfile` for how Jenkins calls the notification API
+
+---
+
+## System Monitoring and Health Checks
+
+Administrators need to monitor the application's health, performance, and availability. This section covers monitoring tools, health checks, and troubleshooting procedures.
+
+### Health Check Endpoints
+
+The application exposes several health check endpoints for monitoring:
+
+| Endpoint | Purpose | Authentication Required |
+|----------|---------|------------------------|
+| `/api/health` | Comprehensive health status (database, uptime) | No |
+| `/api/health/simple` | Simple "OK" response for load balancer health checks | No |
+| `/api/health/startup` | Startup time and uptime information | No |
+
+**Example Health Check Response:**
+
+```json
+{
+    "status": "UP",
+    "database": "connected",
+    "timestamp": "2026-01-19T15:30:00Z",
+    "uptime": "3 days, 8 hours, 34 minutes"
+}
+```
+
+**Using Health Checks:**
+
+```bash
+# Check application health via API
+curl https://taskactivitytracker.com/api/health
+
+# Check via AWS health check
+aws ecs describe-services \
+  --cluster taskactivity-cluster \
+  --services taskactivity-service \
+  --region us-east-1 \
+  --query 'services[0].healthCheckGracePeriodSeconds'
+```
+
+### Health Monitoring Script
+
+A comprehensive health monitoring script is available at `scripts/monitor-health.sh` (for Docker deployments).
+
+**Features:**
+- Monitors application health endpoints
+- Checks database connectivity
+- Tracks system resources (CPU, memory, disk)
+- Analyzes application logs for errors
+- Sends alerts via webhooks (Slack/Teams)
+- Generates detailed health reports
+
+**Usage:**
+
+```bash
+# Single health check
+./scripts/monitor-health.sh check
+
+# Continuous monitoring (every 60 seconds)
+./scripts/monitor-health.sh monitor 60
+
+# Show current status
+./scripts/monitor-health.sh status
+
+# Generate health report
+./scripts/monitor-health.sh report
+```
+
+**Sample Output:**
+
+```
+[2026-01-19 15:30:00] ✓ Swarm cluster is healthy
+[2026-01-19 15:30:01] ✓ All required secrets are present
+[2026-01-19 15:30:02] ✓ All services are healthy
+[2026-01-19 15:30:03] ✓ Application is responsive (245ms)
+[2026-01-19 15:30:04] ✓ Database service is running
+[2026-01-19 15:30:05] ✓ System resources are within normal ranges (CPU: 15%, Memory: 42%, Disk: 35%)
+[2026-01-19 15:30:06] ✓ No critical errors found in recent logs
+
+=== All health checks passed ===
+```
+
+### AWS CloudWatch Monitoring
+
+For AWS deployments, application logs and metrics are sent to CloudWatch.
+
+**Access CloudWatch Logs:**
+1. Open AWS Console: https://console.aws.amazon.com/cloudwatch
+2. Select **Log groups** from left sidebar
+3. Click on `/ecs/taskactivity` log group
+4. Select latest log stream to view real-time logs
+
+**Command Line Access:**
+
+```bash
+# Tail application logs
+aws logs tail /ecs/taskactivity --follow --region us-east-1
+
+# Search for specific errors
+aws logs tail /ecs/taskactivity --follow --region us-east-1 | grep -i "error\|exception"
+
+# View logs for specific time range
+aws logs filter-log-events \
+  --log-group-name /ecs/taskactivity \
+  --start-time 1706534400000 \
+  --end-time 1706537000000 \
+  --region us-east-1
+```
+
+**Key Metrics to Monitor:**
+
+| Metric | Description | Alert Threshold |
+|--------|-------------|----------------|
+| **CPUUtilization** | ECS task CPU usage | > 80% sustained |
+| **MemoryUtilization** | ECS task memory usage | > 85% sustained |
+| **DatabaseConnections** | Active RDS connections | > 90% of max |
+| **FreeStorageSpace** | RDS disk space | < 10% remaining |
+| **ReadLatency / WriteLatency** | RDS query performance | > 100ms average |
+| **4xx / 5xx Errors** | Application error rates | > 5% of requests |
+
+**Create CloudWatch Alarms:**
+
+```bash
+# Example: Alert on high CPU usage
+aws cloudwatch put-metric-alarm \
+  --alarm-name taskactivity-high-cpu \
+  --alarm-description "Alert when ECS CPU exceeds 80%" \
+  --metric-name CPUUtilization \
+  --namespace AWS/ECS \
+  --statistic Average \
+  --period 300 \
+  --evaluation-periods 2 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --dimensions Name=ServiceName,Value=taskactivity-service Name=ClusterName,Value=taskactivity-cluster \
+  --region us-east-1
+```
+
+### Application Performance Monitoring
+
+**Monitor Active Sessions:**
+- Check **User Analytics** dashboard (Admin only)
+- View concurrent user activity
+- Track login/logout patterns
+
+**Database Performance:**
+```sql
+-- Check active database connections
+SELECT count(*) FROM pg_stat_activity WHERE datname = 'AmmoP1DB';
+
+-- Check slow queries
+SELECT pid, now() - query_start AS duration, query
+FROM pg_stat_activity
+WHERE state = 'active' AND now() - query_start > interval '5 seconds'
+ORDER BY duration DESC;
+
+-- Check database size
+SELECT pg_size_pretty(pg_database_size('AmmoP1DB'));
+```
+
+**Application Response Times:**
+- Monitor health check endpoint response times
+- Track JWT token generation/validation times
+- Watch for slow database queries in logs
+
+### Common Monitoring Tasks
+
+**Daily:**
+- ✅ Check ECS task running status
+- ✅ Review application logs for errors
+- ✅ Verify RDS database status
+- ✅ Monitor expense notification delivery
+
+**Weekly:**
+- ✅ Review CloudWatch metrics trends
+- ✅ Check billing dashboard for cost anomalies
+- ✅ Verify S3 receipt uploads are working
+- ✅ Review account lockout alerts
+
+**Monthly:**
+- ✅ Analyze cost trends and optimize resources
+- ✅ Review database backup retention
+- ✅ Check for security updates (Spring Boot, dependencies)
+- ✅ Review user access patterns and inactive accounts
+- ✅ Verify JWT token revocation list size
+
+### Troubleshooting Common Issues
+
+**Issue: Application Not Responding**
+
+**Symptoms:** Health check endpoint returns 503 or times out
+
+**Steps to Diagnose:**
+1. Check ECS service status:
+   ```bash
+   aws ecs describe-services --cluster taskactivity-cluster --services taskactivity-service
+   ```
+2. Check task health:
+   ```bash
+   aws ecs list-tasks --cluster taskactivity-cluster --service-name taskactivity-service
+   aws ecs describe-tasks --cluster taskactivity-cluster --tasks <task-arn>
+   ```
+3. Review CloudWatch logs for startup errors
+4. Check database connectivity
+
+**Common Causes:**
+- Database connection pool exhausted
+- Out of memory (check MemoryUtilization metric)
+- Database credentials incorrect
+- Network connectivity issues
+
+**Issue: High CPU/Memory Usage**
+
+**Symptoms:** ECS tasks showing CPU > 80% or Memory > 85%
+
+**Steps to Diagnose:**
+1. Check current resource utilization:
+   ```bash
+   aws cloudwatch get-metric-statistics \
+     --namespace AWS/ECS \
+     --metric-name CPUUtilization \
+     --dimensions Name=ServiceName,Value=taskactivity-service Name=ClusterName,Value=taskactivity-cluster \
+     --start-time 2026-01-19T12:00:00Z \
+     --end-time 2026-01-19T15:00:00Z \
+     --period 300 \
+     --statistics Average
+   ```
+2. Review application logs for heavy operations
+3. Check for database query performance issues
+
+**Solutions:**
+- Scale up ECS task count (increase desired tasks)
+- Optimize slow database queries
+- Increase task CPU/memory limits in task definition
+
+**Issue: Database Connectivity Errors**
+
+**Symptoms:** Logs show `SQLException`, `ConnectionException`, or database timeouts
+
+**Steps to Diagnose:**
+1. Check RDS instance status:
+   ```bash
+   aws rds describe-db-instances --db-instance-identifier taskactivity-db
+   ```
+2. Verify security group allows ECS tasks to connect
+3. Check database credentials in Secrets Manager
+4. Review RDS CloudWatch metrics (DatabaseConnections)
+
+**Common Causes:**
+- Database password changed but not updated in Secrets Manager
+- RDS instance stopped or restarting
+- Security group rules blocking connection
+- Connection pool exhausted (too many active connections)
+
+**Issue: Emails Not Being Sent**
+
+See [Troubleshooting Email Issues](#troubleshooting-email-issues) section above.
+
+### Deployment and Rollback Procedures
+
+**Deploy New Version:**
+
+Via AWS Console:
+1. Update ECS task definition with new image tag
+2. Create new revision
+3. Update ECS service to use new revision
+4. Monitor deployment progress (3-5 minutes)
+
+Via AWS CLI:
+```bash
+# Register new task definition
+aws ecs register-task-definition --cli-input-json file://taskactivity-task-definition.json
+
+# Update service
+aws ecs update-service \
+  --cluster taskactivity-cluster \
+  --service taskactivity-service \
+  --task-definition taskactivity
+```
+
+**Rollback to Previous Version:**
+
+Via AWS Console:
+1. Navigate to **ECS** → **Clusters** → **taskactivity-cluster**
+2. Select **taskactivity-service**
+3. Click **Update**
+4. Select previous task definition revision from dropdown
+5. Click **Update**
+
+Via AWS CLI:
+```bash
+# List recent task definitions
+aws ecs list-task-definitions \
+  --family-prefix taskactivity \
+  --status ACTIVE \
+  --sort DESC \
+  --max-items 5
+
+# Rollback to previous version
+aws ecs update-service \
+  --cluster taskactivity-cluster \
+  --service taskactivity-service \
+  --task-definition taskactivity:<previous-revision-number>
+```
+
+**Monitor Deployment:**
+```bash
+# Watch deployment status
+aws ecs describe-services \
+  --cluster taskactivity-cluster \
+  --services taskactivity-service \
+  --query 'services[0].deployments'
+
+# Check running tasks
+aws ecs list-tasks \
+  --cluster taskactivity-cluster \
+  --service-name taskactivity-service \
+  --desired-status RUNNING
+```
+
+### Backup and Disaster Recovery
+
+**Database Backups:**
+
+AWS RDS automated backups are enabled with 7-day retention.
+
+**Manual Backup:**
+```bash
+# Create RDS snapshot
+aws rds create-db-snapshot \
+  --db-instance-identifier taskactivity-db \
+  --db-snapshot-identifier taskactivity-manual-backup-$(date +%Y%m%d)
+
+# Verify snapshot created
+aws rds describe-db-snapshots \
+  --db-instance-identifier taskactivity-db
+```
+
+**Database Restore from Snapshot:**
+```bash
+# Restore to new RDS instance
+aws rds restore-db-instance-from-db-snapshot \
+  --db-instance-identifier taskactivity-db-restored \
+  --db-snapshot-identifier taskactivity-manual-backup-20260119
+
+# Update ECS environment variables to point to new database
+# Update JWT_SECRET_NAME to new database endpoint in task definition
+```
+
+**Application Configuration Backups:**
+
+Important files to backup regularly:
+- `taskactivity-task-definition.json` (ECS configuration)
+- `.env` file (local development settings)
+- CloudFormation templates (if using IaC)
+- AWS Secrets Manager values (database credentials, JWT secret)
+
+**Receipt File Backups:**
+
+S3 bucket has lifecycle policy for automatic archiving:
+- Receipts older than 90 days → moved to Glacier
+- Receipts older than 1 year → moved to Deep Archive
+
+**Verify S3 backups:**
+```bash
+# List recent receipts
+aws s3 ls s3://taskactivity-receipts/receipts/ --recursive --human-readable
+
+# Check lifecycle policy
+aws s3api get-bucket-lifecycle-configuration --bucket taskactivity-receipts
+```
+
+### Performance Optimization Tips
+
+**Database:**
+- Review slow query logs monthly
+- Add indexes for frequently queried columns
+- Archive old task activities (> 2 years)
+- Consider read replicas for reporting queries
+
+**Application:**
+- Enable HTTP caching for static resources
+- Use CDN for Angular frontend assets
+- Monitor JWT revocation list size (clean up old entries)
+- Configure appropriate connection pool sizes
+
+**Infrastructure:**
+- Right-size ECS tasks (CPU/memory)
+- Use Application Auto Scaling for variable load
+- Optimize RDS instance class based on usage
+- Enable Multi-AZ for production availability
 
 ---
 
