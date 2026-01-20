@@ -218,6 +218,69 @@ pipeline {
                     echo "Scheduled deployment skipped"
                     echo "Reason: No new builds since last deployment"
                     echo "========================================="
+                    
+                    // Send notification if JENKINS_DEPLOY_SKIPPED_CHECK is enabled
+                    try {
+                        // Read JENKINS_DEPLOY_SKIPPED_CHECK from ECS task definition
+                        def taskDefJson = sh(
+                            script: """
+                                aws ecs describe-task-definition \
+                                    --task-definition ${TASK_DEFINITION_FAMILY} \
+                                    --region ${AWS_REGION} \
+                                    --query 'taskDefinition.containerDefinitions[0].environment[?name==\`JENKINS_DEPLOY_SKIPPED_CHECK\`].value' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        
+                        def skippedCheckEnabled = taskDefJson?.toLowerCase() == 'true'
+                        
+                        echo "JENKINS_DEPLOY_SKIPPED_CHECK from ECS task definition: ${taskDefJson}"
+                        
+                        if (skippedCheckEnabled) {
+                            echo "Sending skipped deployment notification..."
+                            
+                            def endpoint = "${APP_URL}/api/jenkins/deploy-skipped"
+                            def payload = """
+                                {
+                                    "buildNumber": "${BUILD_NUMBER}",
+                                    "branch": "${env.GIT_BRANCH ?: 'main'}",
+                                    "commit": "${env.GIT_COMMIT ?: 'unknown'}",
+                                    "buildUrl": "${JENKINS_URL}/job/TaskActivity-Pipeline/${BUILD_NUMBER}/",
+                                    "environment": "${params.ENVIRONMENT}",
+                                    "reason": "No new builds since last deployment",
+                                    "triggeredBy": "scheduled"
+                                }
+                            """
+                            
+                            def response = sh(
+                                script: """
+                                    curl -s -w '\\n%{http_code}' -X POST ${endpoint} \\
+                                         -H "Content-Type: application/json" \\
+                                         -H "Authorization: Bearer ${JENKINS_API_TOKEN}" \\
+                                         -d '${payload}'
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            
+                            def lines = response.split('\n')
+                            def httpCode = lines[-1]
+                            def body = lines.size() > 1 ? lines[0..-2].join('\n') : ''
+                            
+                            if (httpCode == '200') {
+                                echo "✓ Skipped deployment notification sent successfully"
+                                echo "Response: ${body}"
+                            } else {
+                                echo "⚠ Notification failed with HTTP ${httpCode}"
+                                echo "Response: ${body}"
+                            }
+                        } else {
+                            echo "Skipped deployment notification disabled (JENKINS_DEPLOY_SKIPPED_CHECK not enabled)"
+                        }
+                    } catch (Exception e) {
+                        echo "⚠ Failed to send skipped deployment notification: ${e.message}"
+                        // Don't fail the build if notification fails
+                    }
                 }
             }
         }

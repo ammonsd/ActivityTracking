@@ -22,6 +22,11 @@ app.mail.jenkins-build-notification-email=${JENKINS_BUILD_NOTIFICATION_EMAIL:dea
 
 # Deploy notifications - Developers + Business Analysts
 app.mail.jenkins-deploy-notification-email=${JENKINS_DEPLOY_NOTIFICATION_EMAIL:deanammons@gmail.com}
+
+# Deploy skipped check - Enable/disable skipped deployment notifications (optional)
+# When true, sends email notification when scheduled deployment is skipped (no new builds)
+# Controlled via .env file and update-email-addresses.ps1 script
+JENKINS_DEPLOY_SKIPPED_CHECK=${JENKINS_DEPLOY_SKIPPED_CHECK:false}
 ```
 
 ### Environment Variables
@@ -38,9 +43,16 @@ JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@company.com
 JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@company.com,ba-team@company.com
 ```
 
+**Deploy Skipped Check (.env example):**
+
+```env
+# Enable skipped deployment notifications (set to false to disable)
+JENKINS_DEPLOY_SKIPPED_CHECK=true
+```
+
 ### New API Endpoints
 
-Added two new REST endpoints for deployment notifications:
+Added three new REST endpoints for deployment notifications:
 
 #### Deploy Success
 
@@ -79,12 +91,35 @@ POST /api/jenkins/deploy-failure
 }
 ```
 
+#### Deploy Skipped
+
+```
+POST /api/jenkins/deploy-skipped
+```
+
+**Request Body:**
+
+```json
+{
+    "buildNumber": "123",
+    "branch": "main",
+    "commit": "abc1234",
+    "buildUrl": "https://jenkins.example.com/job/deploy/123/",
+    "environment": "production",
+    "reason": "No new builds since last deployment",
+    "triggeredBy": "scheduled"
+}
+```
+
+**Note:** This endpoint is only called when `JENKINS_DEPLOY_SKIPPED_CHECK=true` in the ECS task definition. Jenkins automatically reads this value from the running ECS task at runtime.
+
 ### Email Service Methods
 
 **New Methods:**
 
 -   `sendDeploySuccessNotification()` - Sends success notification to deploy email list
 -   `sendDeployFailureNotification()` - Sends failure notification to deploy email list
+-   `sendDeploySkippedNotification()` - Sends skipped notification to deploy email list (when enabled)
 
 **Updated Methods:**
 
@@ -222,6 +257,15 @@ pipeline {
 -   **Frequency**: Every deployment (staging, production, etc.)
 -   **Example**: `dev-team@company.com,ba-team@company.com`
 
+### Deploy Skipped Notifications
+
+-   **Purpose**: Notify when scheduled deployment is skipped (no new builds available)
+-   **Recipients**: Same as build notifications (`JENKINS_BUILD_NOTIFICATION_EMAIL`) - support team only, not business users
+-   **Frequency**: Only when scheduled deployments are skipped AND `JENKINS_DEPLOY_SKIPPED_CHECK=true`
+-   **Control**: Managed via `.env` file - no Jenkinsfile changes needed
+-   **Example**: Set `JENKINS_DEPLOY_SKIPPED_CHECK=true` in `.env`, then run `.\aws\update-email-addresses.ps1 -DeployToAws`
+-   **Rationale**: Skipped deployments are operational notifications for the support team, not information business users need
+
 ## Configuration Examples
 
 ### Local Development (.env)
@@ -229,6 +273,7 @@ pipeline {
 ```env
 JENKINS_BUILD_NOTIFICATION_EMAIL=developer@localhost.com
 JENKINS_DEPLOY_NOTIFICATION_EMAIL=developer@localhost.com,manager@localhost.com
+JENKINS_DEPLOY_SKIPPED_CHECK=true
 ```
 
 ### Staging Environment
@@ -236,6 +281,7 @@ JENKINS_DEPLOY_NOTIFICATION_EMAIL=developer@localhost.com,manager@localhost.com
 ```env
 JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@company.com
 JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@company.com,qa-team@company.com,ba-team@company.com
+JENKINS_DEPLOY_SKIPPED_CHECK=true
 ```
 
 ### Production Environment
@@ -243,7 +289,52 @@ JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@company.com,qa-team@company.com,ba-te
 ```env
 JENKINS_BUILD_NOTIFICATION_EMAIL=dev-team@company.com
 JENKINS_DEPLOY_NOTIFICATION_EMAIL=dev-team@company.com,ba-team@company.com,operations@company.com,management@company.com
+JENKINS_DEPLOY_SKIPPED_CHECK=false  # Disable skipped notifications in production if desired
 ```
+
+## Managing Email Configuration
+
+### Updating Email Addresses and Settings
+
+All Jenkins notification settings (email addresses and skipped deployment check) are managed through the `.env` file and the `update-email-addresses.ps1` script. **You do NOT need to modify the Jenkinsfile.**
+
+**Step-by-step process:**
+
+1. **Update .env file:**
+
+    ```env
+    JENKINS_BUILD_NOTIFICATION_EMAIL=new-dev@company.com
+    JENKINS_DEPLOY_NOTIFICATION_EMAIL=new-dev@company.com,new-ba@company.com
+    JENKINS_DEPLOY_SKIPPED_CHECK=true
+    ```
+
+2. **Run the PowerShell script:**
+
+    ```powershell
+    cd aws
+    .\update-email-addresses.ps1 -DeployToAws
+    ```
+
+    This script will:
+    - Read all email settings from `.env`
+    - Update the ECS task definition JSON file
+    - Register the new task definition with AWS
+    - Update the ECS service to use the new configuration
+
+3. **Jenkins automatically picks up the new settings:**
+    - Jenkins reads `JENKINS_DEPLOY_SKIPPED_CHECK` directly from the running ECS task definition
+    - No Jenkinsfile modification required
+    - Changes take effect on the next Jenkins build
+
+**What gets updated automatically:**
+- ✅ `JENKINS_BUILD_NOTIFICATION_EMAIL`
+- ✅ `JENKINS_DEPLOY_NOTIFICATION_EMAIL`  
+- ✅ `JENKINS_DEPLOY_SKIPPED_CHECK`
+- ✅ `MAIL_FROM`
+- ✅ `ADMIN_EMAIL`
+- ✅ `EXPENSE_APPROVERS`
+
+**Important:** The script ensures all settings stay in sync between `.env`, the ECS task definition, and what Jenkins uses at runtime.
 
 ## Migration from Old Property
 
@@ -276,6 +367,8 @@ If you have existing configuration using `JENKINS_NOTIFICATION_EMAIL`:
 2. **Reduced Noise**: Business analysts don't get notified about every build failure during development
 3. **Better Visibility**: Deployment notifications reach the right audience who needs to know about production changes
 4. **Flexibility**: Different email lists for different environments (staging vs production)
+5. **Temporary Monitoring**: Enable skipped deployment notifications when needed, disable when not required
+6. **Centralized Management**: All notification settings managed through `.env` file - no Jenkinsfile changes needed
 
 ## Testing
 
@@ -291,11 +384,20 @@ Test the configuration:
     ```
 
 2. **Deploy Notifications:**
+
     ```bash
     curl -X POST http://localhost:8081/api/jenkins/deploy-success \
          -H "Content-Type: application/json" \
          -H "Authorization: Bearer YOUR_TOKEN" \
          -d '{"buildNumber":"1","deployUrl":"http://jenkins/deploy/1/","environment":"production"}'
+    ```
+
+3. **Deploy Skipped Notifications:**
+    ```bash
+    curl -X POST http://localhost:8081/api/jenkins/deploy-skipped \
+         -H "Content-Type: application/json" \
+         -H "Authorization: Bearer YOUR_TOKEN" \
+         -d '{"buildNumber":"1","buildUrl":"http://jenkins/job/1/","environment":"production","reason":"No new builds since last deployment","triggeredBy":"scheduled"}'
     ```
 
 ## Documentation Updates

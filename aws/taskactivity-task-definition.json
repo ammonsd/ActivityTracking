@@ -68,19 +68,23 @@
         },
         {
           "name": "ADMIN_EMAIL",
-          "value": "deanammons@gmail.com"
-        },
-        {
-          "name": "EXPENSE_APPROVERS",
           "value": "deanammons@gmail.com,deanammons48@gmail.com"
         },
         {
-          "name": "JENKINS_BUILD_NOTIFICATION_EMAIL",
+          "name": "EXPENSE_APPROVERS",
           "value": "deanammons@gmail.com"
         },
         {
-          "name": "JENKINS_DEPLOY_NOTIFICATION_EMAIL",
+          "name": "JENKINS_BUILD_NOTIFICATION_EMAIL",
           "value": "deanammons@gmail.com,deanammons48@gmail.com;ammonsd@gmail.com"
+        },
+        {
+          "name": "JENKINS_DEPLOY_NOTIFICATION_EMAIL",
+          "value": "deanammons@gmail.com"
+        },
+        {
+          "name": "JENKINS_DEPLOY_SKIPPED_CHECK",
+          "value": "true"
         }
       ],
       "secrets": [

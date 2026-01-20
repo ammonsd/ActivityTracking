@@ -264,6 +264,64 @@ public class JenkinsBuildNotificationController {
     }
 
     /**
+     * Notify deploy skipped.
+     * 
+     * @param request the deploy notification request
+     * @return success response
+     */
+    @PostMapping("/deploy-skipped")
+    @Operation(summary = "Send deploy skipped notification",
+                    description = "Sends an email notification when a Jenkins deployment is skipped (e.g., no new builds since last deployment). Called from Jenkins pipeline when scheduled deployment is skipped.",
+                    security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+                                    description = "Notification sent successfully",
+                                    content = @Content(schema = @Schema(
+                                                    implementation = ApiResponse.class))),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+                                    description = "Invalid request parameters",
+                                    content = @Content(schema = @Schema(
+                                                    implementation = ApiResponse.class))),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401",
+                                    description = "Unauthorized - Invalid or missing JWT token")})
+    @RequirePermission(resource = "JENKINS", action = "NOTIFY")
+    public ResponseEntity<ApiResponse<String>> notifyDeploySkipped(@RequestBody @Parameter(
+                    description = "Deploy skipped notification details including build number, branch, commit, URL, environment, and reason",
+                    required = true) DeploySkippedNotificationRequest request) {
+
+            logger.info("Received deploy skipped notification for build: {} to {} - Reason: {}",
+                            request.buildNumber(), request.environment(), request.reason());
+
+            if (request.buildNumber() == null || request.buildNumber().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                                    .body(ApiResponse.error("Build number is required"));
+            }
+
+            if (request.buildUrl() == null || request.buildUrl().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                                    .body(ApiResponse.error("Build URL is required"));
+            }
+
+            if (request.environment() == null || request.environment().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                                    .body(ApiResponse.error("Environment is required"));
+            }
+
+            if (request.reason() == null || request.reason().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                                    .body(ApiResponse.error("Reason is required"));
+            }
+
+            emailService.sendDeploySkippedNotification(request.buildNumber(), request.branch(),
+                            request.commit(), request.buildUrl(), request.environment(),
+                            request.reason());
+
+            return ResponseEntity
+                            .ok(ApiResponse.success("Deploy skipped notification sent for build: "
+                                            + request.buildNumber()));
+    }
+
+    /**
      * Request DTO for Jenkins build notifications.
      * 
      * @param buildNumber the Jenkins build number
@@ -316,5 +374,34 @@ public class JenkinsBuildNotificationController {
                                     required = true) String environment,
                     @Schema(description = "What triggered the build",
                                     example = "scm") String triggeredBy) {
+    }
+
+    /**
+     * Request DTO for Jenkins deploy skipped notifications.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch (e.g., "main", "develop")
+     * @param commit the Git commit hash (short or full)
+     * @param buildUrl the Jenkins build URL
+     * @param environment the deployment environment (e.g., "staging", "production")
+     * @param reason the reason deployment was skipped
+     * @param triggeredBy what triggered this check (e.g., "scheduled")
+     */
+    @Schema(description = "Jenkins deploy skipped notification request")
+    public record DeploySkippedNotificationRequest(
+                    @Schema(description = "Jenkins build number", example = "72",
+                                    required = true) String buildNumber,
+                    @Schema(description = "Git branch name", example = "main") String branch,
+                    @Schema(description = "Git commit hash", example = "abc1234") String commit,
+                    @Schema(description = "Jenkins build URL",
+                                    example = "https://jenkins.example.com/job/taskactivity/72/",
+                                    required = true) String buildUrl,
+                    @Schema(description = "Deployment environment", example = "production",
+                                    required = true) String environment,
+                    @Schema(description = "Reason deployment was skipped",
+                                    example = "No new builds since last deployment",
+                                    required = true) String reason,
+                    @Schema(description = "What triggered the build",
+                                    example = "scheduled") String triggeredBy) {
     }
 }

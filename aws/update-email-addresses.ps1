@@ -10,6 +10,7 @@
     • EXPENSE_APPROVERS - Expense approval notifications
     • JENKINS_BUILD_NOTIFICATION_EMAIL - Jenkins build notifications
     • JENKINS_DEPLOY_NOTIFICATION_EMAIL - Jenkins deployment notifications
+    • JENKINS_DEPLOY_SKIPPED_CHECK - Enable/disable skipped deployment notifications
     
     The script:
     1. Loads environment variables from .env file
@@ -62,9 +63,9 @@ $ecsCluster = "taskactivity-cluster"
 $ecsService = "taskactivity-service"
 $taskDefinitionFamily = "taskactivity"
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "ECS Task Definition Email Update Script" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "ECS Task Definition Configuration Update Script" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ========================================
@@ -96,16 +97,17 @@ $envOutput | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
 Write-Host ""
 
 # ========================================
-# Read Email Configuration from Environment
+# Read Configuration from Environment
 # ========================================
 
-Write-Host "Reading email configuration..." -ForegroundColor Cyan
+Write-Host "Reading Environment configuration..." -ForegroundColor Cyan
 
 $mailFrom = $env:MAIL_FROM
 $adminEmail = $env:ADMIN_EMAIL
 $expenseApprovers = $env:EXPENSE_APPROVERS
 $jenkinsBuildEmail = $env:JENKINS_BUILD_NOTIFICATION_EMAIL
 $jenkinsDeployEmail = $env:JENKINS_DEPLOY_NOTIFICATION_EMAIL
+$jenkinsDeploySkippedCheck = $env:JENKINS_DEPLOY_SKIPPED_CHECK
 
 # Validate required variables
 $missingVars = @()
@@ -114,18 +116,20 @@ if ([string]::IsNullOrWhiteSpace($adminEmail)) { $missingVars += "ADMIN_EMAIL" }
 if ([string]::IsNullOrWhiteSpace($expenseApprovers)) { $missingVars += "EXPENSE_APPROVERS" }
 if ([string]::IsNullOrWhiteSpace($jenkinsBuildEmail)) { $missingVars += "JENKINS_BUILD_NOTIFICATION_EMAIL" }
 if ([string]::IsNullOrWhiteSpace($jenkinsDeployEmail)) { $missingVars += "JENKINS_DEPLOY_NOTIFICATION_EMAIL" }
+if ([string]::IsNullOrWhiteSpace($jenkinsDeploySkippedCheck)) { $missingVars += "JENKINS_DEPLOY_SKIPPED_CHECK" }
 
 if ($missingVars.Count -gt 0) {
     Write-Error "Missing required environment variables in .env file: $($missingVars -join ', ')"
     exit 1
 }
 
-Write-Host "Email Configuration from .env file:" -ForegroundColor White
+Write-Host "Configurations from .env file:" -ForegroundColor White
 Write-Host "  MAIL_FROM: $mailFrom" -ForegroundColor Green
 Write-Host "  ADMIN_EMAIL: $adminEmail" -ForegroundColor Green
 Write-Host "  EXPENSE_APPROVERS: $expenseApprovers" -ForegroundColor Green
 Write-Host "  JENKINS_BUILD_NOTIFICATION_EMAIL: $jenkinsBuildEmail" -ForegroundColor Green
 Write-Host "  JENKINS_DEPLOY_NOTIFICATION_EMAIL: $jenkinsDeployEmail" -ForegroundColor Green
+Write-Host "  JENKINS_DEPLOY_SKIPPED_CHECK: $jenkinsDeploySkippedCheck" -ForegroundColor Green
 Write-Host ""
 
 # ========================================
@@ -227,6 +231,19 @@ try {
                     }
                 }
             }
+            "JENKINS_DEPLOY_SKIPPED_CHECK" {
+                $checked = $true
+                if ($envVar.value -ne $jenkinsDeploySkippedCheck) {
+                    $envVar.value = $jenkinsDeploySkippedCheck
+                    $updated = $true
+                } else {
+                    $checkedVars += @{
+                        Name = $envVar.name
+                        Value = $envVar.value
+                        Status = "unchanged"
+                    }
+                }
+            }
         }
         
         if ($updated) {
@@ -251,9 +268,9 @@ try {
     }
     
     if ($updatedVars.Count -eq 0) {
-        Write-Host "  No changes needed - all email addresses are up to date" -ForegroundColor Yellow
+        Write-Host "  No changes needed - all configurations are up to date" -ForegroundColor Yellow
     } else {
-        Write-Host "  Updated $($updatedVars.Count) email configuration(s):" -ForegroundColor Green
+        Write-Host "  Updated $($updatedVars.Count) configuration(s):" -ForegroundColor Green
         foreach ($var in $updatedVars) {
             Write-Host "    $($var.Name):" -ForegroundColor White
             Write-Host "      Old: $($var.OldValue)" -ForegroundColor Red
@@ -368,7 +385,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 if ($updatedVars.Count -gt 0) {
-    Write-Host "✓ Task definition updated with latest email addresses" -ForegroundColor Green
+    Write-Host "✓ Task definition updated with latest configuration values" -ForegroundColor Green
     Write-Host "✓ Backup saved to: $backupPath" -ForegroundColor Green
     
     if ($DeployToAws) {
@@ -380,11 +397,11 @@ if ($updatedVars.Count -gt 0) {
         Write-Host "  .\update-email-addresses.ps1 -DeployToAws" -ForegroundColor Cyan
     }
 } else {
-    Write-Host "✓ No changes needed - all email addresses are already current" -ForegroundColor Green
+    Write-Host "✓ No changes needed - all configurations are already current" -ForegroundColor Green
 }
 
 Write-Host ""
-Write-Host "Email configuration complete!" -ForegroundColor Green
+Write-Host "Environment configuration complete!" -ForegroundColor Green
 Write-Host ""
 # Exit with appropriate code
 if ($updatedVars.Count -gt 0) {

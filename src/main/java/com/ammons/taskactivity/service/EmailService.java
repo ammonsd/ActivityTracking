@@ -949,6 +949,31 @@ public class EmailService {
     }
 
     /**
+     * Send Jenkins deploy skipped notification.
+     * 
+     * @param buildNumber the Jenkins build number
+     * @param branch the Git branch
+     * @param commit the Git commit hash
+     * @param buildUrl the URL to view the build
+     * @param environment the deployment environment (e.g., staging, production)
+     * @param reason the reason deployment was skipped
+     */
+    public void sendDeploySkippedNotification(String buildNumber, String branch, String commit,
+            String buildUrl, String environment, String reason) {
+        if (!mailEnabled) {
+            logger.debug("Email notifications disabled - skipping deploy skipped notification");
+            return;
+        }
+
+        String subject =
+                String.format("⏭️ Jenkins Deploy %s - SKIPPED (%s)", buildNumber, environment);
+        String body = buildJenkinsDeploySkippedEmailBody(buildNumber, branch, commit, buildUrl,
+                environment, reason);
+
+        sendEmailsWithGrouping(jenkinsBuildNotificationEmail, subject, body, "deploy skipped");
+    }
+
+    /**
      * Builds the email body for Jenkins build notifications.
      * 
      * @param buildNumber the build number
@@ -1036,6 +1061,50 @@ public class EmailService {
         body.append(String.format("This is an automated notification from %s CI/CD Pipeline.%n",
                 appName));
         body.append("Do not reply to this email. This email is sent from an unattended mailbox.");
+
+        return body.toString();
+    }
+
+    /**
+     * Builds the email body for Jenkins deploy skipped notifications.
+     * 
+     * @param buildNumber the build number
+     * @param branch the Git branch
+     * @param commit the Git commit hash
+     * @param buildUrl the URL to view the build
+     * @param environment the deployment environment
+     * @param reason the reason deployment was skipped
+     * @return formatted email body text
+     */
+    private String buildJenkinsDeploySkippedEmailBody(String buildNumber, String branch,
+            String commit, String buildUrl, String environment, String reason) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("⏭️ JENKINS DEPLOYMENT SKIPPED%n%n"));
+
+        body.append("Deployment Details:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("Action Type:        DEPLOYMENT (SKIPPED)%n"));
+        body.append(String.format("Build Number:       %s%n", buildNumber));
+        body.append(String.format("Environment:        %s%n",
+                environment != null ? environment.toUpperCase() : "UNKNOWN"));
+        body.append(String.format("Branch:             %s%n", branch));
+        body.append(String.format("Commit:             %s%n", commit));
+        body.append(String.format("Status:             SKIPPED%n"));
+        body.append(String.format("Reason:             %s%n", reason));
+        body.append(String.format("Timestamp:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+
+        body.append("Links:\n");
+        body.append(String.format("View build: %s%n", buildUrl));
+
+        body.append("\n---\n");
+        body.append(String.format("This is an automated notification from %s CI/CD Pipeline.%n",
+                appName));
+        body.append("Do not reply to this email. This email is sent from an unattended mailbox.\n");
+        body.append(
+                "\nNote: This notification is controlled by the JENKINS_DEPLOY_SKIPPED_CHECK environment variable.");
 
         return body.toString();
     }
