@@ -644,11 +644,23 @@ pipeline {
                     return
                 }
                 
+                // Record successful build in history
+                def actualAction = params.DEPLOY_ACTION
+                if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true') {
+                    actualAction = 'deploy'
+                }
+                
+                if (actualAction == 'build-only') {
+                    recordSuccessfulBuild('build-only')
+                } else if (actualAction == 'deploy') {
+                    recordSuccessfulBuild('deploy')
+                }
+                
                 echo "========================================="
                 echo "✓ BUILD SUCCESSFUL"
                 echo "========================================="
                 echo "Environment: ${params.ENVIRONMENT}"
-                echo "Action: ${params.DEPLOY_ACTION}"
+                echo "Action: ${actualAction}"
                 echo "Build Number: ${env.BUILD_NUMBER}"
                 echo "Image: ${IMAGE_FULL}"
                 
@@ -822,71 +834,50 @@ pipeline {
 
 /**
  * Helper function to get the last successful build number for a specific action type.
- * This is used to determine if there are new builds since the last deployment.
  * 
- * Uses currentBuild.rawBuild.parent to access job without requiring admin approval.
+ * WORKAROUND: Jenkins Script Security blocks access to build objects, so we use
+ * a file-based approach to track build history without needing security approvals.
+ * 
+ * Each successful build writes its metadata to workspace files that can be read
+ * by subsequent builds to determine deployment eligibility.
  * 
  * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
  * @return The build number of the last successful build, or null if none found
  */
 def getLastSuccessfulBuildNumber(String actionType) {
     try {
-        // Use currentBuild.rawBuild.parent to get job without needing Jenkins.instance
-        def job = currentBuild.rawBuild.parent
+        def buildHistoryFile = "${WORKSPACE}/.jenkins-${actionType}-last-build.txt"
         
-        // Search through the last 50 builds
-        def builds = job.getBuilds().limit(50)
-        
-        for (build in builds) {
-            // Skip current build
-            if (build.number >= env.BUILD_NUMBER.toInteger()) {
-                continue
-            }
-            
-            // Check if build was successful
-            if (build.result != hudson.model.Result.SUCCESS) {
-                continue
-            }
-            
-            // Get the parameters for this build
-            def paramsAction = build.getAction(hudson.model.ParametersAction)
-            if (paramsAction == null) {
-                continue
-            }
-            
-            // Check if this build had the matching DEPLOY_ACTION
-            def deployAction = paramsAction.getParameter('DEPLOY_ACTION')
-            if (deployAction != null && deployAction.value == actionType) {
-                echo "Found last successful ${actionType} at build #${build.number}"
-                return build.number
-            }
-            
-            // For scheduled builds, also check if it was a deployment
-            def buildCauses = build.getCauses()
-            def wasScheduledDeploy = false
-            
-            for (cause in buildCauses) {
-                if (cause instanceof hudson.triggers.TimerTrigger.TimerTriggerCause) {
-                    // Check if this scheduled build resulted in a deployment
-                    def envVars = build.getEnvironment(null)
-                    if (envVars['SHOULD_DEPLOY'] == 'true' && actionType == 'deploy') {
-                        wasScheduledDeploy = true
-                        break
-                    }
-                }
-            }
-            
-            if (wasScheduledDeploy) {
-                echo "Found last successful scheduled deployment at build #${build.number}"
-                return build.number
+        // Read the last build number from file if it exists
+        if (fileExists(buildHistoryFile)) {
+            def lastBuildNumber = readFile(buildHistoryFile).trim()
+            if (lastBuildNumber && lastBuildNumber.isInteger()) {
+                echo "Found last successful ${actionType} at build #${lastBuildNumber}"
+                return lastBuildNumber.toInteger()
             }
         }
         
-        echo "No successful ${actionType} builds found in last 50 builds"
+        echo "No successful ${actionType} builds found in history"
         return null
         
     } catch (Exception e) {
-        echo "ERROR: Exception while searching for last successful build: ${e.message}"
+        echo "ERROR: Exception while reading build history: ${e.message}"
         return null
+    }
+}
+
+/**
+ * Record successful build in history file for future reference.
+ * Called at the end of successful builds to track deployment state.
+ * 
+ * @param actionType The DEPLOY_ACTION that was performed ('build-only' or 'deploy')
+ */
+def recordSuccessfulBuild(String actionType) {
+    try {
+        def buildHistoryFile = "${WORKSPACE}/.jenkins-${actionType}-last-build.txt"
+        writeFile(file: buildHistoryFile, text: "${env.BUILD_NUMBER}")
+        echo "Recorded successful ${actionType} build #${env.BUILD_NUMBER}"
+    } catch (Exception e) {
+        echo "WARNING: Failed to record build history: ${e.message}"
     }
 }
