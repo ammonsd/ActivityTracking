@@ -677,11 +677,7 @@ pipeline {
                 
                 // Send success notification to Task Activity application
                 try {
-                    // Determine actual action that was performed
-                    def actualAction = params.DEPLOY_ACTION
-                    if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true') {
-                        actualAction = 'deploy'
-                    }
+                    // actualAction already defined above - reuse it
                     
                     def endpoint = actualAction == 'deploy' ? 
                         "${APP_URL}/api/jenkins/deploy-success" : 
