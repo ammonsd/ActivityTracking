@@ -3,8 +3,8 @@
     Update email addresses in ECS task definition from .env file.
 
 .DESCRIPTION
-    Reads email configuration from .env file and updates the ECS task definition JSON file
-    with the latest email addresses for:
+    Reads email configuration from .env file and updates the ECS task definition with the latest
+    email addresses for:
     • MAIL_FROM - Email sender address
     • ADMIN_EMAIL - Administrator notifications
     • EXPENSE_APPROVERS - Expense approval notifications
@@ -12,11 +12,18 @@
     • JENKINS_DEPLOY_NOTIFICATION_EMAIL - Jenkins deployment notifications
     • JENKINS_DEPLOY_SKIPPED_CHECK - Enable/disable skipped deployment notifications
     
+    SAFETY: The script fetches the CURRENT task definition from AWS ECS (if AWS CLI is available)
+    rather than using the local file. This ensures that any changes made directly in ECS are
+    preserved and not overwritten. If AWS CLI is unavailable or ECS fetch fails, it falls back
+    to using the local taskactivity-task-definition.json file.
+    
     The script:
     1. Loads environment variables from .env file
-    2. Updates the taskactivity-task-definition.json file
-    3. Validates the JSON format
-    4. Optionally registers the new task definition with AWS ECS
+    2. Fetches current task definition from AWS ECS (or uses local file as fallback)
+    3. Updates only the email configuration environment variables
+    4. Saves updated definition to local taskactivity-task-definition.json file
+    5. Validates the JSON format
+    6. Optionally registers the new task definition with AWS ECS and updates the service
 
 .PARAMETER DeployToAws
     If specified, registers the updated task definition with AWS ECS and updates the service.
@@ -26,15 +33,18 @@
 
 .EXAMPLE
     .\update-email-addresses.ps1
-    Update the task definition JSON file with email values from .env.
+    Fetch current task definition from ECS, update with .env values, save to local file.
 
 .EXAMPLE
     .\update-email-addresses.ps1 -DeployToAws
-    Update the JSON file and deploy the new task definition to AWS ECS.
+    Fetch from ECS, update with .env values, save locally, and deploy the new task definition.
 
 .NOTES
     Author: Dean Ammons
     Date: January 2026
+    
+    IMPORTANT: This script prioritizes the current ECS task definition over the local file
+    to prevent accidentally overwriting changes made directly in AWS ECS.
 #>
 
 param(
@@ -133,25 +143,83 @@ Write-Host "  JENKINS_DEPLOY_SKIPPED_CHECK: $jenkinsDeploySkippedCheck" -Foregro
 Write-Host ""
 
 # ========================================
-# Backup Current Task Definition
+# Fetch Current Task Definition from ECS
+# ========================================
+
+Write-Host "Fetching current task definition from AWS ECS..." -ForegroundColor Cyan
+
+try {
+    # Check AWS CLI
+    $awsVersion = aws --version 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "AWS CLI not found. Falling back to local file."
+        $useLocalFile = $true
+    } else {
+        Write-Host "  AWS CLI Version: $awsVersion" -ForegroundColor Gray
+        
+        # Describe the current task definition to get the latest revision
+        $describeOutput = aws ecs describe-task-definition `
+            --task-definition $taskDefinitionFamily `
+            --region $awsRegion 2>&1
+        
+        if ($LASTEXITCODE -eq 0) {
+            $currentTaskDef = ($describeOutput | ConvertFrom-Json).taskDefinition
+            $currentRevision = $currentTaskDef.revision
+            Write-Host "  Current ECS revision: ${taskDefinitionFamily}:${currentRevision}" -ForegroundColor Green
+            
+            # Remove fields that cannot be used when registering new task definition
+            $currentTaskDef.PSObject.Properties.Remove('taskDefinitionArn')
+            $currentTaskDef.PSObject.Properties.Remove('revision')
+            $currentTaskDef.PSObject.Properties.Remove('status')
+            $currentTaskDef.PSObject.Properties.Remove('requiresAttributes')
+            $currentTaskDef.PSObject.Properties.Remove('compatibilities')
+            $currentTaskDef.PSObject.Properties.Remove('registeredAt')
+            $currentTaskDef.PSObject.Properties.Remove('registeredBy')
+            
+            $taskDef = $currentTaskDef
+            $useLocalFile = $false
+            Write-Host "  Using current ECS task definition as base" -ForegroundColor Green
+        } else {
+            Write-Warning "Failed to fetch from ECS: $describeOutput"
+            Write-Warning "Falling back to local file."
+            $useLocalFile = $true
+        }
+    }
+} catch {
+    Write-Warning "Error fetching from ECS: $_"
+    Write-Warning "Falling back to local file."
+    $useLocalFile = $true
+}
+
+# ========================================
+# Backup Local Task Definition File
 # ========================================
 
 $backupPath = "$taskDefPath.backup"
-Write-Host "Creating backup of task definition..." -ForegroundColor Cyan
+Write-Host "Creating backup of local task definition file..." -ForegroundColor Cyan
 Copy-Item -Path $taskDefPath -Destination $backupPath -Force
 Write-Host "  Backup saved to: $backupPath" -ForegroundColor Gray
 Write-Host ""
 
 # ========================================
+# Load Task Definition
+# ========================================
+
+if ($useLocalFile) {
+    Write-Host "Loading task definition from local file..." -ForegroundColor Yellow
+    $taskDefContent = Get-Content -Path $taskDefPath -Raw
+    $taskDef = $taskDefContent | ConvertFrom-Json
+} else {
+    Write-Host "Using task definition fetched from ECS..." -ForegroundColor Cyan
+}
+
+# ========================================
 # Update Task Definition JSON
 # ========================================
 
-Write-Host "Updating task definition JSON file..." -ForegroundColor Cyan
+Write-Host "Updating email configuration in task definition..." -ForegroundColor Cyan
 
 try {
-    # Read and parse JSON
-    $taskDefContent = Get-Content -Path $taskDefPath -Raw
-    $taskDef = $taskDefContent | ConvertFrom-Json
     
     # Find and update environment variables in the container definition
     $envVars = $taskDef.containerDefinitions[0].environment
@@ -288,6 +356,12 @@ try {
     Write-Host ""
     Write-Host "Task definition JSON file updated successfully" -ForegroundColor Green
     Write-Host "  File: $taskDefPath" -ForegroundColor Gray
+    if ($useLocalFile) {
+        Write-Host "  ⚠ Note: Used local file as base (AWS CLI not available or ECS fetch failed)" -ForegroundColor Yellow
+        Write-Host "  ⚠ Local file may not match current ECS configuration" -ForegroundColor Yellow
+    } else {
+        Write-Host "  ✓ Based on current ECS task definition revision ${currentRevision}" -ForegroundColor Green
+    }
     Write-Host ""
     
 } catch {
@@ -325,14 +399,12 @@ if ($DeployToAws) {
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Check AWS CLI
-    $awsVersion = aws --version 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "AWS CLI not found. Please install AWS CLI first."
+    # Verify AWS CLI is available
+    if ($useLocalFile) {
+        Write-Error "Cannot deploy to AWS: AWS CLI not available or ECS fetch failed."
+        Write-Error "Please install AWS CLI and ensure credentials are configured."
         exit 1
     }
-    Write-Host "AWS CLI Version: $awsVersion" -ForegroundColor Gray
-    Write-Host ""
     
     # Register new task definition
     Write-Host "Registering new task definition with AWS ECS..." -ForegroundColor Cyan
