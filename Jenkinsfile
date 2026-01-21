@@ -797,6 +797,26 @@ pipeline {
         }
         
         failure {
+            // Send email notification for ALL failures (including syntax errors)
+            // This catches failures that prevent the pipeline from executing
+            emailext(
+                subject: "❌ Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """Build failed for ${env.JOB_NAME}
+
+Build Number: ${env.BUILD_NUMBER}
+Environment: ${params.ENVIRONMENT ?: 'N/A'}
+Branch: ${env.GIT_BRANCH ?: 'main'}
+Commit: ${env.GIT_COMMIT ?: 'unknown'}
+
+Console Output:
+${env.BUILD_URL}console
+
+This is an automated notification. Do not reply to this email.
+""",
+                to: "${env.JENKINS_BUILD_NOTIFICATION_EMAIL}",
+                mimeType: 'text/plain'
+            )
+            
             script {
                 // Skip failure notification if scheduled build was skipped
                 if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false') {
