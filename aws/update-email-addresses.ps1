@@ -394,57 +394,76 @@ if (-not $SkipValidation) {
 # ========================================
 
 if ($DeployToAws) {
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "Deploying to AWS ECS" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host ""
-    
-    # Verify AWS CLI is available
-    if ($useLocalFile) {
-        Write-Error "Cannot deploy to AWS: AWS CLI not available or ECS fetch failed."
-        Write-Error "Please install AWS CLI and ensure credentials are configured."
-        exit 1
+    # Check if any changes were made
+    if ($updatedVars.Count -eq 0) {
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "Deployment Skipped" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "✓ No configuration changes detected" -ForegroundColor Green
+        Write-Host "✓ ECS task definition is already up-to-date" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Skipping ECS deployment to avoid unnecessary service restart." -ForegroundColor Yellow
+        Write-Host ""
+    } else {
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "Deploying to AWS ECS" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host ""
+        
+        # Verify AWS CLI is available
+        if ($useLocalFile) {
+            Write-Error "Cannot deploy to AWS: AWS CLI not available or ECS fetch failed."
+            Write-Error "Please install AWS CLI and ensure credentials are configured."
+            exit 1
+        }
+        
+        Write-Host "Configuration changes detected: $($updatedVars.Count)" -ForegroundColor Yellow
+        foreach ($var in $updatedVars) {
+            Write-Host "  • $($var.Name)" -ForegroundColor Gray
+        }
+        Write-Host ""
+        
+        # Register new task definition
+        Write-Host "Registering new task definition with AWS ECS..." -ForegroundColor Cyan
+        
+        $registerOutput = aws ecs register-task-definition `
+            --cli-input-json "file://$taskDefPath" `
+            --region $awsRegion 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to register task definition:`n$registerOutput"
+            exit 1
+        }
+        
+        $taskDefResponse = $registerOutput | ConvertFrom-Json
+        $newRevision = $taskDefResponse.taskDefinition.revision
+        
+        Write-Host "  New task definition registered: ${taskDefinitionFamily}:${newRevision}" -ForegroundColor Green
+        Write-Host ""
+        
+        # Update ECS service
+        Write-Host "Updating ECS service to use new task definition..." -ForegroundColor Cyan
+        
+        $updateOutput = aws ecs update-service `
+            --cluster $ecsCluster `
+            --service $ecsService `
+            --task-definition "${taskDefinitionFamily}:${newRevision}" `
+            --region $awsRegion 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to update ECS service:`n$updateOutput"
+            exit 1
+        }
+        
+        Write-Host "  ECS service updated successfully ✓" -ForegroundColor Green
+        Write-Host ""
+        
+        Write-Host "Deployment initiated. The new task will be deployed gradually." -ForegroundColor Yellow
+        Write-Host "Monitor deployment status in AWS ECS Console:" -ForegroundColor Yellow
+        Write-Host "  https://console.aws.amazon.com/ecs/v2/clusters/$ecsCluster/services/$ecsService" -ForegroundColor Cyan
+        Write-Host ""
     }
-    
-    # Register new task definition
-    Write-Host "Registering new task definition with AWS ECS..." -ForegroundColor Cyan
-    
-    $registerOutput = aws ecs register-task-definition `
-        --cli-input-json "file://$taskDefPath" `
-        --region $awsRegion 2>&1
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Failed to register task definition:`n$registerOutput"
-        exit 1
-    }
-    
-    $taskDefResponse = $registerOutput | ConvertFrom-Json
-    $newRevision = $taskDefResponse.taskDefinition.revision
-    
-    Write-Host "  New task definition registered: ${taskDefinitionFamily}:${newRevision}" -ForegroundColor Green
-    Write-Host ""
-    
-    # Update ECS service
-    Write-Host "Updating ECS service to use new task definition..." -ForegroundColor Cyan
-    
-    $updateOutput = aws ecs update-service `
-        --cluster $ecsCluster `
-        --service $ecsService `
-        --task-definition "${taskDefinitionFamily}:${newRevision}" `
-        --region $awsRegion 2>&1
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Failed to update ECS service:`n$updateOutput"
-        exit 1
-    }
-    
-    Write-Host "  ECS service updated successfully ✓" -ForegroundColor Green
-    Write-Host ""
-    
-    Write-Host "Deployment initiated. The new task will be deployed gradually." -ForegroundColor Yellow
-    Write-Host "Monitor deployment status in AWS ECS Console:" -ForegroundColor Yellow
-    Write-Host "  https://console.aws.amazon.com/ecs/v2/clusters/$ecsCluster/services/$ecsService" -ForegroundColor Cyan
-    Write-Host ""
 }
 
 # ========================================
@@ -470,6 +489,10 @@ if ($updatedVars.Count -gt 0) {
     }
 } else {
     Write-Host "✓ No changes needed - all configurations are already current" -ForegroundColor Green
+    
+    if ($DeployToAws) {
+        Write-Host "✓ ECS deployment skipped (no changes detected)" -ForegroundColor Green
+    }
 }
 
 Write-Host ""
