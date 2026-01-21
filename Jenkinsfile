@@ -468,7 +468,17 @@ pipeline {
         stage('Push to ECR') {
             when {
                 allOf {
-                    expression { params.DEPLOY_ACTION != 'rollback' && params.DEPLOY_ACTION != 'build-only' }
+                    anyOf {
+                        // Manual deploy action (not build-only or rollback)
+                        expression { 
+                            params.DEPLOY_ACTION != 'rollback' && params.DEPLOY_ACTION != 'build-only'
+                        }
+                        // Scheduled deployment that passed eligibility check
+                        expression { 
+                            env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true'
+                        }
+                    }
+                    // Don't run if scheduled build was skipped
                     expression { 
                         return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
                     }
