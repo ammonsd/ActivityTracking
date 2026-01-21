@@ -493,6 +493,10 @@ if ($updatedVars.Count -gt 0) {
     if ($DeployToAws) {
         Write-Host "✓ ECS deployment skipped (no changes detected)" -ForegroundColor Green
     }
+    Write-Host ""
+    Write-Host "Restoring task definition JSON from backup..." -ForegroundColor Green
+    Copy-Item -Path $backupPath -Destination $taskDefPath -Force
+    Remove-Item $backupPath -Force
 }
 
 Write-Host ""
