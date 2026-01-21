@@ -679,7 +679,7 @@ public class EmailService {
     public void sendPasswordExpirationWarning(String userEmail, String username, String fullName,
             long daysUntilExpiration) {
         if (!mailEnabled) {
-            logger.debug(
+            logger.warn(
                     "Email notifications disabled - skipping password expiration warning for user: {}",
                     username);
             return;
@@ -779,7 +779,7 @@ public class EmailService {
     public void sendPasswordExpiredNotification(String userEmail, String username,
             String fullName) {
         if (!mailEnabled) {
-            logger.debug(
+            logger.warn(
                     "Email notifications disabled - skipping password expired notification for user: {}",
                     username);
             return;

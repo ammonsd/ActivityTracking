@@ -125,7 +125,7 @@ public class PasswordExpirationNotificationService {
                     long daysUntilExpiration =
                             java.time.temporal.ChronoUnit.DAYS.between(today, expirationDate);
 
-                    logger.debug("User {} matches warning criteria: expires in {} days",
+                    logger.info("User {} matches warning criteria: expires in {} days",
                             user.getUsername(), daysUntilExpiration);
 
                     // Send warning notification
