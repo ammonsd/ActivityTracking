@@ -227,7 +227,7 @@ pipeline {
                                 aws ecs describe-task-definition \
                                     --task-definition ${TASK_DEFINITION_FAMILY} \
                                     --region ${AWS_REGION} \
-                                    --query 'taskDefinition.containerDefinitions[0].environment[?name==\`JENKINS_DEPLOY_SKIPPED_CHECK\`].value' \
+                                    --query 'taskDefinition.containerDefinitions[0].environment[?name==`JENKINS_DEPLOY_SKIPPED_CHECK`].value' \
                                     --output text
                             """,
                             returnStdout: true
