@@ -247,7 +247,8 @@ npm run test:once
 - **Build Modes**: build-only (local testing), deploy (AWS), rollback (revert)
 - **Multi-Environment**: dev, staging, production parameter support
 - **AWS Integration**: Configured with IAM credentials, ECR and ECS ready
-- **Automation**: PowerShell startup scripts (`Start-Jenkins.ps1`)
+- **Automation**: PowerShell startup scripts (`Start-Jenkins.ps1`, `Start-WSLKeepAlive.ps1`)
+- **WSL Keep-Alive**: Automated scheduled task to keep WSL (and Jenkins) running 24/7
 - **Testing**: 315 automated tests per build
 - **Cost Efficient**: Local hosting saves ~$40/month vs EC2-hosted Jenkins
 
@@ -980,6 +981,107 @@ WSL2 requires special networking configuration to access the application from yo
 - WSL IP addresses change when WSL restarts
 - If network access stops working after reboot, run `.\scripts\update-wsl-port-forward.ps1` as Administrator
 - See [WSL Port Forwarding Guide](..\docsWSL_PORT_FORWARDING.md) for detailed troubleshooting
+
+### WSL Keep-Alive for Jenkins (Windows + WSL2)
+
+**Problem:** WSL2 automatically shuts down after several minutes of inactivity, which stops Jenkins and any other services running in WSL.
+
+**Solution:** Automated scheduled task that keeps a hidden WSL session alive 24/7, ensuring Jenkins remains active.
+
+#### Setup (One-Time Configuration)
+
+1. **Create the scheduled task:**
+   ```powershell
+   cd C:\Users\YourUsername\GitHub\ActivityTracking
+   .\scripts\Start-WSLKeepAlive.ps1
+   ```
+
+2. **Start the task immediately (optional - otherwise starts at next login):**
+   ```powershell
+   Start-ScheduledTask -TaskName "Keep WSL Alive"
+   ```
+
+3. **Verify WSL is running:**
+   ```powershell
+   wsl --list --running
+   ```
+
+#### How It Works
+
+The solution creates a Windows Task Scheduler task that:
+- ✅ Runs automatically at every Windows login/reboot
+- ✅ Launches a completely hidden WSL session (no visible window)
+- ✅ Monitors Jenkins logs with `journalctl -u jenkins -f` to keep the session active
+- ✅ Ensures WSL (and Jenkins) stay running indefinitely
+- ✅ Auto-restarts if it fails
+
+**Files Created:**
+- `scripts/Start-WSLKeepAlive.ps1` - Setup script (run once)
+- `scripts/Stop-WSLKeepAlive.ps1` - Cleanup script (if needed)
+- `scripts/wsl-keep-alive-wrapper.ps1` - Runtime wrapper (auto-generated)
+
+#### Management Commands
+
+**Check status:**
+```powershell
+# Verify WSL is running
+wsl --list --running
+
+# Check task status
+Get-ScheduledTask -TaskName "Keep WSL Alive" | Select-Object State, LastRunTime
+
+# Verify Jenkins is accessible
+curl http://localhost:8080
+```
+
+**Stop the keep-alive task:**
+```powershell
+.\scripts\Stop-WSLKeepAlive.ps1
+```
+
+**Restart the keep-alive task:**
+```powershell
+.\scripts\Start-WSLKeepAlive.ps1
+Start-ScheduledTask -TaskName "Keep WSL Alive"
+```
+
+#### Benefits
+
+- **Always Available:** Jenkins stays active 24/7 without manual intervention
+- **Cost Efficient:** Eliminates need for EC2-hosted Jenkins (~$40/month savings)
+- **Zero Maintenance:** Survives reboots and automatically restarts
+- **Hidden Operation:** Completely invisible - no console windows
+- **Developer Productivity:** CI/CD pipeline always ready for builds
+
+#### Troubleshooting
+
+**WSL not staying alive after reboot:**
+1. Verify the scheduled task exists:
+   ```powershell
+   Get-ScheduledTask -TaskName "Keep WSL Alive"
+   ```
+
+2. Check if the wrapper script exists:
+   ```powershell
+   Test-Path "C:\Users\YourUsername\GitHub\ActivityTracking\scripts\wsl-keep-alive-wrapper.ps1"
+   ```
+
+3. Recreate the task:
+   ```powershell
+   .\scripts\Stop-WSLKeepAlive.ps1
+   .\scripts\Start-WSLKeepAlive.ps1
+   ```
+
+**Jenkins not accessible after WSL starts:**
+- Wait 30-60 seconds for Jenkins to fully initialize
+- Check Jenkins service status in WSL:
+  ```bash
+  wsl -u root systemctl status jenkins
+  ```
+- Restart Jenkins if needed:
+  ```bash
+  wsl -u root systemctl restart jenkins
+  ```
 
 ## Configuration
 
