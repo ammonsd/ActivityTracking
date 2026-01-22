@@ -935,13 +935,16 @@ def getLastSuccessfulBuildNumber(String actionType) {
         def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
         def s3Bucket = "taskactivity-logs-archive"
         
-        // Try to read from S3
-        def result = sh(
-            script: """
-                aws s3 cp s3://${s3Bucket}/${s3Key} - 2>/dev/null || echo ""
-            """,
-            returnStdout: true
-        ).trim()
+        // Try to read from S3 with credentials
+        def result = null
+        withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+            result = sh(
+                script: """
+                    aws s3 cp s3://${s3Bucket}/${s3Key} - 2>/dev/null || echo ""
+                """,
+                returnStdout: true
+            ).trim()
+        }
         
         if (result && result.isInteger()) {
             echo "Found last successful ${actionType} at build #${result} (from S3)"
