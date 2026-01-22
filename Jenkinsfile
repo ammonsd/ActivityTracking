@@ -26,9 +26,9 @@ pipeline {
         // Poll every 5 minutes for changes
         pollSCM('H/5 * * * *')
         
-        // Daily deployment at 4pm (only if there are new builds)
+        // Daily deployment at 8am (only if there are new builds)
         // Using H notation to spread load evenly across the hour
-        cron('H 16 * * *')
+        cron('H 8 * * *')
     }
     
     parameters {
@@ -222,16 +222,19 @@ pipeline {
                     // Send notification if JENKINS_DEPLOY_SKIPPED_CHECK is enabled
                     try {
                         // Read JENKINS_DEPLOY_SKIPPED_CHECK from ECS task definition
-                        def taskDefJson = sh(
-                            script: """
-                                aws ecs describe-task-definition \
-                                    --task-definition ${TASK_DEFINITION_FAMILY} \
-                                    --region ${AWS_REGION} \
-                                    --query 'taskDefinition.containerDefinitions[0].environment[?name==`JENKINS_DEPLOY_SKIPPED_CHECK`].value' \
-                                    --output text
-                            """,
-                            returnStdout: true
-                        ).trim()
+                        def taskDefJson = null
+                        withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                            taskDefJson = sh(
+                                script: """
+                                    aws ecs describe-task-definition \
+                                        --task-definition ${TASK_DEFINITION_FAMILY} \
+                                        --region ${AWS_REGION} \
+                                        --query 'taskDefinition.containerDefinitions[0].environment[?name==`JENKINS_DEPLOY_SKIPPED_CHECK`].value' \
+                                        --output text
+                                """,
+                                returnStdout: true
+                            ).trim()
+                        }
                         
                         def skippedCheckEnabled = taskDefJson?.toLowerCase() == 'true'
                         
