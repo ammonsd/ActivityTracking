@@ -21,20 +21,18 @@ param()
 
 $TaskName = "Keep WSL Alive"
 $ScriptDir = Split-Path -Parent $PSCommandPath
-$VbsPath = Join-Path $ScriptDir "wsl-keep-alive.vbs"
+$WrapperPath = Join-Path $ScriptDir "wsl-keep-alive-wrapper.ps1"
 
 Write-Host "Creating scheduled task: $TaskName" -ForegroundColor Cyan
 
 try {
-    # Create VBScript wrapper that launches WSL with a never-ending command
-    # The 0 parameter means completely hidden, False means don't wait
-    $VbsContent = @'
-Set objShell = CreateObject("WScript.Shell")
-objShell.Run "wsl -u root journalctl -u jenkins -f", 0, False
+    # Create PowerShell wrapper script
+    $WrapperContent = @'
+Start-Process -FilePath "wsl" -ArgumentList "-u", "root", "journalctl", "-u", "jenkins", "-f" -WindowStyle Hidden
 '@
     
-    Write-Host "Creating VBScript wrapper: $VbsPath" -ForegroundColor Gray
-    $VbsContent | Out-File -FilePath $VbsPath -Encoding ASCII -Force
+    Write-Host "Creating PowerShell wrapper: $WrapperPath" -ForegroundColor Gray
+    $WrapperContent | Out-File -FilePath $WrapperPath -Encoding UTF8 -Force
 
     # Check if task already exists
     $ExistingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
@@ -43,8 +41,8 @@ objShell.Run "wsl -u root journalctl -u jenkins -f", 0, False
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
     }
 
-    # Define the action - run the VBScript that launches WSL hidden
-    $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPath`""
+    # Define the action - run PowerShell wrapper hidden
+    $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$WrapperPath`""
 
     # Define the trigger - run at user login
     $Trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -72,13 +70,14 @@ objShell.Run "wsl -u root journalctl -u jenkins -f", 0, False
         -Force | Out-Null
 
     Write-Host "✓ Task '$TaskName' created successfully!" -ForegroundColor Green
-    Write-Host "✓ VBScript wrapper created: $VbsPath" -ForegroundColor Green
+    Write-Host "✓ PowerShell wrapper created: $WrapperPath" -ForegroundColor Green
     Write-Host ""
     Write-Host "The task will:" -ForegroundColor White
     Write-Host "  • Start automatically at login" -ForegroundColor Gray
     Write-Host "  • Run WSL completely hidden (no window)" -ForegroundColor Gray
     Write-Host "  • Monitor Jenkins logs to keep session alive" -ForegroundColor Gray
     Write-Host "  • Keep WSL and Jenkins running indefinitely" -ForegroundColor Gray
+    Write-Host "  • Pure PowerShell solution (no VBScript needed)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "To start it now (without logging out):" -ForegroundColor Yellow
     Write-Host "  Start-ScheduledTask -TaskName '$TaskName'" -ForegroundColor Cyan

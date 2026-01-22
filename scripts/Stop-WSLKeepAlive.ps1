@@ -20,8 +20,8 @@ param()
 
 $TaskName = "Keep WSL Alive"
 $ScriptDir = Split-Path -Parent $PSCommandPath
-$VbsPath = Join-Path $ScriptDir "wsl-keep-alive.vbs"
 $WrapperPath = Join-Path $ScriptDir "wsl-keep-alive-wrapper.ps1"
+$VbsPath = Join-Path $ScriptDir "wsl-keep-alive.vbs"
 
 Write-Host "Stopping and removing task: $TaskName" -ForegroundColor Cyan
 
@@ -42,13 +42,13 @@ try {
     }
 
     # Remove wrapper files if they exist
-    if (Test-Path $VbsPath) {
-        Remove-Item $VbsPath -Force
-        Write-Host "✓ VBScript wrapper removed" -ForegroundColor Green
-    }
     if (Test-Path $WrapperPath) {
-        Remove-Item $WrapperPath -Force -ErrorAction SilentlyContinue
-        Write-Host "✓ Old PowerShell wrapper removed" -ForegroundColor Green
+        Remove-Item $WrapperPath -Force
+        Write-Host "✓ PowerShell wrapper removed" -ForegroundColor Green
+    }
+    if (Test-Path $VbsPath) {
+        Remove-Item $VbsPath -Force -ErrorAction SilentlyContinue
+        Write-Host "✓ Old VBScript wrapper removed (if exists)" -ForegroundColor Green
     }
 
     Write-Host ""
