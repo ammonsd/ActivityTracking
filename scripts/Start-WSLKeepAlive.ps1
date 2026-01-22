@@ -4,12 +4,20 @@
 
 .DESCRIPTION
     This script creates a Windows Task Scheduler task that starts at user login
-    and runs a hidden WSL process (tail -f /dev/null) to prevent WSL from auto-shutting down.
+    and runs a hidden WSL process (journalctl -f) to prevent WSL from auto-shutting down.
     This ensures Jenkins and other WSL services remain active.
+
+.PARAMETER LogFilePath
+    Path to the log file where Jenkins output will be written.
+    Default: C:\Logs\Jenkins_WSL.log
 
 .EXAMPLE
     .\Start-WSLKeepAlive.ps1
-    Creates the scheduled task to keep WSL alive.
+    Creates the scheduled task with default log path.
+
+.EXAMPLE
+    .\Start-WSLKeepAlive.ps1 -LogFilePath "D:\Logs\Jenkins.log"
+    Creates the scheduled task with custom log path.
 
 .NOTES
     Author: Dean Ammons
@@ -17,7 +25,11 @@
 #>
 
 [CmdletBinding()]
-param()
+param(
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$LogFilePath = "C:\Logs\Jenkins_WSL.log"
+)
 
 $TaskName = "Keep WSL Alive"
 $ScriptDir = Split-Path -Parent $PSCommandPath
@@ -26,12 +38,20 @@ $WrapperPath = Join-Path $ScriptDir "wsl-keep-alive-wrapper.ps1"
 Write-Host "Creating scheduled task: $TaskName" -ForegroundColor Cyan
 
 try {
-    # Create PowerShell wrapper script
-    $WrapperContent = @'
-Start-Process -FilePath "wsl" -ArgumentList "-u", "root", "journalctl", "-u", "jenkins", "-f" -WindowStyle Hidden
-'@
+    # Ensure log directory exists
+    $LogDir = Split-Path -Parent $LogFilePath
+    if (-not (Test-Path $LogDir)) {
+        Write-Host "Creating log directory: $LogDir" -ForegroundColor Gray
+        New-Item -Path $LogDir -ItemType Directory -Force | Out-Null
+    }
+
+    # Create PowerShell wrapper script with configurable log path
+    $WrapperContent = @"
+Start-Process -FilePath "wsl" -ArgumentList "-u", "root", "journalctl", "-u", "jenkins", "-f" -WindowStyle Hidden -RedirectStandardOutput "$LogFilePath"
+"@
     
     Write-Host "Creating PowerShell wrapper: $WrapperPath" -ForegroundColor Gray
+    Write-Host "Log file location: $LogFilePath" -ForegroundColor Gray
     $WrapperContent | Out-File -FilePath $WrapperPath -Encoding UTF8 -Force
 
     # Check if task already exists
@@ -71,11 +91,13 @@ Start-Process -FilePath "wsl" -ArgumentList "-u", "root", "journalctl", "-u", "j
 
     Write-Host "✓ Task '$TaskName' created successfully!" -ForegroundColor Green
     Write-Host "✓ PowerShell wrapper created: $WrapperPath" -ForegroundColor Green
+    Write-Host "✓ Log directory ensured: $LogDir" -ForegroundColor Green
     Write-Host ""
     Write-Host "The task will:" -ForegroundColor White
     Write-Host "  • Start automatically at login" -ForegroundColor Gray
     Write-Host "  • Run WSL completely hidden (no window)" -ForegroundColor Gray
     Write-Host "  • Monitor Jenkins logs to keep session alive" -ForegroundColor Gray
+    Write-Host "  • Log Jenkins output to: $LogFilePath" -ForegroundColor Gray
     Write-Host "  • Keep WSL and Jenkins running indefinitely" -ForegroundColor Gray
     Write-Host "  • Pure PowerShell solution (no VBScript needed)" -ForegroundColor Gray
     Write-Host ""
@@ -84,6 +106,7 @@ Start-Process -FilePath "wsl" -ArgumentList "-u", "root", "journalctl", "-u", "j
     Write-Host ""
     Write-Host "To verify it's working:" -ForegroundColor Yellow
     Write-Host "  wsl --list --running" -ForegroundColor Cyan
+    Write-Host "  Get-Content '$LogFilePath' -Tail 20" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "To stop it:" -ForegroundColor Yellow
     Write-Host "  .\Stop-WSLKeepAlive.ps1" -ForegroundColor Cyan
