@@ -26,9 +26,9 @@ pipeline {
         // Poll every 5 minutes for changes
         pollSCM('H/5 * * * *')
         
-        // Daily deployment at 8am (only if there are new builds)
+        // Daily deployment at 4pm (only if there are new builds)
         // Using H notation to spread load evenly across the hour
-        cron('H 8 * * *')
+        cron('H 16 * * *')
     }
     
     parameters {
@@ -742,7 +742,7 @@ pipeline {
                 
                 // Mark this build with description based on type
                 if (env.IS_SCHEDULED_BUILD == 'true') {
-                    currentBuild.description = "Scheduled deployment at 4pm"
+                    currentBuild.description = "Scheduled deployment completed"
                 } else if (env.IS_SCM_BUILD == 'true') {
                     currentBuild.description = "Auto-build from main branch (no-cache)"
                 } else if (env.IS_MANUAL_BUILD == 'true') {
