@@ -213,7 +213,32 @@ mvnw test -Dtest=VisitorCounterServiceTest
     mvnw clean package -DskipTests
     ```
 
-4. The counter will start at 0 on each deployment/restart
+4. **Configure CORS for S3-hosted HTML:**
+
+   If your HTML file is hosted on S3 (e.g., `https://taskactivity-docs.s3.us-east-1.amazonaws.com`), you MUST add the S3 origin to the CORS allowed origins list.
+
+   **AWS ECS Environment Variable:**
+   ```bash
+   CORS_ALLOWED_ORIGINS=https://taskactivitytracker.com,https://taskactivity-docs.s3.us-east-1.amazonaws.com
+   ```
+
+   **Update via AWS Console:**
+   - Go to ECS → Clusters → TaskActivity → Service → Update
+   - Edit Task Definition → Container → Environment Variables
+   - Add/Update: `CORS_ALLOWED_ORIGINS=https://taskactivitytracker.com,https://taskactivity-docs.s3.us-east-1.amazonaws.com`
+   - Save and redeploy
+
+   **Or via PowerShell script:**
+   ```powershell
+   # In aws/update-ecs-environment.ps1 or similar
+   aws ecs update-service `
+     --cluster taskactivity-cluster `
+     --service taskactivity-service `
+     --force-new-deployment `
+     --task-definition <your-task-def>
+   ```
+
+5. The counter will start at 0 on each deployment/restart
 
 ## Monitoring
 

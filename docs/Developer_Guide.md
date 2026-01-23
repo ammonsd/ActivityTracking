@@ -3587,6 +3587,302 @@ TaskActivity task = taskActivityRepository.findById(id)
 - HTTP Status: 404 Not Found
 - Renders custom error page with appropriate message
 
+## Visitor Counter API
+
+### Overview
+
+The application includes a privacy-friendly visitor counter system that tracks page view counts without collecting any personal information. This feature provides simple analytics for static documentation pages and external-facing content.
+
+**Key Features:**
+
+- 🔒 **Privacy-First**: Only stores page visit counts, no user data
+- 🌐 **Public API**: No authentication required (CORS-enabled)
+- ⚡ **In-Memory**: Fast, thread-safe counter using `AtomicLong`
+- 📊 **Multi-Page**: Track unlimited pages with unique identifiers
+- 🔄 **Auto-Reset**: Counts reset on application restart
+
+### Architecture
+
+**Components:**
+
+- **Controller**: `VisitorCounterController.java` - REST API endpoints
+- **Service**: `VisitorCounterService.java` - Thread-safe counter logic
+- **Storage**: In-memory `ConcurrentHashMap<String, AtomicLong>`
+
+**Design Decisions:**
+
+- **In-Memory Storage**: Chosen for simplicity and zero overhead. Counts reset on restart, suitable for "visits since last deployment" metrics.
+- **Thread-Safety**: Uses `AtomicLong` for lock-free concurrent increments
+- **Page Name Sanitization**: Prevents injection attacks and ensures consistency
+
+### API Endpoints
+
+All visitor counter endpoints are under `/api/public/visit/` and require no authentication.
+
+#### POST /api/public/visit/{pageName}
+
+Increments the visit count for the specified page and returns the new count.
+
+**Request:**
+```http
+POST /api/public/visit/activitytracking-home
+Content-Type: application/json
+```
+
+**Response:**
+```json
+{
+    "page": "activitytracking-home",
+    "count": 1234,
+    "timestamp": 1706034567890
+}
+```
+
+**Usage in HTML:**
+```javascript
+fetch("https://taskactivitytracker.com/api/public/visit/activitytracking-home", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+})
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("visitor-count").textContent = data.count.toLocaleString();
+    });
+```
+
+#### GET /api/public/visit/{pageName}
+
+Returns the current visit count without incrementing.
+
+**Request:**
+```http
+GET /api/public/visit/activitytracking-home
+```
+
+**Response:**
+```json
+{
+    "page": "activitytracking-home",
+    "count": 1234
+}
+```
+
+**Use Case:** Monitoring/dashboards that need to read counts without affecting them.
+
+#### GET /api/public/visit/stats
+
+Returns all page visit counts.
+
+**Request:**
+```http
+GET /api/public/visit/stats
+```
+
+**Response:**
+```json
+{
+    "activitytracking-home": 1234,
+    "user-guide": 567,
+    "tech-stack": 189
+}
+```
+
+**Use Case:** Analytics dashboard showing traffic across all tracked pages.
+
+### Implementation Details
+
+**VisitorCounterService.java:**
+
+```java
+@Service
+public class VisitorCounterService {
+    private final Map<String, AtomicLong> pageCounters = new ConcurrentHashMap<>();
+    
+    public long incrementAndGet(String pageName) {
+        AtomicLong counter = pageCounters.computeIfAbsent(
+            sanitizePageName(pageName), 
+            k -> new AtomicLong(0)
+        );
+        return counter.incrementAndGet();
+    }
+    
+    private String sanitizePageName(String pageName) {
+        if (pageName == null || pageName.trim().isEmpty()) {
+            return "unknown";
+        }
+        return pageName.trim().toLowerCase().replaceAll("[^a-z0-9-_]", "-");
+    }
+}
+```
+
+**Thread Safety:**
+- `ConcurrentHashMap` for thread-safe map operations
+- `AtomicLong` for lock-free counter increments
+- `computeIfAbsent` ensures atomic counter creation
+
+**Page Name Sanitization:**
+- Converts to lowercase for consistency
+- Removes special characters to prevent injection
+- Replaces invalid chars with hyphens
+
+### Adding Counter to Pages
+
+To add visitor tracking to a page:
+
+1. **Add HTML Display:**
+```html
+<footer>
+    <p id="visitor-count">
+        <span id="visitor-number">Loading...</span> visitors
+    </p>
+</footer>
+```
+
+2. **Add JavaScript:**
+```javascript
+<script>
+(function () {
+    const PAGE_NAME = "your-page-name";  // Unique identifier
+    const API_URL = "https://taskactivitytracker.com/api/public/visit/" + PAGE_NAME;
+    
+    fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("visitor-number").textContent = 
+                data.count.toLocaleString();
+        })
+        .catch(error => {
+            // Hide counter on error
+            document.getElementById("visitor-count").style.display = "none";
+        });
+})();
+</script>
+```
+
+3. **Choose Unique Page Name:**
+   - Use descriptive identifiers: `activitytracking-home`, `user-guide`, `api-docs`
+   - Backend automatically creates counters for new page names
+   - Page names are sanitized and normalized
+
+### Testing
+
+**Unit Tests:**
+
+Location: `src/test/java/com/ammons/taskactivity/service/VisitorCounterServiceTest.java`
+
+```bash
+# Run visitor counter tests
+./mvnw test -Dtest=VisitorCounterServiceTest
+```
+
+**Test Coverage:**
+- ✅ Basic increment and get operations
+- ✅ Multiple page tracking
+- ✅ Counter reset operations
+- ✅ Page name sanitization
+- ✅ Thread safety (implicit via AtomicLong)
+
+**Manual Testing:**
+
+```bash
+# Increment counter
+curl -X POST http://localhost:8080/api/public/visit/test-page
+
+# Get current count
+curl http://localhost:8080/api/public/visit/test-page
+
+# View all stats
+curl http://localhost:8080/api/public/visit/stats
+```
+
+### Privacy & Security
+
+**What We Track:**
+- ✅ Page visit counts (numbers only)
+- ✅ Page identifiers (e.g., "homepage", "user-guide")
+
+**What We DON'T Track:**
+- ❌ IP addresses
+- ❌ User agents
+- ❌ Cookies
+- ❌ Geographic location
+- ❌ User behavior/sessions
+- ❌ Any personally identifiable information (PII)
+
+**Security Measures:**
+- ✅ Page name sanitization prevents injection
+- ✅ CORS enabled for legitimate cross-origin requests
+- ✅ Public endpoint (no authentication bypass risks)
+- ⚠️ Consider rate limiting for production use
+
+### Persistence Options
+
+**Current: In-Memory (Default)**
+
+Pros:
+- ✅ Zero overhead
+- ✅ Simple implementation
+- ✅ Fast performance
+
+Cons:
+- ❌ Counts reset on restart
+- ❌ No historical data
+
+**Future: Database Persistence**
+
+To add persistence, create a `PageVisit` entity:
+
+```java
+@Entity
+@Table(name = "page_visits")
+public class PageVisit {
+    @Id
+    private String pageName;
+    
+    private Long visitCount;
+    
+    @LastModifiedDate
+    private Instant lastUpdated;
+}
+```
+
+Update `VisitorCounterService` to read/write from database.
+
+### Monitoring
+
+**View Live Statistics:**
+
+```bash
+# Check all page counts
+curl https://taskactivitytracker.com/api/public/visit/stats | jq
+
+# PowerShell
+(Invoke-RestMethod https://taskactivitytracker.com/api/public/visit/stats) | ConvertTo-Json
+```
+
+**Example Response:**
+```json
+{
+    "activitytracking-home": 1523,
+    "user-guide": 342,
+    "technology-stack": 187,
+    "api-docs": 98
+}
+```
+
+### Documentation
+
+For complete implementation details and usage examples, see:
+
+- **Feature Documentation**: `docs/Visitor_Counter_Feature.md`
+- **Source Code**:
+  - Controller: `src/main/java/com/ammons/taskactivity/controller/VisitorCounterController.java`
+  - Service: `src/main/java/com/ammons/taskactivity/service/VisitorCounterService.java`
+  - Tests: `src/test/java/com/ammons/taskactivity/service/VisitorCounterServiceTest.java`
+
 ## API Documentation (Swagger/OpenAPI)
 
 ### Overview

@@ -181,6 +181,10 @@ public class SecurityConfig {
 
                                                 // Visitor counter endpoints - public access, no
                                                 // authentication required
+                                                // Allow OPTIONS for CORS preflight
+                                                .requestMatchers(HttpMethod.OPTIONS,
+                                                                "/api/public/**")
+                                                .permitAll()
                                                 .requestMatchers("/api/public/**").permitAll()
 
                                                 // Jenkins API endpoints - require JENKINS_SERVICE
