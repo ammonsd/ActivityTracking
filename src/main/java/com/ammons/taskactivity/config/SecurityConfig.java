@@ -179,6 +179,10 @@ public class SecurityConfig {
                                                 // JWT Authentication endpoints - public access
                                                 .requestMatchers("/api/auth/**").permitAll()
 
+                                                // Visitor counter endpoints - public access, no
+                                                // authentication required
+                                                .requestMatchers("/api/public/**").permitAll()
+
                                                 // Jenkins API endpoints - require JENKINS_SERVICE
                                                 // role
                                                 // Method-level @RequirePermission annotations
