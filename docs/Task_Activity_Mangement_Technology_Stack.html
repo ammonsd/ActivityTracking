@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Activity Management System - Technology Stack</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                overflow: hidden;
+            }
+
+            header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                text-align: center;
+            }
+
+            header h1 {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            header p {
+                font-size: 1.2em;
+                opacity: 0.95;
+            }
+
+            .content {
+                padding: 40px;
+            }
+
+            .section {
+                margin-bottom: 40px;
+            }
+
+            .section h2 {
+                color: #667eea;
+                font-size: 1.8em;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #667eea;
+            }
+
+            .tech-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .tech-card {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .tech-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .tech-card h3 {
+                color: #764ba2;
+                font-size: 1.3em;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+            }
+
+            .tech-card h3::before {
+                /* content: "▶"; */
+                margin-right: 10px;
+                color: #667eea;
+            }
+
+            .tech-card ul {
+                list-style: none;
+                padding-left: 30px;
+            }
+
+            .tech-card li {
+                padding: 5px 0;
+                padding-left: 0;
+                position: relative;
+            }
+
+            .tech-card li::before {
+                content: "●";
+                position: absolute;
+                left: -20px;
+                color: #667eea;
+                font-weight: bold;
+            }
+
+            .version-badge {
+                display: inline-block;
+                background: #667eea;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.85em;
+                margin-left: 8px;
+                font-weight: normal;
+            }
+
+            .highlight-box {
+                background: #fff9e6;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+            }
+
+            .highlight-box h4 {
+                color: #f57c00;
+                margin-bottom: 10px;
+            }
+
+            footer {
+                background: #2c3e50;
+                color: white;
+                text-align: center;
+                padding: 20px;
+                font-size: 0.9em;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin: 20px 0;
+            }
+
+            .stat-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .stat-card .number {
+                font-size: 2em;
+                font-weight: bold;
+                display: block;
+            }
+
+            .stat-card .label {
+                font-size: 0.9em;
+                opacity: 0.9;
+                margin-top: 5px;
+            }
+
+            .download-btn {
+                display: inline-block;
+                background: white;
+                color: #667eea;
+                padding: 12px 30px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: bold;
+                margin-top: 20px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .download-btn:hover {
+                background: #f5f7fa;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .download-btn::before {
+                content: "⬇ ";
+                margin-right: 8px;
+            }
+
+            @media print {
+                body {
+                    background: white;
+                    padding: 0;
+                }
+
+                .tech-card:hover {
+                    transform: none;
+                }
+
+                .download-btn {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Task Activity Management System</h1>
+                <p>Comprehensive Technology Stack Overview</p>
+                <a href="Task_Activity_Mangement_Technology_Stack.pdf" class="download-btn" download>Download PDF Version</a>
+            </header>
+
+            <div class="content">
+                <!-- Overview Stats -->
+                <div class="section">
+                    <h2>Project Overview</h2>
+                    <div class="highlight-box">
+                        <h4>About the System</h4>
+                        <p>
+                            The Task Activity Management System is a comprehensive enterprise application designed to streamline time tracking, 
+                            expense reporting, and project management workflows. Built with modern Java technologies and industry-standard frameworks, 
+                            this system provides a robust, scalable solution for organizations managing both time-based deliverables and expense reimbursements.
+                        </p>
+                    </div>
+                    
+                    <p style="margin: 20px 0;">
+                        <strong>Core Functionality:</strong>
+                    </p>
+                    <ul style="margin-left: 30px; line-height: 1.8;">
+                        <li><strong>Task Activity Tracking:</strong> Log time spent on client projects with detailed phase tracking (Development, Testing, etc.), 
+                            weekly timesheet views, and comprehensive filtering and reporting capabilities</li>
+                        <li><strong>Expense Management:</strong> Submit business expenses with receipt attachments, track approval workflows through multiple 
+                            status stages (Draft → Submitted → Approved → Reimbursed), and maintain detailed audit trails</li>
+                        <li><strong>Role-Based Access Control:</strong> Database-driven authorization system with flexible role and permission management. 
+                            Four pre-configured user roles (USER, ADMIN, EXPENSE_ADMIN, GUEST) with granular permissions stored in the database, 
+                            allowing administrators to create custom roles and modify permissions without code changes</li>
+                        <li><strong>Approval Workflows:</strong> Multi-step approval processes for expenses with email notifications, approval notes, and 
+                            rejection handling with detailed feedback</li>
+                        <li><strong>Analytics & Reporting:</strong> Interactive dashboards with charts for time analysis, client distribution, project trends, 
+                            and team performance metrics (admin only)</li>
+                        <li><strong>Data Export:</strong> CSV export functionality for tasks, expenses, and timesheets enabling integration with external 
+                            accounting and reporting systems</li>
+                        <li><strong>Data Import:</strong> Bulk CSV import functionality for TaskActivity and Expense records with comprehensive validation, 
+                            duplicate detection, multiple date format support (YYYY-MM-DD, MM/DD/YYYY, DD-MMM-YYYY), and automated PowerShell script for streamlined data migration</li>
+                        <li><strong>Security Features:</strong> Account lockout after failed login attempts, password expiration policies (90 days), 
+                            forced password updates, session timeout management (30 minutes), JWT token revocation and blacklisting, 
+                            and magic number validation for file uploads</li>
+                    </ul>
+
+                    <p style="margin: 20px 0;">
+                        <strong>Technical Architecture:</strong>
+                    </p>
+                    <ul style="margin-left: 30px; line-height: 1.8;">
+                        <li><strong>Backend:</strong> Java 21 (Latest LTS) with Spring Boot 3 framework, leveraging Spring MVC, Spring Data JPA, and Spring Security</li>
+                        <li><strong>Frontend:</strong> Dual interface approach - Angular 19 (standalone components) for the modern dashboard and reports, 
+                            Thymeleaf templates for traditional server-rendered pages (task/expense lists, forms)</li>
+                        <li><strong>Database:</strong> PostgreSQL with Hibernate ORM, HikariCP connection pooling, and Spring Data repositories for data persistence</li>
+                        <li><strong>Build & Deploy:</strong> Maven build system with Docker containerization, AWS ECS deployment, Jenkins CI/CD pipeline running on WSL Ubuntu, 
+                            and CloudFormation infrastructure as code</li>
+                        <li><strong>API Documentation:</strong> Springdoc OpenAPI with Swagger UI for REST API exploration and testing</li>
+                        <li><strong>File Storage:</strong> AWS S3 integration for receipt attachments with lifecycle policies and secure presigned URLs</li>
+                    </ul>
+
+                    <div class="highlight-box" style="margin-top: 25px;">
+                        <h4>Key Differentiators</h4>
+                        <p>
+                            This system demonstrates real-world enterprise patterns including email notifications (AWS SES), file upload handling with 
+                            S3 storage, comprehensive audit logging, role-based permissions with approval workflows, and a hybrid frontend architecture 
+                            combining Angular SPA features with traditional server-side rendering for optimal performance and user experience.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Core Backend Technologies -->
+                <div class="section">
+                    <h2>Backend Technologies</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Core Framework</h3>
+                            <ul>
+                                <li>Spring Boot</li>
+                                <li>Spring MVC</li>
+                                <li>Spring Data JPA</li>
+                                <li>Spring Security</li>
+                                <li>Spring Boot Actuator</li>
+                                <li>Spring Boot DevTools</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Data & Persistence</h3>
+                            <ul>
+                                <li>Hibernate ORM</li>
+                                <li>HikariCP Connection Pool</li>
+                                <li>
+                                    PostgreSQL
+                                </li>
+                                <li>JDBC Driver</li>
+                                <li>Spring Data Repositories</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Security & Validation</h3>
+                            <ul>
+                                <li>Spring Security</li>
+                                <li>BCrypt Password Encoding</li>
+                                <li>JWT Authentication (io.jsonwebtoken:jjwt-api)</li>
+                                <li>Access & Refresh Token Validation</li>
+                                <li>Token Type Claim Enforcement</li>
+                                <li>Account Status Validation (Post-Authentication)</li>
+                                <li>Jakarta Bean Validation</li>
+                                <li>CSRF Protection</li>
+                                <li>Session Management</li>
+                                <li>Secure HTTP Headers (X-Content-Type-Options)</li>
+                                <li>XSS Prevention (Content-Disposition for Downloads)</li>
+                                <li>Database-Driven Authorization System</li>
+                                <li>Role & Permission Management UI</li>
+                                <li>Flexible Role Creation (Custom Roles)</li>
+                                <li>Granular Permission Control (Resource:Action Pattern)</li>
+                                <li>@RequirePermission Annotation</li>
+                                <li>Spring AOP Permission Enforcement</li>
+                                <li>Role-Permission Many-to-Many Mapping</li>
+                                <li>Four Pre-configured Roles (ADMIN/USER/GUEST/EXPENSE_ADMIN)</li>
+                                <li>Custom Authentication Entry Points</li>
+                                <li>SPA-Optimized Security (Prevents Browser Auth Prompts)</li>
+                                <li>Multi-Step Approval Workflows</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>API & Documentation</h3>
+                            <ul>
+                                <li>
+                                    Springdoc OpenAPI
+                                </li>
+                                <li>Swagger UI</li>
+                                <li>REST API Support</li>
+                                <li>JSON Processing (Jackson)</li>
+                                <li>Jackson JSR310 Module</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frontend Technologies -->
+                <div class="section">
+                    <h2>Frontend Technologies</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Template Engine (Thymeleaf UI)</h3>
+                            <ul>
+                                <li>Thymeleaf</li>
+                                <li>Thymeleaf Spring Security</li>
+                                <li>Server-Side Rendering</li>
+                                <li>Template Fragments</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Modern SPA Framework (Angular)</h3>
+                            <ul>
+                                <li>Angular 19</li>
+                                <li>TypeScript 5.6+</li>
+                                <li>Angular Material 19</li>
+                                <li>MatDatepicker with Native Date Adapter</li>
+                                <li>MatDialog for Modal Interactions</li>
+                                <li>MatTable with Advanced Features</li>
+                                <li>Standalone Components</li>
+                                <li>RxJS for Reactive Programming</li>
+                                <li>HTTP Client with Interceptors</li>
+                                <li>Node.js 20.11.0 Build Toolchain</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Data Visualization</h3>
+                            <ul>
+                                <li>Chart.js 4.4.0</li>
+                                <li>ng2-charts 6.0.0</li>
+                                <li>Pie Charts</li>
+                                <li>Bar Charts</li>
+                                <li>Line Charts</li>
+                                <li>Doughnut Charts</li>
+                                <li>Interactive Tooltips</li>
+                                <li>Responsive Design</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Web Standards</h3>
+                            <ul>
+                                <li>HTML5</li>
+                                <li>CSS3</li>
+                                <li>Modern JavaScript/TypeScript</li>
+                                <li>Responsive Design</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>CSS Architecture</h3>
+                            <ul>
+                                <li>Modular Stylesheets</li>
+                                <li>base.css (Core Layout)</li>
+                                <li>components.css (UI Components)</li>
+                                <li>Page-Specific Styles</li>
+                                <li>Angular Material Theming</li>
+                                <li>Browser Caching Optimized</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>JavaScript Libraries</h3>
+                            <ul>
+                                <li>Sidebar Menu Navigation</li>
+                                <li>Modal Utilities</li>
+                                <li>Password Toggle</li>
+                                <li>Date Utilities</li>
+                                <li>Form Utilities</li>
+                                <li>Client-Side Validation</li>
+                                <li>CSRF Token Management</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Build & Development Tools -->
+                <div class="section">
+                    <h2>Build & Development</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Build System</h3>
+                            <ul>
+                                <li>
+                                    Apache Maven
+                                </li>
+                                <li>Maven Wrapper (mvnw)</li>
+                                <li>Maven Compiler Plugin</li>
+                                <li>Spring Boot Maven Plugin</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Testing Framework <span class="version-badge">315 tests</span></h3>
+                            <ul>
+                                <li>JUnit 5 (Jupiter)</li>
+                                <li>Spring Boot Test</li>
+                                <li>Spring Security Test</li>
+                                <li>H2 Database (Test)</li>
+                                <li>Mockito</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Logging</h3>
+                            <ul>
+                                <li>Logback</li>
+                                <li>SLF4J API</li>
+                                <li>
+                                    Janino
+                                </li>
+                                <li>Conditional Logging</li>
+                                <li>CloudWatch Integration</li>
+                                <li>Lambda-Powered S3 Export</li>
+                                <li>EventBridge Automation</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>JSON Processing</h3>
+                            <ul>
+                                <li>Jackson Core</li>
+                                <li>Jackson Databind</li>
+                                <li>Jackson JSR310</li>
+                                <li>Java Time Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deployment & Infrastructure -->
+                <div class="section">
+                    <h2>Deployment & Infrastructure</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Containerization</h3>
+                            <ul>
+                                <li>Docker</li>
+                                <li>Docker Compose</li>
+                                <li>Multi-Stage Builds</li>
+                                <li>Eclipse Temurin JRE 21</li>
+                                <li>Cloudflared (Integrated)</li>
+                                <li>Non-Root User Security</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>AWS Cloud Services</h3>
+                            <ul>
+                                <li>Amazon ECS (Fargate)</li>
+                                <li>Amazon RDS (PostgreSQL)</li>
+                                <li>Amazon CloudWatch Logs</li>
+                                <li>AWS Lambda (Log Export Automation)</li>
+                                <li>Amazon EventBridge (Scheduler)</li>
+                                <li>AWS Secrets Manager</li>
+                                <li>Amazon S3 (Log Archival & Receipt Storage)</li>
+                                <li>Amazon SES (Email Notifications)</li>
+                                <li>Amazon ECR (Container Registry)</li>
+                                <li>AWS IAM Roles & Policies</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Networking & Access</h3>
+                            <ul>
+                                <li>Cloudflare Tunnel (Zero Trust Access)</li>
+                                <li>Secure Remote Access Without Public IPs</li>
+                                <li>HTTPS Support</li>
+                                <li>CORS Configuration</li>
+                                <li>Private Network Exposure via Cloudflare</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Continuous Deployment</h3>
+                            <ul>
+                                <li>Jenkins-Based Automated Deployment</li>
+                                <li>Automated AWS Resource Provisioning</li>
+                                <li>Reproducible Deployments</li>
+                                <li>Push-Button Production Updates via Jenkins</li>
+                                <li>ECR Image Push & Deploy</li>
+                                <li>ECS Service Updates</li>
+                                <li>Environment Configuration Management</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Infrastructure as Code (Implemented)</h3>
+                            <ul>
+                                <li>AWS CloudFormation Templates</li>
+                                <li>Complete Infrastructure Automation</li>
+                                <li>Multi-Environment Support (Dev/Staging/Prod)</li>
+                                <li>VPC & Network Configuration</li>
+                                <li>RDS Database Provisioning</li>
+                                <li>ECS/ECR Setup Automation</li>
+                                <li>Load Balancer Configuration (Optional - CloudFormation Template)</li>
+                                <li>Security Groups & IAM Roles</li>
+                                <li>Secrets Manager Integration</li>
+                                <li>Jenkins-Managed Deployments</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>CI/CD (Implemented)</h3>
+                            <ul>
+                                <li>Jenkins Pipeline - Running on WSL Ubuntu</li>
+                                <li>Declarative Jenkinsfile - 532 lines, 12 stages</li>
+                                <li>Build & Test Automation - Maven + 315 tests</li>
+                                <li>Docker & AWS ECR Integration - Configured</li>
+                                <li>Multi-Environment Support - dev/staging/production</li>
+                                <li>Build Modes - build-only, deploy, rollback</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Orchestration (Deployment-Ready)</h3>
+                            <ul>
+                                <li>Kubernetes Support</li>
+                                <li>YAML Manifests</li>
+                                <li>RBAC Configuration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture Patterns -->
+                <div class="section">
+                    <h2>Architecture & Design Patterns</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Design Patterns</h3>
+                            <ul>
+                                <li>MVC (Model-View-Controller)</li>
+                                <li>Repository Pattern</li>
+                                <li>Service Layer Pattern</li>
+                                <li>Data Transfer Objects (DTOs)</li>
+                                <li>Dependency Injection</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Package Structure</h3>
+                            <ul>
+                                <li>Controllers (Web Layer)</li>
+                                <li>Services (Business Logic)</li>
+                                <li>Repositories (Data Access)</li>
+                                <li>Entities (Domain Models)</li>
+                                <li>DTOs (Data Transfer)</li>
+                                <li>Config (Configuration)</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Best Practices</h3>
+                            <ul>
+                                <li>Separation of Concerns</li>
+                                <li>Transaction Management</li>
+                                <li>Exception Handling</li>
+                                <li>Input Validation</li>
+                                <li>Security First</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Development Profiles -->
+                <div class="section">
+                    <h2>Configuration Profiles</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Local Profile</h3>
+                            <ul>
+                                <li>Development Mode</li>
+                                <li>Debug Logging</li>
+                                <li>Local PostgreSQL</li>
+                                <li>Security Disabled (Optional)</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Docker Profile</h3>
+                            <ul>
+                                <li>Container Networking</li>
+                                <li>Environment Variables</li>
+                                <li>Service Discovery</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>AWS Profile</h3>
+                            <ul>
+                                <li>Cloud Configuration</li>
+                                <li>RDS Integration</li>
+                                <li>Secrets Manager</li>
+                                <li>CloudWatch Logging</li>
+                                <li>Lambda Log Export Automation</li>
+                                <li>EventBridge Daily Scheduling</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Features -->
+                <div class="section">
+                    <h2>Key Features & Capabilities</h2>
+                    <div class="highlight-box">
+                        <h4>Application Features</h4>
+                        <ul
+                            style="
+                                list-style: disc;
+                                padding-left: 30px;
+                                margin-top: 10px;
+                            "
+                        >
+                            <li>
+                                <strong>Task Activity Tracking:</strong> Track time by Client, Project, and Phase
+                                <ul style="list-style: circle; padding-left: 30px; margin-top: 5px;">
+                                    <li>Weekly Timesheet View (Monday-Sunday)</li>
+                                    <li>Analytics & Reports Dashboard with Interactive Charts</li>
+                                    <li>8 Report Types: Overview, Client Analysis, Project Analysis, Time Trends, and User Analysis (ADMIN)</li>
+                                    <li>CSV Export for Tasks</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Expense Management:</strong> Track business expenses with receipt uploads
+                                <ul style="list-style: circle; padding-left: 30px; margin-top: 5px;">
+                                    <li>Multi-Step Approval Workflow (Draft → Submitted → Approved/Rejected → Reimbursed)</li>
+                                    <li>Receipt Upload & Storage (Local filesystem or AWS S3)</li>
+                                    <li>Expense Approval Queue for Administrators</li>
+                                    <li>Reimbursement Tracking with Approval Notes</li>
+                                    <li>Weekly Expense Sheet View</li>
+                                    <li>CSV Export for Expenses</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Common Features (Tasks & Expenses):</strong>
+                                <ul style="list-style: circle; padding-left: 30px; margin-top: 5px;">
+                                    <li>Advanced Filtering and Search</li>
+                                    <li>Dropdown Value Management</li>
+                                    <li>User Authentication & Authorization</li>
+                                    <li>Database-Driven Authorization (Roles & Permissions)</li>
+                                    <li>Role & Permission Management UI (Admin)</li>
+                                    <li>Custom Role Creation Capability</li>
+                                    <li>Granular Permission Assignment (Resource:Action)</li>
+                                    <li>Interactive API Documentation (Swagger UI)</li>
+                                    <li>RESTful API Support</li>
+                                    <li>Responsive Web Design with Compact CSS Grid Layouts</li>
+                                    <li>Floating Sidebar Menu Navigation (☰) with Role-Based Visibility</li>
+                                    <li>Data Validation & Error Handling</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="highlight-box">
+                        <h4>Security Features</h4>
+                        <ul
+                            style="
+                                list-style: disc;
+                                padding-left: 30px;
+                                margin-top: 10px;
+                            "
+                        >
+                            <li>BCrypt Password Hashing</li>
+                            <li>JWT-Based Authentication (Stateless Token-Based Security)</li>
+                            <li>Access & Refresh Token Differentiation with Type Validation</li>
+                            <li>JWT Token Expiration & Refresh Mechanism</li>
+                            <li>Account Status Enforcement in JWT Filter (Enabled, Locked, Expired, Credentials)</li>
+                            <li>CSRF Protection</li>
+                            <li>Secure Headers Configuration (X-Content-Type-Options: nosniff)</li>
+                            <li>XSS Prevention for File Downloads (Content-Disposition: attachment)</li>
+                            <li>Admin Endpoint Protection with Defense-in-Depth (Authentication + Permission-Based Access)</li>
+                            <li>Database-Driven Authorization System</li>
+                            <li>Role & Permission Management UI</li>
+                            <li>@RequirePermission Method-Level Security</li>
+                            <li>Spring AOP Permission Interceptor</li>
+                            <li>Flexible Role-Permission Mapping (Many-to-Many)</li>
+                            <li>Custom Role Creation Without Code Changes</li>
+                            <li>Pre-configured Roles (ADMIN/USER/GUEST/EXPENSE_ADMIN)</li>
+                            <li>Password Change Functionality</li>
+                            <li>Account Lockout Protection (5 failed attempts)</li>
+                            <li>Email Notifications for Security Events (AWS SES Integration)</li>
+                            <li>Email Notifications for Expense Status Changes (Approval, Rejection, Reimbursement)</li>
+                            <li>Automated Lockout Email Alerts with Username, IP, and Timestamp</li>
+                            <li>Expense Ownership Validation</li>
+                            <li>Approval Workflow Access Control</li>
+                            <li>JWT Token Revocation & Blacklisting (Server-Side Session Control)</li>
+                            <li>Password Change Auto-Revokes All User Tokens</li>
+                            <li>Scheduled Token Cleanup (Daily at 2 AM)</li>
+                            <li>Magic Number File Validation (Prevents Malicious Uploads)</li>
+                            <li>JPEG/PNG/PDF Signature Verification</li>
+                            <li>Executable & Script Upload Prevention</li>
+                        </ul>
+                    </div>
+
+                    <div class="highlight-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+                        <h4 style="color: #2e7d32;">✅ Security Audit Status</h4>
+                        <p style="margin-bottom: 10px; color: #555;">
+                            This application has completed a comprehensive security audit with <strong>all 12 critical/high-severity issues resolved</strong>. 
+                            Security enhancements include server-side JWT token revocation, magic number file validation, password hash removal from logs, 
+                            admin endpoint protection, account lockout protection, XSS prevention, and comprehensive input validation.
+                        </p>
+                        <p style="margin-top: 10px; color: #555;">
+                            <strong>Testing Coverage:</strong> 315 automated tests including integration tests for token revocation, file validation, 
+                            security controls, and business logic verification.
+                        </p>
+                    </div>
+
+                    <div class="highlight-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+                        <h4 style="color: #2e7d32;">✅ 12-Factor App Compliance</h4>
+                        <p style="margin-bottom: 10px; color: #555;">
+                            This application fully adheres to the <strong>12-Factor App methodology</strong>, 
+                            demonstrating enterprise-grade cloud-native architecture and modern DevOps best practices.
+                        </p>
+                        <ul
+                            style="
+                                list-style: disc;
+                                padding-left: 30px;
+                                margin-top: 10px;
+                            "
+                        >
+                            <li><strong>I. Codebase:</strong> Single Git repository, multiple environment deployments</li>
+                            <li><strong>II. Dependencies:</strong> Explicitly declared in Maven (pom.xml) and npm (package.json)</li>
+                            <li><strong>III. Config:</strong> Environment variables for all configuration, AWS Secrets Manager integration</li>
+                            <li><strong>IV. Backing Services:</strong> PostgreSQL as attached resource, swappable via configuration</li>
+                            <li><strong>V. Build, Release, Run:</strong> Strict separation via Maven, Docker, and CI/CD pipeline</li>
+                            <li><strong>VI. Processes:</strong> Stateless application design, shared database backend</li>
+                            <li><strong>VII. Port Binding:</strong> Self-contained HTTP service with embedded Tomcat</li>
+                            <li><strong>VIII. Concurrency:</strong> Horizontal scaling via process replication (ECS, Kubernetes)</li>
+                            <li><strong>IX. Disposability:</strong> Fast startup, graceful shutdown, health check endpoints</li>
+                            <li><strong>X. Dev/Prod Parity:</strong> Identical Docker images across all environments</li>
+                            <li><strong>XI. Logs:</strong> Stdout/stderr event streams captured by CloudWatch</li>
+                            <li><strong>XII. Admin Processes:</strong> One-off tasks in identical environment (DatabaseInitializer, scripts)</li>
+                        </ul>
+                        <p style="margin-top: 15px; font-weight: bold; color: #2e7d32;">
+                            📊 Compliance Score: 12/12 (100%)
+                        </p>
+                    </div>
+
+                    <div class="highlight-box" style="background: #e3f2fd; border-left-color: #2196f3;">
+                        <h4 style="color: #1565c0;">⚖️ Horizontal Scalability</h4>
+                        <ul
+                            style="
+                                list-style: disc;
+                                padding-left: 30px;
+                                margin-top: 10px;
+                            "
+                        >
+                            <li><strong>Stateless Architecture:</strong> No local state, all data in PostgreSQL</li>
+                            <li><strong>Current Deployment:</strong> Single ECS Fargate instance with Cloudflare Tunnel</li>
+                            <li><strong>Scalability-Ready:</strong> CloudFormation templates available for load-balanced multi-instance deployment</li>
+                            <li><strong>Infrastructure as Code:</strong> ALB, auto-scaling, and multi-AZ CloudFormation templates available but not currently deployed</li>
+                            <li><strong>Connection Pooling:</strong> HikariCP optimized for concurrent database connections</li>
+                            <li><strong>Health Probes:</strong> Spring Boot Actuator endpoints for orchestration readiness</li>
+                            <li><strong>Graceful Shutdown:</strong> 30-second timeout for in-flight request completion</li>
+                            <li><strong>Cost-Optimized:</strong> Cloudflare provides free SSL/CDN/DDoS protection without ALB costs</li>
+                        </ul>
+                    </div>
+
+                    <div class="highlight-box">
+                        <h4>DevOps & Deployment</h4>
+                        <ul
+                            style="
+                                list-style: disc;
+                                padding-left: 30px;
+                                margin-top: 10px;
+                            "
+                        >
+                            <li>Jenkins CI/CD Pipeline - Implemented and Running on WSL Ubuntu</li>
+                            <li>Automated Continuous Deployment via Jenkins</li>
+                            <li>Infrastructure as Code (CloudFormation) - Implemented</li>
+                            <li>Complete Infrastructure Automation Templates</li>
+                            <li>Reproducible & Consistent Deployments</li>
+                            <li>Push-Button Production Updates via Jenkins</li>
+                            <li>Automated AWS Resource Provisioning</li>
+                            <li>Multi-Environment Support (Dev/Staging/Production)</li>
+                            <li>Multi-Stage Docker Builds</li>
+                            <li>AWS ECR Container Registry Integration</li>
+                            <li>AWS ECS (Fargate) Deployment</li>
+                            <li>VPC & Network Automation</li>
+                            <li>RDS Database Provisioning</li>
+                            <li>ALB Setup (CloudFormation Template - Optional)</li>
+                            <li>Security Groups & IAM Roles Automation</li>
+                            <li>Automated Database Initialization</li>
+                            <li>Health Checks & Monitoring</li>
+                            <li>Centralized Logging (CloudWatch)</li>
+                            <li>Automated Log Archival (Lambda + S3)</li>
+                            <li>Serverless Log Export Scheduling</li>
+                            <li>Environment-Based Configuration</li>
+                            <li>Kubernetes Manifests Ready for Orchestration</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Version Information -->
+                <div class="section">
+                    <h2>Detailed Version Information</h2>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h3>Core Dependencies</h3>
+                            <ul>
+                                <li>Java: <span class="version-badge">21</span></li>
+                                <li>Spring Boot: <span class="version-badge">3.5.7</span></li>
+                                <li>Angular: <span class="version-badge">19.2.19</span></li>
+                                <li>TypeScript: <span class="version-badge">5.6+</span></li>
+                                <li>Node.js: <span class="version-badge">20.11.0</span></li>
+                                <li>Chart.js: <span class="version-badge">4.4.0</span></li>
+                                <li>ng2-charts: <span class="version-badge">6.0.0</span></li>
+                                <li>Springdoc OpenAPI: <span class="version-badge">2.6.0</span></li>
+                                <li>Janino: <span class="version-badge">3</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Database</h3>
+                            <ul>
+                                <li>PostgreSQL: <span class="version-badge">17.6</span> (Production)</li>
+                                <li>H2: Latest (Testing)</li>
+                            </ul>
+                        </div>
+
+                        <div class="tech-card">
+                            <h3>Container Images</h3>
+                            <ul>
+                                <li>Maven: <span class="version-badge">3.9.11-eclipse-temurin-21</span></li>
+                                <li>Eclipse <span class="version-badge">Temurin: 21-jre-jammy</li>
+                                <li>PostgreSQL: <span class="version-badge">17.6</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    Task Activity System | Built using Spring Boot
+                </p>
+                <p style="margin-top: 10px; opacity: 0.8">
+                    &copy; 2025-2026 | Version 1.2 | Author: Dean Ammons
+                </p>
+            </footer>
+        </div>
+
+        <!-- Privacy-Friendly Visitor Counter -->
+        <script>
+            /**
+             * Privacy-friendly visitor counter using application backend.
+             * No personal data collected - only increments a counter.
+             *
+             * Author: Dean Ammons
+             * Date: January 2026
+             */
+            (function () {
+                const PAGE_NAME = "technology-stack";
+                const API_URL =
+                    "https://taskactivitytracker.com/api/public/visit/" +
+                    PAGE_NAME;
+
+                // Track visit count silently (check stats at /api/public/visit/stats)
+                fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }).catch(() => {
+                    // Silently fail if API unavailable
+                });
+            })();
+        </script>
+    </body>
+</html>
