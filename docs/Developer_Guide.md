@@ -3729,40 +3729,43 @@ public class VisitorCounterService {
 
 To add visitor tracking to a page:
 
-1. **Add HTML Display:**
+**Using Reusable Script (Recommended):**
+
+1. **Add data-page-name attribute to body:**
 ```html
-<footer>
-    <p id="visitor-count">
-        <span id="visitor-number">Loading...</span> visitors
-    </p>
-</footer>
+<body data-page-name="your-page-identifier">
 ```
 
-2. **Add JavaScript:**
+2. **Include visit-tracker.js:**
+```html
+<!-- Privacy-Friendly Visitor Counter -->
+<script src="./visit-tracker.js"></script>
+</body>
+```
+
+**Script Location:** `docs/visit-tracker.js`
+
+**How It Works:**
+- Script reads `data-page-name` from body element
+- Silently tracks visit (no UI display)
+- Fails gracefully if API unavailable
+- Reusable across all pages (DRY principle)
+
+**Alternative - Direct API Call:**
+
+For custom implementations:
 ```javascript
 <script>
 (function () {
     const PAGE_NAME = "your-page-name";  // Unique identifier
     const API_URL = "https://taskactivitytracker.com/api/public/visit/" + PAGE_NAME;
     
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-    })
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("visitor-number").textContent = 
-                data.count.toLocaleString();
-        })
-        .catch(error => {
-            // Hide counter on error
-            document.getElementById("visitor-count").style.display = "none";
-        });
+    fetch(API_URL, { method: "POST" }).catch(() => {});
 })();
 </script>
 ```
 
-3. **Choose Unique Page Name:**
+**Page Naming:**
    - Use descriptive identifiers: `activitytracking-home`, `user-guide`, `api-docs`
    - Backend automatically creates counters for new page names
    - Page names are sanitized and normalized

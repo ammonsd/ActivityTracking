@@ -22,24 +22,42 @@ A privacy-friendly page visit counter that tracks only the number of visitors to
 
 ### Frontend Integration
 
-**Example:** [activitytracking.html](../docs/activitytracking.html)
+**Reusable Script:** [visit-tracker.js](../docs/visit-tracker.js)
+
+The visitor counter uses a centralized, reusable JavaScript file that tracks page visits silently (no UI display).
+
+**Script Implementation:**
+```javascript
+/**
+ * Privacy-friendly visitor counter using application backend.
+ * No personal data collected - only increments a counter.
+ *
+ * Usage: Add data-page-name attribute to body element
+ * <body data-page-name="your-page-identifier">
+ *
+ * Author: Dean Ammons
+ * Date: January 2026
+ */
+(function () {
+    const pageName = document.body.dataset.pageName;
+    if (!pageName) return;
+
+    const API_URL =
+        "https://taskactivitytracker.com/api/public/visit/" + pageName;
+
+    fetch(API_URL, { method: "POST" }).catch(() => {});
+})();
+```
+
+**HTML Integration Example:** [activitytracking.html](../docs/activitytracking.html)
 
 ```html
-<p id="visitor-count"><span id="visitor-number">Loading...</span> visitors</p>
-
-<script>
-    fetch(
-        "https://taskactivitytracker.com/api/public/visit/activitytracking-home",
-        {
-            method: "POST",
-        },
-    )
-        .then((response) => response.json())
-        .then((data) => {
-            document.getElementById("visitor-number").textContent =
-                data.count.toLocaleString();
-        });
-</script>
+<body data-page-name="activitytracking-home">
+    <!-- page content -->
+    
+    <!-- Privacy-Friendly Visitor Counter -->
+    <script src="./visit-tracker.js"></script>
+</body>
 ```
 
 ## API Endpoints
@@ -93,25 +111,33 @@ Returns all page visit counts.
 
 ## Usage Examples
 
-### Basic Counter
+### Silent Tracking (Recommended)
+
+Using the reusable `visit-tracker.js` script:
 
 ```html
-<p id="visitor-count"><span id="visitor-number">Loading...</span> visitors</p>
+<body data-page-name="your-page-identifier">
+    <!-- page content -->
+    <script src="./visit-tracker.js"></script>
+</body>
+```
 
+**Benefits:**
+- ✅ DRY principle - single source of truth
+- ✅ No code duplication across pages
+- ✅ Silent tracking (no UI clutter)
+- ✅ Easy to maintain and update
+- ✅ Works seamlessly with PDF generation
+
+### Direct API Call (Alternative)
+
+For custom implementations:
+
+```html
 <script>
     fetch("https://yourapp.com/api/public/visit/homepage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            document.getElementById("visitor-number").textContent =
-                data.count.toLocaleString();
-        })
-        .catch((error) => {
-            // Hide counter if unavailable
-            document.getElementById("visitor-count").style.display = "none";
-        });
+        method: "POST"
+    }).catch(() => {});
 </script>
 ```
 
