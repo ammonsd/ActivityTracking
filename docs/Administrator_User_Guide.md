@@ -587,7 +587,7 @@ See [Email Configuration Management](#email-configuration-management) section fo
 | Reset link expired | User can request new reset link (expires after 15 minutes) |
 | Reset link doesn't work | Token may be consumed or expired; request new reset |
 | User has no email | Administrator must manually reset password using "Change Password" feature |
-| GUEST users | GUEST users can also use password reset if they have email addresses |
+| GUEST users | **GUEST role users cannot reset passwords** (restriction for demo/temporary accounts). The reset form will accept the request but no email will be sent. Check logs for "Password reset blocked for GUEST user" warnings. Administrators must manually reset GUEST passwords using "Change Password" feature. |
 
 ---
 

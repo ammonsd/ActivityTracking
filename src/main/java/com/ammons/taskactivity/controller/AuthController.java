@@ -70,20 +70,28 @@ public class AuthController {
 
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                String token = passwordResetService.generateResetToken(email);
-                String resetLink = baseUrl + "/change-password?token=" + token;
 
-                emailService.sendPasswordResetEmail(email, user.getUsername(),
-                        user.getFirstname() + " " + user.getLastname(), resetLink,
-                        passwordResetService.getTokenExpiryMinutes());
+                // Block password reset for GUEST role (silent block for security)
+                if (user.getRole() != null && "GUEST".equals(user.getRole().getName())) {
+                    logger.warn("Password reset blocked for GUEST user: {} (email: {})",
+                            user.getUsername(), email);
+                    // Don't send email, but show generic success message for security
+                } else {
+                    String token = passwordResetService.generateResetToken(email);
+                    String resetLink = baseUrl + "/change-password?token=" + token;
 
-                logger.info("Password reset email sent to: {}", email);
+                    emailService.sendPasswordResetEmail(email, user.getUsername(),
+                            user.getFirstname() + " " + user.getLastname(), resetLink,
+                            passwordResetService.getTokenExpiryMinutes());
+
+                    logger.info("Password reset email sent to: {}", email);
+                }
             } else {
                 logger.warn("Password reset requested for non-existent email: {}", email);
                 // Don't reveal that email doesn't exist - same message for security
             }
 
-            // Always show success message (don't reveal if email exists)
+            // Always show success message (don't reveal if email exists or role restrictions)
             redirectAttributes.addFlashAttribute("successMessage",
                     "If that email address is registered, you will receive a password reset link shortly.");
             return "redirect:/reset-password?success";

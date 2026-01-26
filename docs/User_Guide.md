@@ -207,7 +207,8 @@ If you've forgotten your password, you can reset it yourself using the **Reset P
 1. **Check spam/junk folders**: Reset emails might be filtered
 2. **Wait a few minutes**: Email delivery can take 1-2 minutes
 3. **Verify email address**: Make sure you entered the correct email
-4. **Contact administrator**: If you still can't reset, contact your system administrator
+4. **GUEST users**: If you have a GUEST role, password reset is disabled for security reasons. Contact your system administrator to have your password changed.
+5. **Contact administrator**: If you still can't reset, contact your system administrator
 
 ### If You're Required to Change Your Password
 

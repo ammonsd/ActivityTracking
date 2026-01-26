@@ -241,8 +241,12 @@ This document provides a comprehensive summary of all technical features, framew
 - **GUEST role password restrictions**:
   - GUEST users cannot change their own passwords
   - Password change pages blocked for GUEST role
+  - **Password reset blocked for GUEST users** (silent block for security)
+  - Reset requests accepted but no email sent to GUEST accounts
+  - Blocked attempts logged with warning: "Password reset blocked for GUEST user"
   - GUEST users with expired passwords blocked from authentication
   - Special error message directs GUEST users to contact administrator
+  - Administrators must manually reset GUEST passwords through user management
 
 ### CSRF & Session Security
 

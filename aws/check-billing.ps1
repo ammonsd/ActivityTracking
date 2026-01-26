@@ -199,29 +199,60 @@ catch {
 if ($Forecast -and -not $LastMonth) {
     $today = Get-Date
     $lastDayOfMonth = [DateTime]::DaysInMonth($today.Year, $today.Month)
+    $daysElapsed = $today.Day
     $daysRemaining = $lastDayOfMonth - $today.Day
     
     if ($daysRemaining -gt 0) {
         Write-Host "`n-----------------------------------------------------------------------" -ForegroundColor $InfoColor
         
+        # Calculate simple linear projection based on actual daily average
+        $dailyAverage = $totalCost / $daysElapsed
+        $linearProjectionRemainder = [math]::Round($dailyAverage * $daysRemaining, 2)
+        $linearProjectionTotal = [math]::Round($totalCost + $linearProjectionRemainder, 2)
+        
+        Write-Host "`nDays elapsed: $daysElapsed | Days remaining: $daysRemaining" -ForegroundColor $InfoColor
+        Write-Host "Daily average: $currency `$$([math]::Round($dailyAverage, 2))" -ForegroundColor $InfoColor
+        
+        # Get AWS Cost Explorer forecast
         try {
             $forecastStart = (Get-Date).AddDays(1).ToString("yyyy-MM-dd")
-            $forecastEnd = (Get-Date -Year $today.Year -Month $today.Month -Day $lastDayOfMonth).ToString("yyyy-MM-dd")
+            $forecastEnd = (Get-Date -Year $today.Year -Month $today.Month -Day $lastDayOfMonth).AddDays(1).ToString("yyyy-MM-dd")
             $forecastPeriod = "Start=$forecastStart,End=$forecastEnd"
             
             $forecastResult = aws ce get-cost-forecast --time-period $forecastPeriod --metric UNBLENDED_COST --granularity MONTHLY | ConvertFrom-Json
             
-            $forecastCost = [math]::Round([decimal]$forecastResult.Total.Amount, 2)
-            $projectedTotal = $totalCost + $forecastCost
+            $awsForecastCost = [math]::Round([decimal]$forecastResult.Total.Amount, 2)
+            $awsProjectedTotal = [math]::Round($totalCost + $awsForecastCost, 2)
             
-            Write-Host "`nProjected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
-            Write-Host "$currency `$$forecastCost" -ForegroundColor $WarningColor
+            Write-Host "`n--- Linear Projection (Based on Daily Average) ---" -ForegroundColor $InfoColor
+            Write-Host "Projected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
+            Write-Host "$currency `$$linearProjectionRemainder" -ForegroundColor $SuccessColor
             Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
-            Write-Host "$currency `$$projectedTotal" -ForegroundColor $WarningColor
+            Write-Host "$currency `$$linearProjectionTotal" -ForegroundColor $SuccessColor
+            
+            Write-Host "`n--- AWS Cost Explorer Forecast ---" -ForegroundColor $InfoColor
+            Write-Host "Projected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
+            Write-Host "$currency `$$awsForecastCost" -ForegroundColor $WarningColor
+            Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
+            Write-Host "$currency `$$awsProjectedTotal" -ForegroundColor $WarningColor
+            
+            # Show difference if significant
+            $difference = [math]::Abs($linearProjectionTotal - $awsProjectedTotal)
+            $percentDiff = [math]::Round(($difference / $linearProjectionTotal) * 100, 1)
+            if ($percentDiff -gt 10) {
+                Write-Host "`nNote: Projections differ by $([math]::Round($difference, 2)) ($percentDiff%)" -ForegroundColor $WarningColor
+                Write-Host "AWS forecast may account for usage patterns not reflected in simple average." -ForegroundColor $WarningColor
+            }
         }
         catch {
-            Write-Host "`nWARNING: Unable to fetch forecast data" -ForegroundColor $WarningColor
+            Write-Host "`nWARNING: Unable to fetch AWS forecast data" -ForegroundColor $WarningColor
             Write-Host $_.Exception.Message -ForegroundColor $WarningColor
+            
+            Write-Host "`n--- Linear Projection (Based on Daily Average) ---" -ForegroundColor $InfoColor
+            Write-Host "Projected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
+            Write-Host "$currency `$$linearProjectionRemainder" -ForegroundColor $SuccessColor
+            Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
+            Write-Host "$currency `$$linearProjectionTotal" -ForegroundColor $SuccessColor
         }
     } else {
         Write-Host "`n-----------------------------------------------------------------------" -ForegroundColor $InfoColor
