@@ -257,16 +257,16 @@ To protect your account from unauthorized access, the system automatically locks
 **What Happens When Your Account Is Locked:**
 
 - After 5 incorrect password entries, your account will be locked
-- You will see a message: "Your account has been locked due to too many failed login attempts. Please contact your administrator."
-- You cannot log in until an administrator unlocks your account
-- The administrator receives an automatic email notification about the lockout
+- You will see a message: "Account locked due to too many failed login attempts. Please use the 'Reset Password' link below to reset your password and unlock your account."
+- The system administrator also receives an automatic email notification about the lockout
 
 **What to Do:**
 
-1. **Contact your administrator** to unlock your account
-2. The administrator can unlock your account from the User Management page
-3. **Double-check your password** before attempting to log in again
-4. If you've forgotten your password, use the **"Reset Password"** link on the login page (or contact your administrator)
+1. **Use the Password Reset Feature**: Click the **"Reset Password"** link on the login page
+2. Enter your email address and follow the password reset process (see "If You've Forgotten Your Password" section above)
+3. After successfully resetting your password, your account will be automatically unlocked
+4. Alternatively, **Contact your administrator** if you prefer manual assistance
+5. The administrator can manually unlock your account from the User Management page
 
 ### Password Expiration Warnings
 

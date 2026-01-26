@@ -426,10 +426,12 @@ public class EmailService {
                 ----------------------------------------
 
                 Action Required:
-                Please investigate this potential security incident. The account can be unlocked \
-                via the User Management interface if the activity is determined to be legitimate.
+                                Please investigate this potential security incident.
 
-                To unlock the account:
+                                The user can unlock their account by using the "Reset Password" feature on the login page, \
+                which will allow them to set a new password and automatically unlock their account.
+
+                                Alternatively, you can manually unlock the account:
                 1. Log in to the %s
                 2. Navigate to User Management
                 3. Find the user '%s'
