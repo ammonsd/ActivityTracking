@@ -101,6 +101,14 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    public Optional<User> getUserByEmail(String email) {
+        logger.debug("Retrieving user by email: {}", email);
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        return userRepository.findByEmail(email);
+    }
+
     public User createUser(String username, String password, Roles role) {
         return createUser(username, password, role, true);
     }

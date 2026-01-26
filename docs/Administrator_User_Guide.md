@@ -531,6 +531,64 @@ All action buttons use Angular Material icon buttons with tooltips for better us
 6. **Optional**: Check "Force password update on next login"
 7. **Save**: Click **"Change Password"**
 
+### Self-Service Password Reset Feature
+
+**Overview**: Users can reset their own passwords without administrator intervention using the password reset feature on the login page.
+
+**How It Works:**
+
+1. **User Initiates Reset**: User clicks "Reset Password" link on login page
+2. **Enters Email**: User enters their registered email address
+3. **Token Generation**: System generates a unique, secure token valid for 15 minutes
+4. **Email Sent**: Reset email with secure link sent to user's email address
+5. **User Clicks Link**: User clicks link in email to access password change form
+6. **Password Changed**: User sets new password without needing current password
+7. **Confirmation**: User receives confirmation email and can log in with new password
+
+**Security Features:**
+
+- **Time-Limited Tokens**: Reset tokens expire after 15 minutes
+- **Single-Use**: Each token can only be used once
+- **In-Memory Storage**: Tokens stored in-memory and cleared on application restart
+- **Auto-Cleanup**: Expired tokens automatically removed every 5 minutes
+- **No Email Enumeration**: System doesn't reveal if email address exists
+- **Secure Links**: Reset links include randomly generated UUID tokens
+- **Email Verification**: Only users with registered email addresses can reset
+
+**Administrator Considerations:**
+
+- **Email Required**: Users must have valid email addresses in their profiles to use password reset
+- **Email Configuration**: System must have email (SMTP or AWS SES) configured and enabled
+- **Monitoring**: Check application logs for password reset activity if needed
+- **User Support**: If users don't receive reset emails, verify:
+  - User has correct email address in profile
+  - Email service is configured and operational
+  - Check spam/junk folders
+  - Verify `app.base-url` configuration for correct reset link URLs
+
+**Email Configuration Requirements:**
+
+For password reset to work, ensure these environment variables are configured:
+
+- `MAIL_ENABLED=true` - Enable email notifications
+- `MAIL_HOST` - SMTP server hostname
+- `MAIL_PORT` - SMTP server port (typically 587)
+- `MAIL_USERNAME` - SMTP authentication username
+- `MAIL_PASSWORD` - SMTP authentication password
+- `app.base-url` - Base URL for reset links (e.g., https://taskactivitytracker.com)
+
+See [Email Configuration Management](#email-configuration-management) section for detailed setup instructions.
+
+**Troubleshooting:**
+
+| Issue | Solution |
+|-------|----------|
+| User doesn't receive reset email | 1. Verify user has email in profile<br>2. Check email service configuration<br>3. Check spam/junk folders<br>4. Review application logs for email errors |
+| Reset link expired | User can request new reset link (expires after 15 minutes) |
+| Reset link doesn't work | Token may be consumed or expired; request new reset |
+| User has no email | Administrator must manually reset password using "Change Password" feature |
+| GUEST users | GUEST users can also use password reset if they have email addresses |
+
 ---
 
 ## Expense Management Administration

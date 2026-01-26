@@ -178,6 +178,37 @@ https://taskactivitytracker.com
 3. **Click "Login"**: Press the login button
 4. **Change Password (if required)**: Some accounts require a password change on first login
 
+### If You've Forgotten Your Password
+
+If you've forgotten your password, you can reset it yourself using the **Reset Password** feature:
+
+1. **Click "Reset Password"**: On the login page, click the **"Reset Password"** link below the login button
+2. **Enter Your Email**: Type the email address associated with your account
+3. **Click "Reset Password"**: Submit the form
+4. **Check Your Email**: You'll see a success message. Check your email inbox for a password reset link
+5. **Click the Reset Link**: The email contains a secure link that expires in **15 minutes**
+6. **Enter New Password**: You'll be taken to the password change page
+   - Enter your new password twice (see password requirements below)
+   - You do NOT need to enter your current password
+7. **Click "Change Password"**: Submit the form
+8. **Confirmation Email**: You'll receive a confirmation email that your password was changed
+9. **Return to Login**: Click "Return to Login" and sign in with your new password
+
+**Important Notes:**
+
+- Reset links expire after **15 minutes** for security
+- Each reset link can only be used **once**
+- If the link expires, simply request a new reset link
+- You'll receive a confirmation email after successfully changing your password
+- For security, the system won't reveal if an email address is registered
+
+**If You Don't Receive the Email:**
+
+1. **Check spam/junk folders**: Reset emails might be filtered
+2. **Wait a few minutes**: Email delivery can take 1-2 minutes
+3. **Verify email address**: Make sure you entered the correct email
+4. **Contact administrator**: If you still can't reset, contact your system administrator
+
 ### If You're Required to Change Your Password
 
 Some new accounts are set up to require a password change on first login:
@@ -235,7 +266,7 @@ To protect your account from unauthorized access, the system automatically locks
 1. **Contact your administrator** to unlock your account
 2. The administrator can unlock your account from the User Management page
 3. **Double-check your password** before attempting to log in again
-4. If you've forgotten your password, ask your administrator to reset it
+4. If you've forgotten your password, use the **"Reset Password"** link on the login page (or contact your administrator)
 
 ### Password Expiration Warnings
 

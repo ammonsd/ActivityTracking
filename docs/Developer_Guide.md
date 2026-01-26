@@ -59,6 +59,177 @@ The application provides two user interface options:
 
 Both UIs connect to the same Spring Boot backend REST API and share authentication.
 
+### Password Reset Feature
+
+**Overview**: Self-service password reset functionality allowing users to reset their passwords via email without administrator intervention.
+
+**Architecture:**
+
+```
+┌─────────────┐      ┌──────────────┐      ┌────────────────┐      ┌──────────────┐
+│ Login Page  │ ───> │ AuthController│ ───> │ PasswordReset  │ ───> │ EmailService │
+│             │      │              │      │   Service      │      │              │
+└─────────────┘      └──────────────┘      └────────────────┘      └──────────────┘
+       │                    │                       │                       │
+       │                    ├─────────────────────> │                       │
+       │                    │  Generate Token       │                       │
+       │                    │                       │ ──────────────────> │
+       │                    │                       │  Send Reset Email    │
+       │                    │                       │                       │
+       v                    v                       v                       v
+┌─────────────┐      ┌──────────────┐      ┌────────────────┐      ┌──────────────┐
+│ Change      │ <─── │ PasswordChange│ <─── │ Token          │      │ SMTP/AWS SES │
+│ Password UI │      │  Controller   │      │   Validation   │      │              │
+└─────────────┘      └──────────────┘      └────────────────┘      └──────────────┘
+```
+
+**Components:**
+
+1. **PasswordResetService** (`com.ammons.taskactivity.service.PasswordResetService`)
+   - Manages password reset tokens in-memory using `ConcurrentHashMap`
+   - Token expiration: 15 minutes
+   - Automatic cleanup: Scheduled task runs every 5 minutes
+   - Single-use tokens (consumed after successful reset)
+   - Methods:
+     - `generateResetToken(String email)` - Creates UUID token
+     - `validateToken(String token)` - Checks token validity and expiration
+     - `consumeToken(String token)` - Marks token as used
+     - `cleanupExpiredTokens()` - @Scheduled cleanup job
+
+2. **AuthController** (`com.ammons.taskactivity.controller.AuthController`)
+   - `GET /reset-password` - Display email entry form
+   - `POST /reset-password` - Process reset request, generate token, send email
+   - Security: Always returns success message (no email enumeration)
+
+3. **PasswordChangeController** (`com.ammons.taskactivity.controller.PasswordChangeController`)
+   - Enhanced to handle token-based password reset
+   - `GET /change-password?token={token}` - Display password form with token
+   - `POST /change-password` - Routes to `handlePasswordReset()` when token present
+   - Validates token, updates password, sends confirmation email
+
+4. **EmailService** (`com.ammons.taskactivity.service.EmailService`)
+   - `sendPasswordResetEmail()` - Sends reset link with token
+   - `sendPasswordChangedConfirmation()` - Confirms successful password change
+   - Supports both SMTP and AWS SES delivery
+
+5. **Templates:**
+   - `reset-password.html` - Email entry form
+   - `change-password.html` - Enhanced with conditional logic for token-based reset
+   - `login.html` - Added "Reset Password" link and success messages
+
+**Security Configuration:**
+
+```java
+// SecurityConfig.java
+http.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/reset-password", "/change-password").permitAll()
+    // ... other matchers
+);
+```
+
+**Token Storage:**
+
+```java
+private final ConcurrentHashMap<String, PasswordResetToken> resetTokens = new ConcurrentHashMap<>();
+
+private static class PasswordResetToken {
+    final String email;
+    final LocalDateTime expiryTime;
+}
+```
+
+**Email Configuration:**
+
+Required application properties:
+- `spring.mail.enabled=true`
+- `spring.mail.host`, `spring.mail.port`, `spring.mail.username`, `spring.mail.password`
+- `app.mail.from` - From address for emails
+- `app.base-url` - Base URL for reset links (e.g., http://localhost:8080)
+
+**Reset Email Content:**
+
+```text
+Subject: [Task Activity Management System] Password Reset Request
+
+Hello {fullName},
+
+You requested a password reset for your Task Activity Management System account.
+
+Click the link below to reset your password:
+{baseUrl}/change-password?token={token}
+
+This link will expire in 15 minutes for security reasons.
+
+If you did not request this password reset, please ignore this email.
+Your password will remain unchanged.
+```
+
+**Flow Diagram:**
+
+```
+User                    System                  Email
+  │                       │                       │
+  ├──[Click Reset]──────>│                       │
+  │                       │                       │
+  ├──[Enter Email]──────>│                       │
+  │                       ├──[Generate Token]    │
+  │                       ├──[Send Email]──────>│
+  │<──[Success Message]───┤                       │
+  │                       │                       │
+  │<──────────────────────┼───[Reset Link]───────┤
+  │                       │                       │
+  ├──[Click Link]──────>│                       │
+  │<──[Password Form]─────┤                       │
+  │                       │                       │
+  ├──[New Password]────>│                       │
+  │                       ├──[Validate Token]    │
+  │                       ├──[Update Password]   │
+  │                       ├──[Consume Token]     │
+  │                       ├──[Send Confirm]────>│
+  │<──[Success/Redirect]──┤                       │
+  │                       │                       │
+  ├──[Login]───────────>│                       │
+  │                       │                       │
+```
+
+**Database Schema:**
+
+No database changes required - tokens are stored in-memory only for short-term use.
+
+**Testing:**
+
+```java
+// Integration test example
+@Test
+void testPasswordResetFlow() {
+    // Request reset
+    mockMvc.perform(post("/reset-password")
+            .param("email", "test@example.com"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/reset-password?success"));
+    
+    // Verify email sent
+    verify(emailService).sendPasswordResetEmail(...);
+    
+    // Use token to reset password
+    String token = passwordResetService.generateResetToken("test@example.com");
+    mockMvc.perform(post("/change-password")
+            .param("resetToken", token)
+            .param("newPassword", "NewPassword123!")
+            .param("confirmNewPassword", "NewPassword123!"))
+        .andExpect(status().is3xxRedirection());
+}
+```
+
+**Monitoring:**
+
+Log messages to monitor:
+- `Generated password reset token for email: {email} (expires in 15 minutes)`
+- `Password reset email sent to {email} for user: {username}`
+- `Valid password reset token found for email: {email}`
+- `Password reset token consumed for email: {email}`
+- `Cleaned up {count} expired password reset token(s)`
+
 ### Node.js Integration (Frontend Build)
 
 Node.js is used exclusively for building and developing the Angular frontend. The backend is pure Java/Spring Boot.

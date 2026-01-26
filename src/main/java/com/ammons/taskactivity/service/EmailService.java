@@ -855,6 +855,140 @@ public class EmailService {
     }
 
     /**
+     * Send password reset email to user.
+     * 
+     * @param email the user's email address
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @param resetLink the password reset link
+     * @param expiryMinutes number of minutes until link expires
+     */
+    public void sendPasswordResetEmail(String email, String username, String fullName,
+            String resetLink, int expiryMinutes) {
+        if (!mailEnabled) {
+            logger.warn("Email notifications disabled - skipping password reset email for user: {}",
+                    username);
+            return;
+        }
+
+        if (email == null || email.trim().isEmpty()) {
+            logger.warn("Cannot send password reset email - user {} has no email address",
+                    username);
+            return;
+        }
+
+        String subject = String.format("[%s] Password Reset Request", appName);
+        String body = buildPasswordResetEmailBody(username, fullName, resetLink, expiryMinutes);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(email, subject, body);
+            } else {
+                sendEmailViaSmtp(subject, body, email);
+            }
+            logger.info("Password reset email sent to {} for user: {}", email, username);
+        } catch (Exception e) {
+            logger.error("Failed to send password reset email to {}: {}", email, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Builds the email body for password reset requests.
+     * 
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @param resetLink the password reset link
+     * @param expiryMinutes number of minutes until link expires
+     * @return formatted email body text
+     */
+    private String buildPasswordResetEmailBody(String username, String fullName, String resetLink,
+            int expiryMinutes) {
+        String greeting = (fullName != null && !fullName.trim().isEmpty()) ? fullName : username;
+
+        return String.format("""
+                Hello %s,
+
+                You requested a password reset for your %s account.
+
+                Click the link below to reset your password:
+                %s
+
+                This link will expire in %d minutes for security reasons.
+
+                If you did not request this password reset, please ignore this email.
+                Your password will remain unchanged.
+
+                For security reasons, do not share this link with anyone.
+
+                ---
+                This is an automated notification from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
+                """, greeting, appName, resetLink, expiryMinutes, appName);
+    }
+
+    /**
+     * Send password changed confirmation email to user.
+     * 
+     * @param email the user's email address
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     */
+    public void sendPasswordChangedConfirmation(String email, String username, String fullName) {
+        if (!mailEnabled) {
+            logger.warn(
+                    "Email notifications disabled - skipping password changed confirmation for user: {}",
+                    username);
+            return;
+        }
+
+        if (email == null || email.trim().isEmpty()) {
+            logger.warn("Cannot send password changed confirmation - user {} has no email address",
+                    username);
+            return;
+        }
+
+        String subject = String.format("[%s] Password Changed Successfully", appName);
+        String body = buildPasswordChangedConfirmationBody(username, fullName);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(email, subject, body);
+            } else {
+                sendEmailViaSmtp(subject, body, email);
+            }
+            logger.info("Password changed confirmation sent to {} for user: {}", email, username);
+        } catch (Exception e) {
+            logger.error("Failed to send password changed confirmation to {}: {}", email,
+                    e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Builds the email body for password changed confirmations.
+     * 
+     * @param username the username
+     * @param fullName the full name of the user (optional)
+     * @return formatted email body text
+     */
+    private String buildPasswordChangedConfirmationBody(String username, String fullName) {
+        String greeting = (fullName != null && !fullName.trim().isEmpty()) ? fullName : username;
+
+        return String.format(
+                """
+                        Hello %s,
+
+                        Your password for %s has been changed successfully.
+
+                        If you did not make this change, please contact your system administrator immediately.
+
+                        ---
+                        This is an automated notification from %s.
+                        Do not reply to this email. This email is sent from an unattended mailbox.
+                        """,
+                greeting, appName, appName);
+    }
+
+    /**
      * Send Jenkins build success notification.
      * 
      * @param buildNumber the Jenkins build number
