@@ -52,7 +52,7 @@
 
                 <!-- Error messages -->
                 <div th:if="${param.locked}" class="error-message">
-                    Account locked due to too many failed login attempts. Please contact your administrator.
+                    Account locked due to too many failed login attempts. Please use the "Reset Password" link below to reset your password and unlock your account.
                 </div>
                 <div th:if="${param.disabled}" class="error-message">
                     User Account Disabled. Contact support for help.
@@ -72,6 +72,11 @@
                 <!-- Logout success message -->
                 <div th:if="${param.logout}" class="success-message">
                     You have been logged out successfully.
+                </div>
+
+                <!-- Password reset success message -->
+                <div th:if="${param.resetSuccess}" class="success-message">
+                    Password changed successfully! Please log in with your new password.
                 </div>
 
                 <form th:action="@{/login}" method="post">
@@ -97,6 +102,10 @@
                     </div>
 
                     <button type="submit" class="btn-login">Login</button>
+                    
+                    <a href="/reset-password" style="display: block; text-align: center; margin-top: 15px; color: #007bff; text-decoration: none; font-size: 0.9rem;">
+                        Reset Password
+                    </a>
                 </form>
             </div>
         </div>

@@ -167,7 +167,12 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                                 "/access-denied",
-                                                                "/clear-access-denied-session")
+                                                                "/clear-access-denied-session",
+                                                                "/reset-password")
+                                                .permitAll()
+                                                // Allow unauthenticated access to password reset
+                                                // with token
+                                                .requestMatchers("/change-password")
                                                 .permitAll()
                                                 // Health checks
                                                 .requestMatchers("/api/health/**",
