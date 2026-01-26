@@ -53,7 +53,8 @@ public class PasswordChangeController {
             @RequestParam(value = "forced", required = false) String forced,
             @RequestParam(value = "expired", required = false) String expired,
             @RequestParam(value = "token", required = false) String token, Model model,
-            Authentication authentication, HttpSession session) {
+            Authentication authentication, HttpSession session,
+            RedirectAttributes redirectAttributes) {
 
         // Handle password reset via email token (no authentication required)
         if (token != null && !token.isEmpty()) {
@@ -61,8 +62,8 @@ public class PasswordChangeController {
 
             if (emailOpt.isEmpty()) {
                 logger.warn("Invalid or expired password reset token");
-                model.addAttribute("errorMessage",
-                        "Invalid or expired reset link. Please request a new one.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Your password reset link has expired or is invalid. Please request a new one.");
                 return "redirect:/reset-password?error";
             }
 
@@ -71,6 +72,8 @@ public class PasswordChangeController {
 
             if (userOpt.isEmpty()) {
                 logger.error("User not found for email during password reset: {}", email);
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Unable to process password reset. Please contact support.");
                 return "redirect:/reset-password?error";
             }
 
