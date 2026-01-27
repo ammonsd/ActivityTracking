@@ -26,9 +26,9 @@ pipeline {
         // Poll every 5 minutes for changes
         pollSCM('H/5 * * * *')
         
-        // Daily deployment at 4pm (only if there are new builds)
+        // Daily deployments at 8am, 12pm, and 4pm (only if there are new builds)
         // Using H notation to spread load evenly across the hour
-        cron('H 16 * * *')
+        cron('H 8,12,16 * * *')
     }
     
     parameters {
