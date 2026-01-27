@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -53,7 +52,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSendNotificationForExpiringPassword() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User user = createUser("testuser", "test@example.com", expiresIn5Days, userRole);
@@ -73,7 +72,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSendNotificationForPasswordExpiringToday() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
 
         User user = createUser("testuser", "test@example.com", today, userRole);
         user.setFirstname("Test");
@@ -92,7 +91,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldNotSendNotificationForPasswordExpiringBeyond7Days() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn10Days = today.plusDays(10);
 
         User user = createUser("testuser", "test@example.com", expiresIn10Days, userRole);
@@ -110,7 +109,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSkipGuestUsers() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User guestUser = createUser("guest", "guest@example.com", expiresIn5Days, guestRole);
@@ -128,7 +127,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSkipUsersWithoutEmail() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User userNoEmail = createUser("testuser", null, expiresIn5Days, userRole);
@@ -146,7 +145,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSkipDisabledUsers() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User disabledUser = createUser("testuser", "test@example.com", expiresIn5Days, userRole);
@@ -165,7 +164,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldSkipLockedUsers() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate expiresIn5Days = today.plusDays(5);
 
         User lockedUser = createUser("testuser", "test@example.com", expiresIn5Days, userRole);
@@ -199,7 +198,7 @@ class PasswordExpirationNotificationServiceTest {
     @Test
     void shouldHandleMultipleUsers() {
         // Arrange
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
 
         User user1 = createUser("user1", "user1@example.com", today.plusDays(3), userRole);
         User user2 = createUser("user2", "user2@example.com", today.plusDays(7), userRole);
