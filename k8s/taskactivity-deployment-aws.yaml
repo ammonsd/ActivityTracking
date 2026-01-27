@@ -1,0 +1,447 @@
+# Kubernetes Deployment Configuration for Task Activity Management System - AWS EKS
+# This file is specifically configured for AWS EKS deployment with:
+# - AWS Secrets Manager integration via External Secrets Operator
+# - IAM Roles for Service Accounts (IRSA)
+# - AWS S3 storage for receipts
+# - AWS SES for email notifications
+# - AWS RDS for PostgreSQL database
+#
+# Prerequisites:
+# 1. External Secrets Operator installed in cluster
+# 2. IAM roles created with IRSA permissions
+# 3. AWS Secrets Manager secrets created
+# 4. S3 bucket created: taskactivity-receipts-prod
+# 5. SES configured and verified
+# 6. RDS PostgreSQL instance created
+#
+# Author: Dean Ammons
+# Date: January 2026
+
+# 1. Namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: taskactivity
+  labels:
+    name: taskactivity
+    environment: production
+
+# 2. Application configuration (non-sensitive)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskactivity-config
+  namespace: taskactivity
+data:
+  # Spring Profile - AWS profile enables S3, SES, Secrets Manager integration
+  SPRING_PROFILES_ACTIVE: "aws"
+
+  # AWS Configuration
+  AWS_REGION: "us-east-1"
+
+  # CORS Configuration
+  CORS_ALLOWED_ORIGINS: "https://taskactivitytracker.com,https://www.taskactivitytracker.com,https://*.taskactivitytracker.com"
+
+  # Application URLs
+  APP_BASE_URL: "https://taskactivitytracker.com"
+  SWAGGER_SERVER_URL: "https://taskactivitytracker.com"
+
+  # Logging Configuration
+  LOG_LEVEL: "INFO"
+  SECURITY_LOG_LEVEL: "WARN"
+  ENABLE_FILE_LOGGING: "false"
+
+  # Email Configuration
+  MAIL_ENABLED: "true"
+  MAIL_USE_AWS_SDK: "true"
+  MAIL_FROM: "noreply@taskactivitytracker.com"
+  ADMIN_EMAIL: "deanammons@gmail.com"
+
+  # Storage Configuration (AWS S3)
+  STORAGE_TYPE: "s3"
+  STORAGE_S3_BUCKET: "taskactivity-receipts-prod"
+  STORAGE_S3_REGION: "us-east-1"
+
+  # Expense Approvers
+  EXPENSE_APPROVERS: "deanammons@gmail.com"
+
+  # JVM Configuration
+  JAVA_OPTS: "-Xmx768m -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+  # File Upload Configuration (8MB for production)
+  MAX_FILE_SIZE: "8388608"
+
+# 3. External Secrets Store (connects to AWS Secrets Manager)
+---
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: aws-secrets-manager
+  namespace: taskactivity
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: us-east-1
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: taskactivity-service-account
+
+# 4. External Secrets - Database Credentials
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: taskactivity-db-credentials
+  namespace: taskactivity
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: taskactivity-db-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: taskactivity/database/credentials
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: taskactivity/database/credentials
+        property: password
+    - secretKey: jdbcUrl
+      remoteRef:
+        key: taskactivity/database/credentials
+        property: jdbcUrl
+
+# 5. External Secrets - JWT Secret
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: taskactivity-jwt-secret
+  namespace: taskactivity
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: taskactivity-jwt-secret
+    creationPolicy: Owner
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: taskactivity/jwt/secret
+        property: secret
+
+# 6. External Secrets - Admin Credentials
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: taskactivity-admin-credentials
+  namespace: taskactivity
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: taskactivity-admin-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: password
+      remoteRef:
+        key: taskactivity/admin/credentials
+        property: password
+
+# 7. Task Activity application deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskactivity-app
+  namespace: taskactivity
+  labels:
+    app: taskactivity-app
+    version: v1
+    environment: production
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: taskactivity-app
+  template:
+    metadata:
+      labels:
+        app: taskactivity-app
+        version: v1
+        environment: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      serviceAccountName: taskactivity-service-account
+      automountServiceAccountToken: true
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: taskactivity
+          image: 378010131175.dkr.ecr.us-east-1.amazonaws.com/taskactivity:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # Non-sensitive configuration from ConfigMap
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: AWS_REGION
+            - name: CORS_ALLOWED_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: CORS_ALLOWED_ORIGINS
+            - name: APP_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: APP_BASE_URL
+            - name: SWAGGER_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: SWAGGER_SERVER_URL
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: LOG_LEVEL
+            - name: SECURITY_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: SECURITY_LOG_LEVEL
+            - name: ENABLE_FILE_LOGGING
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: ENABLE_FILE_LOGGING
+            - name: MAIL_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: MAIL_ENABLED
+            - name: MAIL_USE_AWS_SDK
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: MAIL_USE_AWS_SDK
+            - name: MAIL_FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: MAIL_FROM
+            - name: ADMIN_EMAIL
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: ADMIN_EMAIL
+            - name: STORAGE_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: STORAGE_TYPE
+            - name: STORAGE_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: STORAGE_S3_BUCKET
+            - name: STORAGE_S3_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: STORAGE_S3_REGION
+            - name: EXPENSE_APPROVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: EXPENSE_APPROVERS
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: JAVA_OPTS
+            - name: MAX_FILE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: taskactivity-config
+                  key: MAX_FILE_SIZE
+
+            # Sensitive configuration from External Secrets (AWS Secrets Manager)
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: taskactivity-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskactivity-db-credentials
+                  key: password
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: taskactivity-db-credentials
+                  key: jdbcUrl
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: taskactivity-jwt-secret
+                  key: secret
+            - name: APP_ADMIN_INITIAL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskactivity-admin-credentials
+                  key: password
+
+          # Health Probes
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 12
+
+          # Resource limits matching ECS task definition
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+              ephemeral-storage: "500Mi"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+              ephemeral-storage: "1Gi"
+
+          # Security Context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+
+# 8. Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskactivity-service
+  namespace: taskactivity
+  labels:
+    app: taskactivity-app
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+spec:
+  type: ClusterIP
+  selector:
+    app: taskactivity-app
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  sessionAffinity: None
+
+# 9. Horizontal Pod Autoscaler
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: taskactivity-hpa
+  namespace: taskactivity
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: taskactivity-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+# 10. Pod Disruption Budget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: taskactivity-pdb
+  namespace: taskactivity
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: taskactivity-app
