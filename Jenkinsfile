@@ -811,11 +811,14 @@ pipeline {
         }
         
         failure {
-            // Send email notification for ALL failures (including syntax errors)
-            // This catches failures that prevent the pipeline from executing
-            emailext(
-                subject: "❌ Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """Build failed for ${env.JOB_NAME}
+            script {
+                // Send email notification for ALL failures (including syntax errors)
+                def notificationEmail = 'deanammons@gmail.com'
+                
+                try {
+                    emailext(
+                        subject: "❌ Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        body: """Build failed for ${env.JOB_NAME}
 
 Build Number: ${env.BUILD_NUMBER}
 Environment: ${params.ENVIRONMENT ?: 'N/A'}
@@ -827,9 +830,14 @@ ${env.BUILD_URL}console
 
 This is an automated notification. Do not reply to this email.
 """,
-                to: "${env.JENKINS_BUILD_NOTIFICATION_EMAIL}",
-                mimeType: 'text/plain'
-            )
+                        to: notificationEmail,
+                        mimeType: 'text/plain'
+                    )
+                    echo "✓ Build failure email notification sent to: ${notificationEmail}"
+                } catch (Exception e) {
+                    echo "⚠ Failed to send email notification: ${e.message}"
+                }
+            }
             
             script {
                 // Skip failure notification if scheduled build was skipped
