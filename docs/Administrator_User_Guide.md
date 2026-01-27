@@ -1659,7 +1659,7 @@ All email addresses are configured via environment variables:
 
 ### Method 1: Update via PowerShell Script (Recommended)
 
-The `update-email-addresses.ps1` script automates updating email addresses from your `.env` file to the AWS ECS task definition.
+The `update-ecs-variables.ps1` script automates updating email addresses and other environment variables from your `.env` file to the AWS ECS task definition.
 
 **Prerequisites:**
 - `.env` file in project root with email configuration
@@ -1681,10 +1681,10 @@ JENKINS_DEPLOY_NOTIFICATION_EMAIL=ops-team@example.com,manager@example.com
 
 ```powershell
 # Update task definition JSON only (no AWS deployment)
-.\aws\update-email-addresses.ps1
+.\aws\update-ecs-variables.ps1
 
 # Update task definition AND deploy to AWS ECS
-.\aws\update-email-addresses.ps1 -DeployToAws
+.\aws\update-ecs-variables.ps1 -DeployToAws
 ```
 
 **What the Script Does:**

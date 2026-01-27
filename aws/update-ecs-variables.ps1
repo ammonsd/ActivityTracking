@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Update email addresses in ECS task definition from .env file.
+    Update email addresses and base URL in ECS task definition from .env file.
 
 .DESCRIPTION
     Reads email configuration from .env file and updates the ECS task definition with the latest
@@ -11,6 +11,7 @@
     • JENKINS_BUILD_NOTIFICATION_EMAIL - Jenkins build notifications
     • JENKINS_DEPLOY_NOTIFICATION_EMAIL - Jenkins deployment notifications
     • JENKINS_DEPLOY_SKIPPED_CHECK - Enable/disable skipped deployment notifications
+    • APP_BASE_URL - Base URL for password reset links and application URLs
     
     SAFETY: The script fetches the CURRENT task definition from AWS ECS (if AWS CLI is available)
     rather than using the local file. This ensures that any changes made directly in ECS are
@@ -32,11 +33,11 @@
     Skip JSON validation after update.
 
 .EXAMPLE
-    .\update-email-addresses.ps1
+    .\update-ecs-variables.ps1
     Fetch current task definition from ECS, update with .env values, save to local file.
 
 .EXAMPLE
-    .\update-email-addresses.ps1 -DeployToAws
+    .\update-ecs-variables.ps1 -DeployToAws
     Fetch from ECS, update with .env values, save locally, and deploy the new task definition.
 
 .NOTES
@@ -118,6 +119,7 @@ $expenseApprovers = $env:EXPENSE_APPROVERS
 $jenkinsBuildEmail = $env:JENKINS_BUILD_NOTIFICATION_EMAIL
 $jenkinsDeployEmail = $env:JENKINS_DEPLOY_NOTIFICATION_EMAIL
 $jenkinsDeploySkippedCheck = $env:JENKINS_DEPLOY_SKIPPED_CHECK
+$appBaseUrl = $env:APP_BASE_URL
 
 # Validate required variables
 $missingVars = @()
@@ -127,6 +129,7 @@ if ([string]::IsNullOrWhiteSpace($expenseApprovers)) { $missingVars += "EXPENSE_
 if ([string]::IsNullOrWhiteSpace($jenkinsBuildEmail)) { $missingVars += "JENKINS_BUILD_NOTIFICATION_EMAIL" }
 if ([string]::IsNullOrWhiteSpace($jenkinsDeployEmail)) { $missingVars += "JENKINS_DEPLOY_NOTIFICATION_EMAIL" }
 if ([string]::IsNullOrWhiteSpace($jenkinsDeploySkippedCheck)) { $missingVars += "JENKINS_DEPLOY_SKIPPED_CHECK" }
+if ([string]::IsNullOrWhiteSpace($appBaseUrl)) { $missingVars += "APP_BASE_URL" }
 
 if ($missingVars.Count -gt 0) {
     Write-Error "Missing required environment variables in .env file: $($missingVars -join ', ')"
@@ -140,6 +143,7 @@ Write-Host "  EXPENSE_APPROVERS: $expenseApprovers" -ForegroundColor Green
 Write-Host "  JENKINS_BUILD_NOTIFICATION_EMAIL: $jenkinsBuildEmail" -ForegroundColor Green
 Write-Host "  JENKINS_DEPLOY_NOTIFICATION_EMAIL: $jenkinsDeployEmail" -ForegroundColor Green
 Write-Host "  JENKINS_DEPLOY_SKIPPED_CHECK: $jenkinsDeploySkippedCheck" -ForegroundColor Green
+Write-Host "  APP_BASE_URL: $appBaseUrl" -ForegroundColor Green
 Write-Host ""
 
 # ========================================
@@ -303,6 +307,19 @@ try {
                 $checked = $true
                 if ($envVar.value -ne $jenkinsDeploySkippedCheck) {
                     $envVar.value = $jenkinsDeploySkippedCheck
+                    $updated = $true
+                } else {
+                    $checkedVars += @{
+                        Name = $envVar.name
+                        Value = $envVar.value
+                        Status = "unchanged"
+                    }
+                }
+            }
+            "APP_BASE_URL" {
+                $checked = $true
+                if ($envVar.value -ne $appBaseUrl) {
+                    $envVar.value = $appBaseUrl
                     $updated = $true
                 } else {
                     $checkedVars += @{
@@ -485,7 +502,7 @@ if ($updatedVars.Count -gt 0) {
     } else {
         Write-Host ""
         Write-Host "To deploy the updated task definition to AWS, run:" -ForegroundColor Yellow
-        Write-Host "  .\update-email-addresses.ps1 -DeployToAws" -ForegroundColor Cyan
+        Write-Host "  .\update-ecs-variables.ps1 -DeployToAws" -ForegroundColor Cyan
     }
 } else {
     Write-Host "✓ No changes needed - all configurations are already current" -ForegroundColor Green

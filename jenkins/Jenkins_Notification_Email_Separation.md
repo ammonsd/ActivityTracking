@@ -25,7 +25,7 @@ app.mail.jenkins-deploy-notification-email=${JENKINS_DEPLOY_NOTIFICATION_EMAIL:d
 
 # Deploy skipped check - Enable/disable skipped deployment notifications (optional)
 # When true, sends email notification when scheduled deployment is skipped (no new builds)
-# Controlled via .env file and update-email-addresses.ps1 script
+# Controlled via .env file and update-ecs-variables.ps1 script
 JENKINS_DEPLOY_SKIPPED_CHECK=${JENKINS_DEPLOY_SKIPPED_CHECK:false}
 ```
 
@@ -263,7 +263,7 @@ pipeline {
 -   **Recipients**: Same as build notifications (`JENKINS_BUILD_NOTIFICATION_EMAIL`) - support team only, not business users
 -   **Frequency**: Only when scheduled deployments are skipped AND `JENKINS_DEPLOY_SKIPPED_CHECK=true`
 -   **Control**: Managed via `.env` file - no Jenkinsfile changes needed
--   **Example**: Set `JENKINS_DEPLOY_SKIPPED_CHECK=true` in `.env`, then run `.\aws\update-email-addresses.ps1 -DeployToAws`
+-   **Example**: Set `JENKINS_DEPLOY_SKIPPED_CHECK=true` in `.env`, then run `.\aws\update-ecs-variables.ps1 -DeployToAws`
 -   **Rationale**: Skipped deployments are operational notifications for the support team, not information business users need
 
 ## Configuration Examples
@@ -296,7 +296,7 @@ JENKINS_DEPLOY_SKIPPED_CHECK=false  # Disable skipped notifications in productio
 
 ### Updating Email Addresses and Settings
 
-All Jenkins notification settings (email addresses and skipped deployment check) are managed through the `.env` file and the `update-email-addresses.ps1` script. **You do NOT need to modify the Jenkinsfile.**
+All Jenkins notification settings (email addresses and skipped deployment check) are managed through the `.env` file and the `update-ecs-variables.ps1` script. **You do NOT need to modify the Jenkinsfile.**
 
 **Step-by-step process:**
 
@@ -312,7 +312,7 @@ All Jenkins notification settings (email addresses and skipped deployment check)
 
     ```powershell
     cd aws
-    .\update-email-addresses.ps1 -DeployToAws
+    .\update-ecs-variables.ps1 -DeployToAws
     ```
 
     This script will:

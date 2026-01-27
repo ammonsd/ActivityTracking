@@ -11,6 +11,7 @@ Common variables that may need updating:
 - `EXPENSE_APPROVERS` - Expense approval notification recipients
 - `JENKINS_BUILD_NOTIFICATION_EMAIL` - Build notification recipients
 - `JENKINS_DEPLOY_NOTIFICATION_EMAIL` - Deployment notification recipients
+- `APP_BASE_URL` - Base URL for password reset links (e.g., https://taskactivitytracker.com)
 - `JWT_EXPIRATION` - JWT token lifetime in milliseconds (default: 30 days)
 
 ## Method 1: AWS Console (Recommended for Simple Updates)
@@ -63,7 +64,33 @@ Common variables that may need updating:
 
 The service will restart with the new environment variables.
 
-## Method 2: AWS CLI (Automated)
+## Method 2: PowerShell Script (Recommended for Routine Updates)
+
+### Using update-ecs-variables.ps1
+
+The `update-ecs-variables.ps1` script automates updating environment variables from the `.env` file:
+
+```powershell
+# Update local task definition file only
+.\aws\update-ecs-variables.ps1
+
+# Update and deploy to AWS ECS
+.\aws\update-ecs-variables.ps1 -DeployToAws
+```
+
+**What it updates:**
+- `MAIL_FROM`, `ADMIN_EMAIL`, `EXPENSE_APPROVERS`
+- `JENKINS_BUILD_NOTIFICATION_EMAIL`, `JENKINS_DEPLOY_NOTIFICATION_EMAIL`, `JENKINS_DEPLOY_SKIPPED_CHECK`
+- `APP_BASE_URL`
+
+**⚠️ IMPORTANT LIMITATION:** This script only **updates existing** environment variables in AWS. If you're adding a **NEW** variable that doesn't exist in the AWS task definition yet, you must use Method 3 below to manually register it first.
+
+## Method 3: AWS CLI (Manual Registration)
+
+### When to Use This Method
+- **Adding NEW environment variables** that don't exist in AWS yet
+- The `update-ecs-variables.ps1` script reports "no changes" but the variable is missing in AWS
+- Making complex changes beyond what the automated script handles
 
 ### Prerequisites
 
@@ -72,7 +99,32 @@ Ensure you have AWS CLI configured with appropriate permissions:
 aws configure list
 ```
 
-### Script to Update Environment Variables
+### Steps to Add or Update Variables
+
+```powershell
+# Step 1: Register the updated local task definition to AWS
+cd aws
+aws ecs register-task-definition `
+    --cli-input-json file://taskactivity-task-definition.json `
+    --region us-east-1 `
+    --query 'taskDefinition.revision'
+# Note the revision number returned (e.g., 327)
+
+# Step 2: Update service to use the new revision
+aws ecs update-service `
+    --cluster taskactivity-cluster `
+    --service taskactivity-service `
+    --task-definition taskactivity:327 `
+    --force-new-deployment `
+    --region us-east-1 `
+    --query 'service.taskDefinition'
+```
+
+**Replace `327`** with the revision number from Step 1.
+
+### Alternative: Manual JSON Editing
+
+If you need to make changes not in the local file:
 
 ```powershell
 # Step 1: Get current task definition
@@ -81,7 +133,7 @@ aws ecs describe-task-definition `
     --region us-east-1 `
     --query 'taskDefinition' > current-task-def.json
 
-# Step 2: Edit current-task-def.json manually to update environment variables
+# Step 2: Edit current-task-def.json manually to add/update environment variables
 
 # Step 3: Register new task definition
 aws ecs register-task-definition `
@@ -91,7 +143,7 @@ aws ecs register-task-definition `
 # Step 4: Update service to use new revision
 aws ecs update-service `
     --cluster taskactivity-cluster `
-    --service taskactivity `
+    --service taskactivity-service `
     --task-definition taskactivity `
     --force-new-deployment `
     --region us-east-1
