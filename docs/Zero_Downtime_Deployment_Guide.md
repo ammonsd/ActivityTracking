@@ -249,31 +249,67 @@ aws cloudwatch put-metric-alarm `
 
 ## Cost Analysis
 
-### Current Cost (1 Task)
+### Understanding ECS Fargate Pricing
 
-- CPU: 512 units (0.5 vCPU) = $0.04048/hour
-- Memory: 1024 MB (1 GB) = $0.004445/hour
-- **Total:** ~$0.0449/hour × 720 hours/month = **~$32.33/month**
+**AWS Fargate Pricing (us-east-1):**
+- CPU: $0.04048 per vCPU per hour
+- Memory: $0.004445 per GB per hour
 
-### New Cost (2 Tasks)
+**Current Task Configuration:**
+- CPU: 512 units (0.5 vCPU)
+- Memory: 1024 MB (1 GB)
 
-- **Total:** ~$0.0449/hour × 2 tasks × 720 hours/month = **~$64.66/month**
+### Theoretical Cost Calculation (24/7 Operation)
 
-### Additional Monthly Cost
+**If running continuously (720 hours/month):**
 
-- **Increase:** ~$32.33/month (~$388/year)
-- **Cost per deployment:** ~$1.08/day for reliable, zero-downtime updates
+**1 Task (Current):**
+- CPU cost: 0.5 vCPU × $0.04048 × 720 hours = $14.57/month
+- Memory cost: 1 GB × $0.004445 × 720 hours = $3.20/month
+- **Theoretical Total: ~$17.77/month**
 
-### Cost Optimization Option (If Needed)
+**2 Tasks (Recommended):**
+- **Theoretical Total: ~$35.54/month** (2 × $17.77)
+- **Additional cost: ~$17.77/month** (~$213/year)
 
-If cost is a concern, consider reducing task size when scaling to 2:
+### Actual Cost vs. Theoretical
+
+**Your Reported Actual Costs:**
+- Last month: $18.69
+- Current month: $14.99
+
+**Why Your Costs Match the Theory:**
+Your actual costs ($15-19/month) align closely with the theoretical calculation for 1 task running 24/7 (~$17.77/month). The small variations are likely due to:
+- Partial month billing
+- Task restarts during deployments (brief periods with 2 tasks)
+- Slight differences in actual runtime hours
+- AWS billing rounding
+
+### Expected Cost with 2 Tasks
+
+Based on your actual usage pattern:
+
+**Current (1 Task):** ~$15-19/month actual  
+**With 2 Tasks:** ~$30-38/month expected  
+**Additional Cost:** ~$15-19/month (~$180-228/year)
+
+This is **significantly lower** than the original estimate in this document, which incorrectly used higher pricing figures.
+
+### Cost per Deployment
+
+With 2 tasks running 24/7:
+- Monthly cost: ~$35/month
+- Daily cost: ~$1.17/day
+- **Cost per deployment:** ~$0.39 per deployment (3 deployments/day)
+
+### Cost Optimization Options
+
+If cost is still a concern, you can reduce task size:
 
 **Option: 256 CPU / 512 MB per task**
-
-- Per task: ~$0.0225/hour
-- 2 tasks: ~$32.40/month (vs $64.66 for current size)
-- **Savings:** 50% on compute costs
-- **Trade-off:** Slightly reduced performance headroom per task, but 2 tasks provide redundancy
+- Per task: ~$8.88/month
+- 2 tasks: ~$17.76/month (similar to current 1 task cost!)
+- **Trade-off:** Less performance headroom per task
 
 To implement:
 
@@ -285,6 +321,19 @@ To implement:
     ParameterKey=TaskMemory,ParameterValue=512 `
     # ... other parameters
 ```
+
+### Additional AWS Costs to Consider
+
+Your total AWS bill includes more than just ECS Fargate:
+- **RDS Database:** ~$15-30/month (db.t3.micro)
+- **Application Load Balancer:** ~$16-22/month (if used)
+- **NAT Gateway:** ~$32/month (if used)
+- **S3 Storage:** ~$1-5/month (receipts bucket)
+- **Secrets Manager:** ~$0.40-1.20/month (3 secrets)
+- **CloudWatch Logs:** ~$0.50-2/month
+- **Data Transfer:** Variable based on usage
+
+**Note:** The ECS costs mentioned above are ONLY for the Fargate compute. Your full AWS bill will be higher due to these other services.
 
 ---
 
