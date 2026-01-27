@@ -57,6 +57,10 @@ With **2 tasks:**
 
 ### Step 1: Update CloudFormation Stack
 
+You can update the ECS service to 2 tasks using either the AWS CLI or the AWS Console.
+
+#### Option A: Using AWS CLI (PowerShell)
+
 Run the following command to update the ECS service to 2 tasks:
 
 ```powershell
@@ -114,6 +118,55 @@ aws ecs describe-services `
     }
 }
 ```
+
+#### Option B: Using AWS Console
+
+If you don't have CLI permissions or prefer the console:
+
+1. **Open CloudFormation Console**
+   - Navigate to: https://console.aws.amazon.com/cloudformation
+   - Select your region: **US East (N. Virginia) us-east-1**
+
+2. **Locate Your Stack**
+   - Find stack named: `taskactivity-production` (or your stack name)
+   - Click on the stack name to open it
+
+3. **Update Stack**
+   - Click **Update** button (top right)
+   - Select **Use current template**
+   - Click **Next**
+
+4. **Update Parameters**
+   - Scroll to find **DesiredCount** parameter
+   - Change value from `1` to `2`
+   - Leave all other parameters unchanged
+   - Click **Next**
+
+5. **Configure Stack Options**
+   - Leave all options as-is (don't change anything)
+   - Click **Next**
+
+6. **Review and Update**
+   - Review the changes (should show DesiredCount: 1 → 2)
+   - Check the box: **I acknowledge that AWS CloudFormation might create IAM resources**
+   - Click **Submit** (or **Update stack**)
+
+7. **Monitor Stack Update**
+   - Watch the **Events** tab for progress
+   - Wait for status to change from `UPDATE_IN_PROGRESS` to `UPDATE_COMPLETE`
+   - This typically takes 3-5 minutes
+
+8. **Verify ECS Service**
+   - Navigate to: https://console.aws.amazon.com/ecs
+   - Click **Clusters** → `taskactivity-cluster`
+   - Click **Services** → `taskactivity-service`
+   - Under **Deployments and events**, verify:
+     - **Desired tasks**: 2
+     - **Running tasks**: 2
+   - Under **Deployment configuration**, verify:
+     - **Minimum healthy percent**: 100
+     - **Maximum percent**: 200
+     - **Deployment circuit breaker**: Enabled
 
 ### Step 2: Verify Health Checks
 
@@ -300,6 +353,134 @@ Use Jenkins "Rollback" action to deploy previous task definition:
 2. Select "Build with Parameters"
 3. Set `DEPLOY_ACTION` to `rollback`
 4. Click "Build"
+
+---
+
+## Required IAM Permissions
+
+If you encounter permission errors when using the AWS CLI or Console, ensure your IAM user/role has the following permissions.
+
+### Minimum Required Permissions
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "CloudFormationStackUpdate",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:UpdateStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:GetTemplate"
+            ],
+            "Resource": "arn:aws:cloudformation:us-east-1:378010131175:stack/taskactivity-*/*"
+        },
+        {
+            "Sid": "ECSServiceUpdate",
+            "Effect": "Allow",
+            "Action": [
+                "ecs:DescribeServices",
+                "ecs:UpdateService",
+                "ecs:DescribeClusters",
+                "ecs:DescribeTasks"
+            ],
+            "Resource": [
+                "arn:aws:ecs:us-east-1:378010131175:cluster/taskactivity-cluster",
+                "arn:aws:ecs:us-east-1:378010131175:service/taskactivity-cluster/taskactivity-service"
+            ]
+        },
+        {
+            "Sid": "PassRoleForECS",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": [
+                "arn:aws:iam::378010131175:role/ecsTaskRole",
+                "arn:aws:iam::378010131175:role/ecsTaskExecutionRole"
+            ]
+        }
+    ]
+}
+```
+
+### How to Add Permissions via AWS Console
+
+If you need to grant these permissions to a user or role:
+
+#### For IAM Users:
+
+1. **Navigate to IAM**
+   - Go to: https://console.aws.amazon.com/iam
+   - Click **Users** in the left sidebar
+
+2. **Select User**
+   - Find and click on the username that needs permissions
+   - Click **Add permissions** → **Create inline policy**
+
+3. **Create Policy**
+   - Click **JSON** tab
+   - Paste the permission JSON above
+   - Update the AWS account ID (`378010131175`) if different
+   - Click **Review policy**
+
+4. **Name and Create**
+   - Policy name: `TaskActivityDeploymentPermissions`
+   - Description: `Permissions to update TaskActivity CloudFormation stack and ECS service`
+   - Click **Create policy**
+
+#### For IAM Roles:
+
+1. **Navigate to IAM Roles**
+   - Go to: https://console.aws.amazon.com/iam
+   - Click **Roles** in the left sidebar
+
+2. **Select Role**
+   - Find and click on the role name
+   - Click **Add permissions** → **Create inline policy**
+
+3. **Create Policy** (same as above)
+   - Click **JSON** tab
+   - Paste the permission JSON
+   - Click **Review policy**
+   - Name: `TaskActivityDeploymentPermissions`
+   - Click **Create policy**
+
+### Alternative: Use Existing AWS Managed Policies
+
+If inline policies are too restrictive, you can use AWS managed policies (less secure, broader permissions):
+
+- **CloudFormation:** `AWSCloudFormationFullAccess` or `PowerUserAccess`
+- **ECS:** `AmazonECS_FullAccess`
+
+**To attach managed policies:**
+
+1. Go to IAM → Users (or Roles)
+2. Select the user/role
+3. Click **Add permissions** → **Attach policies directly**
+4. Search for and select the policy
+5. Click **Add permissions**
+
+### Verify Your Permissions
+
+After granting permissions, test them:
+
+**CLI Test:**
+```powershell
+# Test CloudFormation access
+aws cloudformation describe-stacks --stack-name taskactivity-production
+
+# Test ECS access
+aws ecs describe-services `
+    --cluster taskactivity-cluster `
+    --services taskactivity-service
+```
+
+**Console Test:**
+- Try accessing CloudFormation console and viewing your stack
+- Try accessing ECS console and viewing your service
+
+If you can view these resources, you have the minimum read permissions. Try updating the stack to verify write permissions.
 
 ---
 
