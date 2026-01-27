@@ -28,7 +28,7 @@ pipeline {
         
         // Daily deployments at 8am, 12pm, and 4pm (only if there are new builds)
         // Using H notation to spread load evenly across the hour
-        cron('H 8,12,16 * * *')
+        cron('8,12,16 * * *')
     }
     
     parameters {
