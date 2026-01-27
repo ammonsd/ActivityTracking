@@ -898,12 +898,16 @@
                     Task Activity System | Built using Spring Boot
                 </p>
                 <p style="margin-top: 10px; opacity: 0.8">
-                    &copy; 2025-2026 | Version 1.2 | Author: Dean Ammons
+                    &copy; 2025-<span id="year"></span> | Version 1.2 | Author: Dean Ammons
                 </p>
             </footer>
         </div>
 
         <!-- Privacy-Friendly Visitor Counter -->
         <script src="./visit-tracker.js"></script>
+        <script>
+            document.getElementById("year").textContent = new Date().getFullYear();
+        </script>
+
     </body>
 </html>
