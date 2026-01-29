@@ -620,18 +620,6 @@
                     </div>
                     
                     <ul class="sidebar-menu-list">
-                        <!-- Update Profile - visible for all, disabled for GUEST -->
-                        <li>
-                            <a 
-                                th:href="${isGuest} ? '#' : @{/profile/edit}"
-                                title="Update Profile"
-                                th:classappend="${isGuest} ? 'disabled' : ''"
-                                th:onclick="${isGuest} ? 'event.preventDefault(); return false;' : ''"
-                            >
-                                <span class="menu-icon">👤</span>
-                                <span>Update Profile</span>
-                            </a>
-                        </li>
                         <!-- Export CSV - visible for all, disabled for GUEST -->
                         <li th:if="${userHasEmail}">
                             <button 

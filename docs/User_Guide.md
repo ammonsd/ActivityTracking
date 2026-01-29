@@ -56,7 +56,8 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 - **👤 Update Profile**: Access your profile to update your information and password
 - **👥 Manage Users** (Admin only): Manage user accounts
-- **📊 Guest Activity** (Admin only): View guest user activity reports
+- **� Manage Roles** (Admin only): Manage user roles and permissions
+- **�📊 Guest Activity** (Admin only): View guest user activity reports
 - **🔧 Manage Dropdowns** (Admin only): Configure dropdown options for clients, projects, and phases
 - **📋 Export CSV**: Export filtered task list to CSV format
 
@@ -556,10 +557,9 @@ The Expense List page includes a **floating sidebar menu** for quick access to e
 
 **Menu Items:**
 
-- **� Update Profile**: Access your profile to update your information and password
 - **📋 Export CSV**: Export filtered expense list to CSV format (read-only for Guest users)
 
-**Note:** Guest users can see the menu but Update Profile and Export CSV options will be disabled.
+**Note:** Guest users can see the menu but Export CSV option will be disabled.
 
 ### Filtering Expenses
 

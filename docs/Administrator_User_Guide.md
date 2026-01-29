@@ -145,7 +145,7 @@ The system provides four pre-configured roles with different permission levels:
 **Custom Roles:**
 
 Administrators can create additional roles as needed:
-- Navigate to "Manage Roles & Permissions" from the header
+- Navigate to "Manage Roles" from the Task Activity List sidebar menu or "Manage Roles & Permissions" from the Role Management page header
 - Click "Add Role" to create a new custom role
 - Assign specific permissions based on organizational requirements
 - Examples: "PROJECT_MANAGER", "FINANCE_VIEWER", "READ_ONLY_ADMIN"
@@ -195,7 +195,9 @@ The system features a **database-driven authorization system** that allows admin
 
 #### Accessing Role Management
 
-1. **Navigate to Role Management**: Click **"Manage Roles & Permissions"** from the header (ADMIN only)
+1. **Navigate to Role Management**: 
+   - Option 1: Click **"☰"** to open the Task Activity List sidebar menu, then click **"🔐 Manage Roles"** (ADMIN only)
+   - Option 2: From within the Role Management page, use the **"Task Activity List"** button in the header to navigate
 2. **View All Roles**: See a list of all roles with their descriptions and assigned permissions
 
 #### Understanding the Permission Model
@@ -253,7 +255,7 @@ Four default roles are provided:
 
 #### Creating Custom Roles
 
-1. **Access Role Management**: Click "Manage Roles & Permissions" from header
+1. **Access Role Management**: Click **"🔐 Manage Roles"** from the Task Activity List sidebar menu
 2. **Click "Add Role"**: Opens the role creation form
 3. **Enter Role Details**:
    - **Role Name**: Unique identifier (e.g., "PROJECT_MANAGER", "FINANCE_VIEWER")

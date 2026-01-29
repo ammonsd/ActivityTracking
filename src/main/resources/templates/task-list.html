@@ -648,6 +648,13 @@
                                 <span>Manage Users</span>
                             </a>
                         </li>
+                        <!-- Manage Roles - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a th:href="@{/task-activity/manage-roles}" title="Manage Roles and Permissions">
+                                <span class="menu-icon">🔐</span>
+                                <span>Manage Roles</span>
+                            </a>
+                        </li>
                         <!-- Guest Activity - ADMIN only -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
                             <a th:href="@{/task-activity/manage-users/guest-activity}" title="Guest Activity Report">
