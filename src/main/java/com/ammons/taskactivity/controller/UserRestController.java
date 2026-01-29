@@ -3,6 +3,7 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.dto.UserDto;
+import com.ammons.taskactivity.dto.UserEditDto;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.security.RequirePermission;
@@ -13,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST API Controller for User Management Used by Angular frontend
@@ -80,14 +80,24 @@ public class UserRestController {
      * Get current user's full profile (for editing). Returns the complete user entity for profile
      * editing.
      * 
+     * Accessible by USER and ADMIN roles only. GUEST users are blocked.
+     * 
      * @param authentication the authenticated user making the request
      * @return ResponseEntity containing the user's complete profile
      */
-    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<User>> getCurrentUserProfile(Authentication authentication) {
         String username = authentication.getName();
         logger.debug("REST API: Getting profile for user: {}", username);
+
+        // Block GUEST users from accessing profile
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+            logger.warn("GUEST user '{}' attempted to access profile", username);
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Guest users cannot access profile settings"));
+        }
+
         return userService.getUserByUsername(username)
                 .map(user -> ResponseEntity.ok(ApiResponse.success("Profile retrieved", user)))
                 .orElse(ResponseEntity.notFound().build());
@@ -98,28 +108,44 @@ public class UserRestController {
      * firstname, lastname, company, email. Role and other security-related fields cannot be
      * modified.
      * 
-     * @param updatedUser the user entity containing updated profile data
+     * Accessible by USER and ADMIN roles only. GUEST users are blocked.
+     * 
+     * @param profileUpdate the DTO containing updated profile data
      * @param authentication the authenticated user making the request
      * @return ResponseEntity containing the updated user profile
      */
-    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<User>> updateCurrentUserProfile(@RequestBody User updatedUser,
+    public ResponseEntity<ApiResponse<User>> updateCurrentUserProfile(
+            @RequestBody UserEditDto profileUpdate,
             Authentication authentication) {
         String username = authentication.getName();
         logger.debug("REST API: Updating profile for user: {}", username);
 
-        return userService.getUserByUsername(username).map(existingUser -> {
-            // Non-admin users can only update specific fields
-            existingUser.setFirstname(updatedUser.getFirstname());
-            existingUser.setLastname(updatedUser.getLastname());
-            existingUser.setCompany(updatedUser.getCompany());
-            existingUser.setEmail(updatedUser.getEmail());
+        // Block GUEST users from updating profile
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+            logger.warn("GUEST user '{}' attempted to update profile", username);
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Guest users cannot modify profile settings"));
+        }
 
-            User savedUser = userService.updateUser(existingUser);
-            return ResponseEntity
-                    .ok(ApiResponse.success("Profile updated successfully", savedUser));
-        }).orElse(ResponseEntity.notFound().build());
+        try {
+            return userService.getUserByUsername(username).map(existingUser -> {
+                // Non-admin users can only update specific profile fields
+                existingUser.setFirstname(profileUpdate.getFirstname());
+                existingUser.setLastname(profileUpdate.getLastname());
+                existingUser.setCompany(profileUpdate.getCompany());
+                existingUser.setEmail(profileUpdate.getEmail());
+
+                User savedUser = userService.updateUser(existingUser);
+                return ResponseEntity
+                        .ok(ApiResponse.success("Profile updated successfully", savedUser));
+            }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        } catch (Exception e) {
+            logger.error("Error updating profile for user {}: {}", username, e.getMessage(), e);
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Error updating profile: " + e.getMessage()));
+        }
     }
 
     /**

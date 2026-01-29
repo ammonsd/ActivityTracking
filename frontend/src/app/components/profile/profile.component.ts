@@ -60,14 +60,10 @@ export class ProfileComponent implements OnInit {
     // Use the dedicated profile endpoint
     this.userService.getCurrentUserProfile().subscribe({
       next: (response) => {
-        console.log('Profile loaded successfully:', response);
         this.currentUser = response.data || null;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading profile:', error);
-        console.error('Error status:', error.status);
-        console.error('Error message:', error.message);
         this.snackBar.open(
           'Failed to load profile: ' + (error.error?.message || error.message),
           'Close',
@@ -87,19 +83,30 @@ export class ProfileComponent implements OnInit {
 
     this.loading = true;
 
+    // Create a DTO with only the fields that can be updated
+    // Extract role name as string (backend returns role as object but expects string)
+    const profileUpdate = {
+      id: this.currentUser.id,
+      username: this.currentUser.username,
+      firstname: this.currentUser.firstname,
+      lastname: this.currentUser.lastname,
+      company: this.currentUser.company,
+      email: this.currentUser.email,
+      role: typeof this.currentUser.role === 'string' 
+        ? this.currentUser.role 
+        : (this.currentUser.role as any)?.name || (this.currentUser.role as any)?.roleName || 'ROLE_USER',
+      enabled: this.currentUser.enabled,
+    };
+
     // Use the dedicated profile update endpoint
-    this.userService.updateCurrentUserProfile(this.currentUser).subscribe({
+    this.userService.updateCurrentUserProfile(profileUpdate as User).subscribe({
       next: (response) => {
-        console.log('Profile updated successfully:', response);
         this.loading = false;
         this.snackBar.open('Profile updated successfully', 'Close', {
           duration: 3000,
         });
       },
       error: (error) => {
-        console.error('Error updating profile:', error);
-        console.error('Error status:', error.status);
-        console.error('Error message:', error.message);
         this.loading = false;
         this.snackBar.open(
           'Failed to update profile: ' +
@@ -107,7 +114,7 @@ export class ProfileComponent implements OnInit {
           'Close',
           {
             duration: 5000,
-          }
+          },
         );
       },
     });

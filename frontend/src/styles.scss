@@ -25,3 +25,17 @@ body {
     'GRAD' 0,
     'opsz' 24;
 }
+
+/* Snackbar styling for error messages */
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+  
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+  
+  .mat-mdc-button {
+    color: white !important;
+  }
+}

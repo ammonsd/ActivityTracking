@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -75,6 +76,29 @@ public class RestExceptionHandler {
 
         ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
         return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * Handle DataIntegrityViolationException - database constraint violations (e.g., duplicate
+     * entries)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex) {
+
+        logger.warn("Data integrity violation: {}", ex.getMessage());
+
+        // Provide a user-friendly message for duplicate task entries
+        String errorMessage =
+                "A task with the same date, client, project, phase, and details already exists.";
+
+        // Check if it's a different type of constraint violation
+        if (ex.getMessage() != null && !ex.getMessage().toLowerCase().contains("duplicate")) {
+            errorMessage = "Database constraint violation. Please check your input and try again.";
+        }
+
+        ApiResponse<Void> response = ApiResponse.error(errorMessage);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     /**

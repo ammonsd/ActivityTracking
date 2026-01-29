@@ -23,6 +23,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TaskActivityService } from '../../services/task-activity.service';
 import { AuthService } from '../../services/auth.service';
 import { TaskActivity } from '../../models/task-activity.model';
@@ -48,6 +49,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
     MatSidenavModule,
     MatListModule,
     MatTooltipModule,
+    MatSnackBarModule,
   ],
   template: `
     <div class="task-list-wrapper">
@@ -248,7 +250,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               <ng-container matColumnDef="taskDate">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
                 <td mat-cell *matCellDef="let task">
-                  {{ task.taskDate | date : 'M/d/yy' }}
+                  {{ task.taskDate | date: 'M/d/yy' }}
                 </td>
               </ng-container>
 
@@ -658,7 +660,8 @@ export class TaskListComponent implements OnInit {
     private readonly taskService: TaskActivityService,
     private readonly authService: AuthService,
     private readonly dialog: MatDialog,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -807,7 +810,7 @@ export class TaskListComponent implements OnInit {
         projectFilter,
         phaseFilter,
         startDateStr,
-        endDateStr
+        endDateStr,
       )
       .subscribe({
         next: (response) => {
@@ -916,14 +919,22 @@ export class TaskListComponent implements OnInit {
 
             let errorMessage = 'Failed to create task. ';
             if (err.status === 403) {
-              errorMessage += 'You do not have permission to create tasks.';
+              errorMessage = 'You do not have permission to create tasks.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate task
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to create task. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar'],
+            });
           },
         });
       }
@@ -966,14 +977,22 @@ export class TaskListComponent implements OnInit {
 
             let errorMessage = 'Failed to clone task. ';
             if (err.status === 403) {
-              errorMessage += 'You do not have permission to create tasks.';
+              errorMessage = 'You do not have permission to create tasks.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate task
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to clone task. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar'],
+            });
           },
         });
       }
@@ -1002,16 +1021,24 @@ export class TaskListComponent implements OnInit {
 
             let errorMessage = 'Failed to update task. ';
             if (err.status === 403) {
-              errorMessage += 'You do not have permission to update this task.';
+              errorMessage = 'You do not have permission to update this task.';
             } else if (err.status === 404) {
-              errorMessage += 'The task no longer exists.';
+              errorMessage = 'The task no longer exists.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate task
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to update task. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar'],
+            });
           },
         });
       }
@@ -1038,7 +1065,20 @@ export class TaskListComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error deleting task:', err);
-            alert('Failed to delete task. You may not have permission.');
+            let errorMessage: string;
+            if (err.status === 403) {
+              errorMessage = 'You do not have permission to delete this task.';
+            } else if (err.error?.message) {
+              errorMessage = err.error.message;
+            } else {
+              errorMessage = 'Failed to delete task. Please try again.';
+            }
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar'],
+            });
           },
         });
       }

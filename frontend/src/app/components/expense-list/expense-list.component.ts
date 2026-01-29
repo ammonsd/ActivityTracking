@@ -337,14 +337,22 @@ export class ExpenseListComponent implements OnInit {
 
             let errorMessage = 'Failed to create expense. ';
             if (err.status === 403) {
-              errorMessage += 'You do not have permission to create expenses.';
+              errorMessage = 'You do not have permission to create expenses.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate expense
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to create expense. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
           },
         });
       }
@@ -393,14 +401,22 @@ export class ExpenseListComponent implements OnInit {
 
             let errorMessage = 'Failed to clone expense. ';
             if (err.status === 403) {
-              errorMessage += 'You do not have permission to create expenses.';
+              errorMessage = 'You do not have permission to create expenses.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate expense
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to clone expense. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
           },
         });
       }
@@ -429,17 +445,25 @@ export class ExpenseListComponent implements OnInit {
 
             let errorMessage = 'Failed to update expense. ';
             if (err.status === 403) {
-              errorMessage +=
+              errorMessage =
                 'You do not have permission to update this expense.';
             } else if (err.status === 404) {
-              errorMessage += 'The expense no longer exists.';
+              errorMessage = 'The expense no longer exists.';
+            } else if (err.status === 409 && err.error?.message) {
+              // 409 Conflict - likely a duplicate expense
+              errorMessage = err.error.message;
             } else if (err.error?.message) {
-              errorMessage += err.error.message;
+              errorMessage = err.error.message;
             } else {
-              errorMessage += 'Please try again.';
+              errorMessage = 'Failed to update expense. Please try again.';
             }
 
-            alert(errorMessage);
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
           },
         });
       }
@@ -466,7 +490,20 @@ export class ExpenseListComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error deleting expense:', err);
-            alert('Failed to delete expense. You may not have permission.');
+            let errorMessage: string;
+            if (err.status === 403) {
+              errorMessage = 'You do not have permission to delete this expense.';
+            } else if (err.error?.message) {
+              errorMessage = err.error.message;
+            } else {
+              errorMessage = 'Failed to delete expense. Please try again.';
+            }
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
           },
         });
       }
