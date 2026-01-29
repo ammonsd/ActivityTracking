@@ -1,7 +1,6 @@
 package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.entity.User;
-import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -154,11 +152,19 @@ class UserRestControllerIntegrationTest {
         @WithUserDetails("testuser")
         @DisplayName("User should update own profile")
         void userShouldUpdateOwnProfile() throws Exception {
-            User updates = new User();
-            updates.setEmail("newemail@example.com");
-            updates.setUsername(testUser.getUsername());
-            updates.setFirstname(testUser.getFirstname());
-            updates.setLastname(testUser.getLastname());
+            // Create a DTO-compatible update object
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("id", testUser.getId());
+            updates.put("username", testUser.getUsername());
+            updates.put("firstname", testUser.getFirstname());
+            updates.put("lastname", testUser.getLastname());
+            updates.put("company", testUser.getCompany());
+            updates.put("email", "newemail@example.com");
+            updates.put("role", "ROLE_USER");
+            updates.put("enabled", true);
+            updates.put("forcePasswordUpdate", false);
+            updates.put("accountLocked", false);
+            updates.put("failedLoginAttempts", 0);
 
             mockMvc.perform(put("/api/users/profile").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updates))).andExpect(status().isOk())
@@ -233,12 +239,23 @@ class UserRestControllerIntegrationTest {
         @WithUserDetails("guest")
         @DisplayName("Guest should not update profiles")
         void guestShouldNotUpdateProfiles() throws Exception {
-            User updates = new User();
-            updates.setFirstname("Hacker");
+            // Create a DTO-compatible update object
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("id", 1L);
+            updates.put("username", "guest");
+            updates.put("firstname", "Hacker");
+            updates.put("lastname", "Guest");
+            updates.put("company", "Test");
+            updates.put("email", "guest@example.com");
+            updates.put("role", "ROLE_GUEST");
+            updates.put("enabled", true);
+            updates.put("forcePasswordUpdate", false);
+            updates.put("accountLocked", false);
+            updates.put("failedLoginAttempts", 0);
 
             mockMvc.perform(put("/api/users/profile").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updates)))
-                    .andExpect(status().isForbidden()); // Guest doesn't have USER_MANAGEMENT:UPDATE
+                    .andExpect(status().isForbidden()); // Guest role is explicitly blocked
         }
 
         // Email format validation is not currently implemented in the application
