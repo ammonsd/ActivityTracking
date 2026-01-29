@@ -83,7 +83,7 @@ export class ProfileComponent implements OnInit {
 
     this.loading = true;
 
-    // Create a DTO with only the fields that can be updated
+    // Create a DTO with only the fields that UserEditDto expects
     // Extract role name as string (backend returns role as object but expects string)
     const profileUpdate = {
       id: this.currentUser.id,
@@ -96,6 +96,9 @@ export class ProfileComponent implements OnInit {
         ? this.currentUser.role 
         : (this.currentUser.role as any)?.name || (this.currentUser.role as any)?.roleName || 'ROLE_USER',
       enabled: this.currentUser.enabled,
+      forcePasswordUpdate: this.currentUser.forcePasswordUpdate || false,
+      accountLocked: this.currentUser.accountLocked || false,
+      failedLoginAttempts: this.currentUser.failedLoginAttempts || 0,
     };
 
     // Use the dedicated profile update endpoint
