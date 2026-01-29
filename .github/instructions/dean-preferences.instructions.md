@@ -64,6 +64,29 @@ For complex multi-step tasks (especially large documentation updates, architectu
 - Ensure changes follow project conventions and instruction files
 - Apply appropriate code attribution (author, date) per project standards
 
+### Java Code Changes
+
+**MANDATORY:** All Java code changes must be compiled and tested before considering the work complete.
+
+- After making Java code changes, always run: `.\mvnw.cmd clean test -DskipFrontend` or target specific test class
+- Verify compilation succeeds (BUILD SUCCESS)
+- Ensure all tests pass (0 failures, 0 errors)
+- Address any compilation errors or test failures immediately
+- Do not mark work as complete until tests pass
+- For changes affecting tests, run the relevant test suite to confirm fixes
+
+**Compilation Command Examples:**
+```bash
+# Full test suite (skip frontend build)
+.\mvnw.cmd clean test -DskipFrontend
+
+# Specific test class
+.\mvnw.cmd clean test -Dtest=UserRestControllerIntegrationTest -DskipFrontend
+
+# Compile only (faster, no tests)
+.\mvnw.cmd clean compile -DskipTests
+```
+
 ## File and Path Management
 
 ### Path Handling
