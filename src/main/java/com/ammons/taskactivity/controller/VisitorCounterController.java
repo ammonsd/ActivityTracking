@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +21,8 @@ import java.util.Map;
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
 public class VisitorCounterController {
+
+    private static final LocalDateTime STARTUP_TIME = LocalDateTime.now();
 
     private final VisitorCounterService visitorCounterService;
 
@@ -67,10 +70,18 @@ public class VisitorCounterController {
     /**
      * Get all page visit counts. Useful for analytics and monitoring.
      *
-     * @return JSON map of all page names and their visit counts
+     * @return JSON map of all page names and their visit counts, plus startup time
      */
     @GetMapping("/visit/stats")
-    public ResponseEntity<Map<String, Long>> getAllStats() {
-        return ResponseEntity.ok(visitorCounterService.getAllCounts());
+    public ResponseEntity<Map<String, Object>> getAllStats() {
+        Map<String, Object> response = new HashMap<>();
+
+        // Add all page counts
+        visitorCounterService.getAllCounts().forEach(response::put);
+
+        // Add startup time as the last entry
+        response.put("startupTime", STARTUP_TIME);
+
+        return ResponseEntity.ok(response);
     }
 }
