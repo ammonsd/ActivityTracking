@@ -697,6 +697,16 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
+                        <!-- React Admin Dashboard - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a 
+                                href="http://localhost:4201"
+                                title="React Admin Dashboard (Development)"
+                            >
+                                <span class="menu-icon">🎯</span>
+                                <span>Admin Dashboard</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
