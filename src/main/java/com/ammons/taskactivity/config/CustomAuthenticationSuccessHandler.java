@@ -42,8 +42,8 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
     private static final String FORCE_PASSWORD_UPDATE_URL = "/change-password?forced=true";
     private static final String PASSWORD_EXPIRED_URL = "/change-password?expired=true";
-    private static final String DEFAULT_SUCCESS_URL = "/app";
 
+    private final String reactDashboardUrl;
     private final UserRepository userRepository;
     private final UserDetailsServiceImpl userDetailsService;
     private final com.ammons.taskactivity.service.UserService userService;
@@ -52,13 +52,16 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final com.ammons.taskactivity.service.EmailService emailService;
     private final com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService;
 
-    public CustomAuthenticationSuccessHandler(UserRepository userRepository,
+    public CustomAuthenticationSuccessHandler(
+            @org.springframework.beans.factory.annotation.Value("${app.dashboard.react-url:/dashboard}") String reactDashboardUrl,
+            UserRepository userRepository,
             UserDetailsServiceImpl userDetailsService,
             @Lazy com.ammons.taskactivity.service.UserService userService,
             com.ammons.taskactivity.service.LoginAuditService loginAuditService,
             com.ammons.taskactivity.service.GeoIpService geoIpService,
             com.ammons.taskactivity.service.EmailService emailService,
             com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService) {
+        this.reactDashboardUrl = reactDashboardUrl;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.userService = userService;
@@ -67,7 +70,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         this.emailService = emailService;
         this.passwordHistoryService = passwordHistoryService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
-        setDefaultTargetUrl(DEFAULT_SUCCESS_URL);
+        setDefaultTargetUrl(reactDashboardUrl);
         setAlwaysUseDefaultTargetUrl(false);
     }
 
@@ -179,8 +182,9 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 String savedUrl = savedRequest.getRedirectUrl();
                 log.info("Found saved request URL: {}", savedUrl);
 
-                // Map root path to Thymeleaf task list
-                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")) {
+                // Map root path to Thymeleaf task list (unless it's /app or /dashboard)
+                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")
+                        && !savedUrl.contains("/dashboard")) {
                     targetUrl = "/task-activity/list";
                     log.info("Root path requested, redirecting to Thymeleaf UI: {}", targetUrl);
                 } else {
@@ -191,9 +195,9 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 // Clear the saved request
                 requestCache.removeRequest(request, response);
             } else {
-                // No saved request, default to Angular dashboard
-                targetUrl = DEFAULT_SUCCESS_URL;
-                log.debug("No saved request found, using default URL: {}", targetUrl);
+                // No saved request, default to React dashboard
+                targetUrl = reactDashboardUrl;
+                log.debug("No saved request found, using React dashboard URL: {}", targetUrl);
             }
 
             getRedirectStrategy().sendRedirect(request, response, targetUrl);

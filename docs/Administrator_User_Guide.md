@@ -8,7 +8,11 @@ This guide is for administrators of the Task Activity Management System. As an a
 
 1. [Accessing the Application](#accessing-the-application)
 2. [Navigation](#navigation)
-3. [Administrator Features](#administrator-features)
+3. [React Admin Dashboard](#react-admin-dashboard)
+   - [Accessing the Dashboard](#accessing-the-react-dashboard)
+   - [Dashboard Features](#dashboard-features)
+   - [Development vs Production](#development-vs-production)
+4. [Administrator Features](#administrator-features)
    - [User Roles Overview](#user-roles-overview)
    - [Managing Users](#managing-users)
    - [Managing Roles and Permissions](#managing-roles-and-permissions)
@@ -79,16 +83,97 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 3. Click **✕** or the menu button again to close
 
 **Menu Items (Admin View):**
-- **� Update Profile**: Access your profile to update your information and password
+- **🏠 Update Profile**: Access your profile to update your information and password
 - **👥 Manage Users**: Create, edit, and manage user accounts
 - **📊 Guest Activity**: View login activity reports for GUEST users
 - **🔧 Manage Dropdowns**: Configure clients, projects, phases, and expense types
 - **📋 Export CSV**: Export filtered task list to CSV format (auto-closes menu after selection)
+- **🎯 Admin Dashboard**: Open the React Admin Dashboard in a new tab (ADMIN only)
 
 **Role-Based Visibility:**
 - **ADMIN**: All menu items enabled
 - **GUEST**: Menu visible but all options disabled (read-only)
 - **USER**: Update Profile and Export CSV available, administrative functions hidden
+
+---
+
+## React Admin Dashboard
+
+The **React Admin Dashboard** is a modern, single-page application built with React, TypeScript, and Material-UI that provides advanced administrative functionality for ADMIN users. It features a responsive design and follows Material Design principles.
+
+### Accessing the React Dashboard
+
+**Prerequisites:**
+- Must be logged in with **ADMIN** role
+- Non-ADMIN users cannot access the dashboard
+
+**Development Access (Phase 3):**
+- URL: [http://localhost:4201](http://localhost:4201)
+- Opens in a new browser tab
+- Available from Thymeleaf UI sidebar menu: Click **🎯 Admin Dashboard**
+- Runs on separate Vite dev server for hot-reload during development
+
+**Production Access:**
+- URL: [http://localhost:8080/dashboard](http://localhost:8080/dashboard) or `https://yourdomain.com/dashboard`
+- Served by Spring Boot from static resources
+- Opens in same browser window (uses th:href link)
+- Session-based authentication maintained across Angular and React dashboards
+
+### Dashboard Features
+
+**Current Status: Phase 3 Skeleton (Development)**
+
+The React Admin Dashboard is currently in Phase 3 development, providing a navigation skeleton with placeholder functionality:
+
+**Available Now:**
+- **Modern Material-UI Design**: Clean, responsive interface with Material Design components
+- **Role-Based Access**: ADMIN role enforcement via Spring Security
+- **Session Integration**: Shares authentication session with Spring Boot and Angular
+- **Navigation Structure**: Left sidebar with feature cards for upcoming management modules
+- **Task Activity Tracker**: Functional link navigates back to Spring Boot Task List UI
+
+**Feature Placeholders (Phase 4-8 Coming Soon):**
+- **User Management**: Shows "Coming Soon" dialog (Phase 4)
+- **Expense Management**: Shows "Coming Soon" dialog (Phase 5)
+- **Dropdown Configuration**: Shows "Coming Soon" dialog (Phase 6)
+- **Reporting & Analytics**: Shows "Coming Soon" dialog (Phase 7)
+- **System Settings**: Shows "Coming Soon" dialog (Phase 8)
+
+### Development vs Production
+
+**Phase 3 Development Mode:**
+- React runs on Vite dev server (port 4201)
+- Accessed via hardcoded URL: `http://localhost:4201`
+- Opens in new tab from Thymeleaf UI
+- Provides fast hot-reload for development
+- Template links in `task-list.html` and `expense-list.html` use `target="_blank"`
+
+**Production Deployment:**
+- React built as static files in `target/classes/static/dashboard/`
+- Served by Spring Boot on port 8080 at `/dashboard`
+- Maven automatically builds both Angular and React during package phase
+- Template links will use `th:href="@{/dashboard}"` instead of hardcoded URL
+- Seamless integration with existing Spring Boot authentication
+
+**AWS Deployment Notes:**
+- Maven build process handles both Angular and React
+- Spring Boot `ServerConfig.java` configures `/dashboard/**` route
+- `SecurityConfig.java` enforces ADMIN role requirement
+- `CustomAuthenticationSuccessHandler.java` preserves `/dashboard` URLs during login
+- Session cookies work across `/app`, `/dashboard`, and root paths
+
+### Next Steps
+
+After AWS deployment validation:
+- **Phase 4**: Implement User Management functionality
+- **Phase 5**: Implement Expense Management functionality
+- **Phase 6**: Implement Dropdown Configuration functionality
+- **Phase 7**: Implement Reporting & Analytics functionality
+- **Phase 8**: Implement System Settings functionality
+
+For technical details on React Dashboard implementation, see [React_Dashboard_Blueprint.md](React_Dashboard_Blueprint.md).
+
+---
 
 ## Administrator Features
 
