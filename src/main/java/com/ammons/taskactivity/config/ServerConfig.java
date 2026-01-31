@@ -47,10 +47,12 @@ public class ServerConfig implements WebMvcConfigurer {
 
     /**
      * Configure resource handlers for static content including Angular SPA. Routes /app/** to serve
-     * Angular app with fallback to index.html for client-side routing.
+     * Angular app with fallback to index.html for client-side routing. Routes /dashboard/** to
+     * serve React admin app with fallback to index.html for client-side routing.
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Angular SPA
         registry.addResourceHandler("/app/**")
                 .addResourceLocations("classpath:/static/app/").resourceChain(true)
                 .addResolver(new PathResourceResolver() {
@@ -64,6 +66,23 @@ public class ServerConfig implements WebMvcConfigurer {
                         }
                         // Otherwise, return index.html for Angular routing
                         return new ClassPathResource("/static/app/index.html");
+                    }
+                });
+
+        // React Admin Dashboard SPA
+        registry.addResourceHandler("/dashboard/**")
+                .addResourceLocations("classpath:/static/dashboard/").resourceChain(true)
+                .addResolver(new PathResourceResolver() {
+                    @Override
+                    protected Resource getResource(String resourcePath, Resource location)
+                            throws IOException {
+                        Resource requestedResource = location.createRelative(resourcePath);
+                        // If resource exists, return it (JS, CSS, etc.)
+                        if (requestedResource.exists() && requestedResource.isReadable()) {
+                            return requestedResource;
+                        }
+                        // Otherwise, return index.html for React routing
+                        return new ClassPathResource("/static/dashboard/index.html");
                     }
                 });
     }

@@ -245,48 +245,77 @@
 				</executions>
 			</plugin>
 			
-			<!-- Frontend Maven Plugin - Build Angular during Maven build -->
-			<plugin>
-				<groupId>com.github.eirslett</groupId>
-				<artifactId>frontend-maven-plugin</artifactId>
-				<version>1.15.1</version>
-				<configuration>
-					<workingDirectory>frontend</workingDirectory>
-					<installDirectory>target</installDirectory>
-					<skip>${skip.frontend.build}</skip>
-				</configuration>
-				<executions>
-					<!-- Install Node.js and npm -->
-					<execution>
-						<id>install node and npm</id>
-						<goals>
-							<goal>install-node-and-npm</goal>
-						</goals>
-						<configuration>
-							<nodeVersion>v20.11.1</nodeVersion>
-							<npmVersion>10.2.4</npmVersion>
-						</configuration>
-					</execution>
-					
-					<!-- npm install -->
-					<execution>
-						<id>npm install</id>
-						<goals>
-							<goal>npm</goal>
-						</goals>
-						<configuration>
-							<arguments>install</arguments>
-						</configuration>
-					</execution>
-					
-					<!-- npm run build:prod -->
-					<execution>
-						<id>npm run build</id>
-						<goals>
-							<goal>npm</goal>
-						</goals>
-						<configuration>
-							<arguments>run build:prod</arguments>
+<!-- Frontend Maven Plugin - Build Angular and React during Maven build -->
+		<plugin>
+			<groupId>com.github.eirslett</groupId>
+			<artifactId>frontend-maven-plugin</artifactId>
+			<version>1.15.1</version>
+			<configuration>
+				<installDirectory>target</installDirectory>
+				<skip>${skip.frontend.build}</skip>
+			</configuration>
+			<executions>
+				<!-- ===== ANGULAR BUILD ===== -->
+				
+				<!-- Install Node.js and npm -->
+				<execution>
+					<id>install node and npm</id>
+					<goals>
+						<goal>install-node-and-npm</goal>
+					</goals>
+					<configuration>
+						<nodeVersion>v20.11.1</nodeVersion>
+						<npmVersion>10.2.4</npmVersion>
+					</configuration>
+				</execution>
+				
+				<!-- npm install for Angular -->
+				<execution>
+					<id>npm install</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<workingDirectory>frontend</workingDirectory>
+						<arguments>install</arguments>
+					</configuration>
+				</execution>
+				
+				<!-- npm run build:prod for Angular -->
+				<execution>
+					<id>npm run build angular</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<workingDirectory>frontend</workingDirectory>
+						<arguments>run build:prod</arguments>
+					</configuration>
+				</execution>
+				
+				<!-- ===== REACT BUILD ===== -->
+				
+				<!-- npm install for React -->
+				<execution>
+					<id>npm install react</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<workingDirectory>frontend-react</workingDirectory>
+						<arguments>install</arguments>
+					</configuration>
+				</execution>
+				
+				<!-- npm run build for React -->
+				<execution>
+					<id>npm run build react</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<workingDirectory>frontend-react</workingDirectory>
+							<arguments>run build</arguments>
 						</configuration>
 					</execution>
 				</executions>
@@ -309,6 +338,24 @@
 							<resources>
 								<resource>
 									<directory>frontend/dist/app/browser</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					
+					<!-- Copy React build to Spring Boot static resources -->
+					<execution>
+						<id>copy-react-build</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/static/dashboard</outputDirectory>
+							<resources>
+								<resource>
+									<directory>frontend-react/dist</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>

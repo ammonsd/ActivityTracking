@@ -182,8 +182,9 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 String savedUrl = savedRequest.getRedirectUrl();
                 log.info("Found saved request URL: {}", savedUrl);
 
-                // Map root path to Thymeleaf task list
-                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")) {
+                // Map root path to Thymeleaf task list (unless it's /app or /dashboard)
+                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")
+                        && !savedUrl.contains("/dashboard")) {
                     targetUrl = "/task-activity/list";
                     log.info("Root path requested, redirecting to Thymeleaf UI: {}", targetUrl);
                 } else {
