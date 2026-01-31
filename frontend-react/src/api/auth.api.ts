@@ -18,10 +18,9 @@ export const authApi = {
         return response.data.data;
     },
 
-    // Logout - calls Spring Boot logout endpoint
+    // Logout - calls Spring Boot session-based logout endpoint
     logout: async (): Promise<void> => {
-        await apiClient.post("/auth/logout");
-        // Redirect to Spring Boot login page
-        window.location.href = "http://localhost:8080/login";
+        // Use absolute URL to avoid Vite proxy (direct to Spring Boot)
+        window.location.href = "http://localhost:8080/logout";
     },
 };

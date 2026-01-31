@@ -643,6 +643,16 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
+                        <!-- React Admin Dashboard - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a 
+                                th:href="@{/dashboard}"
+                                title="React Admin Dashboard"
+                            >
+                                <span class="menu-icon">⚛️</span>
+                                <span>Admin Dashboard</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 /**
- * Description: Main App component with routing
+ * Description: Main App component with routing and layout
  *
  * Author: Dean Ammons
  * Date: January 2026
@@ -9,53 +9,85 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import { MainLayout } from "./components/layout/MainLayout";
+import { DashboardHome } from "./pages/DashboardHome";
+import { UserManagement } from "./pages/UserManagement";
+import { DropdownManagement } from "./pages/DropdownManagement";
+import { RolesManagement } from "./pages/RolesManagement";
+import { GuestActivity } from "./pages/GuestActivity";
 
 function App() {
-    const { checkAuth } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
-    useEffect(() => {
-        // Check authentication on app mount
-        checkAuth();
-    }, [checkAuth]);
+  useEffect(() => {
+      // Check authentication on app mount
+      checkAuth();
+  }, [checkAuth]);
 
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route
-                    path="/"
-                    element={<Navigate to="/dashboard" replace />}
-                />
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <div
-                                style={{ padding: "20px", textAlign: "center" }}
-                            >
-                                <h1>
-                                    Task Activity Tracker - React Admin
-                                    Dashboard
-                                </h1>
-                                <p>
-                                    Dashboard Home - Phase 3 skeleton coming
-                                    next
-                                </p>
-                                <p style={{ color: "#666", marginTop: "20px" }}>
-                                    ✅ Phase 1: Project Setup - Complete
-                                </p>
-                                <p style={{ color: "#666" }}>
-                                    ✅ Phase 2: Authentication - Complete
-                                </p>
-                                <p style={{ color: "#666" }}>
-                                    ⏳ Phase 3: Skeleton Dashboard - Coming next
-                                </p>
-                            </div>
-                        </ProtectedRoute>
-                    }
-                />
-            </Routes>
-        </BrowserRouter>
-    );
+  return (
+      <BrowserRouter>
+          <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+              {/* All routes wrapped in MainLayout and protected by auth */}
+              <Route
+                  path="/dashboard"
+                  element={
+                      <ProtectedRoute>
+                          <MainLayout>
+                              <DashboardHome />
+                          </MainLayout>
+                      </ProtectedRoute>
+                  }
+              />
+
+              {/* Management Features - Admin only routes */}
+              <Route
+                  path="/user-management"
+                  element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                          <MainLayout>
+                              <UserManagement />
+                          </MainLayout>
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/dropdown-management"
+                  element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                          <MainLayout>
+                              <DropdownManagement />
+                          </MainLayout>
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/roles-management"
+                  element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                          <MainLayout>
+                              <RolesManagement />
+                          </MainLayout>
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/guest-activity"
+                  element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                          <MainLayout>
+                              <GuestActivity />
+                          </MainLayout>
+                      </ProtectedRoute>
+                  }
+              />
+          </Routes>
+      </BrowserRouter>
+  );
 }
 
 export default App;
