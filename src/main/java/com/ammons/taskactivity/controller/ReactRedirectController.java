@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class ReactRedirectController {
 
     /**
-     * Forward /dashboard and /dashboard/ to React index.html. Using forward instead of redirect
-     * preserves the URL path for React Router to handle client-side routing.
+     * Redirect /dashboard and /dashboard/ to /dashboard/index.html. The trailing slash pattern
+     * ensures both /dashboard and /dashboard/ are handled.
      */
     @GetMapping({"/dashboard", "/dashboard/"})
-    public String forwardToReact() {
-        return "forward:/dashboard/index.html";
+    public String redirectToReact() {
+        return "redirect:/dashboard/index.html";
     }
 }

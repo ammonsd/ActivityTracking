@@ -6,7 +6,7 @@
  */
 
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import { MainLayout } from "./components/layout/MainLayout";
@@ -83,6 +83,9 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
+                {/* Catch-all route: redirect any unmatched paths (like /index.html) to root */}
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
     );
