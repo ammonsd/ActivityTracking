@@ -646,8 +646,8 @@
                         <!-- React Admin Dashboard - ADMIN only -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
                             <a 
-                                href="http://localhost:4201"
-                                title="React Admin Dashboard (Development)"
+                                th:href="@{/dashboard}"
+                                title="React Admin Dashboard"
                             >
                                 <span class="menu-icon">🎯</span>
                                 <span>Admin Dashboard</span>

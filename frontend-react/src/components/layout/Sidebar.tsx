@@ -56,7 +56,7 @@ export const Sidebar: React.FC = () => {
         {
             name: "Dashboard Home",
             icon: <HomeIcon />,
-            route: "/dashboard",
+            route: "/",
             requiresAdmin: false,
             comingSoon: false,
             enabled: true,

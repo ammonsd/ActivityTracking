@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
+    base: "/dashboard/", // Base path for Spring Boot deployment
     server: {
         port: 4201, // Different from Angular (4200)
         proxy: {
