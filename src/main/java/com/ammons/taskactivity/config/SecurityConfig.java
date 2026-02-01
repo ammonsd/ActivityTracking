@@ -283,11 +283,11 @@ public class SecurityConfig {
                                                 // "/app/**").authenticated()
                                                 .requestMatchers("/app", "/app/").authenticated()
 
-                                                // React admin dashboard - requires authentication
-                                                // and ADMIN role
+                                                // React dashboard - requires authentication
+                                                // (React app handles admin feature visibility)
                                                 .requestMatchers("/dashboard", "/dashboard/",
                                                                 "/dashboard/**")
-                                                .hasRole(ADMIN_ROLE)
+                                                .authenticated()
 
                                                 // All other requests require authentication
                                                 .anyRequest().authenticated())
