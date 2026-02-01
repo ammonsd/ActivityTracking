@@ -8,15 +8,17 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code AND frontend directory for Angular build
+# Copy source code AND frontend directories for Angular and React builds
 COPY src /app/src
 COPY frontend /app/frontend
+COPY frontend-react /app/frontend-react
 
 # Debug: Show what files are in frontend/dist before Maven runs
 RUN ls -la /app/frontend/dist/app/browser/main-*.js || echo "No main-*.js files found"
+RUN ls -la /app/frontend-react/dist/index.html || echo "No React dist files found"
 
-# Use 'package' without 'clean' to preserve copied frontend/dist files
-RUN mvn package -DskipTests -Dskip.frontend.build=true -B
+# Build with frontend (Maven will build both Angular and React)
+RUN mvn package -DskipTests -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
 FROM eclipse-temurin:21-jre-jammy

@@ -101,8 +101,7 @@ export const DashboardHome: React.FC = () => {
     const handleCardClick = (card: FeatureCardData) => {
         // Task Tracker opens Spring Boot UI
         if (card.title === "Task Activity Tracker") {
-            globalThis.location.href =
-                "http://localhost:8080/task-activity/list";
+            globalThis.location.href = "/task-activity/list";
             return;
         }
 

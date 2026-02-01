@@ -106,8 +106,7 @@ export const Sidebar: React.FC = () => {
     const handleMenuItemClick = (item: MenuItem) => {
         // Task Tracker opens Spring Boot UI in same tab
         if (item.name === "Task Activity Tracker") {
-            globalThis.location.href =
-                "http://localhost:8080/task-activity/list";
+            globalThis.location.href = "/task-activity/list";
             return;
         }
 

@@ -16,11 +16,11 @@
     
     Deployment Process:
     The script performs the following steps:
-    1. Clean old Angular builds from source tree (prevents duplicate files in JAR)
+    1. Clean old Angular and React builds from source tree (prevents duplicate files in JAR)
     2. Kill any stuck Node.js processes
-    3. Clean Angular build cache
+    3. Clean Angular and React build caches
     4. Prune Docker build cache (WSL2 only)
-    5. Build the Spring Boot JAR with Maven (includes Angular production build)
+    5. Build the Spring Boot JAR with Maven (includes Angular and React production builds)
     6. Build the Docker image with multi-stage build
     7. Push the Docker image to AWS ECR (Elastic Container Registry)
     8. Update the ECS service with new task definition
@@ -310,6 +310,20 @@ function Build-AndPushImage {
         }
     }
     
+    # Remove old React builds from source tree to prevent duplicate files in JAR
+    Write-Info "Cleaning old React builds from source tree..."
+    $sourceStaticDashboardPath = Join-Path $PWD "src\main\resources\static\dashboard"
+    if (Test-Path $sourceStaticDashboardPath) {
+        try {
+            Remove-Item -Recurse -Force $sourceStaticDashboardPath -ErrorAction Stop
+            Write-Info "Removed old React files from src/main/resources/static/dashboard"
+        } catch {
+            Write-Error "Failed to delete old React builds from $sourceStaticDashboardPath. Error: $_"
+            Write-Error "These files should not be committed to source control."
+            exit 1
+        }
+    }
+    
     # Kill any stuck Node.js processes that might interfere with the build
     Write-Info "Checking for stuck Node.js processes..."
     try {
@@ -331,6 +345,21 @@ function Build-AndPushImage {
     if (Test-Path $nodeModulesCachePath) {
         Remove-Item -Recurse -Force $nodeModulesCachePath -ErrorAction SilentlyContinue
         Write-Info "Node modules cache cleaned"
+    }
+    
+    # Clean React build cache
+    Write-Info "Cleaning React build cache..."
+    $reactCachePath = Join-Path $PWD "frontend-react\.cache"
+    $reactNodeModulesCachePath = Join-Path $PWD "frontend-react\node_modules\.cache"
+    
+    if (Test-Path $reactCachePath) {
+        Remove-Item -Recurse -Force $reactCachePath -ErrorAction SilentlyContinue
+        Write-Info "React cache cleaned"
+    }
+    
+    if (Test-Path $reactNodeModulesCachePath) {
+        Remove-Item -Recurse -Force $reactNodeModulesCachePath -ErrorAction SilentlyContinue
+        Write-Info "React node modules cache cleaned"
     }
     
     # Clean Docker build cache if using WSL2 Docker (prevents disk space issues)
