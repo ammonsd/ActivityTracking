@@ -48,7 +48,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                             variant="body2"
                             sx={{ display: { xs: "none", sm: "block" } }}
                         >
-                            {user?.fullName || user?.username}
+                            {user?.fullName || user?.username} ({user?.username}
+                            )
                         </Typography>
 
                         <Typography

@@ -13,14 +13,24 @@ export const authApi = {
     getCurrentUser: async (): Promise<User> => {
         const response = await apiClient.get<{
             success: boolean;
-            data: User;
+            data: any;
         }>("/users/me");
-        return response.data.data;
+        const user = response.data.data;
+        // Transform backend lowercase fields to camelCase
+        return {
+            ...user,
+            firstName: user.firstname,
+            lastName: user.lastname,
+            fullName:
+                user.firstname && user.lastname
+                    ? `${user.firstname} ${user.lastname}`
+                    : user.username,
+        };
     },
 
     // Logout - calls Spring Boot session-based logout endpoint
     logout: async (): Promise<void> => {
-        // Use absolute URL to avoid Vite proxy (direct to Spring Boot)
-        window.location.href = "http://localhost:8080/logout";
+        // Use relative URL to work in both local and AWS
+        window.location.href = "/logout";
     },
 };
