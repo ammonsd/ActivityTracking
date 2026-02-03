@@ -114,9 +114,46 @@ pipeline {
         
         // Prevent concurrent builds
         disableConcurrentBuilds()
+        
+        // Skip default checkout - we'll do it manually after cleanup
+        skipDefaultCheckout(true)
     }
     
     stages {
+        stage('Workspace Cleanup') {
+            steps {
+                script {
+                    echo "========================================="
+                    echo "Cleaning Workspace"
+                    echo "========================================="
+                    
+                    // Clean up any corrupted @script directories from previous failed builds
+                    try {
+                        sh '''
+                            # Find and remove empty or corrupted @script subdirectories
+                            if [ -d "${WORKSPACE}@script" ]; then
+                                echo "Cleaning up @script directories..."
+                                find "${WORKSPACE}@script" -mindepth 1 -maxdepth 1 -type d -empty -delete 2>/dev/null || true
+                                echo "Cleanup complete"
+                            fi
+                        '''
+                    } catch (Exception e) {
+                        echo "Warning: Could not clean @script directories: ${e.message}"
+                    }
+                    
+                    // Clean workspace but keep .git for faster checkout
+                    cleanWs(
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        patterns: [
+                            [pattern: '.git', type: 'EXCLUDE'],
+                            [pattern: '.gitignore', type: 'EXCLUDE']
+                        ]
+                    )
+                }
+            }
+        }
+        
         stage('Initialize') {
             steps {
                 script {
@@ -921,12 +958,39 @@ This is an automated notification. Do not reply to this email.
         }
         
         always {
-            // Clean up workspace
+            // Clean up workspace thoroughly to prevent corrupt directories
+            script {
+                echo "Performing final workspace cleanup..."
+                
+                // Clean up @script directories that may have been created during this build
+                try {
+                    sh '''
+                        # Remove all @script directories
+                        if [ -d "${WORKSPACE}@script" ]; then
+                            echo "Removing @script directory: ${WORKSPACE}@script"
+                            rm -rf "${WORKSPACE}@script" 2>/dev/null || true
+                        fi
+                        
+                        # Clean up any @tmp directories
+                        if [ -d "${WORKSPACE}@tmp" ]; then
+                            echo "Removing @tmp directory: ${WORKSPACE}@tmp"
+                            rm -rf "${WORKSPACE}@tmp" 2>/dev/null || true
+                        fi
+                    '''
+                } catch (Exception e) {
+                    echo "Warning: Could not clean temporary directories: ${e.message}"
+                }
+            }
+            
             cleanWs(
                 deleteDirs: true,
+                disableDeferredWipeout: true,
                 patterns: [
                     [pattern: 'target/**', type: 'INCLUDE'],
-                    [pattern: '.mvn/**', type: 'INCLUDE']
+                    [pattern: '.mvn/**', type: 'INCLUDE'],
+                    [pattern: 'node_modules/**', type: 'INCLUDE'],
+                    [pattern: 'frontend/node_modules/**', type: 'INCLUDE'],
+                    [pattern: 'frontend-react/node_modules/**', type: 'INCLUDE']
                 ]
             )
         }
