@@ -45,13 +45,13 @@ Added pattern to exclude cleanup log files: `scripts/*cleanup*.log`
 ### Test cleanup (dry-run mode)
 
 ```bash
-wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/scripts/cleanup-jenkins-workspace.sh true
+wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/Jenkins/cleanup-jenkins-workspace.sh true
 ```
 
 ### Run cleanup immediately
 
 ```bash
-wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/scripts/cleanup-jenkins-workspace.sh
+wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/Jenkins/cleanup-jenkins-workspace.sh
 ```
 
 ### Check Jenkins status
@@ -91,41 +91,43 @@ wsl -u root crontab -l
 ### If Jenkins still fails after restart
 
 1. Check if workspace directories are accessible:
-
-    ```bash
-    wsl -u root ls -la /var/lib/jenkins/workspace/
-    ```
+   
+   ```bash
+   wsl -u root ls -la /var/lib/jenkins/workspace/
+   ```
 
 2. Manually remove all @script directories:
-
-    ```bash
-    wsl -u root rm -rf /var/lib/jenkins/workspace/*@script
-    wsl -u root rm -rf /var/lib/jenkins/workspace/*@tmp
-    ```
+   
+   ```bash
+   wsl -u root rm -rf /var/lib/jenkins/workspace/*@script
+   wsl -u root rm -rf /var/lib/jenkins/workspace/*@tmp
+   ```
 
 3. Restart Jenkins:
-    ```bash
-    wsl -u root systemctl restart jenkins
-    ```
+   
+   ```bash
+   wsl -u root systemctl restart jenkins
+   ```
 
 ### If cron job isn't running
 
 1. Check if cron service is running:
-
-    ```bash
-    wsl -u root systemctl status cron
-    ```
+   
+   ```bash
+   wsl -u root systemctl status cron
+   ```
 
 2. Start cron if needed:
-
-    ```bash
-    wsl -u root systemctl start cron
-    ```
+   
+   ```bash
+   wsl -u root systemctl start cron
+   ```
 
 3. Re-run setup script:
-    ```bash
-    wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/scripts/setup-jenkins-cleanup-cron.sh
-    ```
+   
+   ```bash
+   wsl -u root /mnt/c/Users/deana/GitHub/ActivityTracking/Jenkins/setup-jenkins-cleanup-cron.sh
+   ```
 
 ## Impact Assessment
 
