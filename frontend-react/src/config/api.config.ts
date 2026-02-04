@@ -5,8 +5,10 @@
  * Date: January 2026
  */
 
+// Use relative path in development (Vite proxy handles it)
+// In production, this gets served from Spring Boot, so relative path works there too
 export const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+    import.meta.env.VITE_API_URL || "/api";
 
 export const API_ENDPOINTS = {
     auth: {

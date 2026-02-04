@@ -23,10 +23,13 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Unauthorized - redirect to Spring Boot login
+            // Unauthorized - redirect to login using relative path
+            // This works in all environments (dev with proxy, production)
             window.location.href =
-                "http://localhost:8080/login?returnUrl=" +
-                encodeURIComponent(window.location.href);
+                "/login?returnUrl=" +
+                encodeURIComponent(
+                    window.location.pathname + window.location.search,
+                );
         }
         return Promise.reject(error);
     },

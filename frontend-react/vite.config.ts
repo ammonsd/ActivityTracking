@@ -9,7 +9,16 @@ export default defineConfig({
         port: 4201, // Different from Angular (4200)
         proxy: {
             "/api": {
-                target: "http://localhost:8080",
+                target: process.env.VITE_BACKEND_URL || "http://localhost:8080",
+                changeOrigin: true,
+            },
+            // Proxy login/logout endpoints for development
+            "/login": {
+                target: process.env.VITE_BACKEND_URL || "http://localhost:8080",
+                changeOrigin: true,
+            },
+            "/logout": {
+                target: process.env.VITE_BACKEND_URL || "http://localhost:8080",
                 changeOrigin: true,
             },
         },
