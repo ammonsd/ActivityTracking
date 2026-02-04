@@ -1,11 +1,9 @@
 #!/bin/bash
 
-/**
- * Description: Full rebuild and restart script for WSL2 - rebuilds Docker containers and restarts the application
- *
- * Author: Dean Ammons
- * Date: November 2025
- */
+# Description: Full rebuild and restart script for WSL2 - rebuilds Docker containers and restarts the application
+#
+# Author: Dean Ammons
+# Date: November 2025
 
 # Full rebuild and restart script for WSL2
 # Usage: wsl -u root, then ./rebuild-and-start.sh
@@ -97,10 +95,31 @@ if [ "$DOCKER_PROFILE" == "containerized-db" ]; then
     # For containerized-db, start services directly
     echo "Starting containerized-db services..."
     
-    # Set environment variables
-    export DB_USERNAME=postgres
-    export DB_PASSWORD=N1ghrd01-1948
+    # Validate required environment variables
+    if [ -z "$DB_USERNAME" ]; then
+        echo "ERROR: DB_USERNAME environment variable is not set"
+        echo "Load environment variables first using set-env-values.ps1 with -EncryptionKey"
+        exit 1
+    fi
+    
+    if [ -z "$DB_PASSWORD" ]; then
+        echo "ERROR: DB_PASSWORD environment variable is not set"
+        echo "Load environment variables first using set-env-values.ps1 with -EncryptionKey"
+        exit 1
+    fi
+    
+    # Set optional environment variables
     export ENABLE_FILE_LOGGING=${ENABLE_FILE_LOGGING:-true}
+    
+    echo "  DB_USERNAME: $DB_USERNAME"
+    echo "  ENABLE_FILE_LOGGING: $ENABLE_FILE_LOGGING"
+    if [ -n "$JWT_SECRET" ]; then
+        echo "  JWT_SECRET: [set from environment]"
+    fi
+    if [ -n "$APP_ADMIN_INITIAL_PASSWORD" ]; then
+        echo "  APP_ADMIN_INITIAL_PASSWORD: [set from environment]"
+    fi
+    echo ""
     
     # Create logs directory
     mkdir -p /mnt/c/Logs

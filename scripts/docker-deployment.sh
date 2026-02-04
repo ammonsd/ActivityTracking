@@ -1,11 +1,9 @@
 #!/bin/bash
 
-/**
- * Description: Docker deployment script for starting application with correct database connection for WSL2
- *
- * Author: Dean Ammons
- * Date: November 2025
- */
+# Description: Docker deployment script for starting application with correct database connection for WSL2
+#
+# Author: Dean Ammons
+# Date: November 2025
 
 # Start application with correct database connection for WSL2
 #
@@ -53,9 +51,19 @@ echo "Removing old Docker images..."
 docker rmi ${DOCKER_CONTAINER_NAME}-app 2>/dev/null || true
 docker rmi ${DOCKER_CONTAINER_NAME}-app-local-fast 2>/dev/null || true
 
-# Set environment variables
-export DB_USERNAME=postgres
-export DB_PASSWORD=N1ghrd01-1948
+# Set environment variables - REQUIRED
+if [ -z "$DB_USERNAME" ]; then
+    echo "ERROR: DB_USERNAME environment variable is not set"
+    echo "Load environment variables first using set-env-values.ps1"
+    exit 1
+fi
+
+if [ -z "$DB_PASSWORD" ]; then
+    echo "ERROR: DB_PASSWORD environment variable is not set"
+    echo "Load environment variables first using set-env-values.ps1"
+    exit 1
+fi
+
 export SPRING_DATASOURCE_URL="jdbc:postgresql://${WINDOWS_IP}:5432/AmmoP1DB"
 
 # File logging control (set to 'false' to disable file logging)
