@@ -32,6 +32,9 @@
 .PARAMETER SkipValidation
     Skip JSON validation after update.
 
+.PARAMETER EncryptionKey
+    Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
+
 .EXAMPLE
     .\update-ecs-variables.ps1
     Fetch current task definition from ECS, update with .env values, save to local file.
@@ -53,7 +56,10 @@ param(
     [switch]$DeployToAws,
     
     [Parameter(Mandatory=$false)]
-    [switch]$SkipValidation
+    [switch]$SkipValidation,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$EncryptionKey = ""
 )
 
 # Stop on errors
@@ -103,7 +109,11 @@ if (-not (Test-Path $taskDefPath)) {
 # ========================================
 
 Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
-$envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
+    $envOutput = & $setEnvScript -envFile $envFilePath -EncryptionKey $EncryptionKey 2>&1
+} else {
+    $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+}
 $envOutput | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
 Write-Host ""
 

@@ -9,6 +9,12 @@
 .PARAMETER NoCache
     If specified, builds Docker images without cache.
 
+.PARAMETER EnvFile
+    Path to environment file (.env or .env.local). Defaults to .env.local if exists, otherwise .env.
+
+.PARAMETER EncryptionKey
+    Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
+
 .EXAMPLE
     .\start-containerized-db.ps1
     Start containerized database.
@@ -16,6 +22,10 @@
 .EXAMPLE
     .\start-containerized-db.ps1 -NoCache
     Start with no Docker cache.
+
+.EXAMPLE
+    .\start-containerized-db.ps1 -EncryptionKey "your-key-here"
+    Start with encryption key for decrypting sensitive values.
 
 .NOTES
     Author: Dean Ammons

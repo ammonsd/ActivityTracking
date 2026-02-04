@@ -56,6 +56,9 @@
 .PARAMETER SkipEnvFile
     Skip loading environment variables from .env file.
 
+.PARAMETER EncryptionKey
+    Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
+
 .EXAMPLE
     .\deploy-aws.ps1 -Environment dev
     Deploy to development environment.
@@ -114,7 +117,10 @@ param(
     [string]$AdminEmail = "",
     
     [Parameter(Mandatory=$false)]
-    [switch]$SkipEnvFile
+    [switch]$SkipEnvFile,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$EncryptionKey = ""
 )
 
 # Stop on errors
@@ -152,7 +158,11 @@ if (-not $SkipEnvFile) {
     if (Test-Path $setEnvScript) {
         Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
         # Capture output and write to both console and transcript
-        $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+        if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
+            $envOutput = & $setEnvScript -envFile $envFilePath -EncryptionKey $EncryptionKey 2>&1
+        } else {
+            $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+        }
         $envOutput | ForEach-Object { Write-Host $_ }
         Write-Host ""
     } else {

@@ -28,6 +28,9 @@
 .PARAMETER Password
     Admin password (overrides ADMIN_PASSWORD from .env).
 
+.PARAMETER EncryptionKey
+    Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
+
 .EXAMPLE
     .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv"
     Execute SQL from query.sql and save results to results.csv.
@@ -63,7 +66,10 @@ param(
     [string]$Username = "",
     
     [Parameter(Mandatory=$false)]
-    [string]$Password = ""
+    [string]$Password = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$EncryptionKey = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -95,7 +101,11 @@ if ([string]::IsNullOrWhiteSpace($EnvFile)) {
 # Load environment variables using set-env-values.ps1
 $setEnvScript = Join-Path $scriptDir "set-env-values.ps1"
 if (Test-Path $setEnvScript) {
-    . $setEnvScript -envFile $EnvFile -overrideExisting $false
+    if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
+        . $setEnvScript -envFile $EnvFile -overrideExisting $false -EncryptionKey $EncryptionKey
+    } else {
+        . $setEnvScript -envFile $EnvFile -overrideExisting $false
+    }
 }
 
 # Use environment variables as defaults if parameters not provided
