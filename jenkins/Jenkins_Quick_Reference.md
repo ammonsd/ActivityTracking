@@ -188,6 +188,53 @@ aws ecs update-service \
 
 ## Troubleshooting
 
+### Jenkins Port Issues (WSL)
+
+**Problem:** Jenkins running on port 8080 instead of 8081 after restart
+
+**Symptoms:**
+- `curl http://localhost:8081` fails
+- Jenkins accessible at `http://localhost:8080` instead
+
+**Solution 1: Use Fix Script**
+```bash
+# In WSL
+sudo bash /path/to/fix-jenkins-port.sh
+```
+
+**Solution 2: Manual Fix**
+```bash
+# In WSL (as root)
+wsl -u root
+
+# Create systemd override
+mkdir -p /etc/systemd/system/jenkins.service.d
+cat > /etc/systemd/system/jenkins.service.d/override.conf << 'EOF'
+[Service]
+Restart=no
+Environment="JENKINS_PORT=8081"
+EOF
+
+# Apply changes
+systemctl daemon-reload
+systemctl restart jenkins
+
+# Verify (wait 15 seconds)
+sleep 15
+netstat -tlnp | grep 8081  # Should show java listening
+```
+
+**Verification:**
+```bash
+# From Windows PowerShell
+curl http://localhost:8081
+
+# From WSL
+wsl curl http://localhost:8081
+```
+
+**Root Cause:** The systemd service file has `Environment="JENKINS_PORT=8080"` which overrides the `/etc/default/jenkins` setting unless explicitly overridden in a drop-in file.
+
 ### Build Failures
 
 **Maven Build Errors:**

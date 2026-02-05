@@ -86,7 +86,31 @@ sudo apt update
 sudo apt install jenkins -y
 ```
 
-### Step 2: Start Jenkins Service
+### Step 2: Configure Jenkins Port (8081)
+
+Before starting Jenkins, configure it to run on port 8081 to avoid conflicts:
+
+```bash
+# Create systemd override directory if it doesn't exist
+sudo mkdir -p /etc/systemd/system/jenkins.service.d
+
+# Create override configuration for port 8081
+sudo bash -c 'cat > /etc/systemd/system/jenkins.service.d/override.conf << EOF
+[Service]
+Restart=no
+Environment="JENKINS_PORT=8081"
+EOF'
+
+# Reload systemd to apply changes
+sudo systemctl daemon-reload
+```
+
+**Why port 8081?** 
+- Port 8080 is commonly used by other applications (Tomcat, Spring Boot dev servers)
+- Using 8081 prevents conflicts and makes Jenkins easily accessible
+- This override persists across reboots
+
+### Step 3: Start Jenkins Service
 
 ```bash
 # Start Jenkins
@@ -97,9 +121,12 @@ sudo systemctl enable jenkins
 
 # Check Jenkins status
 sudo systemctl status jenkins
+
+# Verify Jenkins is listening on port 8081
+sudo netstat -tlnp | grep 8081
 ```
 
-### Step 3: Access Jenkins
+### Step 4: Access Jenkins
 
 1. Open browser and navigate to: `http://localhost:8081`
 2. Retrieve initial admin password:
