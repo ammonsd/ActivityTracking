@@ -56,6 +56,12 @@
 .PARAMETER SkipEnvFile
     Skip loading environment variables from .env file.
 
+.PARAMETER EnvFile
+    Path to environment file. Defaults to ../.env if not specified.
+
+.PARAMETER OverrideExisting
+    Override existing environment variables. Defaults to $false.
+
 .PARAMETER EncryptionKey
     Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
 
@@ -82,6 +88,10 @@
 .EXAMPLE
     .\deploy-aws.ps1 -EnableEmail -MailFrom "noreply@example.com" -AdminEmail "admin@example.com" -SkipEnvFile
     Deploy with email notifications enabled.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
+    Deploy with encryption key and override existing environment variables.
 
 .NOTES
     Author: Dean Ammons
@@ -120,6 +130,12 @@ param(
     [switch]$SkipEnvFile,
     
     [Parameter(Mandatory=$false)]
+    [string]$EnvFile = "",
+    
+    [Parameter(Mandatory=$false)]
+    [bool]$OverrideExisting = $false,
+    
+    [Parameter(Mandatory=$false)]
     [string]$EncryptionKey = ""
 )
 
@@ -152,16 +168,22 @@ if (-not $Status) {
 # ========================================
 
 if (-not $SkipEnvFile) {
-    $envFilePath = Join-Path $PSScriptRoot "..\.env"
+    # Determine which .env file to use
+    if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+        $envFilePath = Join-Path $PSScriptRoot "..\.env"
+    } else {
+        $envFilePath = $EnvFile
+    }
+    
     $setEnvScript = Join-Path $PSScriptRoot "..\scripts\set-env-values.ps1"
     
     if (Test-Path $setEnvScript) {
         Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
         # Capture output and write to both console and transcript
         if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
-            $envOutput = & $setEnvScript -envFile $envFilePath -EncryptionKey $EncryptionKey 2>&1
+            $envOutput = & $setEnvScript -envFile $envFilePath -overrideExisting $OverrideExisting -EncryptionKey $EncryptionKey 2>&1
         } else {
-            $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+            $envOutput = & $setEnvScript -envFile $envFilePath -overrideExisting $OverrideExisting 2>&1
         }
         $envOutput | ForEach-Object { Write-Host $_ }
         Write-Host ""
@@ -201,6 +223,19 @@ if (-not $PSBoundParameters.ContainsKey('EnableEmail') -and $env:MAIL_ENABLED -e
 if (-not $PSBoundParameters.ContainsKey('UseAwsSdk') -and $env:MAIL_USE_AWS_SDK -eq "true") {
     $UseAwsSdk = $true
     Write-Host "Using AWS SES SDK via MAIL_USE_AWS_SDK environment variable" -ForegroundColor Gray
+}
+
+# Display Jenkins environment variables if loaded (helps verify decryption worked)
+if (-not [string]::IsNullOrWhiteSpace($env:JENKINS_BUILD_NOTIFICATION_EMAIL)) {
+    Write-Host "Using JENKINS_BUILD_NOTIFICATION_EMAIL from environment: $env:JENKINS_BUILD_NOTIFICATION_EMAIL" -ForegroundColor Gray
+}
+
+if (-not [string]::IsNullOrWhiteSpace($env:JENKINS_DEPLOY_NOTIFICATION_EMAIL)) {
+    Write-Host "Using JENKINS_DEPLOY_NOTIFICATION_EMAIL from environment: $env:JENKINS_DEPLOY_NOTIFICATION_EMAIL" -ForegroundColor Gray
+}
+
+if (-not [string]::IsNullOrWhiteSpace($env:JENKINS_DEPLOY_SKIPPED_CHECK)) {
+    Write-Host "Using JENKINS_DEPLOY_SKIPPED_CHECK from environment: $env:JENKINS_DEPLOY_SKIPPED_CHECK" -ForegroundColor Gray
 }
 
 Write-Host ""

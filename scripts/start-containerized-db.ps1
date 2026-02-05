@@ -12,6 +12,9 @@
 .PARAMETER EnvFile
     Path to environment file (.env or .env.local). Defaults to .env.local if exists, otherwise .env.
 
+.PARAMETER OverrideExisting
+    Override existing environment variables. Defaults to $false.
+
 .PARAMETER EncryptionKey
     Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
 
@@ -27,6 +30,10 @@
     .\start-containerized-db.ps1 -EncryptionKey "your-key-here"
     Start with encryption key for decrypting sensitive values.
 
+.EXAMPLE
+    .\start-containerized-db.ps1 -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
+    Start with encryption key and override existing environment variables.
+
 .NOTES
     Author: Dean Ammons
     Date: December 2025
@@ -36,6 +43,8 @@ param(
     [switch]$NoCache,
     
     [string]$EnvFile = "",
+    
+    [bool]$OverrideExisting = $false,
     
     [string]$EncryptionKey = ""
 )
@@ -69,9 +78,9 @@ Write-Host ""
 $setEnvScript = Join-Path $scriptDir "set-env-values.ps1"
 if (Test-Path $setEnvScript) {
     if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
-        . $setEnvScript -envFile $EnvFile -overrideExisting $false -EncryptionKey $EncryptionKey
+        . $setEnvScript -envFile $EnvFile -overrideExisting $OverrideExisting -EncryptionKey $EncryptionKey
     } else {
-        . $setEnvScript -envFile $EnvFile -overrideExisting $false
+        . $setEnvScript -envFile $EnvFile -overrideExisting $OverrideExisting
     }
     Write-Host ""
 } else {

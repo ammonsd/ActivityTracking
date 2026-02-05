@@ -32,6 +32,12 @@
 .PARAMETER SkipValidation
     Skip JSON validation after update.
 
+.PARAMETER EnvFile
+    Path to environment file. Defaults to .env in project root if not specified.
+
+.PARAMETER OverrideExisting
+    Override existing environment variables. Defaults to $false.
+
 .PARAMETER EncryptionKey
     Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
 
@@ -42,6 +48,10 @@
 .EXAMPLE
     .\update-ecs-variables.ps1 -DeployToAws
     Fetch from ECS, update with .env values, save locally, and deploy the new task definition.
+
+.EXAMPLE
+    .\update-ecs-variables.ps1 -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
+    Update with encryption key and override existing environment variables.
 
 .NOTES
     Author: Dean Ammons
@@ -59,6 +69,12 @@ param(
     [switch]$SkipValidation,
     
     [Parameter(Mandatory=$false)]
+    [string]$EnvFile = "",
+    
+    [Parameter(Mandatory=$false)]
+    [bool]$OverrideExisting = $false,
+    
+    [Parameter(Mandatory=$false)]
     [string]$EncryptionKey = ""
 )
 
@@ -71,7 +87,14 @@ $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent $scriptDir
-$envFilePath = Join-Path $projectRoot ".env"
+
+# Determine which .env file to use
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $envFilePath = Join-Path $projectRoot ".env"
+} else {
+    $envFilePath = $EnvFile
+}
+
 $setEnvScript = Join-Path $projectRoot "scripts\set-env-values.ps1"
 $taskDefPath = Join-Path $scriptDir "taskactivity-task-definition.json"
 
@@ -110,9 +133,9 @@ if (-not (Test-Path $taskDefPath)) {
 
 Write-Host "Loading environment variables from .env file..." -ForegroundColor Cyan
 if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
-    $envOutput = & $setEnvScript -envFile $envFilePath -EncryptionKey $EncryptionKey 2>&1
+    $envOutput = & $setEnvScript -envFile $envFilePath -overrideExisting $OverrideExisting -EncryptionKey $EncryptionKey 2>&1
 } else {
-    $envOutput = & $setEnvScript -envFile $envFilePath 2>&1
+    $envOutput = & $setEnvScript -envFile $envFilePath -overrideExisting $OverrideExisting 2>&1
 }
 $envOutput | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
 Write-Host ""

@@ -28,6 +28,9 @@
 .PARAMETER Password
     Admin password (overrides ADMIN_PASSWORD from .env).
 
+.PARAMETER OverrideExisting
+    Override existing environment variables. Defaults to $false.
+
 .PARAMETER EncryptionKey
     Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
 
@@ -42,6 +45,10 @@
 .EXAMPLE
     .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -ApiUrl "http://your-alb-endpoint"
     Execute SQL against custom API endpoint.
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
+    Execute SQL with encryption key and override existing environment variables.
 
 .NOTES
     Author: Dean Ammons
@@ -67,6 +74,9 @@ param(
     
     [Parameter(Mandatory=$false)]
     [string]$Password = "",
+    
+    [Parameter(Mandatory=$false)]
+    [bool]$OverrideExisting = $false,
     
     [Parameter(Mandatory=$false)]
     [string]$EncryptionKey = ""
@@ -102,9 +112,9 @@ if ([string]::IsNullOrWhiteSpace($EnvFile)) {
 $setEnvScript = Join-Path $scriptDir "set-env-values.ps1"
 if (Test-Path $setEnvScript) {
     if (-not [string]::IsNullOrWhiteSpace($EncryptionKey)) {
-        . $setEnvScript -envFile $EnvFile -overrideExisting $false -EncryptionKey $EncryptionKey
+        . $setEnvScript -envFile $EnvFile -overrideExisting $OverrideExisting -EncryptionKey $EncryptionKey
     } else {
-        . $setEnvScript -envFile $EnvFile -overrideExisting $false
+        . $setEnvScript -envFile $EnvFile -overrideExisting $OverrideExisting
     }
 }
 
