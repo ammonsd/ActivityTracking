@@ -93,8 +93,8 @@ pipeline {
         MAVEN_HOME = tool name: 'Maven-3.9', type: 'maven'
         PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${env.PATH}"
         
-        // Application version from pom.xml
-        APP_VERSION = readMavenPom().getVersion()
+        // Application version from pom.xml (set after checkout in Initialize stage)
+        // APP_VERSION will be dynamically set
         
         // Build Notifications Configuration
         APP_URL = 'https://taskactivitytracker.com'
@@ -154,9 +154,25 @@ pipeline {
             }
         }
         
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code...'
+                checkout scm
+                
+                script {
+                    // Display recent commits
+                    sh 'git log --oneline -5'
+                }
+            }
+        }
+        
         stage('Initialize') {
             steps {
                 script {
+                    // Read application version from pom.xml after checkout
+                    def pom = readMavenPom()
+                    env.APP_VERSION = pom.version
+                    
                     echo "========================================="
                     echo "Task Activity Tracking - CI/CD Pipeline"
                     echo "========================================="
@@ -165,7 +181,7 @@ pipeline {
                     echo "Build Number: ${env.BUILD_NUMBER}"
                     echo "Branch: ${env.GIT_BRANCH}"
                     echo "Commit: ${env.GIT_COMMIT?.take(7)}"
-                    echo "Application Version: ${APP_VERSION}"
+                    echo "Application Version: ${env.APP_VERSION}"
                     echo "Trigger: ${currentBuild.getBuildCauses()[0]._class}"
                     echo "========================================="
                     
@@ -322,18 +338,6 @@ pipeline {
                         echo "⚠ Failed to send skipped deployment notification: ${e.message}"
                         // Don't fail the build if notification fails
                     }
-                }
-            }
-        }
-        
-        stage('Checkout') {
-            steps {
-                echo 'Checking out source code...'
-                checkout scm
-                
-                script {
-                    // Display recent commits
-                    sh 'git log --oneline -5'
                 }
             }
         }
