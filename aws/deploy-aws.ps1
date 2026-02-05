@@ -65,6 +65,10 @@
 .PARAMETER EncryptionKey
     Encryption key for sensitive data. Passed to set-env-values.ps1 for decryption.
 
+.PARAMETER UpdateJenkinsMarker
+    Update the S3 deployment marker to prevent Jenkins from auto-deploying.
+    Use this when manually deploying during the day to avoid duplicate deployments.
+
 .EXAMPLE
     .\deploy-aws.ps1 -Environment dev
     Deploy to development environment.
@@ -92,6 +96,10 @@
 .EXAMPLE
     .\deploy-aws.ps1 -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
     Deploy with encryption key and override existing environment variables.
+
+.EXAMPLE
+    .\deploy-aws.ps1 -UpdateJenkinsMarker
+    Deploy and update S3 marker to prevent Jenkins from deploying again (prevents duplicate deploys).
 
 .NOTES
     Author: Dean Ammons
@@ -136,7 +144,10 @@ param(
     [bool]$OverrideExisting = $false,
     
     [Parameter(Mandatory=$false)]
-    [string]$EncryptionKey = ""
+    [string]$EncryptionKey = "",
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$UpdateJenkinsMarker
 )
 
 # Stop on errors
@@ -644,6 +655,46 @@ function Deploy-ToECS {
     }
 }
 
+function Update-JenkinsDeploymentMarker {
+    Write-Info "Updating Jenkins deployment marker in S3..."
+    
+    try {
+        $s3Bucket = "taskactivity-logs-archive"
+        $s3KeyDeploy = "jenkins-build-history/TaskActivity-Pipeline-deploy-last-build.txt"
+        $s3KeyBuildOnly = "jenkins-build-history/TaskActivity-Pipeline-build-only-last-build.txt"
+        
+        # Get the latest successful Jenkins build number from S3
+        $lastBuildNumber = aws s3 cp "s3://${s3Bucket}/${s3KeyBuildOnly}" - 2>$null
+        
+        if ([string]::IsNullOrWhiteSpace($lastBuildNumber)) {
+            Write-Warning "Could not find last Jenkins build number in S3. Using timestamp as marker."
+            $buildMarker = Get-Date -Format "yyyyMMddHHmmss"
+        } else {
+            $buildMarker = $lastBuildNumber.Trim()
+            Write-Info "Using Jenkins build number: $buildMarker"
+        }
+        
+        # Create timestamp for metadata
+        $timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" -AsUTC
+        
+        # Update the deployment marker (write build number to S3)
+        $buildMarker | aws s3 cp - "s3://${s3Bucket}/${s3KeyDeploy}" `
+            --content-type "text/plain" `
+            --metadata "buildNumber=${buildMarker},actionType=deploy,timestamp=${timestamp},source=manual-powershell" 2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "Jenkins deployment marker updated successfully"
+            Write-Info "Jenkins will skip next scheduled deployment (no new builds since this deploy)"
+        } else {
+            Write-Warning "Failed to update Jenkins deployment marker - Jenkins may still auto-deploy"
+        }
+        
+    } catch {
+        Write-Warning "Error updating Jenkins deployment marker: $_"
+        Write-Warning "This is non-critical, but Jenkins may perform a duplicate deployment"
+    }
+}
+
 function Get-DeploymentStatus {
     Write-Info "Fetching deployment status..."
     
@@ -850,6 +901,11 @@ $taskRevision = Update-TaskDefinition
 
 # Deploy to ECS
 Deploy-ToECS -TaskRevision $taskRevision
+
+# Update Jenkins marker if requested
+if ($UpdateJenkinsMarker) {
+    Update-JenkinsDeploymentMarker
+}
 
 # Show deployment status
 Get-DeploymentStatus
