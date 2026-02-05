@@ -452,6 +452,7 @@ function Build-AndPushImage {
     
     # Build Docker image
     Write-Info "Building Docker image: ${APP_NAME}:${IMAGE_TAG}"
+    Write-Info "Using Dockerfile.local (JAR already built by Maven)"
     
     $noCacheFlag = if ($NoCache) { "--no-cache" } else { "" }
     
@@ -459,12 +460,12 @@ function Build-AndPushImage {
         Write-Info "Using WSL2 Docker..."
         # Convert Windows path to WSL path for context
         $wslPath = wsl wslpath -a $PWD.Path
-        wsl -e bash -c "cd '$wslPath' && docker build $noCacheFlag -t ${APP_NAME}:${IMAGE_TAG} -t ${APP_NAME}:latest ."
+        wsl -e bash -c "cd '$wslPath' && docker build $noCacheFlag -f Dockerfile.local -t ${APP_NAME}:${IMAGE_TAG} -t ${APP_NAME}:latest ."
     } else {
         if ($NoCache) {
-            docker build --no-cache -t "${APP_NAME}:${IMAGE_TAG}" -t "${APP_NAME}:latest" .
+            docker build --no-cache -f Dockerfile.local -t "${APP_NAME}:${IMAGE_TAG}" -t "${APP_NAME}:latest" .
         } else {
-            docker build -t "${APP_NAME}:${IMAGE_TAG}" -t "${APP_NAME}:latest" .
+            docker build -f Dockerfile.local -t "${APP_NAME}:${IMAGE_TAG}" -t "${APP_NAME}:latest" .
         }
     }
     
