@@ -537,19 +537,38 @@ function Build-AndPushImage {
 function Update-TaskDefinition {
     Write-Info "Updating ECS task definition..."
     
-    # Task definition file should match your application name
-    $TASK_DEF_FILE = "aws\taskactivity-task-definition.json"
+    # Fetch the current task definition from AWS (like Jenkins does)
+    # This ensures we always use the current, correct configuration
+    Write-Info "Fetching current task definition from AWS..."
+    $currentTaskDefJson = aws ecs describe-task-definition `
+        --task-definition $TASK_FAMILY `
+        --query 'taskDefinition' `
+        --output json 2>&1
     
-    if (-not (Test-Path $TASK_DEF_FILE)) {
-        Write-Error "Task definition file not found: $TASK_DEF_FILE"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to fetch current task definition: $currentTaskDefJson"
         exit 1
     }
     
-    # Read task definition
-    $taskDef = Get-Content $TASK_DEF_FILE -Raw | ConvertFrom-Json
+    $taskDef = $currentTaskDefJson | ConvertFrom-Json
     
-    # Replace the image tag
+    # Remove metadata fields that cannot be used in registration
+    # These fields are set by AWS when the task definition is created
+    $taskDef.PSObject.Properties.Remove('taskDefinitionArn')
+    $taskDef.PSObject.Properties.Remove('revision')
+    $taskDef.PSObject.Properties.Remove('status')
+    $taskDef.PSObject.Properties.Remove('requiresAttributes')
+    $taskDef.PSObject.Properties.Remove('compatibilities')
+    $taskDef.PSObject.Properties.Remove('registeredAt')
+    $taskDef.PSObject.Properties.Remove('registeredBy')
+    $taskDef.PSObject.Properties.Remove('deregisteredAt')
+    
+    Write-Success "Current task definition retrieved successfully"
+    
+    # Update only the image tag (preserving all other configuration)
+    $oldImage = $taskDef.containerDefinitions[0].image
     $taskDef.containerDefinitions[0].image = "${ECR_REPOSITORY}:${IMAGE_TAG}"
+    Write-Info "Updated image: $oldImage -> ${ECR_REPOSITORY}:${IMAGE_TAG}"
     
     # Add/Update email environment variables if enabled
     if ($EnableEmail) {
@@ -582,16 +601,18 @@ function Update-TaskDefinition {
         
         $taskDef.containerDefinitions[0].environment = $envVars
         
-        Write-Info "Email configuration added to task definition"
+        Write-Info "Email configuration updated in task definition"
     }
     
-    # Convert back to JSON and save
-    $taskDefContent = $taskDef | ConvertTo-Json -Depth 10
+    # Convert back to JSON and save to temp file
+    $taskDefContent = $taskDef | ConvertTo-Json -Depth 10 -Compress
     
     # Save to temp file in current directory (use absolute path)
     $tempFile = Join-Path $PSScriptRoot "temp-task-definition-$IMAGE_TAG.json"
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText($tempFile, $taskDefContent, $utf8NoBom)
+    
+    Write-Info "Task definition saved to: $tempFile"
     
     # Register new task definition
     Write-Info "Registering new task definition..."
@@ -602,10 +623,11 @@ function Update-TaskDefinition {
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to register task definition. Error: $taskRevision"
-        Remove-Item $tempFile -ErrorAction SilentlyContinue
+        Write-Error "Task definition file preserved at: $tempFile"
         exit 1
     }
     
+    # Clean up temp file on success
     Remove-Item $tempFile -ErrorAction SilentlyContinue
     
     Write-Success "Task definition registered: ${TASK_FAMILY}:${taskRevision}"
