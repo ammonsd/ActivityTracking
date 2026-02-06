@@ -55,14 +55,12 @@ export const ComingSoonDialog: React.FC<ComingSoonDialogProps> = ({
                     color="text.secondary"
                     sx={{ textAlign: "center" }}
                 >
-                    This feature will be available in a future release. Please
-                    check back later or contact your administrator for more
-                    information.
+                    This feature will be available in a future release.
                 </Typography>
             </DialogContent>
             <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
                 <Button onClick={onClose} variant="contained" color="primary">
-                    Got It
+                    Close
                 </Button>
             </DialogActions>
         </Dialog>
