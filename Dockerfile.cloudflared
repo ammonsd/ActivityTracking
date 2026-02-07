@@ -1,0 +1,62 @@
+# Dockerfile for Cloudflare Tunnel Sidecar (ECS Compatible)
+# For ECS deployment with AWS Secrets Manager
+#
+# Note: The cloudflare/cloudflared base image is distroless (no shell),
+# so we use a multi-stage build with busybox to provide shell and utilities
+FROM alpine:latest AS builder
+
+# Install busybox-static for a standalone shell with built-in commands
+RUN apk add --no-cache busybox-static
+
+# Create the entrypoint script
+RUN mkdir -p /staging/etc/cloudflared /staging/bin && \
+    chmod 777 /staging/etc/cloudflared && \
+    cp /bin/busybox.static /staging/bin/busybox && \
+    cp /bin/busybox.static /staging/bin/sh && \
+    cp /bin/busybox.static /staging/bin/mkdir && \
+    cp /bin/busybox.static /staging/bin/echo && \
+    echo '#!/bin/sh' > /staging/entrypoint.sh && \
+    echo 'set -e' >> /staging/entrypoint.sh && \
+    echo '' >> /staging/entrypoint.sh && \
+    echo '# Write credentials from environment variable to file' >> /staging/entrypoint.sh && \
+    echo 'if [ -n "$CLOUDFLARE_TUNNEL_CREDENTIALS" ]; then' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "$CLOUDFLARE_TUNNEL_CREDENTIALS" > /etc/cloudflared/credentials.json' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "CloudFlare tunnel credentials loaded from environment"' >> /staging/entrypoint.sh && \
+    echo 'else' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "ERROR: CLOUDFLARE_TUNNEL_CREDENTIALS environment variable is required" >&2' >> /staging/entrypoint.sh && \
+    echo '    exit 1' >> /staging/entrypoint.sh && \
+    echo 'fi' >> /staging/entrypoint.sh && \
+    echo '' >> /staging/entrypoint.sh && \
+    echo '# Write config from environment variable to file' >> /staging/entrypoint.sh && \
+    echo 'if [ -n "$CLOUDFLARE_TUNNEL_CONFIG" ]; then' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "$CLOUDFLARE_TUNNEL_CONFIG" > /etc/cloudflared/config.yml' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "CloudFlare tunnel config loaded from environment"' >> /staging/entrypoint.sh && \
+    echo 'else' >> /staging/entrypoint.sh && \
+    echo '    /bin/echo "ERROR: CLOUDFLARE_TUNNEL_CONFIG environment variable is required" >&2' >> /staging/entrypoint.sh && \
+    echo '    exit 1' >> /staging/entrypoint.sh && \
+    echo 'fi' >> /staging/entrypoint.sh && \
+    echo '' >> /staging/entrypoint.sh && \
+    echo '# Start cloudflared tunnel' >> /staging/entrypoint.sh && \
+    echo 'exec /usr/local/bin/cloudflared tunnel --config /etc/cloudflared/config.yml run taskactivity' >> /staging/entrypoint.sh && \
+    chmod +x /staging/entrypoint.sh
+
+# Final stage - use cloudflared image
+FROM cloudflare/cloudflared:latest
+
+# Switch to root to set up directories and copy files
+USER root
+
+# Copy pre-created cloudflared config directory from builder (with proper permissions and ownership)
+COPY --from=builder --chown=nonroot:nonroot /staging/etc/cloudflared /etc/cloudflared
+
+# Copy busybox utilities and entrypoint script from builder
+COPY --from=builder /staging/bin/busybox /bin/busybox
+COPY --from=builder /staging/bin/sh /bin/sh
+COPY --from=builder /staging/bin/mkdir /bin/mkdir
+COPY --from=builder /staging/bin/echo /bin/echo
+COPY --from=builder /staging/entrypoint.sh /entrypoint.sh
+
+# Switch back to non-root user (cloudflared default user)
+USER nonroot
+
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
