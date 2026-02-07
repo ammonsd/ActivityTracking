@@ -260,6 +260,7 @@ $AWS_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
 
 $APP_NAME = "taskactivity"
 $ECR_REPOSITORY = "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME"
+$ECR_REPOSITORY_CLOUDFLARED = "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME-cloudflared"
 $ECS_CLUSTER = "$APP_NAME-cluster"
 $ECS_SERVICE = "$APP_NAME-service"
 $TASK_FAMILY = $APP_NAME
@@ -476,6 +477,28 @@ function Build-AndPushImage {
     
     Write-Success "Docker image built successfully"
     
+    # Build CloudFlare tunnel image
+    Write-Info "Building CloudFlare tunnel sidecar image..."
+    Write-Info "Using Dockerfile.cloudflared"
+    
+    if ($script:useWSLDocker) {
+        $wslPath = wsl wslpath -a $PWD.Path
+        wsl -e bash -c "cd '$wslPath' && docker build $noCacheFlag -f Dockerfile.cloudflared -t ${APP_NAME}-cloudflared:${IMAGE_TAG} -t ${APP_NAME}-cloudflared:latest ."
+    } else {
+        if ($NoCache) {
+            docker build --no-cache -f Dockerfile.cloudflared -t "${APP_NAME}-cloudflared:${IMAGE_TAG}" -t "${APP_NAME}-cloudflared:latest" .
+        } else {
+            docker build -f Dockerfile.cloudflared -t "${APP_NAME}-cloudflared:${IMAGE_TAG}" -t "${APP_NAME}-cloudflared:latest" .
+        }
+    }
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "CloudFlare tunnel Docker build failed"
+        exit 1
+    }
+    
+    Write-Success "CloudFlare tunnel image built successfully"
+    
     # Check if ECR credential helper is configured
     $credHelperConfigured = $false
     if ($script:useWSLDocker) {
@@ -510,9 +533,13 @@ function Build-AndPushImage {
     if ($script:useWSLDocker) {
         wsl -e docker tag "${APP_NAME}:${IMAGE_TAG}" "${ECR_REPOSITORY}:${IMAGE_TAG}"
         wsl -e docker tag "${APP_NAME}:latest" "${ECR_REPOSITORY}:latest"
+        wsl -e docker tag "${APP_NAME}-cloudflared:${IMAGE_TAG}" "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+        wsl -e docker tag "${APP_NAME}-cloudflared:latest" "${ECR_REPOSITORY_CLOUDFLARED}:latest"
     } else {
         docker tag "${APP_NAME}:${IMAGE_TAG}" "${ECR_REPOSITORY}:${IMAGE_TAG}"
         docker tag "${APP_NAME}:latest" "${ECR_REPOSITORY}:latest"
+        docker tag "${APP_NAME}-cloudflared:${IMAGE_TAG}" "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+        docker tag "${APP_NAME}-cloudflared:latest" "${ECR_REPOSITORY_CLOUDFLARED}:latest"
     }
     
     # Push to ECR
@@ -520,9 +547,13 @@ function Build-AndPushImage {
     if ($script:useWSLDocker) {
         wsl -e docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
         wsl -e docker push "${ECR_REPOSITORY}:latest"
+        wsl -e docker push "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+        wsl -e docker push "${ECR_REPOSITORY_CLOUDFLARED}:latest"
     } else {
         docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
         docker push "${ECR_REPOSITORY}:latest"
+        docker push "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+        docker push "${ECR_REPOSITORY_CLOUDFLARED}:latest"
     }
     
     if ($LASTEXITCODE -ne 0) {
@@ -569,6 +600,51 @@ function Update-TaskDefinition {
     $oldImage = $taskDef.containerDefinitions[0].image
     $taskDef.containerDefinitions[0].image = "${ECR_REPOSITORY}:${IMAGE_TAG}"
     Write-Info "Updated image: $oldImage -> ${ECR_REPOSITORY}:${IMAGE_TAG}"
+    
+    # Add or update CloudFlare tunnel sidecar container
+    $cloudflaredContainer = $taskDef.containerDefinitions | Where-Object { $_.name -eq "cloudflared" }
+    if ($cloudflaredContainer) {
+        # Update existing CloudFlare container
+        $oldCloudflaredImage = $cloudflaredContainer.image
+        $cloudflaredContainer.image = "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+        Write-Info "Updated CloudFlare image: $oldCloudflaredImage -> ${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+    } else {
+        # Add new CloudFlare tunnel sidecar container
+        Write-Info "Adding CloudFlare tunnel sidecar container to task definition"
+        $cloudflaredDef = @{
+            name = "cloudflared"
+            image = "${ECR_REPOSITORY_CLOUDFLARED}:${IMAGE_TAG}"
+            cpu = 0
+            essential = $false
+            secrets = @(
+                @{
+                    name = "CLOUDFLARE_TUNNEL_CREDENTIALS"
+                    valueFrom = "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:taskactivity/cloudflare/tunnel-credentials-gpF9bV"
+                },
+                @{
+                    name = "CLOUDFLARE_TUNNEL_CONFIG"
+                    valueFrom = "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:taskactivity/cloudflare/config-rBUT0A"
+                }
+            )
+            logConfiguration = @{
+                logDriver = "awslogs"
+                options = @{
+                    "awslogs-group" = "/ecs/taskactivity-cloudflared"
+                    "awslogs-create-group" = "true"
+                    "awslogs-region" = $AWS_REGION
+                    "awslogs-stream-prefix" = "cloudflared"
+                }
+            }
+            dependsOn = @(
+                @{
+                    containerName = "taskactivity"
+                    condition = "START"
+                }
+            )
+        }
+        $taskDef.containerDefinitions += $cloudflaredDef
+        Write-Success "CloudFlare tunnel sidecar container added"
+    }
     
     # Add/Update email environment variables if enabled
     if ($EnableEmail) {
@@ -752,9 +828,23 @@ function Get-DeploymentStatus {
             --tasks $taskArns `
             --output json | ConvertFrom-Json
         
-        # Get the container image being used
-        $containerImage = $taskDetails.tasks[0].containers[0].image
-        Write-Host "Running Image:   $containerImage"
+        # Get the container images being used
+        $appContainer = $taskDetails.tasks[0].containers | Where-Object { $_.name -eq "taskactivity" }
+        $cloudflaredContainer = $taskDetails.tasks[0].containers | Where-Object { $_.name -eq "cloudflared" }
+        
+        if ($appContainer) {
+            Write-Host "App Image:       $($appContainer.image)"
+        }
+        if ($cloudflaredContainer) {
+            $cloudflaredStatus = if ($cloudflaredContainer.lastStatus -eq "RUNNING") { "Running" } else { $cloudflaredContainer.lastStatus }
+            Write-Host "CloudFlare:      Enabled ($cloudflaredStatus)" -ForegroundColor $(if ($cloudflaredStatus -eq "Running") { "Green" } else { "Yellow" })
+            Write-Host "  Image:         $($cloudflaredContainer.image)" -ForegroundColor Gray
+        } else {
+            Write-Host "CloudFlare:      Not configured" -ForegroundColor Gray
+        }
+        
+        # Keep app container for backward compatibility
+        $containerImage = $appContainer.image
         
         # Check email configuration from running task definition
         $currentTaskDefArn = $taskDetails.tasks[0].taskDefinitionArn

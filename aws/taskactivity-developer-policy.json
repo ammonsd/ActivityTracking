@@ -15,7 +15,8 @@
                 "ecr:CompleteLayerUpload",
                 "ecr:DescribeRepositories",
                 "ecr:ListImages",
-                "ecr:DescribeImages"
+                "ecr:DescribeImages",
+                "ecr:CreateRepository"
             ],
             "Resource": "*"
         },
