@@ -209,6 +209,11 @@ public class SecurityConfig {
                                                 .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                                 ROLE_EXPENSE_ADMIN)
 
+                                                // Login audit endpoint - accessible to all
+                                                // authenticated users for dashboard demo
+                                                .requestMatchers("/api/users/login-audit")
+                                                .authenticated()
+
                                                 // Admin-only API endpoints
                                                 .requestMatchers("/api/users/**",
                                                                 "/api/dropdownvalues/**")

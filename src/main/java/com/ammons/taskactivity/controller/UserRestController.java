@@ -218,7 +218,9 @@ public class UserRestController {
     }
 
     /**
-     * Get login audit data (ADMIN only) Returns recent login activity for guest users
+     * Get login audit data for guest activity dashboard. Returns recent login activity for
+     * specified user (default: guest). Accessible to all authenticated users for dashboard demo
+     * purposes.
      */
     @GetMapping("/login-audit")
     public ResponseEntity<ApiResponse<List<com.ammons.taskactivity.dto.LoginAuditDto>>> getLoginAudit(

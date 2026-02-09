@@ -36,7 +36,7 @@ export const FEATURES: FeaturesConfiguration = {
     guestActivity: {
         enabled: true,
         comingSoon: false,
-        requiresAdmin: true,
+        requiresAdmin: false,
         description: "View guest login activity and statistics",
         icon: "Timeline",
         route: "/guest-activity",
