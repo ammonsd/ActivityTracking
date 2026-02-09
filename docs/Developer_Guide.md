@@ -57,7 +57,27 @@ The application provides two user interface options:
 - **Location**: `frontend/` directory
 - **Development Server**: `npm start` (runs on port 4200)
 
-Both UIs connect to the same Spring Boot backend REST API and share authentication.
+#### React Admin Dashboard (Modern SPA)
+- **React 19.2.0**: Latest version with modern hooks and concurrent features
+- **TypeScript 5.9.3**: Type-safe development
+- **Material-UI v7.3.7**: Google's Material Design component library
+- **Vite 7.2.4**: Next-generation frontend build tool with HMR
+- **Axios**: Promise-based HTTP client for API integration
+- **Zustand**: Lightweight state management
+- **Authentication**: Shares Spring Security session with backend
+- **ADMIN-only Access**: Role enforcement via Spring Security
+- **Access**: 
+  - Development: http://localhost:4201
+  - Production: http://localhost:8080/dashboard
+- **Location**: `frontend-react/` directory
+- **Development Server**: `npm run dev` (runs on port 4201)
+- **Features**:
+  - Guest Activity Report with login audit tracking
+  - CSV export with Copy/Download/Close options
+  - Real-time statistics (Total Logins, Unique Locations, Success Rate)
+  - Responsive Material Design cards and tables
+
+All UIs connect to the same Spring Boot backend REST API and share authentication.
 
 ### Password Reset Feature
 
@@ -236,9 +256,9 @@ Node.js is used exclusively for building and developing the Angular frontend. Th
 
 #### Maven Integration with frontend-maven-plugin
 
-The `pom.xml` includes the `frontend-maven-plugin` which automates the entire Angular build process during Maven builds:
+The `pom.xml` includes the `frontend-maven-plugin` which automates both the Angular and React build processes during Maven builds. The plugin is configured with two execution sets: one for Angular (`frontend/`) and one for React Dashboard (`frontend-react/`).
 
-**Plugin Configuration:**
+**Plugin Configuration (Angular):**
 ```xml
 <plugin>
     <groupId>com.github.eirslett</groupId>
@@ -317,12 +337,54 @@ The `pom.xml` includes the `frontend-maven-plugin` which automates the entire An
 4. Copies built files from `frontend/dist/app/browser/` to `target/classes/static/app/`
 5. Spring Boot serves the Angular app at `/app/` endpoint
 
+**Plugin Configuration (React Dashboard):**
+
+The same `frontend-maven-plugin` is configured with a second execution set for React:
+
+```xml
+<configuration>
+    <workingDirectory>frontend-react</workingDirectory>
+    <installDirectory>target</installDirectory>
+    <skip>${skip.frontend.build}</skip>
+</configuration>
+<executions>
+    <!-- Executions: install node and npm, npm install, npm run build -->
+</executions>
+```
+
+**Resource Copying (React):**
+```xml
+<execution>
+    <id>copy-react-build</id>
+    <phase>process-classes</phase>
+    <goals>
+        <goal>copy-resources</goal>
+    </goals>
+    <configuration>
+        <outputDirectory>${project.build.outputDirectory}/static/dashboard</outputDirectory>
+        <resources>
+            <resource>
+                <directory>frontend-react/dist</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </configuration>
+</execution>
+```
+
+**React Build Flow:**
+1. Reuses Node.js v20.11.0 and npm 10.2.4 from Angular build
+2. Executes `npm install` in `frontend-react/` directory to fetch React dependencies
+3. Runs `npm run build` (Vite production build) to create optimized bundle
+4. Copies built files from `frontend-react/dist/` to `target/classes/static/dashboard/`
+5. Spring Boot serves the React Dashboard at `/dashboard/` endpoint (ADMIN-only)
+
 **Key Benefits:**
 - ✅ **No Node.js pre-installation required** - Maven handles everything
 - ✅ **CI/CD friendly** - Works in Docker builds and build servers
 - ✅ **Consistent versions** - Plugin ensures Node v20.11.0 and npm 10.2.4 everywhere
-- ✅ **Single build command** - `mvnw clean package` builds both backend and frontend
-- ✅ **Optional skip** - Use `-Dskip.frontend.build=true` for backend-only builds
+- ✅ **Single build command** - `mvnw clean package` builds backend, Angular, and React
+- ✅ **Optional skip** - Use `-Dskip.frontend.build=true` to skip all frontend builds
 
 #### Frontend Development Workflow
 
@@ -350,22 +412,42 @@ npm test
 npm run test:once
 ```
 
+**React Dashboard Development Commands:**
+```bash
+cd frontend-react
+
+# Install dependencies
+npm install
+
+# Start Vite dev server with hot-reload (http://localhost:4201)
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Type check only (no build)
+npm run type-check
+```
+
 **Full Application Build:**
 ```bash
-# Build backend + frontend together (Maven handles Node.js)
+# Build backend + Angular + React together (Maven handles Node.js)
 ./mvnw clean package
 
 # Windows
 .\mvnw.cmd clean package
 
-# Skip frontend build for faster backend-only builds
+# Skip all frontend builds for faster backend-only builds
 ./mvnw clean package -Dskip.frontend.build=true
 ```
 
 **Docker Behavior:**
-- Main `Dockerfile` copies the `frontend/` directory but uses `-Dskip.frontend.build=true`
-- Frontend should be pre-built locally or by CI before Docker build
-- Alternatively, remove the skip flag to let Docker run the full Maven frontend build
+- Main `Dockerfile` copies both `frontend/` and `frontend-react/` directories
+- Frontend builds can use `-Dskip.frontend.build=true` if pre-built locally or by CI
+- Alternatively, remove the skip flag to let Docker run the full Maven frontend builds for both Angular and React
 
 **Package.json Scripts:**
 ```json
