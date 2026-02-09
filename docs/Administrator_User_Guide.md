@@ -132,10 +132,19 @@ The React Admin Dashboard is currently in Phase 3 development, providing a navig
 - **Navigation Structure**: Left sidebar with feature cards for upcoming management modules
 - **Task Activity Tracker**: Functional link navigates back to Spring Boot Task List UI
 
-**Feature Placeholders (Phase 4-8 Coming Soon):**
+**Available Features:**
+- **Guest Activity Report** (Phase 6 - Implemented February 2026):
+  - View guest login statistics and audit history
+  - Real-time metrics: Total Logins, Unique Locations, Last Login, Success Rate
+  - Login audit table with Date/Time, IP Address, Location, Status columns
+  - CSV export with dialog options (Copy to Clipboard, Download CSV, Close)
+  - Compact date format for card displays (e.g., "Feb 9, 11:59 AM")
+  - Responsive Material-UI cards and tables
+  - Data resets with each deployment (in-memory storage)
+
+**Feature Placeholders (Phase 4-5, 7-8 Coming Soon):**
 - **User Management**: Shows "Coming Soon" dialog (Phase 4)
 - **Expense Management**: Shows "Coming Soon" dialog (Phase 5)
-- **Dropdown Configuration**: Shows "Coming Soon" dialog (Phase 6)
 - **Reporting & Analytics**: Shows "Coming Soon" dialog (Phase 7)
 - **System Settings**: Shows "Coming Soon" dialog (Phase 8)
 
@@ -932,12 +941,21 @@ Dropdown management has been consolidated into a single, dynamic interface that 
 
 ### Guest Activity Dashboard
 
-Administrators have access to a dedicated dashboard for monitoring GUEST user login activity. This feature helps track who's accessing the system as a guest and provides security visibility.
+Administrators have access to a dedicated dashboard for monitoring GUEST user login activity. This feature is available in both the Spring Boot backend UI and the React Admin Dashboard, providing security visibility and access tracking.
+
+**Available Interfaces:**
+- **Spring Boot UI**: Traditional server-rendered interface at `/admin/guest-activity`
+- **React Admin Dashboard**: Modern SPA interface with Material Design
+  - Development: http://localhost:4201 (Guest Activity card)
+  - Production: http://localhost:8080/dashboard (Guest Activity card)
 
 **Accessing the Dashboard:**
-1. **Navigate**: 
+1. **Navigate (Spring Boot UI)**: 
    - Option 1: Click **"☰"** to open the sidebar menu, then click **"📊 Guest Activity"**
    - Option 2: Navigate from Manage Users page
+2. **Navigate (React Dashboard)**:
+   - Click **"🎯 Admin Dashboard"** from sidebar menu
+   - Click the **"Guest Activity"** card
 2. **View Statistics**: The dashboard displays key metrics at the top:
    - **Total Logins**: Count of all GUEST login attempts (successful and failed)
    - **Unique Locations**: Number of distinct IP addresses that accessed the account

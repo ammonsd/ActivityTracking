@@ -323,6 +323,47 @@ This document provides a comprehensive summary of all technical features, framew
 - **Angular Router** - Client-side routing with guards
 - **Reactive Forms** - Data binding and validation
 
+### React Admin Dashboard (Modern SPA)
+
+- **React 19.2.0** - Latest version with modern hooks and concurrent features
+- **TypeScript 5.9.3** - Type-safe development with strict mode
+- **Material-UI v7.3.7** - Google's Material Design component library
+- **Vite 7.2.4** - Next-generation frontend build tool
+  - Hot Module Replacement (HMR) for instant updates
+  - Optimized production builds with code splitting
+- **Axios** - Promise-based HTTP client for RESTful API integration
+- **Zustand** - Lightweight state management library
+- **Feature flags** - Modular feature enablement via configuration
+- **Session-based auth** - Shares Spring Security session with backend
+- **ADMIN-only access** - Role enforcement at Spring Security level
+
+### React Dashboard Features
+
+- **Guest Activity Report** (Phase 6 - February 2026)
+  - Real-time login audit tracking for GUEST users
+  - Statistics dashboard with 4 metric cards:
+    - Total Logins (purple gradient card)
+    - Unique Locations (blue gradient card)
+    - Last Login (red gradient card with compact date format)
+    - Success Rate (green gradient card)
+  - Login audit table with sortable columns:
+    - Date/Time with full date format for table rows
+    - IP Address
+    - Location identifier
+    - Status (Success/Failed with colored chips)
+  - CSV export functionality:
+    - Export dialog with Copy to Clipboard button
+    - Download CSV with timestamped filename
+    - Close button to dismiss dialog
+  - Refresh button for manual data reload
+  - Responsive Material-UI Grid layout (4-3-3-2 column distribution)
+  - Compact date formatting for card displays ("Feb 9, 11:59 AM")
+  - In-memory data storage (resets with deployment)
+- **Material Design** - Professional, gradient card designs
+- **TypeScript types** - Strongly-typed API contracts and component props
+- **Error handling** - User-friendly error messages and loading states
+- **Empty states** - Informative messages when no data available
+
 ### Angular Dashboard Features
 
 - **Task Management** - View, create, edit, clone, and delete tasks

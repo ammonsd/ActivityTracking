@@ -34,8 +34,8 @@ export const FEATURES: FeaturesConfiguration = {
         route: "/roles-management",
     },
     guestActivity: {
-        enabled: false,
-        comingSoon: true,
+        enabled: true,
+        comingSoon: false,
         requiresAdmin: true,
         description: "View guest login activity and statistics",
         icon: "Timeline",
