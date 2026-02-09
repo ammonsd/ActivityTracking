@@ -30,7 +30,7 @@ pipeline {
         // Using H notation to spread load evenly across the hour
         // Using 0 notation for top of the hour
         // cron('0 8,12,17 * * *')
-        cron('H 16 *')
+        cron('H 16 * * *')
     }
     
     parameters {
