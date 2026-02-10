@@ -27,6 +27,7 @@ public class UserDto {
     private LocalDateTime lastLogin;
     private int failedLoginAttempts;
     private boolean accountLocked;
+    private boolean hasTasks; // Indicates if user has task activities (affects delete permission)
 
     // Default constructor
     public UserDto() {}
@@ -160,5 +161,13 @@ public class UserDto {
 
     public void setAccountLocked(boolean accountLocked) {
         this.accountLocked = accountLocked;
+    }
+
+    public boolean isHasTasks() {
+        return hasTasks;
+    }
+
+    public void setHasTasks(boolean hasTasks) {
+        this.hasTasks = hasTasks;
     }
 }

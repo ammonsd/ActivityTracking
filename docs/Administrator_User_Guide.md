@@ -133,6 +133,17 @@ The React Admin Dashboard is currently in Phase 3 development, providing a navig
 - **Task Activity Tracker**: Functional link navigates back to Spring Boot Task List UI
 
 **Available Features:**
+- **User Management** (Phase 4 - Implemented February 2026):
+  - Full CRUD operations (Create, Read, Update, Delete)
+  - Filter users by username, role, or company
+  - Pagination with configurable rows per page (5/10/25/50)
+  - Add new users with role assignment and password requirements
+  - Edit existing users (all fields except username)
+  - Admin password change with force update option
+  - Delete protection: Cannot delete yourself or users with task activities
+  - Password validation with show/hide toggles
+  - Real-time validation and error handling
+  - Material-UI dialogs and responsive design
 - **Guest Activity Report** (Phase 6 - Implemented February 2026):
   - View guest login statistics and audit history
   - Real-time metrics: Total Logins, Unique Locations, Last Login, Success Rate
@@ -142,8 +153,7 @@ The React Admin Dashboard is currently in Phase 3 development, providing a navig
   - Responsive Material-UI cards and tables
   - Data resets with each deployment (in-memory storage)
 
-**Feature Placeholders (Phase 4-5, 7-8 Coming Soon):**
-- **User Management**: Shows "Coming Soon" dialog (Phase 4)
+**Feature Placeholders (Phase 5, 7-8 Coming Soon):**
 - **Expense Management**: Shows "Coming Soon" dialog (Phase 5)
 - **Reporting & Analytics**: Shows "Coming Soon" dialog (Phase 7)
 - **System Settings**: Shows "Coming Soon" dialog (Phase 8)
@@ -171,14 +181,17 @@ The React Admin Dashboard is currently in Phase 3 development, providing a navig
 - `CustomAuthenticationSuccessHandler.java` preserves `/dashboard` URLs during login
 - Session cookies work across `/app`, `/dashboard`, and root paths
 
-### Next Steps
+### Implementation Progress
 
-After AWS deployment validation:
-- **Phase 4**: Implement User Management functionality
-- **Phase 5**: Implement Expense Management functionality
-- **Phase 6**: Implement Dropdown Configuration functionality
-- **Phase 7**: Implement Reporting & Analytics functionality
-- **Phase 8**: Implement System Settings functionality
+Completed Phases:
+- ✅ **Phase 3**: Skeleton dashboard with navigation (December 2025)
+- ✅ **Phase 4**: User Management with full CRUD operations (February 2026)
+- ✅ **Phase 6**: Guest Activity Report with metrics and CSV export (February 2026)
+
+Upcoming Phases:
+- **Phase 5**: Expense Management functionality
+- **Phase 7**: Reporting & Analytics functionality
+- **Phase 8**: System Settings functionality
 
 For technical details on React Dashboard implementation, see [React_Dashboard_Blueprint.md](React_Dashboard_Blueprint.md).
 
@@ -251,8 +264,8 @@ For detailed information on managing roles and permissions, see the "Managing Ro
 Administrators can create, edit, and delete user accounts:
 
 1. **Access User Management**: 
-   - Option 1: Click **"☰"** to open the sidebar menu, then click **"👥 Manage Users"**
-   - Option 2: Navigate directly from the Angular Dashboard
+   - **Spring Boot UI (Thymeleaf)**: Click **"☰"** to open the sidebar menu, then click **"👥 Manage Users"**
+   - **React Dashboard**: Click **"User Management"** card or sidebar menu option
 2. **View All Users**: See a list of all system users with their full names, company, role, and last login time
 3. **Filter Users**: Use the filter section to find specific users:
     - **Username**: Filter by username (partial match)
@@ -483,7 +496,7 @@ Users can access their profile through:
   - Minimum 10 characters
   - At least 1 uppercase letter
   - At least 1 numeric digit
-  - At least 1 special character (+&%$#@!~)
+  - At least 1 special character (+&%$#@!~*)
   - Not contain more than 2 consecutive identical characters
   - Not contain the username (case-insensitive)
   - Not be the same as the current password

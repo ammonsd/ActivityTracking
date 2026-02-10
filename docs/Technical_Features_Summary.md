@@ -195,6 +195,37 @@ This document provides a comprehensive summary of all technical features, framew
   - Admin unlock capability via User Management UI
   - Visual indicators for locked accounts
 
+### User Management
+
+- **Dual UI interfaces**:
+  - **React Dashboard**: Modern Material-UI user management with full CRUD (frontend-react/src/pages/UserManagement.tsx)
+  - **Spring Boot UI**: Thymeleaf-based user management with Bootstrap styling (templates/admin/user-management.html)
+- **React Dashboard Features** (Phase 4 - February 2026):
+  - Full CRUD operations via REST API
+  - Create users with role assignment and validation
+  - Edit users (all fields except username which is immutable)
+  - Delete users with confirmation and protection rules
+  - Admin password change with force update option
+  - Filter by username, role, company (partial and exact match)
+  - Pagination with 5/10/25/50 rows per page
+  - Delete button disabled for: current user and users with task activities
+  - Password requirements displayed with validation
+  - Show/hide password toggles
+  - Real-time form validation
+  - Material-UI dialogs and responsive design
+- **REST API Endpoints**:
+  - `GET /api/users` - List users with optional filters
+  - `GET /api/users/{id}` - Get user by ID
+  - `GET /api/users/me` - Current authenticated user
+  - `POST /api/users` - Create new user
+  - `PUT /api/users/{id}` - Update user
+  - `DELETE /api/users/{id}` - Delete user
+  - `PUT /api/users/{id}/password` - Admin password change
+  - `GET /api/users/roles` - List available roles
+- **Permission-based access**:
+  - @RequirePermission annotations on all endpoints
+  - CREATE, READ, UPDATE, DELETE permissions for USER_MANAGEMENT resource
+
 ### User Profile Management
 
 - **Self-service profile editing** for USER, ADMIN, and EXPENSE_ADMIN roles

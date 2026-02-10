@@ -25,8 +25,8 @@ public final class ValidationConstants {
     public static final int PASSWORD_MIN_LENGTH = 10;
     public static final String UPPERCASE_PATTERN = ".*[A-Z].*";
     public static final String DIGIT_PATTERN = ".*\\d.*";
-    public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~].*";
-    public static final String ALLOWED_SPECIAL_CHARS = "+&%$#@!~";
+    public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~*].*";
+    public static final String ALLOWED_SPECIAL_CHARS = "+&%$#@!~*";
     // Pattern to detect more than 2 consecutive identical characters
     public static final String CONSECUTIVE_CHARS_PATTERN = "(.)\\1{2,}";
 

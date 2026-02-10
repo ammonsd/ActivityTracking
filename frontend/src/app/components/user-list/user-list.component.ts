@@ -161,16 +161,8 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                     mat-icon-button
                     color="warn"
                     (click)="deleteUser(user)"
-                    [disabled]="
-                      user.username === 'admin' || currentRole === 'GUEST'
-                    "
-                    [title]="
-                      currentRole === 'GUEST'
-                        ? 'Read-only mode'
-                        : user.username === 'admin'
-                        ? 'Cannot delete admin user'
-                        : 'Delete User'
-                    "
+                    [disabled]="isDeleteDisabled(user)"
+                    [title]="getDeleteTooltip(user)"
                   >
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -300,15 +292,17 @@ export class UserListComponent implements OnInit {
   loading = false;
   error: string | null = null;
   currentRole = '';
+  currentUsername = '';
 
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
     this.currentRole = this.authService.getCurrentRole();
+    this.currentUsername = this.authService.getCurrentUsername();
     this.loadUsers();
   }
 
@@ -370,9 +364,43 @@ export class UserListComponent implements OnInit {
     });
   }
 
+  /**
+   * Check if delete button should be disabled for a user
+   * Matches backend rules: cannot delete yourself or users with tasks
+   */
+  isDeleteDisabled(user: User): boolean {
+    return (
+      this.currentRole === 'GUEST' ||
+      user.username === this.currentUsername ||
+      user.hasTasks === true
+    );
+  }
+
+  /**
+   * Get tooltip text explaining why delete is disabled
+   */
+  getDeleteTooltip(user: User): string {
+    if (this.currentRole === 'GUEST') {
+      return 'Read-only mode';
+    }
+    if (user.username === this.currentUsername) {
+      return 'Cannot delete your own account';
+    }
+    if (user.hasTasks) {
+      return 'Cannot delete user with existing task entries';
+    }
+    return 'Delete User';
+  }
+
   deleteUser(user: User): void {
-    if (user.username === 'admin') {
-      alert('Cannot delete the admin user');
+    // Additional validation before showing confirm dialog
+    if (user.username === this.currentUsername) {
+      alert('Cannot delete your own account');
+      return;
+    }
+
+    if (user.hasTasks) {
+      alert('Cannot delete user with existing task entries');
       return;
     }
 

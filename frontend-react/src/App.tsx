@@ -73,10 +73,11 @@ function App() {
                     }
                 />
 
+                {/* Guest Activity - Accessible to all authenticated users */}
                 <Route
                     path="/guest-activity"
                     element={
-                        <ProtectedRoute requiredRole="ADMIN">
+                        <ProtectedRoute>
                             <MainLayout>
                                 <GuestActivity />
                             </MainLayout>

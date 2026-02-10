@@ -5,7 +5,10 @@ import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.dto.UserDto;
 import com.ammons.taskactivity.dto.UserEditDto;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.service.TaskActivityService;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +32,14 @@ public class UserRestController {
     private static final Logger logger = LoggerFactory.getLogger(UserRestController.class);
 
     private final UserService userService;
+    private final TaskActivityService taskActivityService;
+    private final RoleRepository roleRepository;
 
-    public UserRestController(UserService userService) {
+    public UserRestController(UserService userService, TaskActivityService taskActivityService,
+            RoleRepository roleRepository) {
         this.userService = userService;
+        this.taskActivityService = taskActivityService;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -149,16 +157,42 @@ public class UserRestController {
     }
 
     /**
-     * Get all users in the system. Returns a complete list of all registered users.
+     * Get all users in the system with optional filtering. Returns a complete list of users or
+     * filtered list based on query parameters.
      * 
-     * @return ResponseEntity containing list of all users
+     * @param username optional username filter (partial match, case-insensitive)
+     * @param role optional role filter (exact match)
+     * @param company optional company filter (partial match, case-insensitive)
+     * @return ResponseEntity containing list of filtered users
      */
     @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
-        logger.debug("REST API: Getting all users");
-        List<User> users = userService.getAllUsers();
-        List<UserDto> userDtos = users.stream().map(UserDto::new).toList();
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String company) {
+
+        logger.debug("REST API: Getting users with filters - username: {}, role: {}, company: {}",
+                username, role, company);
+
+        List<User> users;
+
+        // If any filter is provided, use filterUsers; otherwise get all users
+        if ((username != null && !username.trim().isEmpty())
+                || (role != null && !role.trim().isEmpty())
+                || (company != null && !company.trim().isEmpty())) {
+            users = userService.filterUsers(username, role, company);
+        } else {
+            users = userService.getAllUsers();
+        }
+
+        // Convert to DTOs and populate hasTasks field
+        List<UserDto> userDtos = users.stream().map(user -> {
+            UserDto dto = new UserDto(user);
+            dto.setHasTasks(taskActivityService.userHasTaskActivities(user.getUsername()));
+            return dto;
+        }).toList();
+
         ApiResponse<List<UserDto>> response = ApiResponse
                 .success("Users retrieved successfully", userDtos).withCount(userDtos.size());
         return ResponseEntity.ok(response);
@@ -181,44 +215,97 @@ public class UserRestController {
     }
 
     /**
-     * Create new user
+     * Create new user with validation
+     * 
+     * @param user the user entity with username, password, role, etc.
+     * @return ResponseEntity containing the created user
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "CREATE")
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@RequestBody User user) {
         logger.debug("REST API: Creating new user: {}", user.getUsername());
-        // Map entity fields to service method signature
-        User createdUser = userService.createUser(user.getUsername(), user.getPassword(),
-                user.getRole(), user.isForcePasswordUpdate());
-        return ResponseEntity.ok(createdUser);
+        try {
+            // Call the full createUser method with all required fields
+            User createdUser = userService.createUser(user.getUsername(), user.getFirstname(),
+                    user.getLastname(), user.getCompany(), user.getEmail(), user.getPassword(),
+                    user.getRole(), user.isForcePasswordUpdate());
+
+            // Set enabled status
+            createdUser.setEnabled(user.isEnabled());
+            User savedUser = userService.updateUser(createdUser);
+
+            return ResponseEntity
+                    .ok(ApiResponse.success("User created successfully", new UserDto(savedUser)));
+        } catch (Exception e) {
+            logger.error("Error creating user: {}", e.getMessage(), e);
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Error creating user: " + e.getMessage()));
+        }
     }
 
     /**
-     * Update existing user
+     * Update existing user with validation
+     * 
+     * @param id the user ID to update
+     * @param user the user entity with updated fields
+     * @return ResponseEntity containing the updated user
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(@PathVariable Long id,
+            @RequestBody User user) {
         logger.debug("REST API: Updating user with ID: {}", id);
         return userService.getUserById(id).map(existingUser -> {
-            user.setId(id);
-            User updatedUser = userService.updateUser(user);
-            return ResponseEntity.ok(updatedUser);
-        }).orElse(ResponseEntity.notFound().build());
+            try {
+                // Update editable fields
+                existingUser.setUsername(user.getUsername());
+                existingUser.setFirstname(user.getFirstname());
+                existingUser.setLastname(user.getLastname());
+                existingUser.setCompany(user.getCompany());
+                existingUser.setEmail(user.getEmail());
+                existingUser.setRole(user.getRole());
+                existingUser.setEnabled(user.isEnabled());
+                existingUser.setAccountLocked(user.isAccountLocked());
+                existingUser.setForcePasswordUpdate(user.isForcePasswordUpdate());
+
+                User updatedUser = userService.updateUser(existingUser);
+                return ResponseEntity.ok(
+                        ApiResponse.success("User updated successfully", new UserDto(updatedUser)));
+            } catch (Exception e) {
+                logger.error("Error updating user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<UserDto>>body(
+                        ApiResponse.error("Error updating user: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
     }
 
     /**
-     * Delete user
+     * Delete user by ID
+     * 
+     * @param id the user ID to delete
+     * @return ResponseEntity with success or error message
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "DELETE")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         logger.debug("REST API: Deleting user with ID: {}", id);
         return userService.getUserById(id).map(user -> {
-            userService.deleteUser(id);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+            try {
+                userService.deleteUser(id);
+                return ResponseEntity
+                        .ok(ApiResponse.<Void>success("User deleted successfully", null));
+            } catch (Exception e) {
+                logger.error("Error deleting user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<Void>>body(
+                        ApiResponse.error("Error deleting user: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
     }
 
     /**
-     * Get login audit data (ADMIN only) Returns recent login activity for guest users
+     * Get login audit data for guest activity dashboard. Returns recent login activity for
+     * specified user (default: guest). Accessible to all authenticated users for dashboard demo
+     * purposes.
      */
     @GetMapping("/login-audit")
     public ResponseEntity<ApiResponse<List<com.ammons.taskactivity.dto.LoginAuditDto>>> getLoginAudit(
@@ -235,6 +322,70 @@ public class UserRestController {
             logger.error("Error retrieving login audit data", e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("Error retrieving login audit: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get all roles for user management filtering. Returns a list of all available roles in the
+     * system.
+     * 
+     * @return ResponseEntity containing list of all roles
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
+    @GetMapping("/roles")
+    public ResponseEntity<ApiResponse<List<Roles>>> getAllRoles() {
+        logger.debug("REST API: Getting all roles");
+        List<Roles> roles = roleRepository.findAll();
+        return ResponseEntity.ok(ApiResponse.success("Roles retrieved successfully", roles));
+    }
+
+    /**
+     * Change password for a user (admin function).
+     * 
+     * @param id the user ID whose password to change
+     * @param request the request body containing newPassword and forcePasswordUpdate flag
+     * @return ResponseEntity with success or error message
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PutMapping("/{id}/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@PathVariable Long id,
+            @RequestBody PasswordChangeRequest request) {
+        logger.debug("REST API: Changing password for user ID: {}", id);
+        return userService.getUserById(id).map(user -> {
+            try {
+                userService.changePassword(user.getUsername(), request.getNewPassword(),
+                        !request.isForcePasswordUpdate());
+                return ResponseEntity
+                        .ok(ApiResponse.<Void>success("Password changed successfully", null));
+            } catch (Exception e) {
+                logger.error("Error changing password for user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<Void>>body(
+                        ApiResponse.error("Error changing password: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+    }
+
+    /**
+     * DTO for password change request
+     */
+    public static class PasswordChangeRequest {
+        private String newPassword;
+        private boolean forcePasswordUpdate;
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
+        }
+
+        public boolean isForcePasswordUpdate() {
+            return forcePasswordUpdate;
+        }
+
+        public void setForcePasswordUpdate(boolean forcePasswordUpdate) {
+            this.forcePasswordUpdate = forcePasswordUpdate;
         }
     }
 }

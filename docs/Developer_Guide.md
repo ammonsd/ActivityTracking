@@ -1590,8 +1590,8 @@ cd aws
 public static final int PASSWORD_MIN_LENGTH = 10;
 public static final String UPPERCASE_PATTERN = ".*[A-Z].*";
 public static final String DIGIT_PATTERN = ".*\\d.*";
-public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~].*";
-public static final String ALLOWED_SPECIAL_CHARS = "+&%$#@!~";
+public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~*].*";
+public static final String ALLOWED_SPECIAL_CHARS = "+&%$#@!~*";
 
 // Validation messages
 public static final String PASSWORD_MIN_LENGTH_MSG = "Password must be at least "
@@ -2348,7 +2348,7 @@ export APP_ADMIN_INITIAL_PASSWORD=securePassword123!
    - Minimum 10 characters
    - At least 1 uppercase letter
    - At least 1 numeric digit
-   - At least 1 special character from: `+&%$#@!~`
+   - At least 1 special character from: `+&%$#@!~*`
    - Not contain more than 2 consecutive identical characters
    - Not contain the username (case-insensitive)
    - Not be the same as the current password
@@ -5044,7 +5044,7 @@ public class PasswordValidator implements ConstraintValidator<ValidPassword, Str
     private static final int MIN_LENGTH = 10;
     private static final String UPPERCASE_PATTERN = ".*[A-Z].*";
     private static final String DIGIT_PATTERN = ".*\\d.*";
-    private static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~].*";
+    private static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~*].*";
 
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {
@@ -5064,7 +5064,7 @@ public class PasswordValidator implements ConstraintValidator<ValidPassword, Str
         }
 
         if (!password.matches(SPECIAL_CHAR_PATTERN)) {
-            setMessage(context, "Password must contain at least 1 special character (+&%$#@!~)");
+            setMessage(context, "Password must contain at least 1 special character (+&%$#@!~*)");
             return false;
         }
 
