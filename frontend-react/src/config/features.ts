@@ -18,8 +18,8 @@ export const FEATURES: FeaturesConfiguration = {
         route: "/user-management",
     },
     dropdownManagement: {
-        enabled: false,
-        comingSoon: true,
+        enabled: true,
+        comingSoon: false,
         requiresAdmin: true,
         description: "Manage dropdown values for tasks and expenses",
         icon: "List",

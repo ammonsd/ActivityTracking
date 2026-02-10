@@ -72,9 +72,12 @@ The application provides two user interface options:
 - **Location**: `frontend-react/` directory
 - **Development Server**: `npm run dev` (runs on port 4201)
 - **Features**:
+  - User Management with full CRUD operations and role assignment
+  - Roles Management with permission-based access control
   - Guest Activity Report with login audit tracking
+  - Dropdown Management for system dropdown values (TASK/EXPENSE categories)
   - CSV export with Copy/Download/Close options
-  - Real-time statistics (Total Logins, Unique Locations, Success Rate)
+  - Real-time statistics and data filtering
   - Responsive Material Design cards and tables
 
 All UIs connect to the same Spring Boot backend REST API and share authentication.

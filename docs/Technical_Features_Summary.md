@@ -370,6 +370,31 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### React Dashboard Features
 
+- **Dropdown Management** (Phase 5 - February 2026)
+  - Comprehensive dropdown value management for TASK and EXPENSE categories
+  - Dynamic category and subcategory filtering with real-time updates
+  - "Add New Category" dialog for creating category/subcategory/value combinations
+  - Inline "Add Value" form (disabled until category selected)
+  - Material-UI table displaying: Category, Subcategory, Value, Display Order, Status (Active/Inactive), Actions
+  - Edit dialog for modifying value, display order, and active status fields
+  - Delete confirmation dialog with contextual information
+  - Summary statistics showing total values and active count
+  - Success/Error notifications via Snackbar
+  - TypeScript types: `DropdownValue`, `DropdownFilters`, request/response types
+  - API client wrapper: `dropdownApi` with full CRUD operations
+  - REST API endpoints:
+    - GET `/api/dropdowns/categories` - Fetch all categories
+    - GET `/api/dropdowns/all` - Fetch all dropdown values
+    - GET `/api/dropdowns/category/{category}` - Fetch values by category
+    - POST `/api/dropdowns` - Create new dropdown value (requires CREATE permission)
+    - PUT `/api/dropdowns/{id}` - Update value (requires UPDATE permission)
+    - DELETE `/api/dropdowns/{id}` - Delete value (requires DELETE permission)
+  - Access control via `@RequirePermission` annotations (USER_MANAGEMENT permissions)
+  - Components: FilterSection, AddCategoryDialog, AddValueForm, DropdownTable, EditDialog, DeleteConfirmDialog, StatsSection
+  - State management with React hooks (useState, useEffect)
+  - Responsive design following Material-UI patterns
+  - Automatic subcategory population based on selected category
+  - No link to Task Activity List (per React dashboard design)
 - **Roles Management** (Phase 7 - February 2026)
   - Comprehensive role and permission management system
   - Material-UI table displaying all roles with grouped permissions

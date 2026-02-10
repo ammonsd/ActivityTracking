@@ -1,73 +1,195 @@
-# React + TypeScript + Vite
+# React Admin Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Author:** Dean Ammons  
+**Date:** February 2026
 
-Currently, two official plugins are available:
+Modern React-based admin dashboard for Task Activity Management System built with TypeScript, Material-UI, and Vite.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Technology Stack
 
-## React Compiler
+- **React 19.2.0** - Latest React with modern hooks and concurrent features
+- **TypeScript 5.9.3** - Type-safe development
+- **Material-UI v7.3.7** - Google's Material Design component library
+- **Vite 7.2.4** - Next-generation frontend build tool with HMR
+- **Axios** - Promise-based HTTP client for API integration
+- **Zustand** - Lightweight state management
+- **React Router** - Client-side routing
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+### Implemented Features (Phase 3-7)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+✅ **User Management** (Phase 4)
+- Full CRUD operations with role assignment
+- Filter by username, role, company
+- Pagination with configurable rows per page
+- Delete protection for active users
+- Password validation and admin password change
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+✅ **Dropdown Management** (Phase 5)
+- Manage dropdown values for TASK and EXPENSE categories
+- Category/subcategory filtering with dynamic updates
+- Add new categories with initial values
+- Inline form for adding values to existing categories
+- Edit values with display order and active status
+- Delete confirmation with context information
+- Summary statistics
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+✅ **Guest Activity Report** (Phase 6)
+- Real-time login audit tracking
+- Statistics dashboard with metric cards
+- CSV export functionality
+- Success rate tracking
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+✅ **Roles Management** (Phase 7)
+- Comprehensive role and permission management
+- Hierarchical permission selection
+- Resource-level permission control
+- Constraint validation for role deletion
+
+### Upcoming Features
+
+🔄 **System Settings** (Phase 8) - Coming soon
+
+## Project Structure
+
+```
+frontend-react/
+├── src/
+│   ├── api/              # API service layer
+│   │   ├── axios.client.ts
+│   │   ├── auth.api.ts
+│   │   ├── dropdown.api.ts
+│   │   ├── guestActivity.api.ts
+│   │   ├── rolesManagement.api.ts
+│   │   └── userManagement.api.ts
+│   ├── components/       # Reusable components
+│   │   ├── common/
+│   │   ├── dropdownManagement/
+│   │   ├── guestActivity/
+│   │   ├── layout/
+│   │   ├── rolesManagement/
+│   │   └── userManagement/
+│   ├── config/          # Configuration files
+│   │   └── features.ts
+│   ├── pages/           # Page components
+│   │   ├── DashboardHome.tsx
+│   │   ├── DropdownManagement.tsx
+│   │   ├── GuestActivity.tsx
+│   │   ├── RolesManagement.tsx
+│   │   └── UserManagement.tsx
+│   ├── store/           # State management
+│   │   └── authStore.ts
+│   ├── types/           # TypeScript type definitions
+│   │   ├── auth.types.ts
+│   │   ├── dropdown.types.ts
+│   │   ├── features.types.ts
+│   │   ├── guestActivity.types.ts
+│   │   ├── rolesManagement.types.ts
+│   │   └── userManagement.types.ts
+│   ├── utils/           # Utility functions
+│   ├── App.tsx          # Main app component
+│   └── main.tsx         # Entry point
+├── public/              # Static assets
+├── dist/                # Build output (gitignored)
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 20.19+ or 22.12+ (Vite requirement)
+- npm 10.2.4+
+- Spring Boot backend running on port 8080
+
+### Installation
+
+```bash
+cd frontend-react
+npm install
 ```
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+Runs on **http://localhost:4201**
+
+The dev server uses Vite proxy to forward API calls to Spring Boot backend (port 8080).
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+Builds static files to `dist/` directory. These files are automatically copied to `target/classes/static/dashboard/` by Maven during the Spring Boot build process.
+
+### Type Checking
+
+```bash
+npm run type-check
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+## Authentication
+
+- **Session-based authentication** shared with Spring Boot backend
+- **ADMIN-only access** enforced via Spring Security
+- Automatic redirect to login if unauthorized (401)
+- Session cookies work across `/api`, `/dashboard`, and root paths
+
+## API Integration
+
+All API calls go through `axios.client.ts` which:
+- Uses relative paths (`/api`) to leverage Vite proxy
+- Includes credentials (session cookies)
+- Handles 401 errors with auto-redirect to login
+- Preserves return URL for post-login redirect
+
+## Deployment
+
+### Development Mode
+- React runs on Vite dev server (port 4201)
+- Fast hot-reload for development
+- Accessed via: `http://localhost:4201`
+
+### Production Mode
+- React built as static files by Maven
+- Served by Spring Boot at `/dashboard`
+- Accessed via: `http://localhost:8080/dashboard`
+- Seamless integration with Spring Security
+
+## Contributing
+
+When adding new features:
+1. Create TypeScript types in `src/types/`
+2. Create API service in `src/api/`
+3. Create components in `src/components/<feature>/`
+4. Create page component in `src/pages/`
+5. Add route in `src/App.tsx`
+6. Update `src/config/features.ts`
+7. Follow established Material-UI patterns
+8. Add proper TypeScript types for all props and state
+
+## Documentation
+
+For more details, see:
+- [Developer Guide](../docs/Developer_Guide.md)
+- [Administrator User Guide](../docs/Administrator_User_Guide.md)
+- [Technical Features Summary](../docs/Technical_Features_Summary.md)
+
+---
+
+**Note:** This React dashboard complements the existing Angular and Thymeleaf UIs, providing a modern admin interface for system management tasks.
