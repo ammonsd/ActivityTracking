@@ -37,6 +37,9 @@ import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { userManagementApi } from "../api/userManagement.api";
 import type { User, Role, UserFilters } from "../types/userManagement.types";
+import { UserFormDialog } from "../components/userManagement/UserFormDialog";
+import { DeleteConfirmDialog } from "../components/userManagement/DeleteConfirmDialog";
+import { ChangePasswordDialog } from "../components/userManagement/ChangePasswordDialog";
 
 export const UserManagement: React.FC = () => {
     // State management
@@ -44,17 +47,23 @@ export const UserManagement: React.FC = () => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Filter state
     const [filters, setFilters] = useState<UserFilters>({
         username: "",
         role: "",
         company: "",
     });
-    
+
     // Pagination state
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    // Dialog state
+    const [formDialogOpen, setFormDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     // Fetch roles on component mount
     useEffect(() => {
@@ -109,7 +118,7 @@ export const UserManagement: React.FC = () => {
         if (filters.company?.trim()) {
             appliedFilters.company = filters.company.trim();
         }
-        
+
         fetchUsers(appliedFilters);
     };
 
@@ -132,31 +141,69 @@ export const UserManagement: React.FC = () => {
     };
 
     const handleChangeRowsPerPage = (
-        event: React.ChangeEvent<HTMLInputElement>
+        event: React.ChangeEvent<HTMLInputElement>,
     ) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
 
-    // Placeholder action handlers (no functionality for first cut)
+    // Action handlers
     const handleAddUser = () => {
-        // TODO: Implement add user dialog
-        console.log("Add user clicked");
+        setSelectedUser(null);
+        setFormDialogOpen(true);
     };
 
     const handleEditUser = (user: User) => {
-        // TODO: Implement edit user dialog
-        console.log("Edit user:", user.username);
+        setSelectedUser(user);
+        setFormDialogOpen(true);
     };
 
     const handleChangePassword = (user: User) => {
-        // TODO: Implement change password dialog
-        console.log("Change password for:", user.username);
+        setSelectedUser(user);
+        setPasswordDialogOpen(true);
     };
 
     const handleDeleteUser = (user: User) => {
-        // TODO: Implement delete confirmation dialog
-        console.log("Delete user:", user.username);
+        setSelectedUser(user);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleFormSave = async (userData: any) => {
+        if (selectedUser === null) {
+            // Add mode - creating new user
+            await userManagementApi.createUser(userData);
+        } else {
+            // Edit mode - updating existing user
+            await userManagementApi.updateUser(selectedUser.id, userData);
+        }
+        setFormDialogOpen(false);
+        setSelectedUser(null);
+        handleRefresh();
+    };
+
+    const handlePasswordChange = async (
+        password: string,
+        forceChange: boolean,
+    ) => {
+        if (selectedUser) {
+            await userManagementApi.changePassword(
+                selectedUser.id,
+                password,
+                forceChange,
+            );
+        }
+        setPasswordDialogOpen(false);
+        setSelectedUser(null);
+        handleRefresh();
+    };
+
+    const handleConfirmDelete = async () => {
+        if (selectedUser) {
+            await userManagementApi.deleteUser(selectedUser.id);
+        }
+        setDeleteDialogOpen(false);
+        setSelectedUser(null);
+        handleRefresh();
     };
 
     // Format datetime to local time
@@ -181,7 +228,7 @@ export const UserManagement: React.FC = () => {
     // Paginated data
     const paginatedUsers = users.slice(
         page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
+        page * rowsPerPage + rowsPerPage,
     );
 
     return (
@@ -290,7 +337,13 @@ export const UserManagement: React.FC = () => {
                         />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 2,
+                                justifyContent: "flex-start",
+                            }}
+                        >
                             <Button
                                 variant="contained"
                                 startIcon={<SearchIcon />}
@@ -330,7 +383,8 @@ export const UserManagement: React.FC = () => {
                                 color="text.secondary"
                                 sx={{ mt: 1 }}
                             >
-                                Try adjusting your filters or click Reset to view all users
+                                Try adjusting your filters or click Reset to
+                                view all users
                             </Typography>
                         </Paper>
                     ) : (
@@ -415,7 +469,7 @@ export const UserManagement: React.FC = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     {formatLocalDateTime(
-                                                        user.lastLogin
+                                                        user.lastLogin,
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
@@ -429,7 +483,9 @@ export const UserManagement: React.FC = () => {
                                                         />
                                                     ) : (
                                                         <Chip
-                                                            icon={<LockOpenIcon />}
+                                                            icon={
+                                                                <LockOpenIcon />
+                                                            }
                                                             label="Unlocked"
                                                             color="success"
                                                             size="small"
@@ -449,7 +505,7 @@ export const UserManagement: React.FC = () => {
                                                             color="primary"
                                                             onClick={() =>
                                                                 handleEditUser(
-                                                                    user
+                                                                    user,
                                                                 )
                                                             }
                                                             title="Edit User"
@@ -461,7 +517,7 @@ export const UserManagement: React.FC = () => {
                                                             color="secondary"
                                                             onClick={() =>
                                                                 handleChangePassword(
-                                                                    user
+                                                                    user,
                                                                 )
                                                             }
                                                             title="Change Password"
@@ -473,7 +529,7 @@ export const UserManagement: React.FC = () => {
                                                             color="error"
                                                             onClick={() =>
                                                                 handleDeleteUser(
-                                                                    user
+                                                                    user,
                                                                 )
                                                             }
                                                             title="Delete User"
@@ -500,6 +556,40 @@ export const UserManagement: React.FC = () => {
                     )}
                 </>
             )}
+
+            {/* User Form Dialog (Add/Edit) */}
+            <UserFormDialog
+                open={formDialogOpen}
+                onClose={() => {
+                    setFormDialogOpen(false);
+                    setSelectedUser(null);
+                }}
+                onSave={handleFormSave}
+                user={selectedUser}
+                roles={roles}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <DeleteConfirmDialog
+                open={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedUser(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                username={selectedUser?.username || ""}
+            />
+
+            {/* Change Password Dialog */}
+            <ChangePasswordDialog
+                open={passwordDialogOpen}
+                onClose={() => {
+                    setPasswordDialogOpen(false);
+                    setSelectedUser(null);
+                }}
+                onSave={handlePasswordChange}
+                username={selectedUser?.username || ""}
+            />
         </Box>
     );
 };

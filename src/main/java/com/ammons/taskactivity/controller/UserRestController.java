@@ -205,40 +205,97 @@ public class UserRestController {
     }
 
     /**
-     * Create new user
+     * Create new user with validation
+     * 
+     * @param user the user entity with username, password, role, etc.
+     * @return ResponseEntity containing the created user
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "CREATE")
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@RequestBody User user) {
         logger.debug("REST API: Creating new user: {}", user.getUsername());
-        // Map entity fields to service method signature
-        User createdUser = userService.createUser(user.getUsername(), user.getPassword(),
-                user.getRole(), user.isForcePasswordUpdate());
-        return ResponseEntity.ok(createdUser);
+        try {
+            User createdUser = userService.createUser(user.getUsername(), user.getPassword(),
+                    user.getRole(), user.isForcePasswordUpdate());
+
+            // Update additional fields if provided
+            if (user.getFirstname() != null)
+                createdUser.setFirstname(user.getFirstname());
+            if (user.getLastname() != null)
+                createdUser.setLastname(user.getLastname());
+            if (user.getCompany() != null)
+                createdUser.setCompany(user.getCompany());
+            if (user.getEmail() != null)
+                createdUser.setEmail(user.getEmail());
+            createdUser.setEnabled(user.isEnabled());
+
+            User savedUser = userService.updateUser(createdUser);
+            return ResponseEntity
+                    .ok(ApiResponse.success("User created successfully", new UserDto(savedUser)));
+        } catch (Exception e) {
+            logger.error("Error creating user: {}", e.getMessage(), e);
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Error creating user: " + e.getMessage()));
+        }
     }
 
     /**
-     * Update existing user
+     * Update existing user with validation
+     * 
+     * @param id the user ID to update
+     * @param user the user entity with updated fields
+     * @return ResponseEntity containing the updated user
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(@PathVariable Long id,
+            @RequestBody User user) {
         logger.debug("REST API: Updating user with ID: {}", id);
         return userService.getUserById(id).map(existingUser -> {
-            user.setId(id);
-            User updatedUser = userService.updateUser(user);
-            return ResponseEntity.ok(updatedUser);
-        }).orElse(ResponseEntity.notFound().build());
+            try {
+                // Update editable fields
+                existingUser.setUsername(user.getUsername());
+                existingUser.setFirstname(user.getFirstname());
+                existingUser.setLastname(user.getLastname());
+                existingUser.setCompany(user.getCompany());
+                existingUser.setEmail(user.getEmail());
+                existingUser.setRole(user.getRole());
+                existingUser.setEnabled(user.isEnabled());
+                existingUser.setAccountLocked(user.isAccountLocked());
+                existingUser.setForcePasswordUpdate(user.isForcePasswordUpdate());
+
+                User updatedUser = userService.updateUser(existingUser);
+                return ResponseEntity.ok(
+                        ApiResponse.success("User updated successfully", new UserDto(updatedUser)));
+            } catch (Exception e) {
+                logger.error("Error updating user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<UserDto>>body(
+                        ApiResponse.error("Error updating user: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
     }
 
     /**
-     * Delete user
+     * Delete user by ID
+     * 
+     * @param id the user ID to delete
+     * @return ResponseEntity with success or error message
      */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "DELETE")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         logger.debug("REST API: Deleting user with ID: {}", id);
         return userService.getUserById(id).map(user -> {
-            userService.deleteUser(id);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+            try {
+                userService.deleteUser(id);
+                return ResponseEntity
+                        .ok(ApiResponse.<Void>success("User deleted successfully", null));
+            } catch (Exception e) {
+                logger.error("Error deleting user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<Void>>body(
+                        ApiResponse.error("Error deleting user: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
     }
 
     /**
@@ -276,6 +333,56 @@ public class UserRestController {
         logger.debug("REST API: Getting all roles");
         List<Roles> roles = roleRepository.findAll();
         return ResponseEntity.ok(ApiResponse.success("Roles retrieved successfully", roles));
+    }
+
+    /**
+     * Change password for a user (admin function).
+     * 
+     * @param id the user ID whose password to change
+     * @param request the request body containing newPassword and forcePasswordUpdate flag
+     * @return ResponseEntity with success or error message
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PutMapping("/{id}/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@PathVariable Long id,
+            @RequestBody PasswordChangeRequest request) {
+        logger.debug("REST API: Changing password for user ID: {}", id);
+        return userService.getUserById(id).map(user -> {
+            try {
+                userService.changePassword(user.getUsername(), request.getNewPassword(),
+                        !request.isForcePasswordUpdate());
+                return ResponseEntity
+                        .ok(ApiResponse.<Void>success("Password changed successfully", null));
+            } catch (Exception e) {
+                logger.error("Error changing password for user {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(500).<ApiResponse<Void>>body(
+                        ApiResponse.error("Error changing password: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+    }
+
+    /**
+     * DTO for password change request
+     */
+    public static class PasswordChangeRequest {
+        private String newPassword;
+        private boolean forcePasswordUpdate;
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
+        }
+
+        public boolean isForcePasswordUpdate() {
+            return forcePasswordUpdate;
+        }
+
+        public void setForcePasswordUpdate(boolean forcePasswordUpdate) {
+            this.forcePasswordUpdate = forcePasswordUpdate;
+        }
     }
 }
 

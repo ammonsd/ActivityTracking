@@ -63,3 +63,39 @@ export interface RoleResponse {
     message: string;
     data: Role[];
 }
+
+/**
+ * User creation request payload
+ */
+export interface UserCreateRequest {
+    username: string;
+    password: string;
+    firstname: string | null;
+    lastname: string;
+    company: string | null;
+    email: string | null;
+    role: {
+        id: number;
+        name: string;
+    };
+    enabled: boolean;
+    forcePasswordUpdate: boolean;
+}
+
+/**
+ * User update request payload
+ */
+export interface UserUpdateRequest {
+    username: string;
+    firstname: string | null;
+    lastname: string;
+    company: string | null;
+    email: string | null;
+    role: {
+        id: number;
+        name: string;
+    };
+    enabled: boolean;
+    accountLocked: boolean;
+    forcePasswordUpdate: boolean;
+}
