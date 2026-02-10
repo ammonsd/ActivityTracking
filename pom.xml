@@ -269,6 +269,44 @@
 					</configuration>
 				</execution>
 				
+				<!-- Configure npm for network resilience -->
+				<execution>
+					<id>npm config for resilience</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<arguments>config set fetch-retry-mintimeout 20000 --global</arguments>
+					</configuration>
+				</execution>
+				<execution>
+					<id>npm config retry max</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<arguments>config set fetch-retry-maxtimeout 120000 --global</arguments>
+					</configuration>
+				</execution>
+				<execution>
+					<id>npm config timeout</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<arguments>config set fetch-timeout 300000 --global</arguments>
+					</configuration>
+				</execution>
+				<execution>
+					<id>npm config retries</id>
+					<goals>
+						<goal>npm</goal>
+					</goals>
+					<configuration>
+						<arguments>config set fetch-retries 5 --global</arguments>
+					</configuration>
+				</execution>
+				
 				<!-- npm install for Angular -->
 				<execution>
 					<id>npm install</id>

@@ -17,13 +17,8 @@ COPY frontend-react /app/frontend-react
 RUN ls -la /app/frontend/dist/app/browser/main-*.js || echo "No main-*.js files found"
 RUN ls -la /app/frontend-react/dist/index.html || echo "No React dist files found"
 
-# Configure npm for better network resilience before Maven build
-RUN npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retries 5
-
 # Build with frontend (Maven will build both Angular and React)
+# npm network resilience configured in pom.xml frontend-maven-plugin
 RUN mvn package -DskipTests -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
