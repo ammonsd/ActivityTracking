@@ -28,6 +28,7 @@ export interface User {
   forcePasswordUpdate?: boolean;
   accountLocked?: boolean;
   failedLoginAttempts?: number;
+  hasTasks?: boolean; // True if user has task activities (affects delete permission)
 }
 
 export interface DropdownValue {
