@@ -2962,6 +2962,626 @@ public class User {
   - **Status**: ✅ All headers implemented and active
 - **Docker Secrets**: Production deployments use Docker secrets for sensitive credentials (JWT_SECRET, database passwords, admin password) instead of environment variables
 
+## React Dashboard Architecture and Components
+
+The React Dashboard provides a modern, type-safe administrative interface built with React 19, TypeScript 5.9, and Material-UI v7. It follows best practices for component design, state management, and API integration.
+
+### Project Structure
+
+```
+frontend-react/
+├── src/
+│   ├── api/                      # API client modules
+│   │   ├── axios.client.ts       # Configured Axios instance
+│   │   ├── guestActivity.api.ts  # Guest activity API wrapper
+│   │   └── rolesManagement.api.ts # Role management API wrapper
+│   ├── components/               # Reusable UI components
+│   │   ├── layout/               # Layout components
+│   │   │   ├── DashboardHome.tsx # Main dashboard landing page
+│   │   │   └── Sidebar.tsx       # Navigation sidebar
+│   │   ├── guestActivity/        # Guest Activity feature components
+│   │   │   └── CSVExportDialog.tsx
+│   │   └── rolesManagement/      # Role Management feature components
+│   │       ├── RoleFormDialog.tsx       # Create/edit role dialog
+│   │       └── DeleteConfirmDialog.tsx  # Delete confirmation dialog
+│   ├── pages/                    # Page-level components (routes)
+│   │   ├── GuestActivity.tsx     # Guest activity report page
+│   │   └── RolesManagement.tsx   # Roles management page
+│   ├── types/                    # TypeScript type definitions
+│   │   ├── guestActivity.types.ts
+│   │   └── rolesManagement.types.ts
+│   ├── config/
+│   │   └── features.ts           # Feature flag configuration
+│   ├── App.tsx                   # Root application component
+│   ├── main.tsx                  # Application entry point
+│   └── router.tsx                # React Router configuration
+├── index.html
+├── package.json
+├── tsconfig.json                 # TypeScript compiler configuration
+└── vite.config.ts                # Vite build configuration
+```
+
+### Technology Stack Configuration
+
+**Vite Configuration (`vite.config.ts`):**
+
+```typescript
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 4201,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'mui-vendor': ['@mui/material', '@mui/icons-material']
+        }
+      }
+    }
+  }
+});
+```
+
+**TypeScript Configuration (`tsconfig.json`):**
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
+}
+```
+
+### Axios Client Setup
+
+**Base Configuration (`axios.client.ts`):**
+
+```typescript
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // Share session cookies with Spring Boot
+});
+
+// Request interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+```
+
+### Feature Flag System
+
+**Configuration (`config/features.ts`):**
+
+```typescript
+export interface FeatureConfig {
+  enabled: boolean;
+  comingSoon: boolean;
+  title: string;
+  description: string;
+}
+
+export const features: Record<string, FeatureConfig> = {
+  userManagement: {
+    enabled: true,
+    comingSoon: false,
+    title: 'User Management',
+    description: 'Manage user accounts, roles, and permissions'
+  },
+  rolesManagement: {
+    enabled: true,
+    comingSoon: false,
+    title: 'Roles Management',
+    description: 'Create and manage roles with custom permissions'
+  },
+  guestActivity: {
+    enabled: true,
+    comingSoon: false,
+    title: 'Guest Activity Report',
+    description: 'View guest login statistics and audit history'
+  },
+  expenseManagement: {
+    enabled: false,
+    comingSoon: true,
+    title: 'Expense Management',
+    description: 'Track and manage expense reports'
+  }
+};
+```
+
+### Component Patterns
+
+#### Page Component Example: RolesManagement.tsx
+
+**Structure:**
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, Paper, Table } from '@mui/material';
+import { rolesManagementApi } from '../api/rolesManagement.api';
+import { Role } from '../types/rolesManagement.types';
+import RoleFormDialog from '../components/rolesManagement/RoleFormDialog';
+
+export default function RolesManagement() {
+  // State management
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  // Data fetching
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  const loadRoles = async () => {
+    try {
+      setLoading(true);
+      const data = await rolesManagementApi.fetchRoles();
+      setRoles(data);
+    } catch (err) {
+      setError('Failed to load roles');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Event handlers
+  const handleCreate = () => {
+    setSelectedRole(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (role: Role) => {
+    setSelectedRole(role);
+    setDialogOpen(true);
+  };
+
+  const handleSave = async (formData: RoleFormData) => {
+    if (selectedRole) {
+      await rolesManagementApi.updateRole(selectedRole.id, formData);
+    } else {
+      await rolesManagementApi.createRole(formData);
+    }
+    setDialogOpen(false);
+    loadRoles();
+  };
+
+  // Render logic
+  return (
+    <Box>
+      <Typography variant="h4">Roles Management</Typography>
+      <Button onClick={handleCreate}>Add New Role</Button>
+      {/* Table component */}
+      <RoleFormDialog
+        open={dialogOpen}
+        role={selectedRole}
+        onSave={handleSave}
+        onClose={() => setDialogOpen(false)}
+      />
+    </Box>
+  );
+}
+```
+
+#### Dialog Component Example: RoleFormDialog.tsx
+
+**Structure:**
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Typography
+} from '@mui/material';
+import { Permission, RoleDetail } from '../../types/rolesManagement.types';
+
+interface RoleFormDialogProps {
+  open: boolean;
+  role: RoleDetail | null;
+  permissions: Permission[];
+  onSave: (data: { name: string; description: string; permissionIds: number[] }) => void;
+  onClose: () => void;
+}
+
+export default function RoleFormDialog({ open, role, permissions, onSave, onClose }: RoleFormDialogProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    selectedPermissions: new Set<number>()
+  });
+
+  useEffect(() => {
+    if (role) {
+      setFormData({
+        name: role.name,
+        description: role.description,
+        selectedPermissions: new Set(role.permissions.map(p => p.id))
+      });
+    } else {
+      setFormData({ name: '', description: '', selectedPermissions: new Set() });
+    }
+  }, [role]);
+
+  // Group permissions by resource
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.resource]) acc[perm.resource] = [];
+    acc[perm.resource].push(perm);
+    return acc;
+  }, {} as Record<string, Permission[]>);
+
+  const handleResourceToggle = (resource: string) => {
+    const resourcePerms = groupedPermissions[resource];
+    const allSelected = resourcePerms.every(p => formData.selectedPermissions.has(p.id));
+    
+    const newSelected = new Set(formData.selectedPermissions);
+    resourcePerms.forEach(p => {
+      if (allSelected) newSelected.delete(p.id);
+      else newSelected.add(p.id);
+    });
+    
+    setFormData({ ...formData, selectedPermissions: newSelected });
+  };
+
+  const handleSubmit = () => {
+    onSave({
+      name: formData.name,
+      description: formData.description,
+      permissionIds: Array.from(formData.selectedPermissions)
+    });
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{role ? 'Edit Role' : 'Create New Role'}</DialogTitle>
+      <DialogContent>
+        <TextField
+          label="Role Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          disabled={!!role}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          fullWidth
+          margin="normal"
+          multiline
+          rows={2}
+        />
+        
+        <Typography variant="h6" sx={{ mt: 2 }}>Permissions</Typography>
+        {Object.entries(groupedPermissions).map(([resource, perms]) => (
+          <Box key={resource} sx={{ mb: 2 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={perms.every(p => formData.selectedPermissions.has(p.id))}
+                  indeterminate={
+                    perms.some(p => formData.selectedPermissions.has(p.id)) &&
+                    !perms.every(p => formData.selectedPermissions.has(p.id))
+                  }
+                  onChange={() => handleResourceToggle(resource)}
+                />
+              }
+              label={<strong>{resource}</strong>}
+            />
+            <FormGroup sx={{ pl: 4 }}>
+              {perms.map(perm => (
+                <FormControlLabel
+                  key={perm.id}
+                  control={
+                    <Checkbox
+                      checked={formData.selectedPermissions.has(perm.id)}
+                      onChange={(e) => {
+                        const newSelected = new Set(formData.selectedPermissions);
+                        if (e.target.checked) newSelected.add(perm.id);
+                        else newSelected.delete(perm.id);
+                        setFormData({ ...formData, selectedPermissions: newSelected });
+                      }}
+                    />
+                  }
+                  label={`${perm.action} - ${perm.description}`}
+                />
+              ))}
+            </FormGroup>
+          </Box>
+        ))}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} variant="contained" color="primary">
+          {role ? 'Save Changes' : 'Create Role'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+```
+
+### API Integration Pattern
+
+**API Module (`api/rolesManagement.api.ts`):**
+
+```typescript
+import apiClient from './axios.client';
+import {
+  ApiResponse,
+  Role,
+  RoleDetail,
+  Permission,
+  RoleCreateRequest,
+  RoleUpdateRequest
+} from '../types/rolesManagement.types';
+
+export const rolesManagementApi = {
+  fetchRoles: async (): Promise<Role[]> => {
+    const response = await apiClient.get<ApiResponse<RoleDetail[]>>('/api/roles');
+    return response.data.data || [];
+  },
+
+  fetchRoleById: async (id: number): Promise<RoleDetail | null> => {
+    const response = await apiClient.get<ApiResponse<RoleDetail>>(`/api/roles/${id}`);
+    return response.data.data || null;
+  },
+
+  fetchPermissions: async (): Promise<Permission[]> => {
+    const response = await apiClient.get<ApiResponse<Permission[]>>('/api/roles/permissions');
+    return response.data.data || [];
+  },
+
+  createRole: async (request: RoleCreateRequest): Promise<RoleDetail> => {
+    const response = await apiClient.post<ApiResponse<RoleDetail>>('/api/roles', request);
+    return response.data.data!;
+  },
+
+  updateRole: async (id: number, request: RoleUpdateRequest): Promise<RoleDetail> => {
+    const response = await apiClient.put<ApiResponse<RoleDetail>>(`/api/roles/${id}`, request);
+    return response.data.data!;
+  },
+
+  deleteRole: async (id: number): Promise<void> => {
+    await apiClient.delete(`/api/roles/${id}`);
+  }
+};
+
+export default rolesManagementApi;
+```
+
+### Type Definitions
+
+**Types Module (`types/rolesManagement.types.ts`):**
+
+```typescript
+export interface Permission {
+  id: number;
+  resource: string;
+  action: string;
+  description: string;
+  permissionKey: string; // Format: "RESOURCE:ACTION"
+}
+
+export interface RoleDetail {
+  id: number;
+  name: string;
+  description: string;
+  permissions: Permission[];
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  description: string;
+  permissionsDisplay: string; // Grouped format for table display
+}
+
+export interface RoleCreateRequest {
+  name: string;
+  description: string;
+  permissionIds: number[];
+}
+
+export interface RoleUpdateRequest {
+  description?: string;
+  permissionIds?: number[];
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T | null;
+}
+```
+
+### Routing Configuration
+
+**Router Setup (`router.tsx`):**
+
+```typescript
+import { createBrowserRouter } from 'react-router-dom';
+import App from './App';
+import DashboardHome from './components/layout/DashboardHome';
+import GuestActivity from './pages/GuestActivity';
+import RolesManagement from './pages/RolesManagement';
+
+export const router = createBrowserRouter([
+  {
+    path: '/dashboard',
+    element: <App />,
+    children: [
+      { index: true, element: <DashboardHome /> },
+      { path: 'guest-activity', element: <GuestActivity /> },
+      { path: 'roles-management', element: <RolesManagement /> }
+    ]
+  }
+]);
+```
+
+### Material-UI Theme Configuration
+
+**Theme Setup (`main.tsx` or `theme.ts`):**
+
+```typescript
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+});
+
+// In main.tsx:
+<ThemeProvider theme={theme}>
+  <CssBaseline />
+  <RouterProvider router={router} />
+</ThemeProvider>
+```
+
+### Error Handling Pattern
+
+```typescript
+const loadData = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    const data = await api.fetchData();
+    setData(data);
+  } catch (err) {
+    console.error('Failed to load data:', err);
+    setError(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### Best Practices
+
+**Component Design:**
+- Use functional components with hooks (useState, useEffect, useCallback)
+- Extract reusable logic into custom hooks
+- Keep components focused on single responsibility
+- Use TypeScript for type safety
+
+**State Management:**
+- Use local state for component-specific data
+- Lift state up when multiple components need access
+- Consider Zustand for global state if needed
+- Avoid prop drilling with context API
+
+**Performance Optimization:**
+- Memoize expensive computations with useMemo
+- Prevent unnecessary re-renders with useCallback
+- Use React.memo for pure components
+- Lazy load routes and components when appropriate
+
+**API Integration:**
+- Centralize API calls in dedicated modules
+- Use TypeScript for API response types
+- Handle loading and error states consistently
+- Implement request cancellation for long-running requests
+
+**Testing:**
+- Write unit tests for utility functions
+- Test component rendering with React Testing Library
+- Mock API calls in tests
+- Test user interactions and form submissions
+
+### Development Workflow
+
+1. **Start Development Server:**
+   ```bash
+   cd frontend-react
+   npm run dev
+   ```
+
+2. **Build for Production:**
+   ```bash
+   npm run build
+   ```
+
+3. **Type Check:**
+   ```bash
+   npm run type-check
+   ```
+
+4. **Lint and Format:**
+   ```bash
+   npm run lint
+   npm run format
+   ```
+
+### Integration with Spring Boot
+
+**Development Mode:**
+- React dev server runs on port 4201
+- Vite proxy forwards `/api` requests to Spring Boot (port 8080)
+- Hot Module Replacement (HMR) for instant updates
+- session cookies shared between frontends
+
+**Production Mode:**
+- Maven builds React app → `frontend-react/dist/`
+- Static files copied to `target/classes/static/dashboard/`
+- Spring Boot serves React app at `/dashboard`
+- Same session authentication as Angular and Thymeleaf UIs
+- SecurityConfig allows `/dashboard/**` paths
+
+**Maven Integration:**
+- frontend-maven-plugin handles npm install and build
+- Builds triggered during `mvn package` phase
+- Can skip with `-Dskip.frontend.build=true`
+
 ## API Reference
 
 ### Base URL
@@ -3609,6 +4229,367 @@ The admin interface includes a "Guest Activity" dashboard (`/admin/guest-activit
 - Maximum 1,000 entries retained
 - Cleared on application restart or redeployment
 - Export to CSV recommended for long-term record keeping
+
+### Role Management API
+
+The Role Management API provides RESTful endpoints for managing roles and permissions in the React Dashboard. This API enables dynamic role creation, modification, and deletion without requiring code changes.
+
+**Key Features:**
+- Full CRUD operations for roles
+- Permission assignment and management
+- Role-based access control enforcement
+- Real-time permission updates
+- Constraint validation for safe deletions
+
+**Implementation Architecture:**
+- **Controller**: `RoleManagementRestController` at `/api/roles`
+- **DTOs**: `RoleDto`, `PermissionDto` for data transfer
+- **Authorization**: `@RequirePermission` with USER_MANAGEMENT resource
+- **Repositories**: `RoleRepository`, `PermissionRepository`
+- **Database**: PostgreSQL with JPA/Hibernate
+
+#### Get All Roles
+
+```http
+GET /api/roles
+```
+
+**Description:** Retrieves all roles with their assigned permissions in a hierarchical structure.
+
+**Access Control:** Requires `USER_MANAGEMENT:READ` permission
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Roles retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "name": "ADMIN",
+            "description": "Full system access with all permissions",
+            "permissions": [
+                {
+                    "id": 1,
+                    "resource": "USER_MANAGEMENT",
+                    "action": "CREATE",
+                    "description": "Create new user accounts",
+                    "permissionKey": "USER_MANAGEMENT:CREATE"
+                },
+                {
+                    "id": 2,
+                    "resource": "USER_MANAGEMENT",
+                    "action": "READ",
+                    "description": "View user information",
+                    "permissionKey": "USER_MANAGEMENT:READ"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Get Role by ID
+
+```http
+GET /api/roles/{id}
+```
+
+**Parameters:**
+- `id` (path): Role ID (Long)
+
+**Description:** Retrieves a specific role with its permissions.
+
+**Access Control:** Requires `USER_MANAGEMENT:READ` permission
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Role retrieved successfully",
+    "data": {
+        "id": 1,
+        "name": "USER",
+        "description": "Standard user with task and expense access",
+        "permissions": [...]
+    }
+}
+```
+
+**Error Handling:**
+- Throws `RoleNotFoundException` if role not found (404)
+- Returns standard error response with `success: false`
+
+#### Get All Permissions
+
+```http
+GET /api/roles/permissions
+```
+
+**Description:** Retrieves all available permissions in the system for role assignment.
+
+**Access Control:** Requires `USER_MANAGEMENT:READ` permission
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Permissions retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "resource": "USER_MANAGEMENT",
+            "action": "CREATE",
+            "description": "Create new user accounts",
+            "permissionKey": "USER_MANAGEMENT:CREATE"
+        },
+        {
+            "id": 2,
+            "resource": "TASK_MANAGEMENT",
+            "action": "READ",
+            "description": "View task activities",
+            "permissionKey": "TASK_MANAGEMENT:READ"
+        }
+    ]
+}
+```
+
+**Use Case:** Called when opening the role creation/edit dialog to populate the permission selection checkboxes.
+
+#### Create New Role
+
+```http
+POST /api/roles
+Content-Type: application/json
+
+{
+    "name": "PROJECT_MANAGER",
+    "description": "Project manager with task and user read access",
+    "permissionIds": [2, 5, 8, 12]
+}
+```
+
+**Description:** Creates a new role with specified permissions.
+
+**Access Control:** Requires `USER_MANAGEMENT:CREATE` permission
+
+**Request Body:**
+- `name` (String, required): Unique role name (e.g., "PROJECT_MANAGER")
+- `description` (String, required): Brief explanation of role purpose
+- `permissionIds` (List<Long>, required): List of permission IDs to assign
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Role created successfully",
+    "data": {
+        "id": 5,
+        "name": "PROJECT_MANAGER",
+        "description": "Project manager with task and user read access",
+        "permissions": [...]
+    }
+}
+```
+
+**Validation:**
+- Role name must be unique (returns 400 if duplicate)
+- At least one permission must be assigned
+- All permission IDs must exist in database
+- Name and description cannot be empty
+
+#### Update Role
+
+```http
+PUT /api/roles/{id}
+Content-Type: application/json
+
+{
+    "description": "Updated description for project manager role",
+    "permissionIds": [2, 5, 8, 12, 15]
+}
+```
+
+**Parameters:**
+- `id` (path): Role ID (Long)
+
+**Description:** Updates an existing role's description and/or assigned permissions.
+
+**Access Control:** Requires `USER_MANAGEMENT:UPDATE` permission
+
+**Request Body:**
+- `description` (String, optional): Updated role description
+- `permissionIds` (List<Long>, optional): Updated list of permission IDs
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Role updated successfully",
+    "data": {
+        "id": 5,
+        "name": "PROJECT_MANAGER",
+        "description": "Updated description for project manager role",
+        "permissions": [...]
+    }
+}
+```
+
+**Implementation Notes:**
+- Role name is immutable (cannot be changed after creation)
+- Permission assignment is replaced entirely (not merged)
+- Changes take effect immediately for all users with this role
+- Users must re-login to see UI changes
+
+#### Delete Role
+
+```http
+DELETE /api/roles/{id}
+```
+
+**Parameters:**
+- `id` (path): Role ID (Long)
+
+**Description:** Deletes a role if it is not assigned to any users.
+
+**Access Control:** Requires `USER_MANAGEMENT:DELETE` permission
+
+**Response (Success):**
+
+```json
+{
+    "success": true,
+    "message": "Role deleted successfully",
+    "data": null
+}
+```
+
+**Response (Constraint Violation):**
+
+```json
+{
+    "success": false,
+    "message": "Cannot delete role 'PROJECT_MANAGER' as it is currently assigned to users. Please reassign these users to a different role first.",
+    "data": null
+}
+```
+
+**Error Handling:**
+- Returns 400 Bad Request if role is assigned to users
+- Returns 404 Not Found if role ID doesn't exist
+- Built-in roles (ADMIN, USER, GUEST) may have additional protection
+
+**Best Practices:**
+1. Check role assignment before deletion
+2. Reassign users to alternative roles first
+3. Document reason for role removal
+4. Test in non-production environment
+
+#### DTO Structure
+
+**RoleDto.java:**
+```java
+public class RoleDto {
+    private Long id;
+    private String name;
+    private String description;
+    private List<PermissionDto> permissions;
+    
+    public RoleDto(Roles role) {
+        this.id = role.getId();
+        this.name = role.getName();
+        this.description = role.getDescription();
+        this.permissions = role.getPermissions().stream()
+            .map(PermissionDto::new)
+            .toList();
+    }
+}
+```
+
+**PermissionDto.java:**
+```java
+public class PermissionDto {
+    private Long id;
+    private String resource;
+    private String action;
+    private String description;
+    private String permissionKey; // Computed: "RESOURCE:ACTION"
+    
+    public PermissionDto(Permission permission) {
+        this.id = permission.getId();
+        this.resource = permission.getResource();
+        this.action = permission.getAction();
+        this.description = permission.getDescription();
+    }
+    
+    public String getPermissionKey() {
+        return resource + ":" + action;
+    }
+}
+```
+
+#### Frontend Integration
+
+**React Components:**
+- `RolesManagement.tsx`: Main page displaying roles table
+- `RoleFormDialog.tsx`: Create/edit dialog with hierarchical permission selection
+- `DeleteConfirmDialog.tsx`: Confirmation dialog for role deletion
+- `rolesManagement.api.ts`: API client wrapper
+- `rolesManagement.types.ts`: TypeScript type definitions
+
+**API Client Example:**
+```typescript
+import apiClient from './axios.client';
+
+export const fetchRoles = async (): Promise<Role[]> => {
+    const response = await apiClient.get<ApiResponse<RoleDetail[]>>('/api/roles');
+    return response.data.data || [];
+};
+
+export const createRole = async (request: RoleCreateRequest): Promise<RoleDetail> => {
+    const response = await apiClient.post<ApiResponse<RoleDetail>>('/api/roles', request);
+    return response.data.data!;
+};
+```
+
+**Permission Grouping:**
+
+The React UI groups permissions by resource for better usability:
+```typescript
+const groupedPermissions: Record<string, Permission[]> = {
+    'USER_MANAGEMENT': [
+        { id: 1, action: 'CREATE', ... },
+        { id: 2, action: 'READ', ... }
+    ],
+    'TASK_MANAGEMENT': [...]
+};
+```
+
+Master checkboxes control all permissions for a resource with indeterminate state for partial selection.
+
+#### Security Considerations
+
+**Authorization:**
+- All endpoints require session or JWT authentication
+- Permission checks via `@RequirePermission` annotation
+- Resource: USER_MANAGEMENT
+- Actions: READ, CREATE, UPDATE, DELETE
+
+**Input Validation:**
+- Role names validated for uniqueness
+- Permission IDs validated against database
+- SQL injection prevention via parameterized queries
+- CSRF protection enabled for state-changing operations
+
+**Audit Trail:**
+- Role creation/modification logged to CloudWatch
+- Permission changes tracked for compliance
+- User role assignments logged via UserService
 
 ### Web Controller Endpoints
 
