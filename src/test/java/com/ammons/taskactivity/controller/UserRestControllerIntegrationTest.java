@@ -207,9 +207,9 @@ class UserRestControllerIntegrationTest {
                     put("/api/users/{id}", testUser.getId()).contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updates)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.email").value("updated@example.com")); // No $.data
-                                                                                  // wrapper for
-                                                                                  // this endpoint
+                    .andExpect(jsonPath("$.data.email").value("updated@example.com")); // Response
+                                                                                       // wrapped in
+                                                                                       // ApiResponse<UserDto>
         }
 
         // The /profile endpoint does not allow password updates
