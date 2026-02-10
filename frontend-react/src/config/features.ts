@@ -10,8 +10,8 @@ import type { FeaturesConfiguration } from "../types/features.types";
 
 export const FEATURES: FeaturesConfiguration = {
     userManagement: {
-        enabled: false,
-        comingSoon: true,
+        enabled: true,
+        comingSoon: false,
         requiresAdmin: true,
         description: "Manage users, roles, and permissions",
         icon: "People",

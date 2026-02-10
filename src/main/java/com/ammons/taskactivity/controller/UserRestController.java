@@ -5,7 +5,9 @@ import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.dto.UserDto;
 import com.ammons.taskactivity.dto.UserEditDto;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +31,11 @@ public class UserRestController {
     private static final Logger logger = LoggerFactory.getLogger(UserRestController.class);
 
     private final UserService userService;
+    private final RoleRepository roleRepository;
 
-    public UserRestController(UserService userService) {
+    public UserRestController(UserService userService, RoleRepository roleRepository) {
         this.userService = userService;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -149,15 +153,35 @@ public class UserRestController {
     }
 
     /**
-     * Get all users in the system. Returns a complete list of all registered users.
+     * Get all users in the system with optional filtering. Returns a complete list of users or
+     * filtered list based on query parameters.
      * 
-     * @return ResponseEntity containing list of all users
+     * @param username optional username filter (partial match, case-insensitive)
+     * @param role optional role filter (exact match)
+     * @param company optional company filter (partial match, case-insensitive)
+     * @return ResponseEntity containing list of filtered users
      */
     @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
-        logger.debug("REST API: Getting all users");
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String company) {
+
+        logger.debug("REST API: Getting users with filters - username: {}, role: {}, company: {}",
+                username, role, company);
+
+        List<User> users;
+
+        // If any filter is provided, use filterUsers; otherwise get all users
+        if ((username != null && !username.trim().isEmpty())
+                || (role != null && !role.trim().isEmpty())
+                || (company != null && !company.trim().isEmpty())) {
+            users = userService.filterUsers(username, role, company);
+        } else {
+            users = userService.getAllUsers();
+        }
+
         List<UserDto> userDtos = users.stream().map(UserDto::new).toList();
         ApiResponse<List<UserDto>> response = ApiResponse
                 .success("Users retrieved successfully", userDtos).withCount(userDtos.size());
@@ -238,6 +262,20 @@ public class UserRestController {
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("Error retrieving login audit: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Get all roles for user management filtering. Returns a list of all available roles in the
+     * system.
+     * 
+     * @return ResponseEntity containing list of all roles
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
+    @GetMapping("/roles")
+    public ResponseEntity<ApiResponse<List<Roles>>> getAllRoles() {
+        logger.debug("REST API: Getting all roles");
+        List<Roles> roles = roleRepository.findAll();
+        return ResponseEntity.ok(ApiResponse.success("Roles retrieved successfully", roles));
     }
 }
 
