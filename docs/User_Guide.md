@@ -490,7 +490,7 @@ Your new password must:
 - Be at least 10 characters long
 - Contain at least one uppercase letter
 - Contain at least one number
-- Contain at least one special character (+&%$#@!~)
+- Contain at least one special character (+&%$#@!~*)
 - Not contain more than 2 consecutive identical characters
 - Not contain the username (case-insensitive)
 - Not match your current password
