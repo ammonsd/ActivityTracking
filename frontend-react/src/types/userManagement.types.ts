@@ -24,6 +24,23 @@ export interface User {
     lastLogin: string | null; // ISO 8601 datetime string
     failedLoginAttempts: number;
     accountLocked: boolean;
+    hasTasks: boolean; // True if user has task activities (affects delete permission)
+}
+
+/**
+ * Current user data from /api/users/me endpoint
+ * Used to identify the logged-in user
+ */
+export interface CurrentUser {
+    id: number;
+    username: string;
+    firstname: string | null;
+    lastname: string | null;
+    company: string | null;
+    email: string | null;
+    enabled: boolean;
+    passwordExpiringWarning?: string | null;
+    daysUntilExpiration?: number | null;
 }
 
 /**

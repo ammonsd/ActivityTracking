@@ -36,7 +36,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { userManagementApi } from "../api/userManagement.api";
-import type { User, Role, UserFilters } from "../types/userManagement.types";
+import type {
+    User,
+    Role,
+    UserFilters,
+    CurrentUser,
+} from "../types/userManagement.types";
 import { UserFormDialog } from "../components/userManagement/UserFormDialog";
 import { DeleteConfirmDialog } from "../components/userManagement/DeleteConfirmDialog";
 import { ChangePasswordDialog } from "../components/userManagement/ChangePasswordDialog";
@@ -45,6 +50,7 @@ export const UserManagement: React.FC = () => {
     // State management
     const [users, setUsers] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
+    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -65,13 +71,20 @@ export const UserManagement: React.FC = () => {
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-    // Fetch roles on component mount
+    // Fetch current user, roles, and users on component mount
     useEffect(() => {
-        fetchRoles();
-    }, []);
+        const initializeData = async () => {
+            try {
+                const currentUserData =
+                    await userManagementApi.fetchCurrentUser();
+                setCurrentUser(currentUserData);
+            } catch (err) {
+                console.error("Error fetching current user:", err);
+            }
+        };
 
-    // Fetch users on component mount
-    useEffect(() => {
+        initializeData();
+        fetchRoles();
         fetchUsers();
     }, []);
 
@@ -97,6 +110,29 @@ export const UserManagement: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    /**
+     * Check if delete button should be disabled for a user
+     * Matches backend rules: cannot delete yourself or users with tasks
+     */
+    const isDeleteDisabled = (user: User): boolean => {
+        if (!currentUser) return true; // Disable if current user not loaded yet
+        return user.username === currentUser.username || user.hasTasks;
+    };
+
+    /**
+     * Get tooltip text explaining why delete is disabled
+     */
+    const getDeleteTooltip = (user: User): string => {
+        if (!currentUser) return "Loading...";
+        if (user.username === currentUser.username) {
+            return "Cannot delete your own account";
+        }
+        if (user.hasTasks) {
+            return "Cannot delete user with existing task entries";
+        }
+        return "Delete User";
     };
 
     const handleFilterChange = (field: keyof UserFilters, value: string) => {
@@ -532,7 +568,12 @@ export const UserManagement: React.FC = () => {
                                                                     user,
                                                                 )
                                                             }
-                                                            title="Delete User"
+                                                            title={getDeleteTooltip(
+                                                                user,
+                                                            )}
+                                                            disabled={isDeleteDisabled(
+                                                                user,
+                                                            )}
                                                         >
                                                             <DeleteIcon fontSize="small" />
                                                         </IconButton>

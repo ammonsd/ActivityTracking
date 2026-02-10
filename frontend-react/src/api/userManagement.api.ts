@@ -9,6 +9,7 @@ import apiClient from "./axios.client";
 import type {
     User,
     Role,
+    CurrentUser,
     UserFilters,
     UserResponse,
     RoleResponse,
@@ -17,6 +18,19 @@ import type {
 } from "../types/userManagement.types";
 
 export const userManagementApi = {
+    /**
+     * Fetch current authenticated user
+     * @returns Promise with current user data
+     */
+    fetchCurrentUser: async (): Promise<CurrentUser> => {
+        const response = await apiClient.get<{
+            success: boolean;
+            message: string;
+            data: CurrentUser;
+        }>("/users/me");
+        return response.data.data;
+    },
+
     /**
      * Fetch users with optional filters
      * @param filters - Optional filters for username, role, and company

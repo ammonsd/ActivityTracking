@@ -7,6 +7,7 @@ import com.ammons.taskactivity.dto.UserEditDto;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
@@ -31,10 +32,13 @@ public class UserRestController {
     private static final Logger logger = LoggerFactory.getLogger(UserRestController.class);
 
     private final UserService userService;
+    private final TaskActivityService taskActivityService;
     private final RoleRepository roleRepository;
 
-    public UserRestController(UserService userService, RoleRepository roleRepository) {
+    public UserRestController(UserService userService, TaskActivityService taskActivityService,
+            RoleRepository roleRepository) {
         this.userService = userService;
+        this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
     }
 
@@ -182,7 +186,13 @@ public class UserRestController {
             users = userService.getAllUsers();
         }
 
-        List<UserDto> userDtos = users.stream().map(UserDto::new).toList();
+        // Convert to DTOs and populate hasTasks field
+        List<UserDto> userDtos = users.stream().map(user -> {
+            UserDto dto = new UserDto(user);
+            dto.setHasTasks(taskActivityService.userHasTaskActivities(user.getUsername()));
+            return dto;
+        }).toList();
+
         ApiResponse<List<UserDto>> response = ApiResponse
                 .success("Users retrieved successfully", userDtos).withCount(userDtos.size());
         return ResponseEntity.ok(response);
