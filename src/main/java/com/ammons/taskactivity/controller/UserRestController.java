@@ -215,21 +215,15 @@ public class UserRestController {
     public ResponseEntity<ApiResponse<UserDto>> createUser(@RequestBody User user) {
         logger.debug("REST API: Creating new user: {}", user.getUsername());
         try {
-            User createdUser = userService.createUser(user.getUsername(), user.getPassword(),
+            // Call the full createUser method with all required fields
+            User createdUser = userService.createUser(user.getUsername(), user.getFirstname(),
+                    user.getLastname(), user.getCompany(), user.getEmail(), user.getPassword(),
                     user.getRole(), user.isForcePasswordUpdate());
 
-            // Update additional fields if provided
-            if (user.getFirstname() != null)
-                createdUser.setFirstname(user.getFirstname());
-            if (user.getLastname() != null)
-                createdUser.setLastname(user.getLastname());
-            if (user.getCompany() != null)
-                createdUser.setCompany(user.getCompany());
-            if (user.getEmail() != null)
-                createdUser.setEmail(user.getEmail());
+            // Set enabled status
             createdUser.setEnabled(user.isEnabled());
-
             User savedUser = userService.updateUser(createdUser);
+
             return ResponseEntity
                     .ok(ApiResponse.success("User created successfully", new UserDto(savedUser)));
         } catch (Exception e) {
