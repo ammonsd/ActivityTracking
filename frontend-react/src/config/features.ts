@@ -26,8 +26,8 @@ export const FEATURES: FeaturesConfiguration = {
         route: "/dropdown-management",
     },
     rolesManagement: {
-        enabled: false,
-        comingSoon: true,
+        enabled: true,
+        comingSoon: false,
         requiresAdmin: true,
         description: "Manage roles and permissions",
         icon: "Security",

@@ -152,10 +152,22 @@ The React Admin Dashboard is currently in Phase 3 development, providing a navig
   - Compact date format for card displays (e.g., "Feb 9, 11:59 AM")
   - Responsive Material-UI cards and tables
   - Data resets with each deployment (in-memory storage)
+- **Roles Management** (Phase 7 - Implemented February 2026):
+  - Comprehensive role and permission management system
+  - View all system roles with assigned permissions
+  - Create new roles with custom permission sets
+  - Edit existing roles to add/remove permissions
+  - Delete roles with constraint validation (cannot delete roles assigned to users)
+  - Hierarchical permission selection grouped by resource
+  - Master checkboxes for resource-level permission control
+  - Indeterminate state shows partial permission selection
+  - Permission grouping: USER_MANAGEMENT, TASK_MANAGEMENT, ROLE_MANAGEMENT, SYSTEM_CONFIGURATION
+  - Real-time validation and error handling
+  - Material-UI dialogs with responsive design
+  - **Access Control**: Requires USER_MANAGEMENT:READ permission to view, USER_MANAGEMENT:CREATE/UPDATE/DELETE for modifications
 
-**Feature Placeholders (Phase 5, 7-8 Coming Soon):**
+**Feature Placeholders (Phase 5, 8 Coming Soon):**
 - **Expense Management**: Shows "Coming Soon" dialog (Phase 5)
-- **Reporting & Analytics**: Shows "Coming Soon" dialog (Phase 7)
 - **System Settings**: Shows "Coming Soon" dialog (Phase 8)
 
 ### Development vs Production
@@ -187,10 +199,10 @@ Completed Phases:
 - ✅ **Phase 3**: Skeleton dashboard with navigation (December 2025)
 - ✅ **Phase 4**: User Management with full CRUD operations (February 2026)
 - ✅ **Phase 6**: Guest Activity Report with metrics and CSV export (February 2026)
+- ✅ **Phase 7**: Roles Management with permission assignment (February 2026)
 
 Upcoming Phases:
 - **Phase 5**: Expense Management functionality
-- **Phase 7**: Reporting & Analytics functionality
 - **Phase 8**: System Settings functionality
 
 For technical details on React Dashboard implementation, see [React_Dashboard_Blueprint.md](React_Dashboard_Blueprint.md).
@@ -516,6 +528,165 @@ You should edit a user's profile as administrator only when:
 - Unlocking locked accounts
 - Enabling/disabling accounts
 - Initial user setup before first login
+
+### Managing Roles in React Dashboard (Phase 7)
+
+The React Dashboard provides a modern, intuitive interface for managing roles and permissions, complementing the Spring Boot backend role management system.
+
+#### Accessing Roles Management
+
+1. **Navigate to React Dashboard**: Access via http://localhost:4201 (development) or http://localhost:8080/dashboard (production)
+2. **Click "Roles Management"**: From the dashboard home screen or sidebar menu
+3. **Required Permission**: USER_MANAGEMENT:READ or higher
+
+#### Viewing Roles
+
+The Roles Management page displays all system roles in a Material-UI table:
+
+- **Role Name**: Unique identifier for the role
+- **Description**: Brief explanation of the role's purpose
+- **Permissions**: Grouped by resource for easy readability (e.g., "USER_MANAGEMENT: CREATE, READ, UPDATE")
+- **Actions**: Edit and Delete buttons for each role (requires USER_MANAGEMENT:UPDATE/DELETE permissions)
+
+**Permission Display Format:**
+
+Permissions are grouped by resource to improve readability:
+- ✅ Good: "USER_MANAGEMENT: CREATE, READ, UPDATE | TASK_MANAGEMENT: READ, UPDATE"
+- ❌ Before: Long comma-separated list difficult to scan
+
+#### Creating New Roles
+
+1. **Click "Add New Role"** button (top-right corner)
+2. **Role Form Dialog Opens**:
+   - **Role Name**: Enter unique identifier (e.g., "PROJECT_MANAGER", "FINANCE_VIEWER")
+     - Must be unique across all roles
+     - Displayed in uppercase by convention
+   - **Description**: Enter clear explanation of the role's purpose
+   - **Permissions**: Select from hierarchical permission tree
+3. **Select Permissions**:
+   - Permissions are organized by resource (USER_MANAGEMENT, TASK_MANAGEMENT, etc.)
+   - **Master Checkbox**: Check/uncheck all permissions for a resource
+   - **Indeterminate State**: Shows when only some permissions are selected
+   - **Individual Checkboxes**: Select specific actions (CREATE, READ, UPDATE, DELETE)
+4. **Click "Create"**: Role is created and immediately available for user assignment
+5. **Success Message**: Confirmation displayed, table refreshes automatically
+
+**Permission Resources:**
+- `USER_MANAGEMENT`: User account management
+- `TASK_MANAGEMENT`: Task activity operations
+- `ROLE_MANAGEMENT`: Role and permission administration
+- `SYSTEM_CONFIGURATION`: System settings (future)
+
+#### Editing Existing Roles
+
+1. **Click "Edit" icon** (pencil) next to the role you want to modify
+2. **Role Form Dialog Opens**:
+   - **Role Name**: Displayed as read-only (cannot be changed)
+   - **Description**: Can be updated
+   - **Current Permissions**: Pre-selected based on existing assignments
+3. **Modify Permissions**:
+   - Check boxes to add permissions
+   - Uncheck boxes to remove permissions
+   - Use master checkboxes for resource-level changes
+4. **Click "Save"**: Changes are saved and take effect immediately
+5. **Impact**: All users with this role receive updated permissions (requires re-login to see UI changes)
+
+**Best Practices for Editing:**
+- **Built-in Roles**: Use caution when modifying ADMIN, USER, GUEST, EXPENSE_ADMIN
+- **Production Changes**: Test permission changes in non-production environment first
+- **Communication**: Notify affected users when removing permissions from their role
+- **Documentation**: Update role descriptions when changing permission scope
+
+#### Deleting Roles
+
+1. **Click "Delete" icon** (trash can) next to the role
+2. **Confirmation Dialog Opens**:
+   - Warning message displayed
+   - ⚠️ **Important**: "Roles currently assigned to users cannot be deleted"
+   - Lists affected users if role is in use
+3. **Confirm or Cancel**:
+   - **Cancel**: No changes made
+   - **Delete**: Role is permanently removed (if not assigned to users)
+4. **Error Handling**:
+   - If role is assigned to users, deletion fails with error message
+   - Must reassign users to different roles before deletion
+   - Built-in roles (ADMIN, USER, GUEST, EXPENSE_ADMIN) have additional protection
+
+**Pre-Deletion Checklist:**
+- [ ] Check if role is assigned to any users
+- [ ] Reassign users to appropriate alternative roles
+- [ ] Document reason for role removal
+- [ ] Verify no automated systems depend on this role
+
+#### Permission Grouping and Display
+
+The React interface groups permissions by resource for improved usability:
+
+**Hierarchical Display:**
+```
+□ USER_MANAGEMENT (Master Checkbox)
+  □ CREATE - Create new user accounts
+  □ READ - View user information
+  □ UPDATE - Modify user details
+  □ DELETE - Remove user accounts
+  
+□ TASK_MANAGEMENT (Master Checkbox)
+  □ CREATE - Create new tasks
+  □ READ - View tasks
+  □ UPDATE - Edit existing tasks
+  □ DELETE - Remove tasks
+```
+
+**Indeterminate State:**
+
+When some (but not all) permissions for a resource are selected, the master checkbox displays an indeterminate state (dash icon), making it clear that the resource has partial permissions.
+
+#### Real-Time Validation and Error Handling
+
+- **Duplicate Names**: Cannot create roles with names that already exist
+- **Required Fields**: Role name and description are mandatory
+- **Permission Selection**: Must select at least one permission
+- **Delete Constraints**: Cannot delete roles assigned to users
+- **Network Errors**: Graceful error handling with user-friendly messages
+- **Loading States**: Visual feedback during API operations
+
+#### Integration with User Management
+
+Roles created or modified in the Roles Management interface are immediately available in the User Management interface:
+
+1. Navigate to User Management
+2. Edit or create a user
+3. Role dropdown includes all custom roles
+4. Assign role to user
+5. User receives permissions defined in the role
+
+**Synchronization:**
+
+Changes made in either the React Dashboard or Spring Boot UI are synchronized through the backend database:
+- Create role in React → Available in Spring Boot UI immediately
+- Edit permissions in Spring Boot UI → Reflected in React Dashboard on page refresh
+
+#### Troubleshooting
+
+**Role not appearing in user assignment:**
+- Refresh the User Management page
+- Verify role was created successfully (check Roles Management table)
+- Check browser console for errors
+
+**Permission changes not taking effect:**
+- Users must log out and log back in after role changes
+- Clear browser cache if UI appears inconsistent
+- Verify role exists in database
+
+**Cannot delete role:**
+- Check if role is assigned to users (error message lists users)
+- Reassign users to different roles first
+- Some built-in roles may have additional protections
+
+**Permissions not grouped correctly:**
+- Verify permission format follows "RESOURCE:ACTION" pattern
+- Check backend logs for permission loading errors
+- Ensure permissions table is properly seeded
 
 ### Managing Task Activities
 

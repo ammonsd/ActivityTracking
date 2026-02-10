@@ -370,6 +370,24 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### React Dashboard Features
 
+- **Roles Management** (Phase 7 - February 2026)
+  - Comprehensive role and permission management system
+  - Material-UI table displaying all roles with grouped permissions
+  - Create new roles with hierarchical permission selection
+  - Edit existing roles (role name read-only, description and permissions editable)
+  - Delete roles with constraint validation (cannot delete assigned roles)
+  - Permission grouping by resource (USER_MANAGEMENT, TASK_MANAGEMENT, ROLE_MANAGEMENT, SYSTEM_CONFIGURATION)
+  - Master checkboxes for resource-level permission control with indeterminate state
+  - Individual permission selection (CREATE, READ, UPDATE, DELETE actions)
+  - Real-time validation and error handling
+  - TypeScript types for type-safe API integration
+  - API client wrapper using Axios
+  - Access control via @RequirePermission annotations
+  - REST API: `/api/roles` endpoints (GET all, GET by ID, GET permissions, POST create, PUT update, DELETE)
+  - DTOs: `RoleDto`, `PermissionDto` for clean data transfer
+  - Error handling for constraint violations (role assigned to users)
+  - Empty states with informative messages
+  - Responsive dialog forms with Material-UI components
 - **Guest Activity Report** (Phase 6 - February 2026)
   - Real-time login audit tracking for GUEST users
   - Statistics dashboard with 4 metric cards:
