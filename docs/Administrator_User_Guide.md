@@ -823,6 +823,67 @@ All action buttons use Angular Material icon buttons with tooltips for better us
 6. **Optional**: Check "Force password update on next login"
 7. **Save**: Click **"Change Password"**
 
+#### Password History Validation
+
+**Implemented**: February 2026
+
+The system prevents users from reusing recent passwords to enhance security:
+
+**How It Works:**
+- System stores the last 5 password hashes for each user
+- When changing passwords (admin or self-service), the new password is checked against this history
+- If the new password matches any of the last 5 passwords, the change is rejected
+- Only password hashes are stored (using BCrypt), never plain text
+
+**What This Means for Administrators:**
+
+1. **Password Rejections**: Users may report that their password change was rejected even though it meets complexity requirements
+   - This is working as designed if they're trying to reuse a recent password
+   - Explain that they need to choose a password they haven't used recently
+
+2. **Force Password Change**: Even when admins force a password change, history validation still applies
+   - This ensures users can't cycle between a small set of favorite passwords
+   - The new admin-set password must not match the user's last 5 passwords
+
+3. **Password Requirements**: All password change forms now display:
+   - "Cannot match any of your previous 5 passwords"
+   - This requirement appears alongside other password rules
+
+4. **New User Creation**: When creating a new user account:
+   - The initial password is automatically saved to their password history
+   - This prevents them from immediately "changing" back to the same password
+
+**Configuration** (System Administrators Only):
+
+The feature can be configured in `application.properties`:
+```properties
+# Enable/disable password history validation (default: true)
+security.password.history.enabled=true
+
+# Number of previous passwords to check (default: 5)
+security.password.history.size=5
+```
+
+**Benefits:**
+- Reduces risk of compromised credentials remaining in use
+- Enforces meaningful password changes
+- Meets compliance requirements for password rotation
+- Prevents users from cycling between favorite passwords
+
+**FAQs:**
+
+**Q: Can I temporarily disable password history for a specific user?**  
+A: No, the feature applies system-wide. However, a system administrator can temporarily disable it in configuration if needed for troubleshooting.
+
+**Q: What if a user forgets all their passwords and can't create a new one?**  
+A: As an administrator, you can set any new password that meets complexity requirements. The new password just can't match their last 5 passwords.
+
+**Q: How long does password history persist?**  
+A: Password history persists indefinitely but is limited to the configured number of entries (default: 5 most recent). When a user changes their password for the 6th time, the oldest entry is automatically removed.
+
+**Q: What happens to password history when a user is deleted?**  
+A: Password history is automatically deleted along with the user account (CASCADE DELETE).
+
 ### Self-Service Password Reset Feature
 
 **Overview**: Users can reset their own passwords without administrator intervention using the password reset feature on the login page.

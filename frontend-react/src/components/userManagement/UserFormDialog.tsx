@@ -328,6 +328,9 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
                                                 Not contain more than 2
                                                 consecutive identical characters
                                             </li>
+                                            <li>
+                                                Cannot match any of your previous 5 passwords
+                                            </li>
                                         </ul>
                                     </Alert>
                                 </Grid>

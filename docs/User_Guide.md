@@ -494,6 +494,7 @@ Your new password must:
 - Not contain more than 2 consecutive identical characters
 - Not contain the username (case-insensitive)
 - Not match your current password
+- Cannot match any of your previous 5 passwords
 
 ### How to Change Your Password
 
@@ -887,6 +888,21 @@ ADMIN users see an additional tab with team performance analytics:
 5. **Avoid Screenshots from Unknown Sources**: Screenshots should be saved properly as JPEG or PNG
 
 **Technical Note:** The system validates the actual file content (magic numbers/signatures) rather than trusting the file extension. This prevents malicious files from being uploaded, even if they're renamed to look like images.
+
+### Password Change Issues
+
+**Problem:** "Cannot reuse any of your previous passwords" error
+
+**Cause:**
+- You're trying to use a password that matches one of your last 5 passwords
+- The system stores your password history to prevent reuse of recent passwords
+
+**Solutions:**
+1. **Choose a Different Password**: Create a new password that you haven't used in your last 5 password changes
+2. **Make It Unique**: Even small changes won't work if the overall password matches a previous one
+3. **Consider a Password Manager**: Use a password manager to generate and store unique passwords
+
+**Why This Exists:** Password history validation is a security feature that prevents you from cycling through the same few passwords. This ensures better account security over time.
 
 ---
   - Metrics displayed:
