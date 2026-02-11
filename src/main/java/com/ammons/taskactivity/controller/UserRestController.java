@@ -10,6 +10,9 @@ import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.security.RequirePermission;
+import com.ammons.taskactivity.validation.ValidPassword;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -349,7 +352,7 @@ public class UserRestController {
     @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     @PutMapping("/{id}/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@PathVariable Long id,
-            @RequestBody PasswordChangeRequest request) {
+            @Valid @RequestBody PasswordChangeRequest request) {
         logger.debug("REST API: Changing password for user ID: {}", id);
         return userService.getUserById(id).map(user -> {
             try {
@@ -369,6 +372,8 @@ public class UserRestController {
      * DTO for password change request
      */
     public static class PasswordChangeRequest {
+        @ValidPassword
+        @NotBlank(message = "Password cannot be blank")
         private String newPassword;
         private boolean forcePasswordUpdate;
 

@@ -130,8 +130,9 @@ public class PasswordChangeController {
      */
     @PostMapping("/change-password")
     public String changePassword(@Valid @ModelAttribute PasswordChangeDto passwordChangeDto,
+            BindingResult bindingResult,
             @RequestParam(value = "resetToken", required = false) String resetToken,
-            BindingResult bindingResult, Model model, Authentication authentication,
+            Model model, Authentication authentication,
             HttpSession session, RedirectAttributes redirectAttributes) {
 
         // Handle password reset via token (no authentication required)
@@ -155,17 +156,19 @@ public class PasswordChangeController {
             return "redirect:/task-activity/list?error=guest_restricted";
         }
 
-        // Check for validation errors
-        if (bindingResult.hasErrors()) {
-            model.addAttribute(PASSWORD_CHANGE_DTO, passwordChangeDto);
-            addUserDisplayInfo(model, authentication);
-            model.addAttribute(IS_FORCED, true);
-            return CHANGE_PASSWORD_VIEW;
+        // Check if passwords match BEFORE validation errors to properly add to BindingResult
+        if (!passwordChangeDto.getNewPassword().equals(passwordChangeDto.getConfirmNewPassword())) {
+            bindingResult.rejectValue("confirmNewPassword", "error.confirmNewPassword",
+                    "Passwords do not match. Please try again.");
         }
 
-        // Check if passwords match
-        if (!passwordChangeDto.getNewPassword().equals(passwordChangeDto.getConfirmNewPassword())) {
-            model.addAttribute("errorMessage", "New passwords do not match");
+        // Check for validation errors (includes password strength and match errors)
+        if (bindingResult.hasErrors()) {
+            // Extract all errors and display them at the top of the page
+            String errorMessage =
+                    bindingResult.getAllErrors().stream().map(error -> error.getDefaultMessage())
+                            .collect(java.util.stream.Collectors.joining("; "));
+            model.addAttribute("errorMessage", errorMessage);
             model.addAttribute(PASSWORD_CHANGE_DTO, passwordChangeDto);
             addUserDisplayInfo(model, authentication);
             model.addAttribute(IS_FORCED, true);
