@@ -5572,6 +5572,162 @@ public void changePassword(String username, String newPassword) {
 
 ---
 
+### Password History Validation
+
+**Location**: `src/main/java/com/ammons/taskactivity/entity/PasswordHistory.java`  
+**Service**: `src/main/java/com/ammons/taskactivity/service/PasswordValidationService.java`  
+**Repository**: `src/main/java/com/ammons/taskactivity/repository/PasswordHistoryRepository.java`
+
+**Implemented**: February 2026
+
+The application prevents users from reusing recent passwords by maintaining a history of password hashes and validating new passwords against this history.
+
+#### Purpose and Benefits
+
+1. **Security Enhancement**: Reduces risk of compromised credentials remaining in use
+2. **Compliance**: Meets regulatory requirements for password rotation policies
+3. **Meaningful Changes**: Prevents users from cycling between favorite passwords
+4. **Audit Trail**: Maintains historical record of password changes per user
+
+#### Configuration
+
+**Application Properties** (`application.properties`):
+
+```properties
+# Enable/disable password history validation (default: true)
+security.password.history.enabled=true
+
+# Number of previous passwords to store and check (default: 5)
+security.password.history.size=5
+```
+
+**AWS Deployment** (`application-aws.properties`):
+
+```properties
+# Use environment variables for ECS task definitions
+security.password.history.enabled=${SECURITY_PASSWORD_HISTORY_ENABLED:true}
+security.password.history.size=${SECURITY_PASSWORD_HISTORY_SIZE:5}
+```
+
+**Environment Variables for AWS ECS:**
+
+```bash
+SECURITY_PASSWORD_HISTORY_ENABLED=true
+SECURITY_PASSWORD_HISTORY_SIZE=5
+```
+
+#### Database Schema
+
+**password_history Table:**
+
+```sql
+CREATE TABLE IF NOT EXISTS password_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_password_history_user_id ON password_history(user_id);
+CREATE INDEX idx_password_history_changed_at ON password_history(changed_at);
+```
+
+**Key Features:**
+- **CASCADE DELETE**: When a user is deleted, their password history is automatically removed
+- **Indexed Lookups**: Fast retrieval by user_id and ordering by changed_at
+- **BCrypt Storage**: Only password hashes stored, never plain text
+- **Automatic Timestamps**: changed_at set to CURRENT_TIMESTAMP on insert
+
+#### Service Layer Integration
+
+**Password Change Flow:**
+
+1. **Password Strength Validation**: Checks length, complexity, consecutive characters
+2. **Current Password Check**: Verifies new password differs from current password
+3. **Password History Validation**: Compares against last N password hashes using BCrypt
+4. **Password Update**: Encodes new password with BCrypt and updates user record
+5. **History Save**: Stores new password hash in password_history table
+6. **History Cleanup**: Automatically removes entries exceeding configured size
+7. **Token Revocation**: Invalidates all existing JWT tokens for the user
+
+**Validation Method:**
+
+```java
+public void validatePasswordNotInHistory(Long userId, String newPassword) {
+    if (!historyEnabled) return;
+    
+    List<PasswordHistory> recent = passwordHistoryRepository
+        .findRecentByUserId(userId, PageRequest.of(0, historySize));
+    
+    for (PasswordHistory history : recent) {
+        if (passwordEncoder.matches(newPassword, history.getPasswordHash())) {
+            throw new IllegalArgumentException("Cannot reuse any of your previous passwords");
+        }
+    }
+}
+```
+
+#### Performance and Database Growth
+
+**Query Performance:**
+- Indexed user_id lookups: O(1)
+- Paginated retrieval: Only fetches configured size (default: 5)
+- BCrypt comparison: ~5 comparisons max
+- Typical overhead: <100ms per password change
+
+**Storage:**
+- Automatic cleanup limits growth
+- Max N entries per user (default: 5)
+- ~300 bytes per entry
+- Linear growth with users, bounded by cleanup
+
+#### Error Handling
+
+**Validation Error Message:**
+```
+Cannot reuse any of your previous passwords
+```
+
+**UI Display:**
+- Shown on all password change forms
+- Requirement listed: "Cannot match any of your previous 5 passwords"
+- Clear error feedback when validation fails
+
+#### Troubleshooting
+
+**Check User History:**
+
+```sql
+SELECT ph.password_hash, ph.changed_at 
+FROM password_history ph 
+JOIN users u ON ph.user_id = u.id 
+WHERE u.username = 'username' 
+ORDER BY ph.changed_at DESC 
+LIMIT 5;
+```
+
+**Disable Feature Temporarily:**
+
+```properties
+security.password.history.enabled=false
+```
+
+**Manual Cleanup:**
+
+```sql
+DELETE FROM password_history 
+WHERE user_id = :user_id 
+AND id NOT IN (
+  SELECT id FROM password_history 
+  WHERE user_id = :user_id 
+  ORDER BY changed_at DESC 
+  LIMIT 5
+);
+```
+
+---
+
 ### File Upload Security
 
 **Location**: `src/main/java/com/ammons/taskactivity/util/FileTypeValidator.java`
