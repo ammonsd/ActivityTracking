@@ -1,6 +1,9 @@
 package com.ammons.taskactivity.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -34,9 +37,18 @@ public class PasswordHistory {
 
     /**
      * Foreign key to users table. CASCADE DELETE ensures password history is removed when user is
-     * deleted.
+     * deleted. JPA relationship with ON DELETE CASCADE for proper cascade in both JPA and SQL.
      */
-    @Column(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User user;
+
+    /**
+     * Convenience field for direct access to user ID without loading the User entity. Read-only to
+     * avoid conflicts with the user relationship.
+     */
+    @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
     /**
@@ -63,6 +75,19 @@ public class PasswordHistory {
     }
 
     /**
+     * Full constructor for creating new password history entries with User entity.
+     * 
+     * @param user the User entity
+     * @param passwordHash the BCrypt hash of the password
+     * @param changedAt the timestamp when password was changed
+     */
+    public PasswordHistory(User user, String passwordHash, LocalDateTime changedAt) {
+        this.user = user;
+        this.passwordHash = passwordHash;
+        this.changedAt = changedAt != null ? changedAt : LocalDateTime.now();
+    }
+
+    /**
      * Full constructor for creating new password history entries.
      * 
      * @param userId the user's ID
@@ -71,6 +96,9 @@ public class PasswordHistory {
      */
     public PasswordHistory(Long userId, String passwordHash, LocalDateTime changedAt) {
         this.userId = userId;
+        // Create a minimal User object just to satisfy the relationship
+        this.user = new User();
+        this.user.setId(userId);
         this.passwordHash = passwordHash;
         this.changedAt = changedAt != null ? changedAt : LocalDateTime.now();
     }
@@ -93,6 +121,14 @@ public class PasswordHistory {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Long getUserId() {
