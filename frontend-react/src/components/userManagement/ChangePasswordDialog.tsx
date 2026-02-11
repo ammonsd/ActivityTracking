@@ -209,6 +209,7 @@ export const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                                 characters
                             </li>
                             <li>Not be the same as the current password</li>
+                            <li>Cannot match any of your previous 5 passwords</li>
                         </ul>
                     </Alert>
 
