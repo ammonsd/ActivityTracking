@@ -208,6 +208,8 @@ export const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                                 Not contain more than 2 consecutive identical
                                 characters
                             </li>
+                            <li>Not contain the username (case-insensitive)</li>
+                            <li>Not be the same as your current password</li>
                             <li>
                                 Cannot match any of your previous 5 passwords
                             </li>

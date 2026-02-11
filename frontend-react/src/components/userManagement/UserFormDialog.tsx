@@ -329,7 +329,16 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
                                                 consecutive identical characters
                                             </li>
                                             <li>
-                                                Cannot match any of your previous 5 passwords
+                                                Not contain the username
+                                                (case-insensitive)
+                                            </li>
+                                            <li>
+                                                Not be the same as your current
+                                                password
+                                            </li>
+                                            <li>
+                                                Cannot match any of your
+                                                previous 5 passwords
                                             </li>
                                         </ul>
                                     </Alert>
