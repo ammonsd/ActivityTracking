@@ -1,8 +1,8 @@
 # Security Measures and Best Practices
 
 **Project:** Task Activity Management System  
-**Document Version:** 1.0  
-**Last Updated:** January 5, 2026  
+**Document Version:** 1.1  
+**Last Updated:** February 11, 2026  
 **Classification:** Internal Documentation
 
 ---
@@ -218,8 +218,81 @@ public ResponseEntity<?> getTaskActivities() { ... }
 
 -   **Current Password Verification:** Users must provide current password
 -   **New Password Validation:** Enforces complexity requirements
--   **Password History:** (Recommended enhancement) Prevent reuse of recent passwords
+-   **Password History Validation:** Prevents reuse of last 5 passwords (Implemented: February 2026)
 -   **Secure Transmission:** HTTPS ensures encrypted transmission
+
+### Password History (Implemented: February 2026)
+
+**Purpose:**
+
+-   Prevents users from reusing recent passwords
+-   Reduces risk of compromised credentials remaining in use
+-   Meets compliance requirements for password rotation
+-   Enforces meaningful password changes rather than cycling between favorites
+
+**Implementation Details:**
+
+-   **History Size:** Stores last 5 password hashes per user (configurable)
+-   **Storage Method:** BCrypt hashes only, never plain text
+-   **Database Table:** `password_history` with CASCADE DELETE on user removal
+-   **Automatic Cleanup:** Old entries removed automatically when history exceeds configured size
+-   **Performance:** Indexed by user_id and changed_at for fast lookups
+
+**Configuration:**
+
+```properties
+# Enable/disable password history validation (default: true)
+security.password.history.enabled=true
+
+# Number of previous passwords to check (default: 5)
+security.password.history.size=5
+```
+
+**AWS Deployment:**
+
+```bash
+# Environment variables for ECS task definitions
+SECURITY_PASSWORD_HISTORY_ENABLED=true
+SECURITY_PASSWORD_HISTORY_SIZE=5
+```
+
+**Validation Behavior:**
+
+-   Password history check occurs after password strength validation
+-   New password compared against last N password hashes using BCrypt
+-   Clear error message: "Cannot reuse any of your previous passwords"
+-   Applies to all password change scenarios (self-service, admin reset, forced update)
+-   Initial password saved to history when user is created
+
+**User Experience:**
+
+-   Password requirements clearly state: "Cannot match any of your previous 5 passwords"
+-   Displayed on change password form, password expired page, and admin dialogs
+-   Validation error provides specific feedback about history restriction
+-   Users can reuse older passwords once they fall outside the history window
+
+**Database Schema:**
+
+```sql
+CREATE TABLE password_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_password_history_user_id ON password_history(user_id);
+CREATE INDEX idx_password_history_changed_at ON password_history(changed_at);
+```
+
+**Security Benefits:**
+
+-   Prevents password reuse attacks where attackers rely on user patterns
+-   Enforces genuine password changes rather than simple character substitutions
+-   Reduces risk window for compromised credentials
+-   Supports compliance with security policies requiring password history
+-   Automatic cleanup prevents unlimited database growth
 
 ---
 

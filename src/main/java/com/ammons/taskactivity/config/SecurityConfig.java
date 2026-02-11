@@ -138,9 +138,13 @@ public class SecurityConfig {
                                                                 org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                                                 // Content-Security-Policy: Restrict resource
                                                 // loading
+                                                // SECURITY: Removed 'unsafe-eval' (2026-02-11) -
+                                                // no eval() usage found
+                                                // TODO: Remove 'unsafe-inline' and implement
+                                                // nonce-based CSP
                                                 .contentSecurityPolicy(csp -> csp.policyDirectives(
                                                                 "default-src 'self'; "
-                                                                                + "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; "
+                                                                                + "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; "
                                                                                 + "style-src 'self' 'unsafe-inline'; "
                                                                                 + "img-src 'self' data:; "
                                                                                 + "font-src 'self' data:; "
@@ -459,15 +463,16 @@ public class SecurityConfig {
                                                                 .disable())
                                                 // Content Security Policy - Restrict resource
                                                 // loading
-                                                // SECURITY: Removed 'unsafe-eval' to prevent
-                                                // dynamic code
-                                                // execution (eval, Function constructor)
+                                                // SECURITY: Removed 'unsafe-eval' (2026-02-11) -
+                                                // no eval() usage found
                                                 // Note: 'unsafe-inline' kept for Thymeleaf inline
                                                 // scripts
-                                                // (TODO: migrate to nonces)
+                                                // TODO: Remove 'unsafe-inline' and implement
+                                                // nonce-based CSP (see
+                                                // CSP_Hardening_Implementation_Plan.md)
                                                 .contentSecurityPolicy(csp -> csp.policyDirectives(
                                                                 "default-src 'self'; "
-                                                                                + "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; "
+                                                                                + "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; "
                                                                                 + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                                                                                 + "img-src 'self' data: https:; "
                                                                                 + "font-src 'self' data: https://fonts.gstatic.com; "
