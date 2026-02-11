@@ -23,6 +23,7 @@ public final class ValidationConstants {
 
     // Password validation
     public static final int PASSWORD_MIN_LENGTH = 10;
+    public static final int PASSWORD_HISTORY_SIZE = 5;
     public static final String UPPERCASE_PATTERN = ".*[A-Z].*";
     public static final String DIGIT_PATTERN = ".*\\d.*";
     public static final String SPECIAL_CHAR_PATTERN = ".*[+&%$#@!~*].*";
@@ -67,6 +68,9 @@ public final class ValidationConstants {
                     "New password cannot be the same as your current password";
     public static final String PASSWORD_REUSE_SESSION_MSG =
                     "New password cannot be the same as your original password from this session";
+    public static final String PASSWORD_REUSE_HISTORY_MSG =
+                    "New password cannot match any of your previous " + PASSWORD_HISTORY_SIZE
+                                    + " passwords";
     public static final String LASTNAME_NULL_OR_EMPTY_MSG = "Last name cannot be null or empty";
     public static final String ROLE_NULL_MSG = "Role cannot be null";
 }

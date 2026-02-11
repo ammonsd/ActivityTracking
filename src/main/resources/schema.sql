@@ -273,3 +273,29 @@ CREATE INDEX idx_expenses_payment_method ON expenses (payment_method);
 CREATE INDEX idx_expenses_user_date ON expenses (username, expense_date DESC);
 CREATE INDEX idx_expenses_user_status ON expenses (username, expense_status);
 CREATE INDEX idx_expenses_client_project ON expenses (client, project);
+
+--------------------------------
+-- Create password_history table for password reuse prevention
+-- Security Feature: Prevents users from reusing their recent passwords
+-- Stores BCrypt hashed passwords only (never plain text)
+-- Maintains configurable history (default: 5 most recent passwords)
+--------------------------------
+CREATE TABLE IF NOT EXISTS password_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Performance indexes for password history queries
+-- idx_password_history_user_id: Fast lookup of user's password history
+-- idx_password_history_changed_at: Efficient ordering and cleanup of old entries
+CREATE INDEX IF NOT EXISTS idx_password_history_user_id ON password_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_history_changed_at ON password_history(changed_at);
+
+-- Comments for documentation
+COMMENT ON TABLE password_history IS 'Stores password history to prevent password reuse. Only BCrypt hashes are stored, never plain text.';
+COMMENT ON COLUMN password_history.user_id IS 'Foreign key to users table. CASCADE DELETE ensures cleanup when user is deleted.';
+COMMENT ON COLUMN password_history.password_hash IS 'BCrypt hash of the password (same format as users.userpassword). Used for password validation.';
+COMMENT ON COLUMN password_history.changed_at IS 'Timestamp when this password was set. Used for ordering and cleanup of old entries.';

@@ -1,7 +1,9 @@
 package com.ammons.taskactivity.service;
 
+import com.ammons.taskactivity.entity.PasswordHistory;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.PasswordHistoryRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.validation.PasswordValidationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -21,6 +24,8 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for UserService Tests user management operations and validation
+ * 
+ * Modified: February 2026 - Added password history validation tests
  * 
  * @author Dean Ammons
  * @version 1.0
@@ -47,12 +52,20 @@ class UserServiceTest {
     @Mock
     private TokenRevocationService tokenRevocationService;
 
+    @Mock
+    private PasswordHistoryRepository passwordHistoryRepository;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserService(userRepository, passwordEncoder, passwordValidationService,
-                        loginAuditService, passwordHistoryService, tokenRevocationService);
+                        loginAuditService, passwordHistoryService, tokenRevocationService,
+                        passwordHistoryRepository);
+
+        // Set password history configuration values via reflection
+        ReflectionTestUtils.setField(userService, "historyEnabled", true);
+        ReflectionTestUtils.setField(userService, "historySize", 5);
     }
 
     @Test
@@ -413,5 +426,170 @@ class UserServiceTest {
             // Assert
             assertEquals(7L, result, "Password expiring in 7 days should return 7");
             verify(userRepository).findByUsername(username);
+    }
+
+    // ========================================
+    // Password History Tests - Added February 2026
+    // ========================================
+
+    @Test
+    void testChangePasswordWithHistoryEnabled_SavesToHistory() {
+            // Arrange
+            String username = "testuser";
+            String newPassword = "NewValid123!";
+            String encodedOldPassword = "encodedOldPassword";
+            String encodedNewPassword = "encodedNewPassword";
+            User user = new User(username, encodedOldPassword, new Roles("USER"));
+            user.setId(1L);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+            when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
+            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(passwordEncoder.matches(newPassword, encodedOldPassword)).thenReturn(false);
+            when(passwordHistoryService.getOriginalPasswordHash(username)).thenReturn(null);
+            when(passwordHistoryRepository.save(any(PasswordHistory.class)))
+                            .thenReturn(new PasswordHistory(1L, encodedNewPassword));
+
+            // Act
+            userService.changePassword(username, newPassword, false);
+
+            // Assert - Verify password history was saved
+            verify(passwordHistoryRepository).save(any(PasswordHistory.class));
+            verify(passwordHistoryRepository).deleteOldPasswordHistory(1L, 5);
+    }
+
+    @Test
+    void testChangePasswordWithHistoryDisabled_DoesNotSaveToHistory() {
+            // Arrange - Disable history for this test
+            ReflectionTestUtils.setField(userService, "historyEnabled", false);
+
+            String username = "testuser";
+            String newPassword = "NewValid123!";
+            String encodedOldPassword = "encodedOldPassword";
+            String encodedNewPassword = "encodedNewPassword";
+            User user = new User(username, encodedOldPassword, new Roles("USER"));
+            user.setId(1L);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+            when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
+            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(passwordEncoder.matches(newPassword, encodedOldPassword)).thenReturn(false);
+            when(passwordHistoryService.getOriginalPasswordHash(username)).thenReturn(null);
+
+            // Act
+            userService.changePassword(username, newPassword, false);
+
+            // Assert - Verify password history was NOT saved
+            verify(passwordHistoryRepository, never()).save(any(PasswordHistory.class));
+            verify(passwordHistoryRepository, never()).deleteOldPasswordHistory(anyLong(),
+                            anyInt());
+
+            // Re-enable for other tests
+            ReflectionTestUtils.setField(userService, "historyEnabled", true);
+    }
+
+    @Test
+    void testCreateUserWithHistoryEnabled_SavesInitialPasswordToHistory() {
+            // Arrange
+            String username = "newuser";
+            String firstname = "New";
+            String lastname = "User";
+            String password = "ValidPass123!";
+            Roles role = new Roles("USER");
+            String encodedPassword = "encodedPassword";
+
+            User savedUser = new User(username, encodedPassword, role);
+            savedUser.setId(1L);
+
+            when(userRepository.existsByUsername(username)).thenReturn(false);
+            when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
+            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            when(passwordHistoryRepository.save(any(PasswordHistory.class)))
+                            .thenReturn(new PasswordHistory(1L, encodedPassword));
+
+            // Act
+            User result = userService.createUser(username, firstname, lastname, password, role,
+                            true);
+
+            // Assert
+            assertNotNull(result);
+            verify(passwordHistoryRepository).save(any(PasswordHistory.class));
+    }
+
+    @Test
+    void testCreateUserWithHistoryDisabled_DoesNotSaveToHistory() {
+            // Arrange - Disable history for this test
+            ReflectionTestUtils.setField(userService, "historyEnabled", false);
+
+            String username = "newuser";
+            String firstname = "New";
+            String lastname = "User";
+            String password = "ValidPass123!";
+            Roles role = new Roles("USER");
+            String encodedPassword = "encodedPassword";
+
+            when(userRepository.existsByUsername(username)).thenReturn(false);
+            when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
+            when(userRepository.save(any(User.class)))
+                            .thenReturn(new User(username, encodedPassword, role));
+
+            // Act
+            User result = userService.createUser(username, firstname, lastname, password, role,
+                            true);
+
+            // Assert
+            assertNotNull(result);
+            verify(passwordHistoryRepository, never()).save(any(PasswordHistory.class));
+
+            // Re-enable for other tests
+            ReflectionTestUtils.setField(userService, "historyEnabled", true);
+    }
+
+    @Test
+    void testChangePassword_CallsPasswordHistoryValidation() {
+            // Arrange
+            String username = "testuser";
+            String newPassword = "NewValid123!";
+            String encodedOldPassword = "encodedOldPassword";
+            String encodedNewPassword = "encodedNewPassword";
+            User user = new User(username, encodedOldPassword, new Roles("USER"));
+            user.setId(1L);
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+            when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
+            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(passwordEncoder.matches(newPassword, encodedOldPassword)).thenReturn(false);
+            when(passwordHistoryService.getOriginalPasswordHash(username)).thenReturn(null);
+
+            // Act
+            userService.changePassword(username, newPassword, false);
+
+            // Assert - Verify password history validation was called
+            verify(passwordValidationService).validatePasswordNotInHistory(1L, newPassword);
+    }
+
+    @Test
+    void testChangePassword_CleansUpOldHistoryEntries() {
+            // Arrange
+            String username = "testuser";
+            String newPassword = "NewValid123!";
+            String encodedOldPassword = "encodedOldPassword";
+            String encodedNewPassword = "encodedNewPassword";
+            User user = new User(username, encodedOldPassword, new Roles("USER"));
+            user.setId(42L); // Use specific ID to verify cleanup call
+
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+            when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
+            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(passwordEncoder.matches(newPassword, encodedOldPassword)).thenReturn(false);
+            when(passwordHistoryService.getOriginalPasswordHash(username)).thenReturn(null);
+            when(passwordHistoryRepository.save(any(PasswordHistory.class)))
+                            .thenReturn(new PasswordHistory(42L, encodedNewPassword));
+
+            // Act
+            userService.changePassword(username, newPassword, false);
+
+            // Assert - Verify cleanup was called with correct user ID and history size
+            verify(passwordHistoryRepository).deleteOldPasswordHistory(42L, 5);
     }
 }

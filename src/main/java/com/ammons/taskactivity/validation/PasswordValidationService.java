@@ -1,9 +1,16 @@
 package com.ammons.taskactivity.validation;
 
+import com.ammons.taskactivity.entity.PasswordHistory;
+import com.ammons.taskactivity.repository.PasswordHistoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -20,6 +27,27 @@ public class PasswordValidationService {
     private static final Logger logger = LoggerFactory.getLogger(PasswordValidationService.class);
     private static final Pattern CONSECUTIVE_CHARS_PATTERN =
             Pattern.compile(ValidationConstants.CONSECUTIVE_CHARS_PATTERN);
+
+    private final PasswordHistoryRepository passwordHistoryRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${security.password.history.enabled:true}")
+    private boolean historyEnabled;
+
+    @Value("${security.password.history.size:5}")
+    private int historySize;
+
+    /**
+     * Constructor for PasswordValidationService.
+     *
+     * @param passwordHistoryRepository Repository for password history operations
+     * @param passwordEncoder Password encoder for comparing hashed passwords
+     */
+    public PasswordValidationService(PasswordHistoryRepository passwordHistoryRepository,
+            PasswordEncoder passwordEncoder) {
+        this.passwordHistoryRepository = passwordHistoryRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Validates that a password meets the required strength criteria.
@@ -105,5 +133,52 @@ public class PasswordValidationService {
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    /**
+     * Validates that a new password does not match any of the user's recent password history. This
+     * method retrieves the configured number of most recent passwords and compares them against the
+     * proposed new password using BCrypt matching.
+     *
+     * @param userId the user's ID for history lookup
+     * @param newPassword the new plaintext password to validate
+     * @throws IllegalArgumentException if the password matches any entry in the user's password
+     *         history
+     */
+    public void validatePasswordNotInHistory(Long userId, String newPassword) {
+        // Skip validation if history checking is disabled
+        if (!historyEnabled) {
+            logger.debug("Password history validation disabled via configuration");
+            return;
+        }
+
+        if (userId == null) {
+            throw new IllegalArgumentException(
+                    "User ID cannot be null for password history validation");
+        }
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException(ValidationConstants.PASSWORD_NULL_OR_EMPTY_MSG);
+        }
+
+        // Retrieve recent password history (configured size, default 5)
+        Pageable pageable = PageRequest.of(0, historySize);
+        List<PasswordHistory> recentPasswords =
+                passwordHistoryRepository.findRecentByUserId(userId, pageable);
+
+        logger.debug("Checking new password against {} recent password(s) for user ID: {}",
+                recentPasswords.size(), userId);
+
+        // Check if new password matches any of the recent passwords
+        for (PasswordHistory history : recentPasswords) {
+            if (passwordEncoder.matches(newPassword, history.getPasswordHash())) {
+                logger.warn(
+                        "Password validation failed: matches password from history for user ID: {}",
+                        userId);
+                throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_HISTORY_MSG);
+            }
+        }
+
+        logger.debug("Password history validation successful for user ID: {}", userId);
     }
 }

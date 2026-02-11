@@ -1,12 +1,15 @@
 package com.ammons.taskactivity.service;
 
+import com.ammons.taskactivity.entity.PasswordHistory;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
+import com.ammons.taskactivity.repository.PasswordHistoryRepository;
 import com.ammons.taskactivity.repository.UserRepository;
 import com.ammons.taskactivity.validation.PasswordValidationService;
 import com.ammons.taskactivity.validation.ValidationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,17 +38,26 @@ public class UserService {
     private final LoginAuditService loginAuditService;
     private final PasswordHistoryService passwordHistoryService;
     private final TokenRevocationService tokenRevocationService;
+    private final PasswordHistoryRepository passwordHistoryRepository;
+
+    @Value("${security.password.history.enabled:true}")
+    private boolean historyEnabled;
+
+    @Value("${security.password.history.size:5}")
+    private int historySize;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
             PasswordValidationService passwordValidationService,
             LoginAuditService loginAuditService, PasswordHistoryService passwordHistoryService,
-            TokenRevocationService tokenRevocationService) {
+            TokenRevocationService tokenRevocationService,
+            PasswordHistoryRepository passwordHistoryRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordValidationService = passwordValidationService;
         this.loginAuditService = loginAuditService;
         this.passwordHistoryService = passwordHistoryService;
         this.tokenRevocationService = tokenRevocationService;
+        this.passwordHistoryRepository = passwordHistoryRepository;
     }
 
     public List<User> getAllUsers() {
@@ -171,6 +183,14 @@ public class UserService {
         user.setForcePasswordUpdate(forcePasswordUpdate);
         User savedUser = userRepository.save(user);
 
+        // Save initial password to history if enabled
+        if (historyEnabled) {
+            PasswordHistory history =
+                    new PasswordHistory(savedUser.getId(), savedUser.getPassword());
+            passwordHistoryRepository.save(history);
+            logger.debug("Saved initial password to history for new user: {}", username);
+        }
+
         logger.info("Successfully created new user: {} with role: {}", username, role);
         return savedUser;
     }
@@ -254,6 +274,11 @@ public class UserService {
         // Password strength validation (including username check)
         passwordValidationService.validatePasswordStrength(newPassword, username);
 
+        // Password history validation - check against previous N passwords
+        if (historyEnabled) {
+            passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
+        }
+
         logger.debug("Found user for password change: id={}, username={}, currentForceUpdate={}",
                 user.getId(), user.getUsername(), user.isForcePasswordUpdate());
 
@@ -265,6 +290,17 @@ public class UserService {
         // Note: This version does not clear force password update flag
         userRepository.save(user);
         logger.info("Password successfully updated for user: {}", username);
+
+        // Save password to history if enabled
+        if (historyEnabled) {
+            PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
+            passwordHistoryRepository.save(history);
+            logger.debug("Saved password to history for user: {}", username);
+
+            // Clean up old password history entries (keep only configured size)
+            passwordHistoryRepository.deleteOldPasswordHistory(user.getId(), historySize);
+            logger.debug("Cleaned up old password history for user: {}", username);
+        }
     }
 
     @Transactional
@@ -304,6 +340,11 @@ public class UserService {
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_SESSION_MSG);
         }
 
+        // Password history validation - check against previous N passwords
+        if (historyEnabled) {
+            passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
+        }
+
         logger.debug("Found user for password change: id={}, username={}, currentForceUpdate={}",
                 user.getId(), user.getUsername(), user.isForcePasswordUpdate());
 
@@ -329,6 +370,17 @@ public class UserService {
 
         logger.info("Password successfully changed for user: {} (id={}), forceUpdate now: {}",
                 username, savedUser.getId(), savedUser.isForcePasswordUpdate());
+
+        // Save password to history if enabled
+        if (historyEnabled) {
+            PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
+            passwordHistoryRepository.save(history);
+            logger.debug("Saved password to history for user: {}", username);
+
+            // Clean up old password history entries (keep only configured size)
+            passwordHistoryRepository.deleteOldPasswordHistory(user.getId(), historySize);
+            logger.debug("Cleaned up old password history for user: {}", username);
+        }
 
         // SECURITY FIX: Revoke all JWT tokens on password change
         // This ensures that attackers who may have stolen a token cannot use it after password
