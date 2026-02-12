@@ -8,6 +8,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 - ✅ Daily task recording with client/project/phase tracking
 - 📊 Analytics & Reports Dashboard with interactive charts and visualizations
+  - **Flexible date range filtering** with preset options (This Month, Last Month, Last 3 Months, This Year, All Time) and custom date selection
   - Time distribution by client and project
   - Daily/weekly/monthly time tracking visualizations
   - Phase distribution analysis
@@ -21,9 +22,11 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 - 💰 Travel and business expense tracking with receipt management
 - 📸 Receipt upload/download (JPEG, PNG, PDF validated via magic number signatures) with AWS S3 or local storage
+  - **Angular Dashboard**: Upload receipts directly in Add/Edit expense dialogs for streamlined workflow
 - 💳 Payment method and vendor tracking
 - 📋 Expense categorization by type (travel, meals, office supplies, etc.)
 - ✅ Multi-stage approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
+- ✏️ **Full CRUD operations in Angular Dashboard**: Create, Edit, Clone, and Delete expenses without leaving the dashboard
 - 📧 **Email notifications for expense status changes** (AWS SES integration):
   - Automatic notifications when expense status changes (submitted, approved, rejected, reimbursed)
   - Includes expense details, status change reason, and approval notes
@@ -44,16 +47,28 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 ### Profile Management
 
-- 👤 **My Profile**: Self-service profile management for non-admin users
-  - **Angular UI**: Modern Material Design profile editor accessible from dashboard and side menu
-  - **Backend UI**: Thymeleaf-based profile editor with success/error notifications
+- 👤 **My Profile**: Self-service profile management for all users
+  - **Angular UI**: Modern Material Design profile editor with integrated password change dialog
+  - **Backend UI**: Thymeleaf-based profile editor with dedicated password change page
   - Users can update their own first name, last name, company, and email
   - Email address required for expense management features
-  - Password changes available via dedicated Change Password page
+  - **Password change in Angular**: Click "Update Password" button to open dialog with current password verification and real-time validation
+  - **Password change in Backend**: Dedicated Change Password page with success/error notifications
   - Profile updates return to My Profile with confirmation message
-  - Password changes redirect back to My Profile after completion
-- 🔐 Secure password management with 90-day expiration policy and automated email warnings
+- 🔐 Secure password management with comprehensive validation:
+  - Minimum 10 characters with uppercase, digit, and special character requirements
+  - Current password verification for self-service changes
+  - Cannot reuse last 5 passwords or contain username
+  - 90-day expiration policy with automated email warnings (1-7 days before expiration)
+  - Real-time validation feedback with specific error messages
 - 🔒 Account lockout protection (5 failed login attempts) with admin email notifications
+
+### Dashboard Navigation
+
+- 🔄 **Cross-Dashboard Links**: Seamless navigation between user and admin interfaces
+  - **Angular Dashboard (User)**: Admin Dashboard link for ADMIN and GUEST roles to access React admin interface
+  - **React Dashboard (Admin)**: User Dashboard link for all roles to access Angular user interface
+  - Links preserve authentication and provide unified experience across both UIs
 
 ### General Features
 

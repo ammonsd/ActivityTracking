@@ -72,13 +72,6 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               <button
                 mat-raised-button
                 color="accent"
-                (click)="navigateToWeeklyTimesheet()"
-              >
-                <mat-icon>calendar_today</mat-icon> Weekly Timesheet
-              </button>
-              <button
-                mat-raised-button
-                color="accent"
                 (click)="navigateToExpenses()"
                 *ngIf="canAccessExpenses || currentRole === 'GUEST'"
                 [disabled]="currentRole === 'GUEST'"
@@ -711,11 +704,6 @@ export class TaskListComponent implements OnInit {
   // Navigation methods
   navigateToDashboard(): void {
     this.router.navigate(['/dashboard']);
-  }
-
-  navigateToWeeklyTimesheet(): void {
-    // Navigate to the Java/Thymeleaf weekly timesheet page
-    globalThis.location.href = '/task-activity/weekly-timesheet';
   }
 
   navigateToExpenses(): void {

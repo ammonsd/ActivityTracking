@@ -21,6 +21,21 @@ mat-card-header {
   font-weight: 500;
 }
 
+.action-buttons-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.action-buttons-row button {
+  white-space: nowrap;
+}
+
+.action-buttons-row .button-text {
+  margin-left: 4px;
+}
+
 .filter-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -106,10 +121,19 @@ th {
   padding: 4px 8px !important;
 }
 
-.actions-cell button {
-  margin: 0 1px;
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.action-buttons button {
+  margin: 0;
   min-width: 36px;
-  padding: 4px 8px;
+  padding: 4px;
+  flex-shrink: 0;
 }
 
 mat-icon {

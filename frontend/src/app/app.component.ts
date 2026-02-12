@@ -40,7 +40,7 @@ import { ExpenseService } from './services/expense.service';
 export class AppComponent {
   @ViewChild('drawer') drawer?: MatDrawer;
 
-  title = 'Admin Dashboard';
+  title = 'Task Activity Tracker - User Dashboard';
   isAuthenticated$;
   currentUser = '';
   currentRole = '';
@@ -52,7 +52,7 @@ export class AppComponent {
   constructor(
     public readonly authService: AuthService,
     private readonly router: Router,
-    private readonly expenseService: ExpenseService
+    private readonly expenseService: ExpenseService,
   ) {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
     this.currentUser = this.authService.getCurrentUsername();
@@ -133,7 +133,7 @@ export class AppComponent {
         this.canAccessExpenses = response.data || false;
         console.log(
           'AppComponent - Can access expenses:',
-          this.canAccessExpenses
+          this.canAccessExpenses,
         );
       },
       error: (err) => {
@@ -154,7 +154,7 @@ export class AppComponent {
   navigateExternal(
     event: Event,
     url: string,
-    preventDefault: boolean = false
+    preventDefault: boolean = false,
   ): void {
     event.preventDefault();
     if (!preventDefault) {

@@ -5,7 +5,13 @@
  * Date: November 2025
  */
 
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -27,7 +33,10 @@ import { WeeklySummaryDto } from '../../../models/report.model';
   templateUrl: './weekly-summary.component.html',
   styleUrl: './weekly-summary.component.scss',
 })
-export class WeeklySummaryComponent implements OnInit {
+export class WeeklySummaryComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
+
   loading = false;
   data: WeeklySummaryDto[] = [];
   displayedColumns: string[] = [
@@ -43,18 +52,29 @@ export class WeeklySummaryComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getWeeklySummary().subscribe({
-      next: (data: WeeklySummaryDto[]) => {
-        this.data = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading weekly summary:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getWeeklySummary(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: WeeklySummaryDto[]) => {
+          this.data = data;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading weekly summary:', err);
+          this.loading = false;
+        },
+      });
   }
 
   formatWeekRange(start: string, end: string): string {

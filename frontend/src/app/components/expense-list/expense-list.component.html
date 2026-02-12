@@ -4,6 +4,23 @@
       <mat-card-title>Expenses</mat-card-title>
     </mat-card-header>
     <mat-card-content>
+      <!-- Action Buttons Section -->
+      <div class="action-buttons-row">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="addExpense()"
+          [disabled]="currentRole === 'GUEST'"
+        >
+          <mat-icon>add</mat-icon>
+          <span class="button-text">Add Expense</span>
+        </button>
+        <button mat-raised-button color="accent" (click)="clearFilters()">
+          <mat-icon>clear</mat-icon>
+          <span class="button-text">Clear Filters</span>
+        </button>
+      </div>
+
       <!-- Filter Section -->
       <div class="filter-section">
         <mat-form-field appearance="outline">
@@ -126,13 +143,6 @@
           ></mat-datepicker-toggle>
           <mat-datepicker #endPicker></mat-datepicker>
         </mat-form-field>
-
-        <div class="table-actions">
-          <button mat-raised-button color="accent" (click)="clearFilters()">
-            <mat-icon>clear</mat-icon>
-            <span class="button-text">Clear Filters</span>
-          </button>
-        </div>
       </div>
 
       <!-- Pagination Controls -->
@@ -242,34 +252,34 @@
           <td mat-cell *matCellDef="let expense">{{ expense.username }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="receipt">
-          <th mat-header-cell *matHeaderCellDef>Receipt</th>
-          <td mat-cell *matCellDef="let expense">
-            <div class="receipt-actions">
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let expense" class="actions-cell">
+            <div class="action-buttons">
               <button
-                *ngIf="!expense.receiptPath"
                 mat-icon-button
                 color="primary"
-                (click)="uploadReceipt(expense)"
-                matTooltip="Upload Receipt"
+                (click)="editExpense(expense)"
+                matTooltip="Edit Expense"
+                [disabled]="currentRole === 'GUEST'"
               >
-                <mat-icon>upload_file</mat-icon>
+                <mat-icon>edit</mat-icon>
               </button>
               <button
-                *ngIf="expense.receiptPath"
                 mat-icon-button
                 color="accent"
-                (click)="downloadReceipt(expense)"
-                matTooltip="Download Receipt"
+                (click)="cloneExpense(expense)"
+                matTooltip="Clone Expense"
+                [disabled]="currentRole === 'GUEST'"
               >
-                <mat-icon>download</mat-icon>
+                <mat-icon>content_copy</mat-icon>
               </button>
               <button
-                *ngIf="expense.receiptPath"
                 mat-icon-button
                 color="warn"
-                (click)="deleteReceiptConfirm(expense)"
-                matTooltip="Delete Receipt"
+                (click)="deleteExpense(expense)"
+                matTooltip="Delete Expense"
+                [disabled]="currentRole === 'GUEST'"
               >
                 <mat-icon>delete</mat-icon>
               </button>

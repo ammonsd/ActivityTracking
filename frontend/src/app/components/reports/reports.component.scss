@@ -25,6 +25,57 @@
   }
 }
 
+.date-filter-card {
+  margin-bottom: 24px;
+}
+
+.date-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    flex: 1 1 auto;
+    min-width: 120px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 768px) {
+    button {
+      flex: 1 1 calc(50% - 4px);
+    }
+  }
+}
+
+.custom-date-range {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1 1 200px;
+    min-width: 150px;
+  }
+
+  button {
+    margin-top: 8px;
+  }
+
+  @media (max-width: 768px) {
+    mat-form-field {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+
 .reports-tabs {
   ::ng-deep .mat-mdc-tab-body-content {
     padding: 24px 0;

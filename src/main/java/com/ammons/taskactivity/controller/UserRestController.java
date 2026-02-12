@@ -369,6 +369,50 @@ public class UserRestController {
     }
 
     /**
+     * Change password for current logged-in user. Allows any authenticated user to change their own
+     * password without admin permissions.
+     * 
+     * @param request the request body containing currentPassword and newPassword
+     * @param authentication the authentication object containing the current user
+     * @return ResponseEntity with success or error message
+     */
+    @PutMapping("/profile/password")
+    public ResponseEntity<ApiResponse<Void>> changeOwnPassword(
+            @Valid @RequestBody ProfilePasswordChangeRequest request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        logger.debug("REST API: User '{}' changing their own password", username);
+
+        // Block GUEST users from changing password
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+            logger.warn("GUEST user '{}' attempted to change password", username);
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Guest users cannot change passwords"));
+        }
+
+        return userService.getUserByUsername(username).map(user -> {
+            try {
+                // Verify current password first
+                if (!userService.verifyCurrentPassword(username, request.getCurrentPassword())) {
+                    return ResponseEntity.status(401).<ApiResponse<Void>>body(
+                            ApiResponse.error("Current password is incorrect"));
+                }
+
+                // Change the password
+                userService.changePassword(username, request.getNewPassword(), true);
+                return ResponseEntity
+                        .ok(ApiResponse.<Void>success("Password changed successfully", null));
+            } catch (Exception e) {
+                logger.error("Error changing password for user '{}': {}", username, e.getMessage(),
+                        e);
+                return ResponseEntity.status(500).<ApiResponse<Void>>body(
+                        ApiResponse.error("Error changing password: " + e.getMessage()));
+            }
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+    }
+
+    /**
      * DTO for password change request
      */
     public static class PasswordChangeRequest {
@@ -391,6 +435,34 @@ public class UserRestController {
 
         public void setForcePasswordUpdate(boolean forcePasswordUpdate) {
             this.forcePasswordUpdate = forcePasswordUpdate;
+        }
+    }
+
+    /**
+     * DTO for profile password change request (requires current password verification)
+     */
+    public static class ProfilePasswordChangeRequest {
+        @NotBlank(message = "Current password is required")
+        private String currentPassword;
+
+        @ValidPassword
+        @NotBlank(message = "New password cannot be blank")
+        private String newPassword;
+
+        public String getCurrentPassword() {
+            return currentPassword;
+        }
+
+        public void setCurrentPassword(String currentPassword) {
+            this.currentPassword = currentPassword;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
         }
     }
 }

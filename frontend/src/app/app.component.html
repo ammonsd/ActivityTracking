@@ -51,6 +51,15 @@
       <a
         *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
         mat-list-item
+        href="/dashboard"
+        (click)="navigateExternal($event, '/dashboard')"
+      >
+        <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
+        <span matListItemTitle>Admin Dashboard</span>
+      </a>
+      <a
+        *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
+        mat-list-item
         [routerLink]="currentRole === 'GUEST' ? null : '/dropdowns'"
         routerLinkActive="active"
         [class.disabled]="currentRole === 'GUEST'"

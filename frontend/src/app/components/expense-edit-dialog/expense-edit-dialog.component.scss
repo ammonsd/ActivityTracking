@@ -34,3 +34,101 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.receipt-upload-section {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .current-receipt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background-color: rgba(63, 81, 181, 0.08);
+    border-radius: 4px;
+
+    mat-icon {
+      color: #3f51b5;
+    }
+
+    span {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+  }
+
+  .file-input-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .file-size-hint {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .selected-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background-color: rgba(76, 175, 80, 0.08);
+    border-radius: 4px;
+    margin-bottom: 12px;
+
+    mat-icon {
+      color: #4caf50;
+    }
+
+    .file-name {
+      flex: 1;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+      word-break: break-all;
+    }
+
+    .file-size {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .file-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background-color: rgba(244, 67, 54, 0.08);
+    border-radius: 4px;
+    margin-bottom: 12px;
+
+    mat-icon {
+      color: #f44336;
+    }
+
+    span {
+      font-size: 14px;
+      color: #f44336;
+    }
+  }
+
+  .receipt-note {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.54);
+    font-style: italic;
+  }
+}

@@ -133,6 +133,64 @@
       <mat-label>Notes</mat-label>
       <textarea matInput formControlName="notes" rows="2"></textarea>
     </mat-form-field>
+
+    <!-- Receipt Upload Section -->
+    <div class="receipt-upload-section">
+      <h3>Receipt (Optional)</h3>
+      
+      <div *ngIf="!isAddMode && data.expense.receiptPath" class="current-receipt">
+        <mat-icon>receipt</mat-icon>
+        <span>Current receipt: {{ data.expense.receiptPath }}</span>
+      </div>
+
+      <div class="file-input-container">
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          (change)="onFileSelected($event)"
+          style="display: none"
+        />
+        <button
+          type="button"
+          mat-raised-button
+          color="accent"
+          (click)="fileInput.click()"
+          [disabled]="!!selectedFile"
+        >
+          <mat-icon>attach_file</mat-icon>
+          Choose Receipt File
+        </button>
+        <span class="file-size-hint">Max {{ maxFileSizeMB }}MB (JPG, PNG, PDF)</span>
+      </div>
+
+      <div *ngIf="selectedFile" class="selected-file">
+        <mat-icon>description</mat-icon>
+        <span class="file-name">{{ selectedFile.name }}</span>
+        <span class="file-size">({{ formatFileSize(selectedFile.size) }})</span>
+        <button
+          type="button"
+          mat-icon-button
+          color="warn"
+          (click)="removeSelectedFile()"
+          matTooltip="Remove file"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="fileError" class="file-error">
+        <mat-icon>error</mat-icon>
+        <span>{{ fileError }}</span>
+      </div>
+
+      <p class="receipt-note" *ngIf="isAddMode">
+        Note: Receipt will be uploaded after the expense is saved.
+      </p>
+      <p class="receipt-note" *ngIf="!isAddMode && selectedFile">
+        Note: New receipt will replace the existing one.
+      </p>
+    </div>
   </form>
 </mat-dialog-content>
 

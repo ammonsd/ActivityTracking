@@ -26,6 +26,7 @@ import {
     Timeline as TimelineIcon,
     Assignment as AssignmentIcon,
     Home as HomeIcon,
+    Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
@@ -94,6 +95,14 @@ export const Sidebar: React.FC = () => {
             enabled: FEATURES.guestActivity.enabled,
         },
         {
+            name: "User Dashboard",
+            icon: <DashboardIcon />,
+            route: "/app",
+            requiresAdmin: false,
+            comingSoon: false,
+            enabled: true,
+        },
+        {
             name: "Task Activity Tracker",
             icon: <AssignmentIcon />,
             route: FEATURES.taskTracker.route,
@@ -107,6 +116,12 @@ export const Sidebar: React.FC = () => {
         // Task Tracker opens Spring Boot UI in same tab
         if (item.name === "Task Activity Tracker") {
             globalThis.location.href = "/task-activity/list";
+            return;
+        }
+
+        // User Dashboard opens Angular app in same tab
+        if (item.name === "User Dashboard") {
+            globalThis.location.href = "/app";
             return;
         }
 
@@ -129,6 +144,9 @@ export const Sidebar: React.FC = () => {
     const isButtonDisabled = (item: MenuItem): boolean => {
         // Dashboard Home is always enabled
         if (item.name === "Dashboard Home") return false;
+
+        // User Dashboard is always enabled for all roles
+        if (item.name === "User Dashboard") return false;
 
         // Task Tracker is always enabled for all roles
         if (item.name === "Task Activity Tracker") return false;

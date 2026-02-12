@@ -32,7 +32,7 @@ import { AuthService } from './auth.service';
 export class ReportsService {
   constructor(
     private readonly taskActivityService: TaskActivityService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
   ) {}
 
   // Helper method to get date range for current month
@@ -81,7 +81,7 @@ export class ReportsService {
   // Backend automatically filters by username for non-admin users
   private fetchTasksForDateRange(
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Observable<TaskActivity[]> {
     // Use getAllTasks which respects role-based filtering on the backend
     // Pass large page size to get all matching records
@@ -93,23 +93,34 @@ export class ReportsService {
         undefined,
         undefined,
         startDate,
-        endDate
+        endDate,
       )
       .pipe(map((response) => response.data || []));
   }
 
-  getDashboardSummary(): Observable<DashboardSummaryDto> {
-    const monthRange = this.getCurrentMonthRange();
+  getDashboardSummary(
+    startDate?: Date,
+    endDate?: Date,
+  ): Observable<DashboardSummaryDto> {
+    const monthRange =
+      startDate && endDate
+        ? {
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+          }
+        : this.getCurrentMonthRange();
+    
+    // Always show current week as a reference point
     const weekRange = this.getCurrentWeekRange();
 
     return forkJoin({
       monthData: this.fetchTasksForDateRange(
         monthRange.startDate,
-        monthRange.endDate
+        monthRange.endDate,
       ),
       weekData: this.fetchTasksForDateRange(
         weekRange.startDate,
-        weekRange.endDate
+        weekRange.endDate,
       ),
     }).pipe(
       map(({ monthData, weekData }) => {
@@ -118,11 +129,11 @@ export class ReportsService {
 
         const monthHours = monthTasks.reduce(
           (sum: number, task: TaskActivity) => sum + task.hours,
-          0
+          0,
         );
         const weekHours = weekTasks.reduce(
           (sum: number, task: TaskActivity) => sum + task.hours,
-          0
+          0,
         );
 
         // Get top client and project from month data
@@ -136,14 +147,14 @@ export class ReportsService {
 
         // Calculate average daily hours based on days with actual time entries
         const uniqueDates = new Set(
-          monthTasks.map((t: TaskActivity) => t.taskDate.split('T')[0])
+          monthTasks.map((t: TaskActivity) => t.taskDate.split('T')[0]),
         );
         const daysWithEntries = uniqueDates.size;
         const avgDaily = daysWithEntries > 0 ? monthHours / daysWithEntries : 0;
 
         // Count unique clients
         const clientCount = new Set(
-          monthTasks.map((t: TaskActivity) => t.client)
+          monthTasks.map((t: TaskActivity) => t.client),
         ).size;
 
         return {
@@ -154,13 +165,13 @@ export class ReportsService {
           avgDaily: Math.round(avgDaily * 10) / 10,
           clientCount,
         };
-      })
+      }),
     );
   }
 
   getTimeByClient(
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Observable<TimeByClientDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -169,7 +180,7 @@ export class ReportsService {
         const clientHours = this.groupByClient(tasks);
         const totalHours = clientHours.reduce(
           (sum, item) => sum + item.hours,
-          0
+          0,
         );
 
         return clientHours.map((item) => ({
@@ -177,14 +188,14 @@ export class ReportsService {
           hours: Math.round(item.hours * 10) / 10,
           percentage: Math.round((item.hours / totalHours) * 1000) / 10,
         }));
-      })
+      }),
     );
   }
 
   getTimeByProject(
     startDate?: Date,
     endDate?: Date,
-    client?: string
+    client?: string,
   ): Observable<TimeByProjectDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -228,12 +239,12 @@ export class ReportsService {
 
         result.sort((a, b) => b.hours - a.hours);
         return result;
-      })
+      }),
     );
   }
 
   getDailyHours(startDate?: Date, endDate?: Date): Observable<DailyHoursDto[]> {
-    const range = this.getLastNDaysRange(30);
+    const range = this.getDateRange(startDate, endDate);
 
     return this.fetchTasksForDateRange(range.startDate, range.endDate).pipe(
       map((tasks) => {
@@ -257,14 +268,14 @@ export class ReportsService {
         }
 
         return result;
-      })
+      }),
     );
   }
 
   getTimeByPhase(
     startDate?: Date,
     endDate?: Date,
-    project?: string
+    project?: string,
   ): Observable<TimeByPhaseDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -294,18 +305,29 @@ export class ReportsService {
 
         result.sort((a, b) => b.hours - a.hours);
         return result;
-      })
+      }),
     );
   }
 
-  getWeeklySummary(weeks: number = 4): Observable<WeeklySummaryDto[]> {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - weeks * 7);
+  getWeeklySummary(
+    startDate?: Date,
+    endDate?: Date,
+  ): Observable<WeeklySummaryDto[]> {
+    let start: Date;
+    let end: Date;
+
+    if (startDate && endDate) {
+      start = startDate;
+      end = endDate;
+    } else {
+      end = new Date();
+      start = new Date();
+      start.setDate(end.getDate() - 4 * 7); // Default to 4 weeks
+    }
 
     return this.fetchTasksForDateRange(
-      startDate.toISOString().split('T')[0],
-      endDate.toISOString().split('T')[0]
+      start.toISOString().split('T')[0],
+      end.toISOString().split('T')[0],
     ).pipe(
       map((tasks) => {
         const weeklyData = new Map<
@@ -335,12 +357,11 @@ export class ReportsService {
         const sortedWeeks = Array.from(weeklyData.entries());
         sortedWeeks.sort((a, b) => b[1].start.getTime() - a[1].start.getTime());
 
-        const weekSlice = sortedWeeks.slice(0, weeks);
-        for (const [key, weekData] of weekSlice) {
+        for (const [key, weekData] of sortedWeeks) {
           const index = sortedWeeks.findIndex(([k]) => k === key);
           const totalHours = weekData.tasks.reduce(
             (sum, t) => sum + t.hours,
-            0
+            0,
           );
           const clientHours = this.groupByClient(weekData.tasks);
 
@@ -348,7 +369,7 @@ export class ReportsService {
           if (index < sortedWeeks.length - 1) {
             const prevWeekHours = sortedWeeks[index + 1][1].tasks.reduce(
               (sum, t) => sum + t.hours,
-              0
+              0,
             );
             if (prevWeekHours > 0) {
               change = ((totalHours - prevWeekHours) / prevWeekHours) * 100;
@@ -368,14 +389,14 @@ export class ReportsService {
         }
 
         return result;
-      })
+      }),
     );
   }
 
   getTopActivities(
     startDate?: Date,
     endDate?: Date,
-    minHours?: number
+    minHours?: number,
   ): Observable<TopActivityDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -424,19 +445,31 @@ export class ReportsService {
 
         result.sort((a, b) => b.hours - a.hours);
         return result.slice(0, 10);
-      })
+      }),
     );
   }
 
-  getMonthlyComparison(months: number = 6): Observable<MonthlyComparisonDto[]> {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(endDate.getMonth() - months);
-    startDate.setDate(1);
+  getMonthlyComparison(
+    startDate?: Date,
+    endDate?: Date,
+  ): Observable<MonthlyComparisonDto[]> {
+    let start: Date;
+    let end: Date;
+
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      start.setDate(1); // First day of start month
+      end = endDate;
+    } else {
+      end = new Date();
+      start = new Date();
+      start.setMonth(end.getMonth() - 6); // Default to 6 months
+      start.setDate(1);
+    }
 
     return this.fetchTasksForDateRange(
-      startDate.toISOString().split('T')[0],
-      endDate.toISOString().split('T')[0]
+      start.toISOString().split('T')[0],
+      end.toISOString().split('T')[0],
     ).pipe(
       map((tasks) => {
         const monthlyMap = new Map<
@@ -447,7 +480,7 @@ export class ReportsService {
         for (const task of tasks) {
           const taskDate = new Date(task.taskDate);
           const monthKey = `${taskDate.getFullYear()}-${String(
-            taskDate.getMonth() + 1
+            taskDate.getMonth() + 1,
           ).padStart(2, '0')}`;
 
           if (!monthlyMap.has(monthKey)) {
@@ -463,8 +496,7 @@ export class ReportsService {
         const sortedMonths = Array.from(monthlyMap.entries());
         sortedMonths.sort((a, b) => b[1].date.getTime() - a[1].date.getTime());
 
-        const monthSlice = sortedMonths.slice(0, months);
-        for (const [month, data] of monthSlice) {
+        for (const [month, data] of sortedMonths) {
           const totalHours = data.tasks.reduce((sum, t) => sum + t.hours, 0);
           const clientHours = this.groupByClient(data.tasks);
 
@@ -480,14 +512,14 @@ export class ReportsService {
 
         result.reverse();
         return result;
-      })
+      }),
     );
   }
 
   // Helper methods
   private getDateRange(
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): { startDate: string; endDate: string } {
     if (startDate && endDate) {
       return {
@@ -549,7 +581,7 @@ export class ReportsService {
    */
   getUserSummaries(
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Observable<UserSummaryDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -585,7 +617,7 @@ export class ReportsService {
           const billableDates = new Set(
             userTasks
               .filter((t) => t.project !== 'Non-Billable')
-              .map((t) => t.taskDate)
+              .map((t) => t.taskDate),
           );
           const daysWorked = billableDates.size;
           const avgHoursPerDay =
@@ -593,7 +625,7 @@ export class ReportsService {
 
           // Get top client and project (excluding Non-Billable)
           const billableTasks = userTasks.filter(
-            (t) => t.project !== 'Non-Billable'
+            (t) => t.project !== 'Non-Billable',
           );
           const clientHours = this.groupByClient(billableTasks);
           const projectCounts = this.groupByProject(billableTasks);
@@ -605,7 +637,7 @@ export class ReportsService {
 
           // Get last activity date
           const lastActivityDate = Math.max(
-            ...userTasks.map((t) => new Date(t.taskDate).getTime())
+            ...userTasks.map((t) => new Date(t.taskDate).getTime()),
           );
 
           result.push({
@@ -626,7 +658,7 @@ export class ReportsService {
         // Sort by total hours descending
         result.sort((a, b) => b.totalHours - a.totalHours);
         return result;
-      })
+      }),
     );
   }
 
@@ -649,7 +681,7 @@ export class ReportsService {
 
         const totalHours = Array.from(userHoursMap.values()).reduce(
           (sum, h) => sum + h,
-          0
+          0,
         );
 
         const result: UserHoursDto[] = [];
@@ -663,7 +695,7 @@ export class ReportsService {
 
         result.sort((a, b) => b.hours - a.hours);
         return result;
-      })
+      }),
     );
   }
 
@@ -672,7 +704,7 @@ export class ReportsService {
    */
   getUserActivityTimeline(
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Observable<UserActivityByDateDto[]> {
     const range = this.getDateRange(startDate, endDate);
 
@@ -711,7 +743,7 @@ export class ReportsService {
         });
 
         return result;
-      })
+      }),
     );
   }
 }

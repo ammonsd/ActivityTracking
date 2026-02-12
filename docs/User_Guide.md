@@ -371,8 +371,9 @@ The weekly timesheet gives you a comprehensive view of your time across an entir
 
 ### Accessing Weekly Timesheet
 
-1. **From Task List**: Click **"📊 Weekly Timesheet"** button
-2. **From Main Menu**: Select "Weekly View" option
+**From Backend Interface**: Navigate to the Weekly Timesheet from the main navigation menu in the Thymeleaf backend interface (http://localhost:8080)
+
+**Note**: The Weekly Timesheet button was removed from the Angular dashboard (http://localhost:4200) to provide a more streamlined user experience. Users should access the Weekly Timesheet directly from the backend interface.
 
 ### Understanding the Timesheet
 
@@ -498,21 +499,28 @@ Your new password must:
 
 ### How to Change Your Password
 
-**From My Profile:**
+**From Angular Profile:**
 
 1. Access your profile (see "Accessing My Profile" above)
 2. Click the **"Update Password"** button
-3. Enter your **Current Password**
-4. Enter your **New Password**
-5. Enter your **Confirm Password** (must match new password)
-6. Click **"Change Password"**
-7. You'll be redirected back to My Profile with a success message
+3. A dialog opens with password change form:
+   - Enter your **Current Password**
+   - Enter your **New Password** (real-time validation feedback)
+   - Enter your **Confirm Password** (must match new password)
+   - View password requirements with live status indicators
+   - Use "Show passwords" checkbox if needed
+4. Click **"Update"** to save or **"Cancel"** to close without changes
+5. Dialog closes on success with confirmation message
+6. Specific error messages display for validation failures (e.g., "Password must contain at least 1 special character (+&%$#@!~*)")
 
 **From the Backend Menu:**
 
 1. Navigate to the user menu
 2. Select "Change Password"
-3. Follow the same steps as above
+3. Dedicated page opens with password change form
+4. Enter current password, new password, and confirm password
+5. Click "Change Password" button
+6. Redirected back to My Profile with success message
 
 ### Password Expiration
 
@@ -541,10 +549,17 @@ The expense list shows all your recorded expenses with the following information
 - **Client**: Client associated with the expense
 - **Project**: Project the expense is related to
 - **Type**: Category of expense (Travel, Home Office, etc.)
-- **Amount**: Expense amount with currency
+- **Amount**: Expense amount with currency (formatted with comma separators for readability)
 - **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
-- **Receipt**: Indicator if receipt is attached
-- **Actions**: View, Edit, Submit, Delete buttons
+- **Actions**: Edit, Clone, and Delete buttons for managing your expenses
+
+**Angular Dashboard Features:**
+The Angular dashboard (http://localhost:4200) provides full expense management capabilities:
+- **Add Expense** - Create new expenses with receipt upload
+- **Edit Expense** - Modify draft expenses and upload/replace receipts
+- **Clone Expense** - Duplicate existing expenses for similar entries
+- **Delete Expense** - Remove draft expenses
+- **Receipt Upload** - Attach receipts directly in Add/Edit dialogs (no separate receipt column needed)
 
 ### Using the Sidebar Menu
 
@@ -822,36 +837,56 @@ The Reports section provides interactive charts and visualizations to help you a
 
 Navigate to **Reports** from the main menu to view your analytics dashboard.
 
+### Date Range Filtering
+
+**All reports now support flexible date range filtering!**
+
+At the top of the Analytics & Reports page, you'll find comprehensive date filtering options:
+
+**Preset Date Ranges (Quick Selection):**
+- **This Month** - Current calendar month
+- **Last Month** - Previous calendar month
+- **Last 3 Months** - Rolling 3-month period
+- **This Year** - Current calendar year (Jan 1 - Dec 31)
+- **All Time** - View all historical data
+
+**Custom Date Range:**
+- **Start Date** - Select any start date using the date picker
+- **End Date** - Select any end date using the date picker
+- **Clear Button** - Reset date filters to default (current month)
+
+When you change the date range, all report tabs automatically update to show data for the selected period. This allows you to analyze historical trends, compare different time periods, and review past performance.
+
 ### Available Reports
 
 **For All Users:**
 
 #### 1. Overview Tab
 
-Dashboard summary with key metrics:
+Dashboard summary with key metrics for the selected date range:
 
-- Total hours this month and week
+- Total hours for selected period and current week
 - Top clients and projects
 - Average hours per day
 - Quick insights into your time allocation
 
 #### 2. Client Analysis Tab
 
-- **Time distribution by client** (pie chart) - Visual breakdown of time spent per client
-- **Top activities breakdown** - Most time-consuming tasks
+- **Time distribution by client** (pie chart) - Visual breakdown of time spent per client for selected date range
+- **Top activities breakdown** - Most time-consuming tasks within the period
 - Client-focused time metrics
 
 #### 3. Project Analysis Tab
 
-- **Time distribution by project** (bar chart) - Hours worked per project
+- **Time distribution by project** (bar chart) - Hours worked per project within date range
 - **Phase distribution** (donut chart) - Time spent in different phases (Development, Testing, etc.)
 - Project-level time breakdown with phase details
 
 #### 4. Time Trends Tab
 
-- **Daily time tracking** (line chart) - Daily hours worked over time
-- **Weekly summary** with trends - Week-by-week comparison
-- **Monthly comparison** (grouped bar chart) - Compare hours across months
+- **Daily time tracking** (line chart) - Daily hours worked for the selected date range
+- **Weekly summary** with trends - Week-by-week comparison within period
+- **Monthly comparison** (grouped bar chart) - Compare hours across months in selected range
 
 **For ADMIN Users Only:**
 

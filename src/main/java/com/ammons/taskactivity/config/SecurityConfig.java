@@ -209,7 +209,8 @@ public class SecurityConfig {
                                                 // granular access
                                                 .requestMatchers("/api/admin/**").authenticated()
                                                 .requestMatchers("/api/users/me",
-                                                                "/api/users/profile")
+                                                                "/api/users/profile",
+                                                                "/api/users/profile/password")
                                                 .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
                                                                 ROLE_EXPENSE_ADMIN)
 

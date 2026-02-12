@@ -129,7 +129,7 @@ export class ExpenseListComponent implements OnInit {
         'amount',
         'expenseStatus',
         'username',
-        'receipt',
+        'actions',
       ];
     } else {
       this.displayedColumns = [
@@ -140,7 +140,7 @@ export class ExpenseListComponent implements OnInit {
         'description',
         'amount',
         'expenseStatus',
-        'receipt',
+        'actions',
       ];
     }
   }
@@ -322,13 +322,37 @@ export class ExpenseListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Submitting new expense:', result);
+        console.log('Submitting new expense:', result.expense);
         // Remove the id field if present since this is a new expense
-        const { id, ...expenseData } = result;
+        const { id, ...expenseData } = result.expense;
         this.expenseService.createExpense(expenseData).subscribe({
           next: (response) => {
             console.log('Expense created successfully:', response);
-            this.loadExpenses(); // Reload the list
+            
+            // If a receipt file was selected, upload it
+            if (result.receiptFile && response.data?.id) {
+              this.expenseService.uploadReceipt(response.data.id, result.receiptFile).subscribe({
+                next: () => {
+                  console.log('Receipt uploaded successfully');
+                  this.snackBar.open('Expense and receipt saved successfully', 'Close', {
+                    duration: 3000,
+                  });
+                  this.loadExpenses(); // Reload the list
+                },
+                error: (err) => {
+                  console.error('Error uploading receipt:', err);
+                  this.snackBar.open('Expense saved, but receipt upload failed', 'Close', {
+                    duration: 5000,
+                  });
+                  this.loadExpenses(); // Still reload to show the created expense
+                },
+              });
+            } else {
+              this.snackBar.open('Expense saved successfully', 'Close', {
+                duration: 3000,
+              });
+              this.loadExpenses(); // Reload the list
+            }
           },
           error: (err) => {
             console.error('Error creating expense:', err);
@@ -386,13 +410,37 @@ export class ExpenseListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Submitting cloned expense:', result);
+        console.log('Submitting cloned expense:', result.expense);
         // Remove the id field if present since this is a new expense
-        const { id, ...expenseData } = result;
+        const { id, ...expenseData } = result.expense;
         this.expenseService.createExpense(expenseData).subscribe({
           next: (response) => {
             console.log('Expense cloned successfully:', response);
-            this.loadExpenses(); // Reload the list
+            
+            // If a receipt file was selected, upload it
+            if (result.receiptFile && response.data?.id) {
+              this.expenseService.uploadReceipt(response.data.id, result.receiptFile).subscribe({
+                next: () => {
+                  console.log('Receipt uploaded successfully');
+                  this.snackBar.open('Expense cloned and receipt saved successfully', 'Close', {
+                    duration: 3000,
+                  });
+                  this.loadExpenses(); // Reload the list
+                },
+                error: (err) => {
+                  console.error('Error uploading receipt:', err);
+                  this.snackBar.open('Expense cloned, but receipt upload failed', 'Close', {
+                    duration: 5000,
+                  });
+                  this.loadExpenses(); // Still reload to show the created expense
+                },
+              });
+            } else {
+              this.snackBar.open('Expense cloned successfully', 'Close', {
+                duration: 3000,
+              });
+              this.loadExpenses(); // Reload the list
+            }
           },
           error: (err) => {
             console.error('Error cloning expense:', err);
@@ -432,11 +480,35 @@ export class ExpenseListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Submitting expense update:', result);
-        this.expenseService.updateExpense(result.id, result).subscribe({
+        console.log('Submitting expense update:', result.expense);
+        this.expenseService.updateExpense(result.expense.id, result.expense).subscribe({
           next: (response) => {
             console.log('Expense updated successfully:', response);
-            this.loadExpenses(); // Reload the list
+            
+            // If a receipt file was selected, upload it (will replace existing receipt)
+            if (result.receiptFile && result.expense.id) {
+              this.expenseService.uploadReceipt(result.expense.id, result.receiptFile).subscribe({
+                next: () => {
+                  console.log('Receipt uploaded successfully');
+                  this.snackBar.open('Expense and receipt updated successfully', 'Close', {
+                    duration: 3000,
+                  });
+                  this.loadExpenses(); // Reload the list
+                },
+                error: (err) => {
+                  console.error('Error uploading receipt:', err);
+                  this.snackBar.open('Expense updated, but receipt upload failed', 'Close', {
+                    duration: 5000,
+                  });
+                  this.loadExpenses(); // Still reload to show the updated expense
+                },
+              });
+            } else {
+              this.snackBar.open('Expense updated successfully', 'Close', {
+                duration: 3000,
+              });
+              this.loadExpenses(); // Reload the list
+            }
           },
           error: (err) => {
             console.error('Error updating expense:', err);
@@ -512,9 +584,9 @@ export class ExpenseListComponent implements OnInit {
 
   formatCurrency(amount: number, currency: string): string {
     if (currency === 'USD' || !currency) {
-      return `$${amount.toFixed(2)}`;
+      return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
-    return `${currency} ${amount.toFixed(2)}`;
+    return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   // Receipt Management Methods
