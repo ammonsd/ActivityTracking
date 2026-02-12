@@ -5,7 +5,14 @@
  * Date: November 2025
  */
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,7 +36,9 @@ Chart.register(...registerables);
   templateUrl: './daily-tracking.component.html',
   styleUrl: './daily-tracking.component.scss',
 })
-export class DailyTrackingComponent implements OnInit {
+export class DailyTrackingComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   loading = false;
@@ -41,28 +50,36 @@ export class DailyTrackingComponent implements OnInit {
 
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly chartConfig: ChartConfigService
+    private readonly chartConfig: ChartConfigService,
   ) {}
 
   ngOnInit(): void {
     this.chartOptions = this.chartConfig.getLineChartOptions(
-      'Daily Time Tracking'
+      'Daily Time Tracking',
     );
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['startDate'] || changes['endDate']) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getDailyHours().subscribe({
-      next: (data: DailyHoursDto[]) => {
-        this.updateChart(data);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading daily hours:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getDailyHours(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: DailyHoursDto[]) => {
+          this.updateChart(data);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading daily hours:', err);
+          this.loading = false;
+        },
+      });
   }
 
   updateChart(data: DailyHoursDto[]): void {
@@ -71,7 +88,7 @@ export class DailyTrackingComponent implements OnInit {
         new Date(d.date).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
-        })
+        }),
       ),
       datasets: [
         {

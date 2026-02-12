@@ -5,7 +5,14 @@
  * Date: November 2025
  */
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,8 +36,11 @@ Chart.register(...registerables);
   templateUrl: './phase-distribution.component.html',
   styleUrl: './phase-distribution.component.scss',
 })
-export class PhaseDistributionComponent implements OnInit {
+export class PhaseDistributionComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
 
   loading = false;
   chartData: ChartData<'doughnut'> = {
@@ -46,7 +56,7 @@ export class PhaseDistributionComponent implements OnInit {
 
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly chartConfig: ChartConfigService
+    private readonly chartConfig: ChartConfigService,
   ) {}
 
   ngOnInit(): void {
@@ -55,18 +65,29 @@ export class PhaseDistributionComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getTimeByPhase().subscribe({
-      next: (data: TimeByPhaseDto[]) => {
-        this.updateChart(data);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading phase data:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getTimeByPhase(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: TimeByPhaseDto[]) => {
+          this.updateChart(data);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading phase data:', err);
+          this.loading = false;
+        },
+      });
   }
 
   updateChart(data: TimeByPhaseDto[]): void {

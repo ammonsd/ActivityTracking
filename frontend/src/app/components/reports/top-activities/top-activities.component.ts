@@ -5,7 +5,13 @@
  * Date: November 2025
  */
 
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -27,7 +33,10 @@ import { TopActivityDto } from '../../../models/report.model';
   templateUrl: './top-activities.component.html',
   styleUrl: './top-activities.component.scss',
 })
-export class TopActivitiesComponent implements OnInit {
+export class TopActivitiesComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
+
   loading = false;
   activities: TopActivityDto[] = [];
   maxHours = 0;
@@ -38,19 +47,30 @@ export class TopActivitiesComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getTopActivities().subscribe({
-      next: (data: TopActivityDto[]) => {
-        this.activities = data;
-        this.maxHours = Math.max(...data.map((a) => a.hours));
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading top activities:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getTopActivities(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: TopActivityDto[]) => {
+          this.activities = data;
+          this.maxHours = Math.max(...data.map((a) => a.hours));
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading top activities:', err);
+          this.loading = false;
+        },
+      });
   }
 
   getProgressPercentage(hours: number): number {

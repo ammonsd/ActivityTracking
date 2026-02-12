@@ -155,6 +155,23 @@ This document provides a comprehensive summary of all technical features, framew
 - **Comprehensive logging** - Detailed logs for scheduled task execution and results
 - **Production-ready** - Scheduling works across multiple ECS Fargate instances
 
+### Angular Dashboard Features
+
+- **Expense Management in Angular UI**:
+  - Full CRUD operations (Create, Read, Update, Delete) for expenses
+  - Receipt upload integrated into Add/Edit expense dialogs
+  - Clone expense functionality for quick duplicate entries
+  - Comma-separated currency formatting for better readability
+  - Streamlined action buttons layout (Add Expense, Clear Filters)
+  - No browser refresh required - all operations via REST API
+- **Analytics & Reports with Date Range Filtering**:
+  - Preset date range buttons (This Month, Last Month, Last 3 Months, This Year, All Time)
+  - Custom date range selection with Material Design date pickers
+  - Real-time report updates when date range changes
+  - All report components support date filtering via @Input properties
+  - OnChanges lifecycle hook for automatic data refresh
+  - Reports Service methods updated to accept optional date parameters
+
 ### Email Notification System
 
 - **Email requirement for expense access** - users must have valid email to access expense features

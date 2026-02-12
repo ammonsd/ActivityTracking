@@ -5,7 +5,14 @@
  * Date: November 2025
  */
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,8 +36,11 @@ Chart.register(...registerables);
   templateUrl: './monthly-comparison.component.html',
   styleUrl: './monthly-comparison.component.scss',
 })
-export class MonthlyComparisonComponent implements OnInit {
+export class MonthlyComparisonComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
 
   loading = false;
   chartData: ChartData<'bar'> = {
@@ -41,34 +51,48 @@ export class MonthlyComparisonComponent implements OnInit {
 
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly chartConfig: ChartConfigService
+    private readonly chartConfig: ChartConfigService,
   ) {}
 
   ngOnInit(): void {
     this.chartOptions = this.chartConfig.getGroupedBarChartOptions(
-      'Monthly Comparison by Client'
+      'Monthly Comparison by Client',
     );
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getMonthlyComparison().subscribe({
-      next: (data: MonthlyComparisonDto[]) => {
-        this.updateChart(data);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading monthly comparison:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getMonthlyComparison(
+        this.startDate ?? undefined,
+        this.endDate ?? undefined,
+      )
+      .subscribe({
+        next: (data: MonthlyComparisonDto[]) => {
+          this.updateChart(data);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading monthly comparison:', err);
+          this.loading = false;
+        },
+      });
   }
 
   updateChart(data: MonthlyComparisonDto[]): void {
     const colors = this.chartConfig.getColorPalette();
     const clients = Array.from(
-      new Set(data.flatMap((m) => m.clients.map((c) => c.client)))
+      new Set(data.flatMap((m) => m.clients.map((c) => c.client))),
     );
 
     this.chartData = {

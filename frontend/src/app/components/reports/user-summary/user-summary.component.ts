@@ -5,7 +5,13 @@
  * Date: November 2025
  */
 
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,7 +32,10 @@ import { UserSummaryDto } from '../../../models/report.model';
   templateUrl: './user-summary.component.html',
   styleUrl: './user-summary.component.scss',
 })
-export class UserSummaryComponent implements OnInit {
+export class UserSummaryComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
+
   userSummaries: UserSummaryDto[] = [];
   loading = false;
   displayedColumns: string[] = [
@@ -48,18 +57,29 @@ export class UserSummaryComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getUserSummaries().subscribe({
-      next: (data) => {
-        this.userSummaries = data;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading user summaries:', error);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getUserSummaries(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data) => {
+          this.userSummaries = data;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading user summaries:', error);
+          this.loading = false;
+        },
+      });
   }
 
   getRankIcon(index: number): string {

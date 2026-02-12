@@ -5,7 +5,13 @@
  * Date: November 2025
  */
 
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,7 +31,10 @@ import { DashboardSummaryDto } from '../../../models/report.model';
   templateUrl: './dashboard-summary.component.html',
   styleUrl: './dashboard-summary.component.scss',
 })
-export class DashboardSummaryComponent implements OnInit {
+export class DashboardSummaryComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
+
   summary: DashboardSummaryDto | null = null;
   loading = false;
 
@@ -35,17 +44,28 @@ export class DashboardSummaryComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['startDate'] || changes['endDate']) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getDashboardSummary().subscribe({
-      next: (data) => {
-        this.summary = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading dashboard summary:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getDashboardSummary(
+        this.startDate ?? undefined,
+        this.endDate ?? undefined,
+      )
+      .subscribe({
+        next: (data) => {
+          this.summary = data;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading dashboard summary:', err);
+          this.loading = false;
+        },
+      });
   }
 }

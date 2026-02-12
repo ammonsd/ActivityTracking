@@ -5,7 +5,14 @@
  * Date: November 2025
  */
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,7 +36,9 @@ Chart.register(...registerables);
   templateUrl: './time-by-project.component.html',
   styleUrl: './time-by-project.component.scss',
 })
-export class TimeByProjectComponent implements OnInit {
+export class TimeByProjectComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   loading = false;
@@ -41,35 +50,43 @@ export class TimeByProjectComponent implements OnInit {
 
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly chartConfig: ChartConfigService
+    private readonly chartConfig: ChartConfigService,
   ) {}
 
   ngOnInit(): void {
     this.chartOptions = this.chartConfig.getBarChartOptions(
       'Time Distribution by Project',
-      true
+      true,
     );
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['startDate'] || changes['endDate']) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getTimeByProject().subscribe({
-      next: (data: TimeByProjectDto[]) => {
-        this.updateChart(data);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading project data:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getTimeByProject(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: TimeByProjectDto[]) => {
+          this.updateChart(data);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading project data:', err);
+          this.loading = false;
+        },
+      });
   }
 
   updateChart(data: TimeByProjectDto[]): void {
     const colors = this.chartConfig.getColorPalette();
     const phases = Array.from(
-      new Set(data.flatMap((p) => p.phases.map((ph) => ph.phase)))
+      new Set(data.flatMap((p) => p.phases.map((ph) => ph.phase))),
     );
 
     this.chartData = {

@@ -4,12 +4,45 @@
     <h1>Analytics & Reports</h1>
   </div>
 
+  <!-- Date Range Filter Section -->
+  <mat-card class="date-filter-card">
+    <mat-card-content>
+      <div class="date-filter-section">
+        <div class="preset-buttons">
+          <button mat-raised-button (click)="setDateRange('currentMonth')">This Month</button>
+          <button mat-raised-button (click)="setDateRange('lastMonth')">Last Month</button>
+          <button mat-raised-button (click)="setDateRange('last3Months')">Last 3 Months</button>
+          <button mat-raised-button (click)="setDateRange('currentYear')">This Year</button>
+          <button mat-raised-button (click)="setDateRange('allTime')">All Time</button>
+        </div>
+        
+        <div class="custom-date-range">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" placeholder="Select start date">
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" placeholder="Select end date">
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          <button mat-raised-button color="warn" (click)="clearDateRange()">Clear</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <mat-tab-group animationDuration="300ms" class="reports-tabs">
     <!-- Overview Tab -->
     <mat-tab label="Overview">
       <ng-template matTabContent>
         <div class="tab-content">
-          <app-dashboard-summary></app-dashboard-summary>
+          <app-dashboard-summary [startDate]="startDate" [endDate]="endDate"></app-dashboard-summary>
         </div>
       </ng-template>
     </mat-tab>
@@ -19,8 +52,8 @@
       <ng-template matTabContent>
         <div class="tab-content">
           <div class="report-grid">
-            <app-time-by-client></app-time-by-client>
-            <app-top-activities></app-top-activities>
+            <app-time-by-client [startDate]="startDate" [endDate]="endDate"></app-time-by-client>
+            <app-top-activities [startDate]="startDate" [endDate]="endDate"></app-top-activities>
           </div>
         </div>
       </ng-template>
@@ -31,8 +64,8 @@
       <ng-template matTabContent>
         <div class="tab-content">
           <div class="report-grid">
-            <app-time-by-project></app-time-by-project>
-            <app-phase-distribution></app-phase-distribution>
+            <app-time-by-project [startDate]="startDate" [endDate]="endDate"></app-time-by-project>
+            <app-phase-distribution [startDate]="startDate" [endDate]="endDate"></app-phase-distribution>
           </div>
         </div>
       </ng-template>
@@ -43,9 +76,9 @@
       <ng-template matTabContent>
         <div class="tab-content">
           <div class="report-grid-vertical">
-            <app-daily-tracking></app-daily-tracking>
-            <app-weekly-summary></app-weekly-summary>
-            <app-monthly-comparison></app-monthly-comparison>
+            <app-daily-tracking [startDate]="startDate" [endDate]="endDate"></app-daily-tracking>
+            <app-weekly-summary [startDate]="startDate" [endDate]="endDate"></app-weekly-summary>
+            <app-monthly-comparison [startDate]="startDate" [endDate]="endDate"></app-monthly-comparison>
           </div>
         </div>
       </ng-template>
@@ -56,8 +89,8 @@
       <ng-template matTabContent>
         <div class="tab-content">
           <div class="report-grid-vertical">
-            <app-user-summary></app-user-summary>
-            <app-hours-by-user></app-hours-by-user>
+            <app-user-summary [startDate]="startDate" [endDate]="endDate"></app-user-summary>
+            <app-hours-by-user [startDate]="startDate" [endDate]="endDate"></app-hours-by-user>
           </div>
         </div>
       </ng-template>

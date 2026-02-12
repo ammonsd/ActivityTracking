@@ -950,8 +950,20 @@ See [Email Configuration Management](#email-configuration-management) section fo
 
 Administrators with ADMIN or EXPENSE_ADMIN roles can view and manage all user expenses:
 
-1. **Access Expense List**: Click **"💰 Expense List"** from the navigation header
-2. **View All Expenses**: By default, administrators see expenses from all users
+1. **Access Expense List**: 
+   - **Backend**: Click **"💰 Expense List"** from the navigation header (http://localhost:8080)
+   - **Angular Dashboard**: Navigate to Expenses section (http://localhost:4200) for full CRUD operations
+   
+2. **Angular Dashboard Capabilities**: The Angular UI provides streamlined expense management:
+   - **Create Expenses**: Add new expenses with integrated receipt upload in the Add dialog
+   - **Edit Expenses**: Modify draft expenses and upload/replace receipts directly in the Edit dialog
+   - **Clone Expenses**: Duplicate expenses for similar entries (date and receipt must be updated)
+   - **Delete Expenses**: Remove draft expenses
+   - **Filter Options**: Client, Project, Type, Status, Payment Method, Date Range, Username (admin)
+   - **Actions Column**: Edit, Clone, and Delete buttons for each expense row
+   - **Currency Formatting**: Amounts display with comma separators for improved readability
+
+3. **View All Expenses**: By default, administrators see expenses from all users
 3. **Filter Expenses**: Use comprehensive filtering options:
     - **User**: Filter by specific username
     - **Client**: Filter by client name

@@ -5,7 +5,14 @@
  * Date: November 2025
  */
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,7 +36,9 @@ Chart.register(...registerables);
   templateUrl: './time-by-client.component.html',
   styleUrl: './time-by-client.component.scss',
 })
-export class TimeByClientComponent implements OnInit {
+export class TimeByClientComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   loading = false;
@@ -46,28 +55,36 @@ export class TimeByClientComponent implements OnInit {
 
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly chartConfig: ChartConfigService
+    private readonly chartConfig: ChartConfigService,
   ) {}
 
   ngOnInit(): void {
     this.chartOptions = this.chartConfig.getPieChartOptions(
-      'Time Distribution by Client'
+      'Time Distribution by Client',
     );
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['startDate'] || changes['endDate']) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getTimeByClient().subscribe({
-      next: (data: TimeByClientDto[]) => {
-        this.updateChart(data);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading client data:', err);
-        this.loading = false;
-      },
-    });
+    this.reportsService
+      .getTimeByClient(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data: TimeByClientDto[]) => {
+          this.updateChart(data);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading client data:', err);
+          this.loading = false;
+        },
+      });
   }
 
   updateChart(data: TimeByClientDto[]): void {

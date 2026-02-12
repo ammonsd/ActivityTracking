@@ -8,6 +8,7 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 - ✅ Daily task recording with client/project/phase tracking
 - 📊 Analytics & Reports Dashboard with interactive charts and visualizations
+  - **Flexible date range filtering** with preset options (This Month, Last Month, Last 3 Months, This Year, All Time) and custom date selection
   - Time distribution by client and project
   - Daily/weekly/monthly time tracking visualizations
   - Phase distribution analysis
@@ -21,9 +22,11 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 
 - 💰 Travel and business expense tracking with receipt management
 - 📸 Receipt upload/download (JPEG, PNG, PDF validated via magic number signatures) with AWS S3 or local storage
+  - **Angular Dashboard**: Upload receipts directly in Add/Edit expense dialogs for streamlined workflow
 - 💳 Payment method and vendor tracking
 - 📋 Expense categorization by type (travel, meals, office supplies, etc.)
 - ✅ Multi-stage approval workflow (Draft → Submitted → Approved/Rejected → Reimbursed)
+- ✏️ **Full CRUD operations in Angular Dashboard**: Create, Edit, Clone, and Delete expenses without leaving the dashboard
 - 📧 **Email notifications for expense status changes** (AWS SES integration):
   - Automatic notifications when expense status changes (submitted, approved, rejected, reimbursed)
   - Includes expense details, status change reason, and approval notes

@@ -5,7 +5,13 @@
  * Date: November 2025
  */
 
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -26,7 +32,10 @@ import { ReportsService } from '../../../services/reports.service';
   templateUrl: './hours-by-user.component.html',
   styleUrl: './hours-by-user.component.scss',
 })
-export class HoursByUserComponent implements OnInit {
+export class HoursByUserComponent implements OnInit, OnChanges {
+  @Input() startDate: Date | null = null;
+  @Input() endDate: Date | null = null;
+
   loading = false;
 
   barChartData: ChartConfiguration<'bar'>['data'] = {
@@ -52,7 +61,7 @@ export class HoursByUserComponent implements OnInit {
               dataIndex
             ] as any;
             return `${label}: ${value}h (${percentage?.percentage?.toFixed(
-              1
+              1,
             )}%)`;
           },
         },
@@ -81,38 +90,49 @@ export class HoursByUserComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      (changes['startDate'] || changes['endDate']) &&
+      !changes['startDate']?.firstChange
+    ) {
+      this.loadData();
+    }
+  }
+
   loadData(): void {
     this.loading = true;
-    this.reportsService.getHoursByUser().subscribe({
-      next: (data) => {
-        const sortedData = [...data].sort((a, b) => b.hours - a.hours);
+    this.reportsService
+      .getHoursByUser(this.startDate ?? undefined, this.endDate ?? undefined)
+      .subscribe({
+        next: (data) => {
+          const sortedData = [...data].sort((a, b) => b.hours - a.hours);
 
-        this.barChartData = {
-          labels: sortedData.map((d) => d.username),
-          datasets: [
-            {
-              label: 'Hours Worked',
-              data: sortedData.map(
-                (d) =>
-                  ({
-                    x: d.username,
-                    y: d.hours,
-                    percentage: d.percentage,
-                  } as any)
-              ),
-              backgroundColor: this.generateColors(sortedData.length),
-              borderColor: this.generateColors(sortedData.length, 0.8),
-              borderWidth: 1,
-            },
-          ],
-        };
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading hours by user:', error);
-        this.loading = false;
-      },
-    });
+          this.barChartData = {
+            labels: sortedData.map((d) => d.username),
+            datasets: [
+              {
+                label: 'Hours Worked',
+                data: sortedData.map(
+                  (d) =>
+                    ({
+                      x: d.username,
+                      y: d.hours,
+                      percentage: d.percentage,
+                    }) as any,
+                ),
+                backgroundColor: this.generateColors(sortedData.length),
+                borderColor: this.generateColors(sortedData.length, 0.8),
+                borderWidth: 1,
+              },
+            ],
+          };
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading hours by user:', error);
+          this.loading = false;
+        },
+      });
   }
 
   private generateColors(count: number, alpha: number = 0.6): string[] {

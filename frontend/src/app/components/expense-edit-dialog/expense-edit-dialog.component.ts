@@ -1,8 +1,8 @@
 /**
- * Description: Expense Edit Dialog component - provides a dialog for creating and editing expenses
+ * Description: Expense Edit Dialog component - provides a dialog for creating and editing expenses with receipt upload
  *
  * Author: Dean Ammons
- * Date: December 2025
+ * Date: January 2026
  */
 
 import { Component, Inject, OnInit } from '@angular/core';
@@ -25,9 +25,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Expense } from '../../models/expense.model';
 import { DropdownValue } from '../../models/task-activity.model';
 import { DropdownService } from '../../services/dropdown.service';
+import { ExpenseService } from '../../services/expense.service';
 
 @Component({
   selector: 'app-expense-edit-dialog',
@@ -42,6 +44,7 @@ import { DropdownService } from '../../services/dropdown.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './expense-edit-dialog.component.html',
   styleUrl: './expense-edit-dialog.component.scss',
@@ -55,11 +58,18 @@ export class ExpenseEditDialogComponent implements OnInit {
   currencies: DropdownValue[] = [];
   vendors: DropdownValue[] = [];
   isAddMode: boolean = false;
+  
+  // Receipt upload properties
+  selectedFile: File | null = null;
+  maxFileSize = 5242880; // 5MB default
+  maxFileSizeMB = 5;
+  fileError: string | null = null;
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly dialogRef: MatDialogRef<ExpenseEditDialogComponent>,
     private readonly dropdownService: DropdownService,
+    private readonly expenseService: ExpenseService,
     @Inject(MAT_DIALOG_DATA)
     public data: { expense: Expense; isAddMode?: boolean }
   ) {
@@ -96,6 +106,24 @@ export class ExpenseEditDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDropdowns();
+    this.loadMaxFileSize();
+  }
+
+  loadMaxFileSize(): void {
+    this.expenseService.getMaxFileSize().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.maxFileSize = response.data.maxFileSizeBytes;
+          this.maxFileSizeMB = response.data.maxFileSizeMB;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading max file size:', err);
+        // Use default values if we can't load from server
+        this.maxFileSize = 5242880; // 5MB default
+        this.maxFileSizeMB = 5;
+      },
+    });
   }
 
   loadDropdowns(): void {
@@ -130,6 +158,51 @@ export class ExpenseEditDialogComponent implements OnInit {
     });
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.fileError = null;
+
+      // Validate file size
+      if (this.maxFileSize > 0 && file.size > this.maxFileSize) {
+        this.fileError = `File size exceeds maximum of ${this.maxFileSizeMB}MB`;
+        this.selectedFile = null;
+        input.value = '';
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'application/pdf',
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        this.fileError = 'Invalid file type. Please upload JPG, PNG, or PDF';
+        this.selectedFile = null;
+        input.value = '';
+        return;
+      }
+
+      this.selectedFile = file;
+    }
+  }
+
+  removeSelectedFile(): void {
+    this.selectedFile = null;
+    this.fileError = null;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
   onSubmit(): void {
     if (this.expenseForm.valid) {
       // Convert Date object to YYYY-MM-DD string format for the API
@@ -146,7 +219,12 @@ export class ExpenseEditDialogComponent implements OnInit {
         expenseDate: formattedDate,
         expenseStatus: this.data.expense.expenseStatus || 'Draft',
       };
-      this.dialogRef.close(updatedExpense);
+      
+      // Return both the expense data and the selected file
+      this.dialogRef.close({ 
+        expense: updatedExpense, 
+        receiptFile: this.selectedFile 
+      });
     }
   }
 
