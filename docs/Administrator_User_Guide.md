@@ -502,20 +502,27 @@ All users (except Guest users) can manage their own profile information without 
 - Role (only administrators can change roles)
 - Account Status (enabled/disabled)
 - Account Lock Status
-- Password (changed via separate Change Password page)
+- Password (self-service password change available via dialog in Angular Profile or dedicated page in Backend)
 
 **Access Methods:**
 
 Users can access their profile through:
 
-1. **Angular UI**: "My Profile" card on dashboard or side menu (modern Material Design interface)
-2. **Backend UI**: "My Profile" option in user menu (Thymeleaf-based with success/error notifications)
+1. **Angular UI**: "My Profile" card on dashboard or side menu (modern Material Design interface with integrated password change dialog)
+2. **Backend UI**: "My Profile" option in user menu (Thymeleaf-based with success/error notifications and dedicated password change page)
 
 **Password Management:**
 
 - Users can change their own password via the **"🔒 Update Password"** button in their profile page
-- To access: Click **"👤 Update Profile"** in the sidebar menu, then click **"🔒 Update Password"** at the bottom
-- Password changes redirect back to the profile page after completion
+- **Angular UI**: Click "Update Password" to open dialog with:
+  - Current password verification field
+  - New password field with real-time validation
+  - Confirm password field
+  - Show/hide password toggles
+  - Password requirements checklist with live feedback
+  - Specific error messages for validation failures (e.g., "Password must contain at least 1 numeric digit")
+- **Backend UI**: Dedicated Change Password page accessed from profile with success/error notifications
+- Password changes in Angular close the dialog on success with confirmation message
 - Passwords must meet security requirements:
   - Minimum 10 characters
   - At least 1 uppercase letter

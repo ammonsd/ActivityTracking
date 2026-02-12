@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
@@ -32,6 +33,7 @@ import { User } from '../../models/task-activity.model';
     MatInputModule,
     MatFormFieldModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
     MatSnackBarModule,
   ],
   templateUrl: './profile.component.html',
@@ -41,12 +43,18 @@ export class ProfileComponent implements OnInit {
   loading = false;
   currentUser: User | null = null;
   currentRole = '';
+  showPasswordDialog = false;
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+  showPasswords = false;
+  passwordError = '';
 
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly snackBar: MatSnackBar
+    private readonly snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -69,7 +77,7 @@ export class ProfileComponent implements OnInit {
           'Close',
           {
             duration: 5000,
-          }
+          },
         );
         this.loading = false;
       },
@@ -92,9 +100,12 @@ export class ProfileComponent implements OnInit {
       lastname: this.currentUser.lastname,
       company: this.currentUser.company,
       email: this.currentUser.email,
-      role: typeof this.currentUser.role === 'string' 
-        ? this.currentUser.role 
-        : (this.currentUser.role as any)?.name || (this.currentUser.role as any)?.roleName || 'ROLE_USER',
+      role:
+        typeof this.currentUser.role === 'string'
+          ? this.currentUser.role
+          : (this.currentUser.role as any)?.name ||
+            (this.currentUser.role as any)?.roleName ||
+            'ROLE_USER',
       enabled: this.currentUser.enabled,
       forcePasswordUpdate: this.currentUser.forcePasswordUpdate || false,
       accountLocked: this.currentUser.accountLocked || false,
@@ -125,5 +136,96 @@ export class ProfileComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  openPasswordDialog(): void {
+    this.showPasswordDialog = true;
+    this.currentPassword = '';
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.showPasswords = false;
+    this.passwordError = '';
+  }
+
+  closePasswordDialog(): void {
+    this.showPasswordDialog = false;
+    this.currentPassword = '';
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.showPasswords = false;
+    this.passwordError = '';
+  }
+
+  updatePassword(): void {
+    this.passwordError = '';
+
+    if (!this.newPassword || !this.confirmPassword) {
+      this.passwordError = 'Both fields are required';
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordError = 'Passwords do not match';
+      return;
+    }
+
+    if (this.newPassword.length < 8) {
+      this.passwordError = 'Password must be at least 8 characters';
+      return;
+    }
+
+    if (!this.currentUser?.id) {
+      this.passwordError = 'User ID not found';
+      return;
+    }
+
+    this.loading = true;
+
+    this.userService
+      .updatePassword(
+        this.currentUser.id,
+        this.currentPassword,
+        this.newPassword,
+      )
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.closePasswordDialog();
+          this.snackBar.open('Password updated successfully', 'Close', {
+            duration: 3000,
+          });
+        },
+        error: (error) => {
+          this.loading = false;
+
+          // Handle validation errors with field-specific messages
+          if (error.error?.data && typeof error.error.data === 'object') {
+            // Extract field error message (newPassword field)
+            const fieldError =
+              error.error.data.newPassword || error.error.data.currentPassword;
+            this.passwordError =
+              fieldError || error.error?.message || 'Failed to update password';
+          } else {
+            this.passwordError =
+              error.error?.message || 'Failed to update password';
+          }
+        },
+      });
+  }
+
+  get roleDisplay(): string {
+    if (!this.currentUser?.role) return '';
+
+    // Handle role as object (with name or roleName property)
+    if (typeof this.currentUser.role === 'object') {
+      return (
+        (this.currentUser.role as any)?.name ||
+        (this.currentUser.role as any)?.roleName ||
+        ''
+      );
+    }
+
+    // Handle role as string
+    return this.currentUser.role;
   }
 }

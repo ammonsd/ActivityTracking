@@ -39,7 +39,7 @@ import { ExpenseService } from '../../services/expense.service';
         </div>
       </div>
 
-      <h2>Admin Dashboard</h2>
+      <h2>Task Activity Tracker - User Dashboard</h2>
 
       <div class="dashboard-grid">
         <mat-card class="dashboard-card" routerLink="/tasks">
@@ -109,7 +109,7 @@ import { ExpenseService } from '../../services/expense.service';
         <mat-card>
           <mat-card-header>
             <mat-card-title
-              >Welcome to the Angular Admin Dashboard</mat-card-title
+              >Welcome to the Task Activity Tracker</mat-card-title
             >
           </mat-card-header>
           <mat-card-content>
@@ -178,7 +178,9 @@ import { ExpenseService } from '../../services/expense.service';
 
       .dashboard-card {
         cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
       }
 
       .dashboard-card:hover {
@@ -232,7 +234,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly expenseService: ExpenseService
+    private readonly expenseService: ExpenseService,
   ) {}
 
   ngOnInit(): void {

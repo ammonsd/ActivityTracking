@@ -157,6 +157,13 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### Angular Dashboard Features
 
+- **Cross-Dashboard Navigation** (February 2026):
+  - **Admin Dashboard Link**: Available for ADMIN and GUEST roles in Angular dashboard sidebar
+    - Icon: admin_panel_settings (shield icon)
+    - Navigates to React Admin Dashboard at `/dashboard`
+    - Provides quick access to advanced admin features and management tools
+  - Preserves authentication session across dashboard transitions
+  - Seamless user experience between Angular (user-focused) and React (admin-focused) interfaces
 - **Expense Management in Angular UI**:
   - Full CRUD operations (Create, Read, Update, Delete) for expenses
   - Receipt upload integrated into Add/Edit expense dialogs
@@ -237,7 +244,7 @@ This document provides a comprehensive summary of all technical features, framew
   - `POST /api/users` - Create new user
   - `PUT /api/users/{id}` - Update user
   - `DELETE /api/users/{id}` - Delete user
-  - `PUT /api/users/{id}/password` - Admin password change
+  - `PUT /api/users/{id}/password` - Admin password change (requires USER_MANAGEMENT:UPDATE permission)
   - `GET /api/users/roles` - List available roles
 - **Permission-based access**:
   - @RequirePermission annotations on all endpoints
@@ -247,17 +254,24 @@ This document provides a comprehensive summary of all technical features, framew
 
 - **Self-service profile editing** for USER, ADMIN, and EXPENSE_ADMIN roles
 - **Dual UI interfaces**:
-  - **Angular UI**: Modern Material Design profile component (frontend/src/app/components/profile/)
-  - **Backend UI**: Thymeleaf-based profile editor with Bootstrap styling
+  - **Angular UI**: Modern Material Design profile component with integrated password change dialog (frontend/src/app/components/profile/)
+  - **Backend UI**: Thymeleaf-based profile editor with Bootstrap styling and dedicated password change page
 - **User-controlled fields**: First name, last name, company, email address
 - **Protected fields**: Username (immutable), role, account status, lock status
 - **Profile access points**:
   - Angular: "My Profile" card on dashboard and side menu option
   - Backend: "My Profile" link in user menu
+- **Password Change Features**:
+  - **Angular**: Inline dialog with current password verification, show/hide toggles, real-time validation feedback, and specific error messages
+  - **Backend**: Dedicated page with form validation and success/error notifications
+  - Current password verification required for self-service changes
+  - Cannot reuse last 5 passwords
+  - Password complexity requirements enforced (10+ chars, uppercase, digit, special character)
 - **REST API endpoints**:
   - `GET /api/users/me` - Current user information
   - `GET /api/users/profile` - Current user's profile for editing
   - `PUT /api/users/profile` - Update current user's profile
+  - `PUT /api/users/profile/password` - Self-service password change (requires current password verification, no admin permission required)
   - `GET /profile/edit` - Backend Thymeleaf profile editor
   - `POST /profile/edit` - Backend profile update handler
 - **Security architecture**:
@@ -387,6 +401,13 @@ This document provides a comprehensive summary of all technical features, framew
 
 ### React Dashboard Features
 
+- **Cross-Dashboard Navigation** (February 2026):
+  - **User Dashboard Link**: Available for all roles (ADMIN, USER, GUEST, EXPENSE_ADMIN) in React dashboard sidebar
+    - Icon: dashboard icon
+    - Navigates to Angular User Dashboard at `/app`
+    - Provides quick access to user-focused features (tasks, expenses, reports)
+  - Preserves authentication session across dashboard transitions
+  - Enables admins to quickly switch between management and operational views
 - **Dropdown Management** (Phase 5 - February 2026)
   - Comprehensive dropdown value management for TASK and EXPENSE categories
   - Dynamic category and subcategory filtering with real-time updates

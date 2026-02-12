@@ -46,4 +46,15 @@ export class UserService {
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  updatePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.apiUrl}/profile/password`, {
+      currentPassword,
+      newPassword,
+    });
+  }
 }

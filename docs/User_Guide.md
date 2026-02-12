@@ -499,21 +499,28 @@ Your new password must:
 
 ### How to Change Your Password
 
-**From My Profile:**
+**From Angular Profile:**
 
 1. Access your profile (see "Accessing My Profile" above)
 2. Click the **"Update Password"** button
-3. Enter your **Current Password**
-4. Enter your **New Password**
-5. Enter your **Confirm Password** (must match new password)
-6. Click **"Change Password"**
-7. You'll be redirected back to My Profile with a success message
+3. A dialog opens with password change form:
+   - Enter your **Current Password**
+   - Enter your **New Password** (real-time validation feedback)
+   - Enter your **Confirm Password** (must match new password)
+   - View password requirements with live status indicators
+   - Use "Show passwords" checkbox if needed
+4. Click **"Update"** to save or **"Cancel"** to close without changes
+5. Dialog closes on success with confirmation message
+6. Specific error messages display for validation failures (e.g., "Password must contain at least 1 special character (+&%$#@!~*)")
 
 **From the Backend Menu:**
 
 1. Navigate to the user menu
 2. Select "Change Password"
-3. Follow the same steps as above
+3. Dedicated page opens with password change form
+4. Enter current password, new password, and confirm password
+5. Click "Change Password" button
+6. Redirected back to My Profile with success message
 
 ### Password Expiration
 
