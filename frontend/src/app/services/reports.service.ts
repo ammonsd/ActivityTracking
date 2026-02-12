@@ -109,6 +109,8 @@ export class ReportsService {
             endDate: endDate.toISOString().split('T')[0],
           }
         : this.getCurrentMonthRange();
+    
+    // Always show current week as a reference point
     const weekRange = this.getCurrentWeekRange();
 
     return forkJoin({
@@ -242,7 +244,7 @@ export class ReportsService {
   }
 
   getDailyHours(startDate?: Date, endDate?: Date): Observable<DailyHoursDto[]> {
-    const range = this.getLastNDaysRange(30);
+    const range = this.getDateRange(startDate, endDate);
 
     return this.fetchTasksForDateRange(range.startDate, range.endDate).pipe(
       map((tasks) => {

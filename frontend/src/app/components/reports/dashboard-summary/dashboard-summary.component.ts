@@ -40,6 +40,13 @@ export class DashboardSummaryComponent implements OnInit, OnChanges {
 
   constructor(private reportsService: ReportsService) {}
 
+  get periodLabel(): string {
+    if (this.startDate && this.endDate) {
+      return 'Selected Period';
+    }
+    return 'Current Month';
+  }
+
   ngOnInit(): void {
     this.loadData();
   }
