@@ -31,7 +31,7 @@ pipeline {
         // Using 0 notation for top of the hour
         // cron('0 8,12,17 * * *')
         // cron('H 16 * * *')
-        cron('0 12 17 * * *')
+        cron('0 12,17 * * *')
     }
     
     parameters {
