@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -81,6 +83,7 @@ public class SecurityConfig {
         private final UserRepository userRepository;
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final RateLimitFilter rateLimitFilter;
+        private final Environment environment;
 
         public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                         CustomAccessDeniedHandler customAccessDeniedHandler,
@@ -90,7 +93,7 @@ public class SecurityConfig {
                         ForcePasswordUpdateFilter forcePasswordUpdateFilter,
                         UserRepository userRepository,
                         JwtAuthenticationFilter jwtAuthenticationFilter,
-                        RateLimitFilter rateLimitFilter) {
+                        RateLimitFilter rateLimitFilter, Environment environment) {
                 this.userDetailsService = userDetailsService;
                 this.customAccessDeniedHandler = customAccessDeniedHandler;
                 this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
@@ -100,6 +103,7 @@ public class SecurityConfig {
                 this.userRepository = userRepository;
                 this.jwtAuthenticationFilter = jwtAuthenticationFilter;
                 this.rateLimitFilter = rateLimitFilter;
+                this.environment = environment;
         }
 
         @Bean
@@ -207,6 +211,13 @@ public class SecurityConfig {
                                                 // Method-level @RequirePermission annotations
                                                 // control
                                                 // granular access
+                                                // Modified by: Dean Ammons - February 2026
+                                                // Change: Restricted SQL query endpoint to ADMIN
+                                                // role
+                                                // Reason: Prevent authenticated non-admin users
+                                                // from executing admin SQL queries
+                                                .requestMatchers("/api/admin/query/**")
+                                                .hasRole(ADMIN_ROLE)
                                                 .requestMatchers("/api/admin/**").authenticated()
                                                 .requestMatchers("/api/users/me",
                                                                 "/api/users/profile",
@@ -539,16 +550,20 @@ public class SecurityConfig {
 
                 if (hasWildcard) {
                         // SECURITY CHECK: Fail fast if wildcard CORS + credentials in production
-                        String activeProfile = System.getProperty("spring.profiles.active", "");
-                        boolean isProduction = activeProfile.contains("aws")
-                                        || activeProfile.contains("prod");
+                        String activeProfiles = String.join(",", environment.getActiveProfiles());
+                        // Modified by: Dean Ammons - February 2026
+                        // Change: Use Spring Environment profile detection instead of JVM system
+                        // property
+                        // Reason: ECS sets SPRING_PROFILES_ACTIVE as an environment variable
+                        boolean isProduction =
+                                        environment.acceptsProfiles(Profiles.of("aws", "prod"));
 
                         if (isProduction) {
                                 String errorMsg = String.format(
                                                 "CRITICAL SECURITY ERROR: Wildcard CORS origins with credentials enabled in production! "
                                                                 + "Active profile: %s, Origins: %s. This allows ANY origin to make authenticated requests. "
                                                                 + "Set CORS_ALLOWED_ORIGINS to explicit domains (e.g., https://taskactivitytracker.com)",
-                                                activeProfile, origins);
+                                                activeProfiles, origins);
                                 logger.error("[CORS] {}", errorMsg);
                                 throw new IllegalStateException(errorMsg);
                         }

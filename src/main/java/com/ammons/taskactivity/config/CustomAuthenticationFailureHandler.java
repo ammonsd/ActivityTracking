@@ -170,40 +170,26 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     }
 
     /**
-     * Extracts the client's IP address from the HTTP request, handling proxies and load balancers.
-     * 
+     * Extracts the client's IP address from the HTTP request.
+     *
      * <p>
-     * Checks the following headers in order:
-     * <ul>
-     * <li>X-Forwarded-For - Standard proxy header (Cloudflare, AWS ALB, etc.)</li>
-     * <li>X-Real-IP - Alternative proxy header</li>
-     * <li>Proxy-Client-IP - WebLogic proxy</li>
-     * <li>WL-Proxy-Client-IP - WebLogic proxy alternative</li>
-     * <li>HTTP_X_FORWARDED_FOR - Alternative format</li>
-     * <li>HTTP_CLIENT_IP - Some proxies</li>
-     * <li>Remote address - Direct connection</li>
-     * </ul>
-     * 
+     * SECURITY: Uses CloudFlare's CF-Connecting-IP header which cannot be spoofed by clients. Falls
+     * back to getRemoteAddr() when not behind CloudFlare.
+     *
+     * <p>
+     * Modified by: Dean Ammons - February 2026 Change: Removed trust in X-Forwarded-For and similar
+     * proxy headers Reason: Prevent spoofed source IP in login audit and lockout flows
+     *
      * @param request the HTTP request
      * @return the client's IP address, or "unknown" if not determinable
      */
     private String getClientIpAddress(HttpServletRequest request) {
-        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP",
-                "WL-Proxy-Client-IP", "HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP"};
-
-        for (String header : headerNames) {
-            String ip = request.getHeader(header);
-            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2)
-                // The first one is the original client
-                if (ip.contains(",")) {
-                    ip = ip.split(",")[0].trim();
-                }
-                return ip;
-            }
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isEmpty()
+                && !"unknown".equalsIgnoreCase(cfConnectingIp)) {
+            return cfConnectingIp;
         }
 
-        // Fallback to remote address
         String remoteAddr = request.getRemoteAddr();
         return (remoteAddr != null && !remoteAddr.isEmpty()) ? remoteAddr : "unknown";
     }
