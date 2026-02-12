@@ -733,8 +733,11 @@ public class ExpenseService {
         entity.setPaymentMethod(dto.getPaymentMethod());
         entity.setVendor(dto.getVendor());
         entity.setReferenceNumber(dto.getReferenceNumber());
-        entity.setReceiptPath(dto.getReceiptPath());
-        entity.setReceiptStatus(dto.getReceiptStatus());
+        // Modified by: Dean Ammons - February 2026
+        // Change: Ignore client-provided receipt path/status on create
+        // Reason: Prevent object key/path injection and enforce server-managed receipt metadata
+        entity.setReceiptPath(null);
+        entity.setReceiptStatus("Receipt Missing");
         entity.setExpenseStatus(
                 dto.getExpenseStatus() != null ? dto.getExpenseStatus() : STATUS_DRAFT);
         entity.setApprovedBy(dto.getApprovedBy());

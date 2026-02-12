@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Service for managing JWT token revocation (blacklist).
@@ -28,6 +29,8 @@ import java.util.Date;
 public class TokenRevocationService {
 
     private static final Logger logger = LoggerFactory.getLogger(TokenRevocationService.class);
+    private static final String REASON_PASSWORD_CHANGE_ALL = "password_change_all";
+    private static final String TOKEN_TYPE_CUTOFF_MARKER = "cutoff_marker";
 
     private final RevokedTokenRepository revokedTokenRepository;
     private final JwtUtil jwtUtil;
@@ -110,15 +113,46 @@ public class TokenRevocationService {
         logger.info("[Token Revocation] Revoking all tokens for user {}: Reason={}", username,
                 reason);
 
-        // Note: We cannot revoke tokens that haven't been seen yet
-        // This method is primarily for documentation purposes
-        // In practice, password changes should invalidate tokens via credential checks
+        // Modified by: Dean Ammons - February 2026
+        // Change: Persist a user-level cutoff marker to invalidate all tokens issued before
+        // password change
+        // Reason: Ensure password changes revoke previously issued JWTs, even if they were not
+        // individually blacklisted
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime markerExpiration = now.plusDays(30);
+        String markerJti = "REVOKE_ALL_" + username + "_" + UUID.randomUUID();
 
-        // For now, we just log the intent
-        // Future enhancement: Track all issued tokens with JTI
-        logger.warn(
-                "[Token Revocation] Note: Can only revoke tokens that have been explicitly revoked. "
-                        + "For password changes, rely on account status checks in JwtAuthenticationFilter.");
+        RevokedToken cutoffMarker = new RevokedToken(markerJti, username, TOKEN_TYPE_CUTOFF_MARKER,
+                markerExpiration, REASON_PASSWORD_CHANGE_ALL);
+        revokedTokenRepository.save(cutoffMarker);
+        logger.info("[Token Revocation] Created revoke-all cutoff marker for user {} at {}",
+                username, now);
+    }
+
+    /**
+     * Validate whether a token was issued before the latest password-change revocation marker for a
+     * user.
+     *
+     * @param username username from JWT subject
+     * @param tokenIssuedAt token iat claim
+     * @return true if token should be rejected due to password-change cutoff
+     */
+    public boolean isTokenIssuedBeforePasswordChangeRevocation(String username,
+            Date tokenIssuedAt) {
+        if (username == null || tokenIssuedAt == null) {
+            return false;
+        }
+
+        LocalDateTime latestCutoff = revokedTokenRepository
+                .findLatestRevocationTimeByUsernameAndReason(username, REASON_PASSWORD_CHANGE_ALL);
+
+        if (latestCutoff == null) {
+            return false;
+        }
+
+        LocalDateTime issuedAt =
+                tokenIssuedAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        return issuedAt.isBefore(latestCutoff);
     }
 
     /**

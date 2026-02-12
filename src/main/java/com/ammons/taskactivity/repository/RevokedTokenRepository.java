@@ -49,4 +49,11 @@ public interface RevokedTokenRepository extends JpaRepository<RevokedToken, Long
      */
     @Query("SELECT r FROM RevokedToken r WHERE r.username = :username ORDER BY r.revokedAt DESC")
     java.util.List<RevokedToken> findByUsername(@Param("username") String username);
+
+    /**
+     * Find the latest revocation timestamp for a user by reason.
+     */
+    @Query("SELECT MAX(r.revokedAt) FROM RevokedToken r WHERE r.username = :username AND r.reason = :reason")
+    LocalDateTime findLatestRevocationTimeByUsernameAndReason(@Param("username") String username,
+            @Param("reason") String reason);
 }

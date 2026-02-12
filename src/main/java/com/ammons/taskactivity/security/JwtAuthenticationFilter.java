@@ -76,6 +76,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         filterChain.doFilter(request, response);
                         return;
                     }
+
+                    // Modified by: Dean Ammons - February 2026
+                    // Change: Reject tokens issued before password-change cutoff marker
+                    // Reason: Invalidate all previously issued tokens after password change
+                    if (tokenRevocationService.isTokenIssuedBeforePasswordChangeRevocation(username,
+                            claims.getIssuedAt())) {
+                        logger.warn(
+                                "Authentication attempt with token issued before password-change cutoff: User={}",
+                                username);
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
                 } catch (Exception e) {
                     logger.error("Failed to check token revocation status: {}", e.getMessage());
                     filterChain.doFilter(request, response);
