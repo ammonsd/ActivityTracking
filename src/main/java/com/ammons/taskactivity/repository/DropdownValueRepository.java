@@ -63,4 +63,21 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
      * Finds all dropdown values sorted by category, subcategory, displayOrder, and itemValue
      */
     public List<DropdownValue> findAllByOrderByCategoryAscSubcategoryAscDisplayOrderAscItemValueAsc();
+
+    /**
+     * Finds a specific dropdown value by category, subcategory, and item value. Used for
+     * billability evaluation.
+     */
+    @Query("SELECT dropdownValue FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category AND dropdownValue.subcategory = :subcategory AND dropdownValue.itemValue = :itemValue")
+    public DropdownValue findByCategoryAndSubcategoryAndItemValue(
+                    @Param("category") String category, @Param("subcategory") String subcategory,
+                    @Param("itemValue") String itemValue);
+
+    /**
+     * Finds all non-billable dropdown values for a specific category and subcategory. Used for
+     * reporting and filtering.
+     */
+    @Query("SELECT dropdownValue FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category AND dropdownValue.subcategory = :subcategory AND dropdownValue.nonBillable = true ORDER BY dropdownValue.displayOrder, dropdownValue.itemValue")
+    public List<DropdownValue> findNonBillableByCategoryAndSubcategory(
+                    @Param("category") String category, @Param("subcategory") String subcategory);
 }
