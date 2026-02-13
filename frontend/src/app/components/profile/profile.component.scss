@@ -160,6 +160,8 @@ mat-form-field {
 }
 
 .password-dialog {
+  position: relative;
+  z-index: 1001;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;

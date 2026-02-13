@@ -300,9 +300,7 @@ public class SecurityConfig {
                                                                 ROLE_EXPENSE_ADMIN)
 
                                                 // Angular dashboard - requires authentication
-                                                // .requestMatchers("/app",
-                                                // "/app/**").authenticated()
-                                                .requestMatchers("/app", "/app/").authenticated()
+                                                .requestMatchers("/app", "/app/**").authenticated()
 
                                                 // React dashboard - requires authentication
                                                 // (React app handles admin feature visibility)
