@@ -32,9 +32,8 @@ import { ExpenseService } from '../../services/expense.service';
           <strong>👋 Welcome, Guest!</strong>
           <span>
             You can create and edit your own tasks and view the weekly
-            timesheet. Other features (expenses, users, dropdowns) are visible
-            but read-only to allow exposure to the full application
-            functionality.
+            timesheet. Other features (expenses) are visible but read-only to
+            allow exposure to the full application functionality.
           </span>
         </div>
       </div>
@@ -62,18 +61,6 @@ import { ExpenseService } from '../../services/expense.service';
         </mat-card>
 
         <mat-card
-          *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
-          class="dashboard-card"
-          [class.disabled]="currentRole === 'GUEST'"
-          routerLink="/users"
-        >
-          <mat-card-header>
-            <mat-icon>people</mat-icon>
-            <mat-card-title>User Management</mat-card-title>
-          </mat-card-header>
-        </mat-card>
-
-        <mat-card
           *ngIf="currentRole !== 'GUEST'"
           class="dashboard-card"
           routerLink="/profile"
@@ -81,18 +68,6 @@ import { ExpenseService } from '../../services/expense.service';
           <mat-card-header>
             <mat-icon>account_circle</mat-icon>
             <mat-card-title>My Profile</mat-card-title>
-          </mat-card-header>
-        </mat-card>
-
-        <mat-card
-          *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
-          class="dashboard-card"
-          [class.disabled]="currentRole === 'GUEST'"
-          routerLink="/dropdowns"
-        >
-          <mat-card-header>
-            <mat-icon>list</mat-icon>
-            <mat-card-title>Dropdown Management</mat-card-title>
           </mat-card-header>
         </mat-card>
 
