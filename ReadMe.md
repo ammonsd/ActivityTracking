@@ -66,13 +66,13 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 ### Dashboard Navigation
 
 - 🔄 **Cross-Dashboard Links**: Seamless navigation between user and admin interfaces
-  - **Angular Dashboard (User)**: Admin Dashboard link for ADMIN and GUEST roles to access React admin interface
-  - **React Dashboard (Admin)**: User Dashboard link for all roles to access Angular user interface
+  - **Angular User Dashboard** (`/app`): User-focused features (tasks, expenses, reports, profile) with link to React Admin Dashboard
+  - **React Admin Dashboard** (`/dashboard`): Administrative features (user management, dropdown management, system configuration) with link to Angular User Dashboard
   - Links preserve authentication and provide unified experience across both UIs
 
 ### General Features
 
-- 🎯 Dynamic dropdown management for clients, projects, phases, and expense types
+- 🎯 **Dynamic dropdown management** for clients, projects, phases, and expense types (accessible via React Admin Dashboard)
 - ✔️ Data validation and error handling
 - 📚 Comprehensive API documentation (Swagger/OpenAPI)
 

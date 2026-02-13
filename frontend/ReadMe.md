@@ -1,702 +1,397 @@
-# Angular Admin Dashboard# Angular Admin Dashboard# Frontend
+# Angular User Dashboard
 
+This is an Angular 19 user dashboard that integrates with the Spring Boot Task Activity backend. Administrative functions (user management, dropdown management) are available in the **React Admin Dashboard** (`/dashboard`).
 
+## 🎯 Purpose
 
-This is an Angular 19 admin dashboard that integrates with the Spring Boot Task Activity backend.This is an Angular 19 admin dashboard that integrates with the Spring Boot Task Activity backend.This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.19.
+This Angular frontend demonstrates:
 
-
-
-## 🎯 Purpose## 🎯 Purpose## Development server
-
-
-
-This Angular frontend demonstrates:This Angular frontend demonstrates:To start a local development server, run:
-
-
-
-- **Angular 19** with standalone components- **Angular 19** with standalone components
-
+- **Angular 19** with standalone components
 - **Angular Material** UI components
-
-- **RESTful API** integration with Spring Boot- **Angular Material** UI components```bash
-
+- **RESTful API** integration with Spring Boot
 - **TypeScript** type safety and modern JavaScript features
-
-- **Responsive design** and professional UI/UX- **RESTful API** integration with Spring Bootng serve
-
+- **Responsive design** and professional UI/UX
 - **Service-based architecture** for API calls
+- **User-focused features** (tasks, expenses, profile, reports)
 
-- **TypeScript** type safety and modern JavaScript features```
+**Note:** Administrative features (user management, dropdown values management) are provided by the React Admin Dashboard to provide a modern, optimized experience for administrative tasks.
 
 ## 📋 Prerequisites
 
-- **Responsive design** and professional UI/UX
-
 - Node.js (v18 or higher)
-
-- npm (v9 or higher)- **Service-based architecture** for API callsOnce the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
+- npm (v9 or higher)
 - Spring Boot backend running on `http://localhost:8080`
-
-## 📋 Prerequisites## Code scaffolding
 
 ## 🚀 Quick Start
 
-- Node.js (v18 or higher)Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
 ### 1. Install Dependencies
 
-- npm (v9 or higher)
+```bash
+cd frontend
+npm install
+```
+
+### 2. Start Development Server
 
 ```bash
-
-cd frontend- Spring Boot backend running on `http://localhost:8080````bash
-
-npm install
-
-```ng generate component component-name
-
-
-
-### 2. Start Development Server## 🚀 Quick Start```
-
-
-
-```bash### 1. Install DependenciesFor a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
 npm start
+```
 
-````bash`bash
+The application will be available at `http://localhost:4200`
 
+### 3. Build for Production
 
-
-The application will be available at `http://localhost:4200`cd frontendng generate --help
-
-
-
-### 3. Build for Productionnpm install```
-
-
-
-```bash````
-
+```bash
 npm run build
+```
 
-```## Building
+Production files will be in the `dist/` directory.
 
+## 📁 Project Structure
 
-
-Production files will be in the `dist/` directory.### 2. Start Development Server
-
-
-
-## 📁 Project StructureTo build the project run:
-
-
-
-``````bash
-
+```
 frontend/
-
-├── src/npm start```bash
-
+├── src/
 │   ├── app/
-
-│   │   ├── components/          # UI Components```ng build
-
-│   │   │   ├── dashboard/       # Main dashboard
-
-│   │   │   ├── task-list/       # Task activities view````
-
-│   │   │   ├── user-list/       # User management
-
-│   │   │   ├── dropdown-management/  # Dropdown valuesThe application will be available at `http://localhost:4200`
-
-│   │   │   └── reports/         # Reports (coming soon)
-
-│   │   ├── services/            # API ServicesThis will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-│   │   │   ├── task-activity.service.ts
-
-│   │   │   ├── user.service.ts### 3. Build for Production
-
-│   │   │   ├── dropdown.service.ts
-
-│   │   │   └── auth.service.ts## Running unit tests
-
-│   │   ├── models/              # TypeScript interfaces
-
-│   │   │   └── task-activity.model.ts```bash
-
-│   │   ├── guards/              # Route guards
-
-│   │   │   ├── auth.guard.tsnpm run buildTo execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-│   │   │   └── admin.guard.ts
-
-│   │   ├── interceptors/        # HTTP interceptors```
-
-│   │   │   └── auth.interceptor.ts
-
-│   │   ├── app.component.ts     # Root component```bash
-
-│   │   ├── app.routes.ts        # Route configuration
-
-│   │   └── app.config.ts        # App configurationProduction files will be in the `dist/` directory.ng test
-
-│   ├── environments/            # Environment configs
-
-│   │   ├── environment.ts       # Development```
-
-│   │   └── environment.prod.ts  # Production
-
-│   └── styles.scss              # Global styles## 📁 Project Structure
-
-├── angular.json                 # Angular CLI config
-
-├── package.json                 # Dependencies## Running end-to-end tests
-
-└── tsconfig.json               # TypeScript config
-
-```````
-
-
-
-## 🎨 Featuresfrontend/For end-to-end (e2e) testing, run:
-
-
-
-### Dashboard├── src/
-
-
-
-- Overview cards for navigation│   ├── app/```bash
-
-- Quick access to all modules
-
-- Modern Material Design interface│   │   ├── components/          # UI Componentsng e2e
-
-- Role-based visibility (ADMIN/GUEST features)
-
-│   │   │   ├── dashboard/       # Main dashboard```
-
-### Task Activities
-
+│   │   ├── components/          # UI Components
+│   │   │   ├── dashboard/       # Main user dashboard
 │   │   │   ├── task-list/       # Task activities view
-
-- View all task activities
-
-- Filter by client, project, phase, and date range│   │   │   ├── user-list/       # User managementAngular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-- Paginated data table
-
-- Real-time data from API│   │   │   └── dropdown-management/  # Dropdown values
-
-- Edit and delete actions
-
-│   │   ├── services/            # API Services## Additional Resources
-
-### User Management
-
+│   │   │   ├── task-edit-dialog/    # Task editor dialog
+│   │   │   ├── expense-list/    # Expense tracking view
+│   │   │   ├── expense-edit-dialog/ # Expense editor dialog
+│   │   │   ├── receipt-upload-dialog/ # Receipt upload
+│   │   │   ├── profile/         # User profile management
+│   │   │   ├── reports/         # Analytics & Reports Dashboard
+│   │   │   └── confirm-dialog/  # Confirmation dialogs
+│   │   ├── services/            # API Services
 │   │   │   ├── task-activity.service.ts
-
-- List all users (ADMIN/GUEST only)
-
-- View user roles and status│   │   │   ├── user.service.tsFor more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
-
-- Add/Edit/Delete users (ADMIN only)
-
-- Role-based badges│   │   │   └── dropdown.service.ts
-
-- Read-only mode for GUEST users│   │   ├── models/              # TypeScript interfaces
-
-│   │   │   └── task-activity.model.ts
-
-### Dropdown Management│   │   ├── app.component.ts     # Root component
-
+│   │   │   ├── expense.service.ts
+│   │   │   ├── user.service.ts  # Used by profile component
+│   │   │   ├── dropdown.service.ts  # Used by task/expense dialogs
+│   │   │   ├── reports.service.ts
+│   │   │   ├── chart-config.service.ts
+│   │   │   └── auth.service.ts
+│   │   ├── models/              # TypeScript interfaces
+│   │   │   ├── task-activity.model.ts
+│   │   │   ├── expense.model.ts
+│   │   │   └── user.model.ts
+│   │   ├── guards/              # Route guards
+│   │   │   └── auth.guard.ts
+│   │   ├── interceptors/        # HTTP interceptors
+│   │   │   └── auth.interceptor.ts
+│   │   ├── app.component.ts     # Root component
 │   │   ├── app.routes.ts        # Route configuration
-
-- Tabbed interface for Clients, Projects, Phases (ADMIN/GUEST only)│   │   └── app.config.ts        # App configuration
-
-- View and manage dropdown values│   ├── environments/            # Environment configs
-
-- Active/Inactive status indicators│   │   ├── environment.ts       # Development
-
-- Edit and delete actions (ADMIN only)│   │   └── environment.prod.ts  # Production
-
+│   │   └── app.config.ts        # App configuration
+│   ├── environments/            # Environment configs
+│   │   ├── environment.ts       # Development
+│   │   └── environment.prod.ts  # Production
 │   └── styles.scss              # Global styles
-
-## 🔌 API Integration├── angular.json                 # Angular CLI config
-
+├── angular.json                 # Angular CLI config
 ├── package.json                 # Dependencies
+└── tsconfig.json               # TypeScript config
+```
 
-The Angular app communicates with Spring Boot REST APIs:└── tsconfig.json               # TypeScript config
+## 🎨 Features
 
-````
-
-| Service             | Endpoint               | Purpose         |
-
-| ------------------- | ---------------------- | --------------- |## 🎨 Features
-
-| TaskActivityService | `/api/task-activities` | CRUD for tasks  |
-
-| UserService         | `/api/users`           | User management |### Dashboard
-
-| DropdownService     | `/api/dropdowns`       | Dropdown values |
+### Dashboard
 
 - Overview cards for navigation
-
-### Environment Configuration- Quick access to all modules
-
+- Quick access to all modules
 - Modern Material Design interface
-
-**Development** (`src/environments/environment.ts`):
+- Link to React Admin Dashboard for ADMIN users
 
 ### Task Activities
 
-```typescript
+- View all task activities
+- Filter by client, project, phase, and date range
+- Paginated data table with sorting
+- Real-time data from API
+- Add, edit, clone, and delete actions
+- Weekly timesheet view (Monday-Sunday)
+- CSV export capabilities
 
-export const environment = {- View all task activities
+### Expense Management
 
-  production: false,- Paginated data table
+- View and manage expenses
+- Receipt upload/download in dialogs
+- Filter by client, project, type, status, and date range
+- Multi-stage approval workflow visibility
+- Add, edit, clone, and delete actions (role-based)
+- Expense totals and status tracking
+- Email notifications for status changes
 
-  apiUrl: "http://localhost:8080/api",- Real-time data from API
+### User Profile
 
-};- Edit and delete actions
+- Self-service profile management
+- Update first name, last name, company, email
+- Integrated password change dialog
+- Real-time validation with specific error messages
+- Password requirements enforced (10+ characters, uppercase, digit, special char)
 
-```
+### Analytics & Reports
 
-### User Management
-
-**Production** (`src/environments/environment.prod.ts`):
-
-- List all users
-
-```typescript- View user roles and status
-
-export const environment = {- Add/Edit/Delete users
-
-  production: true,- Role-based badges
-
-  apiUrl: "/api",
-
-};### Dropdown Management
-
-```
-
-- Tabbed interface for Clients, Projects, Phases
-
-## 🔐 Authentication- View and manage dropdown values
-
-- Active/Inactive status indicators
-
-The Angular app integrates with Spring Security:
+- Interactive charts and visualizations (Chart.js)
+- Flexible date range filtering with presets
+- Time distribution by client and project
+- Daily/weekly/monthly time tracking visualizations
+- Phase distribution analysis
+- ADMIN-only user performance analytics
 
 ## 🔌 API Integration
 
-- **Login**: Users authenticate via Spring Boot's `/login` page (Thymeleaf)
+The Angular app communicates with Spring Boot REST APIs:
 
-- **Session Management**: Spring Security manages the sessionThe Angular app communicates with Spring Boot REST APIs:
+| Service              | Endpoint               | Purpose                          |
+| -------------------- | ---------------------- | -------------------------------- |
+| TaskActivityService  | `/api/task-activities` | CRUD for tasks                   |
+| ExpenseService       | `/api/expenses`        | CRUD for expenses                |
+| UserService          | `/api/users`           | User profile management          |
+| DropdownService      | `/api/dropdowns`       | Dropdown values for forms        |
+| ReportsService       | `/api/reports`         | Analytics data                   |
+| ChartConfigService   | N/A                    | Chart.js configuration           |
+| AuthService          | `/api/auth`            | Authentication state management  |
 
-- **API Authentication**: HTTP Basic Auth credentials stored in session storage
+### Environment Configuration
 
-- **Auth Guards**: Protect routes requiring authentication| Service             | Endpoint               | Purpose         |
+**Development** (`src/environments/environment.ts`):
 
-- **Auth Interceptor**: Automatically adds Basic Auth headers to API requests| ------------------- | ---------------------- | --------------- |
-
-- **Logout**: Redirects to Spring Security's `/logout` endpoint| TaskActivityService | `/api/task-activities` | CRUD for tasks  |
-
-| UserService         | `/api/users`           | User management |
-
-**No separate Angular login** - Single authentication point through Spring Security.| DropdownService     | `/api/dropdowns`       | Dropdown values |
-
-
-
-## 🛠️ Development### Environment Configuration
-
-
-
-### Running Both Applications**Development** (`src/environments/environment.ts`):
-
-
-
-**Terminal 1 - Spring Boot Backend:**```typescript
-
+```typescript
 export const environment = {
-
-```bash  production: false,
-
-# From project root  apiUrl: "http://localhost:8080/api",
-
-mvnw.cmd spring-boot:run};
-
-``````
-
-
-
-Backend runs on: `http://localhost:8080`**Production** (`src/environments/environment.prod.ts`):
-
-
-
-**Terminal 2 - Angular Frontend:**```typescript
-
-export const environment = {
-
-```bash  production: true,
-
-# From frontend directory  apiUrl: "/api",
-
-cd frontend};
-
-npm start```
-
+  production: false,
+  apiUrl: "http://localhost:8080/api",
+};
 ```
+
+**Production** (`src/environments/environment.prod.ts`):
+
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: "/api",
+};
+```
+
+## 🔐 Authentication
+
+The Angular app integrates with Spring Security:
+
+- **Login**: Users authenticate via Spring Boot's `/login` page (Thymeleaf)
+- **Session Management**: Spring Security manages the session
+- **API Authentication**: HTTP Basic Auth credentials stored in session storage
+- **Auth Guards**: Protect routes requiring authentication
+- **Auth Interceptor**: Automatically adds Basic Auth headers to API requests
+- **Logout**: Redirects to Spring Security's `/logout` endpoint
+
+**No separate Angular login** - Single authentication point through Spring Security.
 
 ## 🛠️ Development
 
-Frontend runs on: `http://localhost:4200`
-
 ### Running Both Applications
-
-### Hot Reload
 
 **Terminal 1 - Spring Boot Backend:**
 
-Angular CLI provides hot reload - changes to TypeScript/HTML/CSS files will automatically reload the browser.
-
 ```bash
-
-### Angular CLI Commands# From project root
-
+# From project root
 mvnw.cmd spring-boot:run
-
-```bash```
-
-# Install new packages
-
-npm install package-name**Terminal 2 - Angular Frontend:**
-
-
-
-# Generate new component```bash
-
-ng generate component components/my-component# From frontend directory
-
-cd frontend
-
-# Generate new servicenpm start
-
-ng generate service services/my-service```
-
-
-
-# Build for production### Hot Reload
-
-npm run build
-
-Angular CLI provides hot reload - changes to TypeScript/HTML/CSS files will automatically reload the browser.
-
-# Run tests
-
-npm test## 📚 Key Angular Concepts Demonstrated
-
 ```
 
-### 1. Standalone Components
+Backend runs on: `http://localhost:8080`
+
+**Terminal 2 - Angular Frontend:**
+
+```bash
+# From frontend directory
+cd frontend
+npm start
+```
+
+Frontend runs on: `http://localhost:4200`
+
+### Hot Reload
+
+Angular CLI provides hot reload - changes to TypeScript/HTML/CSS files will automatically reload the browser.
+
+### Angular CLI Commands
+
+```bash
+# Install new packages
+npm install package-name
+
+# Generate new component
+ng generate component components/my-component
+
+# Generate new service
+ng generate service services/my-service
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+```
 
 ## 📚 Key Angular Concepts Demonstrated
 
-All components use the new standalone API (no NgModules):
-
 ### 1. Standalone Components
 
+All components use the new standalone API (no NgModules):
+
 ```typescript
-
-All components use the new standalone API (no NgModules):@Component({
-
+@Component({
   standalone: true,
-
-```typescript  imports: [CommonModule, MatTableModule, ...]
-
-@Component({})
-
-  standalone: true,```
-
-  imports: [CommonModule, MatTableModule, ...]
-
-})### 2. Dependency Injection
-
+  imports: [CommonModule, MatTableModule, ...],
+})
 ```
-
-Services are injected via constructor:
 
 ### 2. Dependency Injection
 
-```typescript
-
-Services are injected via constructor:constructor(private readonly taskService: TaskActivityService) {}
-
-```
+Services are injected via constructor:
 
 ```typescript
-
-constructor(private readonly taskService: TaskActivityService) {}### 3. RxJS Observables
-
+constructor(private readonly taskService: TaskActivityService) {}
 ```
-
-Async data handling with observables:
 
 ### 3. RxJS Observables
 
+Async data handling with observables:
+
 ```typescript
-
-Async data handling with observables:this.taskService.getAllTasks().subscribe({
-
+this.taskService.getAllTasks().subscribe({
   next: (data) => (this.tasks = data),
-
-```typescript  error: (err) => console.error(err),
-
-this.taskService.getAllTasks().subscribe({});
-
-  next: (data) => (this.tasks = data),```
-
   error: (err) => console.error(err),
-
-});### 4. Routing
-
+});
 ```
-
-Declarative routing with Angular Router:
 
 ### 4. Routing
 
+Declarative routing with Angular Router:
+
 ```typescript
-
-Declarative routing with Angular Router:export const routes: Routes = [
-
-  { path: "dashboard", component: DashboardComponent },
-
-```typescript  { path: "tasks", component: TaskListComponent },
-
-export const routes: Routes = [];
-
-  { path: "dashboard", component: DashboardComponent, canActivate: [authGuard] },```
-
+export const routes: Routes = [
+  { path: "dashboard", component: DashboardComponent, canActivate: [authGuard] },
   { path: "tasks", component: TaskListComponent, canActivate: [authGuard] },
-
-];### 5. Angular Material
-
+  { path: "expenses", component: ExpenseListComponent, canActivate: [authGuard] },
+  { path: "reports", component: ReportsComponent, canActivate: [authGuard] },
+  { path: "profile", component: ProfileComponent, canActivate: [authGuard] },
+];
 ```
-
-Professional UI components:
 
 ### 5. Angular Material
 
-- `MatTableModule` - Data tables
+Professional UI components:
 
-Professional UI components:- `MatButtonModule` - Buttons
-
+- `MatTableModule` - Data tables with sorting and pagination
+- `MatButtonModule` - Buttons
 - `MatCardModule` - Cards
-
-- `MatTableModule` - Data tables- `MatToolbarModule` - Navigation
-
-- `MatButtonModule` - Buttons- `MatSidenavModule` - Side navigation
-
-- `MatCardModule` - Cards
-
-- `MatToolbarModule` - Navigation### 6. TypeScript Interfaces
-
-- `MatSidenavModule` - Side navigation
-
-- `MatTabsModule` - Tabbed interfacesType-safe models:
-
+- `MatToolbarModule` - Navigation toolbar
+- `MatSidenavModule` - Side navigation drawer
+- `MatTabsModule` - Tabbed interfaces
 - `MatIconModule` - Material icons
+- `MatDialogModule` - Modal dialogs
+- `MatFormFieldModule` - Form fields
+- `MatSelectModule` - Dropdowns
+- `MatDatepickerModule` - Date pickers
+- `MatCheckboxModule` - Checkboxes
+
+### 6. TypeScript Interfaces
+
+Type-safe models:
 
 ```typescript
-
-### 6. TypeScript Interfacesexport interface TaskActivity {
-
+export interface TaskActivity {
   id?: number;
-
-Type-safe models:  taskDate: string;
-
-  clientName: string;
-
-```typescript  // ...
-
-export interface TaskActivity {}
-
-  id?: number;```
-
   taskDate: string;
-
-  client: string;## 🎓 Interview Preparation Topics
-
+  client: string;
   project: string;
-
-  phase: string;This project demonstrates knowledge of:
-
+  phase: string;
   hours: number;
-
-  details: string;1. **Angular Framework**
-
+  details: string;
   username: string;
-
-}   - Components, Services, Routing
-
-```   - Dependency Injection
-
-   - Lifecycle hooks (ngOnInit)
+}
+```
 
 ### 7. HTTP Interceptors
 
-2. **TypeScript**
-
 Automatic request modification:
 
-   - Interfaces and types
-
-```typescript   - Access modifiers (readonly, private)
-
-export const authInterceptor: HttpInterceptorFn = (req, next) => {   - Modern ES6+ features
-
+```typescript
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Add auth headers automatically
-
-  const credentials = sessionStorage.getItem('auth');3. **HTTP Communication**
-
+  const credentials = sessionStorage.getItem('auth');
   if (credentials) {
-
-    req = req.clone({   - HttpClient for API calls
-
-      setHeaders: { Authorization: `Basic ${credentials}` }   - Observable pattern
-
-    });   - Error handling
-
+    req = req.clone({
+      setHeaders: { Authorization: `Basic ${credentials}` }
+    });
   }
-
-  return next(req);4. **UI/UX**
-
+  return next(req);
 };
-
-```   - Angular Material components
-
-   - Responsive design
-
-### 8. Route Guards   - Navigation patterns
-
-
-
-Protect routes with guards:5. **Architecture**
-
-
-
-```typescript   - Service-based architecture
-
-export const authGuard = () => {   - Separation of concerns
-
-  const authService = inject(AuthService);   - Environment configuration
-
-  if (authService.isAuthenticated()) {
-
-    return true;6. **Modern Development**
-
-  }   - npm and package management
-
-  globalThis.location.href = '/login';   - Angular CLI
-
-  return false;   - Development vs Production builds
-
-};
-
-```## 🔧 Troubleshooting
-
-
-
-## 🎓 Interview Preparation Topics### Backend Connection Issues
-
-
-
-This project demonstrates knowledge of:If you see errors about failed API calls:
-
-
-
-1. **Angular Framework**1. **Verify Spring Boot is running:**
-
-   - Components, Services, Routing
-
-   - Dependency Injection   ```bash
-
-   - Lifecycle hooks (ngOnInit)   curl http://localhost:8080/api/health
-
-   - Standalone components (Angular 19+)   ```
-
-
-
-2. **TypeScript**2. **Check CORS configuration** in `SecurityConfig.java`
-
-   - Interfaces and types
-
-   - Access modifiers (readonly, private)3. **Verify API endpoints** match service URLs
-
-   - Modern ES6+ features
-
-### Port Already in Use
-
-3. **HTTP Communication**
-
-   - HttpClient for API callsIf port 4200 is in use:
-
-   - Observable pattern
-
-   - Error handling```bash
-
-   - Interceptorsng serve --port 4201
-
 ```
 
+### 8. Route Guards
+
+Protect routes with guards:
+
+```typescript
+export const authGuard = () => {
+  const authService = inject(AuthService);
+  if (authService.isAuthenticated()) {
+    return true;
+  }
+  globalThis.location.href = '/login';
+  return false;
+};
+```
+
+## 🎓 Interview Preparation Topics
+
+This project demonstrates knowledge of:
+
+1. **Angular Framework**
+   - Components, Services, Routing
+   - Dependency Injection
+   - Lifecycle hooks (ngOnInit)
+   - Standalone components (Angular 19+)
+   - Material Design integration
+   - Reactive programming with RxJS
+
+2. **TypeScript**
+   - Interfaces and types
+   - Access modifiers (readonly, private)
+   - Modern ES6+ features
+   - Strict type checking
+
+3. **HTTP Communication**
+   - HttpClient for API calls
+   - Observable pattern
+   - Error handling
+   - Interceptors for auth
+
 4. **UI/UX**
-
-   - Angular Material components## 📖 Additional Resources
-
+   - Angular Material components
    - Responsive design
+   - Navigation patterns
+   - Role-based UI visibility
+   - Chart.js integration
+   - Form validation and feedback
 
-   - Navigation patterns- [Angular Documentation](https://angular.dev)
-
-   - Role-based UI visibility- [Angular Material](https://material.angular.io)
-
-- [RxJS Documentation](https://rxjs.dev)
-
-5. **Architecture**- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-
+5. **Architecture**
    - Service-based architecture
-
-   - Separation of concerns## 🎯 Next Steps
-
+   - Separation of concerns
    - Environment configuration
+   - Guard-based route protection
+   - Component communication
+   - State management patterns
 
-   - Guard-based route protectionTo enhance the application:
-
-
-
-6. **Modern Development**1. **Add authentication** - Integrate with Spring Security
-
-   - npm and package management2. **Form validation** - Add reactive forms with validation
-
-   - Angular CLI3. **Charts & Analytics** - Add data visualization
-
-   - Development vs Production builds4. **Real-time updates** - Implement WebSocket communication
-
-   - Hot module replacement5. **Unit tests** - Add Jasmine/Karma tests
-
-6. **E2E tests** - Add Protractor/Cypress tests
+6. **Modern Development**
+   - npm and package management
+   - Angular CLI
+   - Development vs Production builds
+   - Hot module replacement
+   - Code scaffolding
 
 ## 🔧 Troubleshooting
 
----
-
 ### Backend Connection Issues
-
-**Good luck with your interview! 🚀**
 
 If you see errors about failed API calls:
 
@@ -734,18 +429,28 @@ If you can't access the Angular app:
 - [RxJS Documentation](https://rxjs.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Angular CLI Reference](https://angular.dev/tools/cli)
+- [Chart.js Documentation](https://www.chartjs.org/)
 
-## 🎯 Next Steps
+## 🎯 Current Features
 
-To enhance the application:
+This application already includes:
 
-1. **Add form validation** - Implement reactive forms with validators
-2. **Add edit dialogs** - Create Material dialogs for inline editing
-3. **Add charts & analytics** - Integrate Chart.js or ngx-charts
-4. **Add real-time updates** - Implement WebSocket communication
-5. **Unit tests** - Add Jasmine/Karma tests
-6. **E2E tests** - Add Cypress tests
+✅ **Form validation** - Reactive forms with comprehensive validators
+✅ **Edit dialogs** - Material dialogs for inline editing (tasks, expenses, profile)
+✅ **Charts & analytics** - Chart.js integration with interactive reports
+✅ **Multiple views** - Dashboard, lists, reports, profile
+✅ **Receipt management** - Upload/download receipts directly in dialogs
+✅ **Role-based access** - Different features for USER, ADMIN, GUEST roles
+✅ **Weekly timesheet view** - Monday-Sunday format with totals
+✅ **CSV export** - Export filtered data
+✅ **Password management** - Self-service password change with validation
+
+## 🔗 Related Dashboards
+
+For administrative functions, see:
+- **React Admin Dashboard** (`/dashboard`) - User management, dropdown management, system configuration (modern React + Material-UI)
+- **Spring Boot UI** (`/task-activity/list`, `/expenses/list`) - Classic Thymeleaf-based interfaces
 
 ---
 
-**This Angular application demonstrates modern full-stack development with Spring Boot backend integration!** 🚀
+**This Angular application demonstrates modern user-focused development with Spring Boot backend integration!** 🚀
