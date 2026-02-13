@@ -298,6 +298,16 @@
                 </div>
             </div>
 
+            <!-- Billability Filter -->
+            <div class="date-selector" style="margin-top: 15px;">
+                <label for="billability Filter">Billability:</label>
+                <select id="billabilityFilter" name="billability" onchange="applyBillabilityFilter()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 150px;">
+                    <option value="All" th:selected="${billability == null or billability == 'All'}">All</option>
+                    <option value="Billable" th:selected="${billability == 'Billable'}">Billable</option>
+                    <option value="Non-Billable" th:selected="${billability == 'Non-Billable'}">Non-Billable</option>
+                </select>
+            </div>
+
             <!-- Error Message -->
             <div
                 th:if="${errorMessage}"
@@ -468,6 +478,25 @@
                     DateUtils.updateUrl(null, '/task-activity/weekly-timesheet'); // Remove date parameter to show current week
                 });
             });
+
+            // Handle billability filter change
+            function applyBillabilityFilter() {
+                const billabilityFilter = document.getElementById('billabilityFilter');
+                const dateInput = document.getElementById('weekStartDate');
+                const currentDate = dateInput.value;
+                
+               // Build URL with date and billability parameters
+                const params = new URLSearchParams();
+                if (currentDate) {
+                    params.append('date', currentDate);
+                }
+                const billability = billabilityFilter.value;
+                if (billability && billability !== 'All') {
+                    params.append('billability', billability);
+                }
+                
+                window.location.href = '/task-activity/weekly-timesheet?' + params.toString();
+            }
 
             // CSV Export Functionality
             function generateCSV() {
