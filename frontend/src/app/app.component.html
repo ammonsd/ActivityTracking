@@ -29,17 +29,6 @@
         <span matListItemTitle>Tasks</span>
       </a>
       <a
-        *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
-        mat-list-item
-        [routerLink]="currentRole === 'GUEST' ? null : '/users'"
-        routerLinkActive="active"
-        [class.disabled]="currentRole === 'GUEST'"
-        (click)="currentRole === 'GUEST' && $event.preventDefault()"
-      >
-        <mat-icon matListItemIcon>people</mat-icon>
-        <span matListItemTitle>Users</span>
-      </a>
-      <a
         *ngIf="currentRole !== 'GUEST'"
         mat-list-item
         routerLink="/profile"
@@ -56,17 +45,6 @@
       >
         <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
         <span matListItemTitle>Admin Dashboard</span>
-      </a>
-      <a
-        *ngIf="currentRole === 'ADMIN' || currentRole === 'GUEST'"
-        mat-list-item
-        [routerLink]="currentRole === 'GUEST' ? null : '/dropdowns'"
-        routerLinkActive="active"
-        [class.disabled]="currentRole === 'GUEST'"
-        (click)="currentRole === 'GUEST' && $event.preventDefault()"
-      >
-        <mat-icon matListItemIcon>list</mat-icon>
-        <span matListItemTitle>Dropdowns</span>
       </a>
       <a 
         *ngIf="canAccessExpenses || currentRole === 'GUEST'"
