@@ -109,27 +109,43 @@
                            placeholder="Enter dropdown value">
                 </div>
 
-                <div class="form-group">
-                    <label for="displayOrder">Display Order *</label>
-                    <input type="number"
-                           id="displayOrder"
-                           name="displayOrder"
-                           th:value="${dropdownValue.displayOrder}"
-                           required
-                           min="0"
-                           placeholder="0">
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox"
-                               id="isActive"
-                               name="isActive"
-                               th:checked="${dropdownValue.isActive}"
-                               value="true">
-                        <label for="isActive">Active</label>
+                <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 0 1 200px;">
+                        <label for="displayOrder">Display Order *</label>
+                        <input type="number"
+                               id="displayOrder"
+                               name="displayOrder"
+                               th:value="${dropdownValue.displayOrder}"
+                               required
+                               min="0"
+                               placeholder="0">
                     </div>
-                    <small style="color: #6c757d;">Inactive values will not appear in dropdown lists</small>
+
+                    <div class="form-group" style="flex: 0 0 auto; margin-top: 30px;">
+                        <div class="checkbox-group">
+                            <input type="checkbox"
+                                   id="nonBillable"
+                                   name="nonBillable"
+                                   th:checked="${dropdownValue.nonBillable}"
+                                   value="true">
+                            <label for="nonBillable">Non-Billable</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="flex: 0 0 auto; margin-top: 30px;">
+                        <div class="checkbox-group">
+                            <input type="checkbox"
+                                   id="isActive"
+                                   name="isActive"
+                                   th:checked="${dropdownValue.isActive}"
+                                   value="true">
+                            <label for="isActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <small style="color: #6c757d; display: block; margin-bottom: 5px;">Non-billable values will be excluded from billable calculations</small>
+                    <small style="color: #6c757d; display: block;">Inactive values will not appear in dropdown lists</small>
                 </div>
 
                 <div class="button-group">

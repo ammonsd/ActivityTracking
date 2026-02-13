@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!--
+Description: Administrative view for managing dropdown categories, values, and billability indicators.
+
+Author: Dean Ammons
+Date: February 2026
+-->
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -101,6 +107,19 @@
             width: 100%;
             border-collapse: collapse;
             margin: 0;
+        }
+        /* Modified by: Dean Ammons - February 2026
+           Change: Prevent table cells from wrapping so status and actions stay on one line. */
+        .dropdown-table td.billability-cell,
+        .dropdown-table td.status-cell,
+        .dropdown-table td.actions-cell {
+            white-space: nowrap;
+        }
+        .dropdown-table td.actions-cell .action-buttons {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
         }
         th, td {
             padding: 12px;
@@ -276,7 +295,15 @@
                                    th:disabled="${#strings.isEmpty(selectedCategory)}">
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="flex: 0 0 auto; min-width: auto;">
+                            <div style="display: flex; align-items: center; gap: 5px; margin-top: 25px; white-space: nowrap;">
+                                <input type="checkbox" id="nonBillable" name="nonBillable" value="true"
+                                       th:disabled="${#strings.isEmpty(selectedCategory)}">
+                                <label for="nonBillable" style="margin: 0; font-weight: normal;">Non-Bill</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="flex: 0 0 auto; min-width: auto;">
                             <div class="spacer"></div>
                             <button type="submit" class="btn btn-success" 
                                     th:disabled="${#strings.isEmpty(selectedCategory)}">Add</button>
@@ -290,13 +317,14 @@
                 <h2 th:text="${selectedCategory != '' ? 'Current ' + selectedCategory + ' Values' : 'All Dropdown Values'}">Values</h2>
                 
                 <div class="table-container" th:if="${not #lists.isEmpty(dropdownValues)}">
-                    <table>
+                    <table class="dropdown-table">
                         <thead>
                             <tr>
                                 <th>Category</th>
                                 <th>Subcategory</th>
                                 <th>Value</th>
                                 <th>Display Order</th>
+                                <th>Billability</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -307,22 +335,31 @@
                                 <td th:text="${value.subcategory}">TASK</td>
                                 <td th:text="${value.itemValue}">Sample Value</td>
                                 <td th:text="${value.displayOrder}">1</td>
-                                <td>
+                                <td class="billability-cell">
+                                    <span th:if="${value.nonBillable}" 
+                                          class="status-inactive" 
+                                          style="background-color: #ffc107; color: #212529;">Non-Billable</span>
+                                    <span th:unless="${value.nonBillable}" 
+                                          class="status-active">Billable</span>
+                                </td>
+                                <td class="status-cell">
                                     <span th:if="${value.isActive}" class="status-active">Active</span>
                                     <span th:unless="${value.isActive}" class="status-inactive">Inactive</span>
                                 </td>
-                                <td>
-                                    <a th:href="@{/admin/dropdowns/edit/{id}(id=${value.id})}" 
-                                       class="btn btn-warning btn-sm">Edit</a>
-                                    
-                                    <button type="button" 
-                                            class="btn btn-danger btn-sm"
-                                            onclick="confirmDelete(this)"
-                                            th:data-id="${value.id}"
-                                            th:data-value="${value.itemValue}"
-                                            th:data-category="${value.category}">
-                                        Delete
-                                    </button>
+                                <td class="actions-cell">
+                                    <span class="action-buttons">
+                                        <a th:href="@{/admin/dropdowns/edit/{id}(id=${value.id})}" 
+                                           class="btn btn-warning btn-sm">Edit</a>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm"
+                                                onclick="confirmDelete(this)"
+                                                th:data-id="${value.id}"
+                                                th:data-value="${value.itemValue}"
+                                                th:data-category="${value.category}">
+                                            Delete
+                                        </button>
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>

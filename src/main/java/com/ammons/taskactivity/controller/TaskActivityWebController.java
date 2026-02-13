@@ -565,10 +565,10 @@ public class TaskActivityWebController {
     public String showDropdownManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            // Get all dropdown values by category and subcategory
-            List<DropdownValue> clients = dropdownValueService.getActiveClients();
-            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
-            List<DropdownValue> phases = dropdownValueService.getActivePhases();
+            // Get ALL dropdown values (active and inactive) for management
+            List<DropdownValue> clients = dropdownValueService.getAllClients();
+            List<DropdownValue> projects = dropdownValueService.getAllProjects();
+            List<DropdownValue> phases = dropdownValueService.getAllPhases();
 
             model.addAttribute("clients", clients);
             model.addAttribute("projects", projects);
@@ -586,7 +586,7 @@ public class TaskActivityWebController {
     public String showClientManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> clients = dropdownValueService.getActiveClients();
+            List<DropdownValue> clients = dropdownValueService.getAllClients();
             model.addAttribute(DROPDOWN_VALUES_ATTR, clients);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_CLIENT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Clients");
@@ -602,7 +602,7 @@ public class TaskActivityWebController {
     public String showProjectManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
+            List<DropdownValue> projects = dropdownValueService.getAllProjects();
             model.addAttribute(DROPDOWN_VALUES_ATTR, projects);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PROJECT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Projects");
@@ -618,7 +618,7 @@ public class TaskActivityWebController {
     public String showPhaseManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> phases = dropdownValueService.getActivePhases();
+            List<DropdownValue> phases = dropdownValueService.getAllPhases();
             model.addAttribute(DROPDOWN_VALUES_ATTR, phases);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PHASE);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Phases");
@@ -632,9 +632,10 @@ public class TaskActivityWebController {
 
     @PostMapping("/add-dropdown")
     public String addDropdownValue(@RequestParam String category, @RequestParam String value,
+            @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
             RedirectAttributes redirectAttributes) {
         try {
-            dropdownValueService.createDropdownValue(category, "TASK", value);
+            dropdownValueService.createDropdownValue(category, "TASK", value, nonBillable);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
                     + value
                     + "' to " + category.toLowerCase() + " dropdown.");

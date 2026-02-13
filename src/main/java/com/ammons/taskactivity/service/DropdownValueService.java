@@ -89,6 +89,22 @@ public class DropdownValueService {
      * Add new dropdown value with subcategory
      */
     public DropdownValue createDropdownValue(String category, String subcategory, String value) {
+        return createDropdownValue(category, subcategory, value, false);
+    }
+
+    /**
+     * Add new dropdown value with subcategory and nonBillable flag.
+     *
+     * @param category The dropdown category (e.g., CLIENT, PROJECT, PHASE)
+     * @param subcategory The dropdown subcategory (e.g., TASK, EXPENSE)
+     * @param value The dropdown value
+     * @param nonBillable Whether this dropdown value is non-billable
+     * @return The created dropdown value
+     * @author Dean Ammons
+     * @since February 2026
+     */
+    public DropdownValue createDropdownValue(String category, String subcategory, String value,
+            Boolean nonBillable) {
         // Check for duplicate values within a category and subcategory
         if (dropdownValueRepository.existsByCategoryAndSubcategoryAndItemValueIgnoreCase(
                 category.toUpperCase(), subcategory.toUpperCase(), value)) {
@@ -102,11 +118,12 @@ public class DropdownValueService {
 
         // Create and configure new entity
         DropdownValue dropdownValue = new DropdownValue();
-        dropdownValue.setCategory(category.toUpperCase()); // Format category name
-        dropdownValue.setSubcategory(subcategory.toUpperCase()); // Format subcategory name
+        dropdownValue.setCategory(category.toUpperCase());
+        dropdownValue.setSubcategory(subcategory.toUpperCase());
         dropdownValue.setItemValue(value);
         dropdownValue.setDisplayOrder(maxOrder + 1);
         dropdownValue.setIsActive(true);
+        dropdownValue.setNonBillable(Boolean.TRUE.equals(nonBillable));
 
         return dropdownValueRepository.save(dropdownValue);
     }
@@ -116,6 +133,23 @@ public class DropdownValueService {
      */
     public DropdownValue updateDropdownValue(Long id, String value, Integer displayOrder,
             Boolean isActive) {
+        return updateDropdownValue(id, value, displayOrder, isActive, null);
+    }
+
+    /**
+     * Update dropdown value with nonBillable flag.
+     *
+     * @param id The dropdown value ID
+     * @param value The updated value
+     * @param displayOrder The display order
+     * @param isActive Whether the value is active
+     * @param nonBillable Whether the value is non-billable (null = no change)
+     * @return The updated dropdown value
+     * @author Dean Ammons
+     * @since February 2026
+     */
+    public DropdownValue updateDropdownValue(Long id, String value, Integer displayOrder,
+            Boolean isActive, Boolean nonBillable) {
         Optional<DropdownValue> existing = dropdownValueRepository.findById(id);
         if (existing.isPresent()) {
             DropdownValue dropdownValue = existing.get();
@@ -132,6 +166,9 @@ public class DropdownValueService {
             dropdownValue.setItemValue(value);
             dropdownValue.setDisplayOrder(displayOrder);
             dropdownValue.setIsActive(isActive);
+            if (nonBillable != null) {
+                dropdownValue.setNonBillable(nonBillable);
+            }
 
             return dropdownValueRepository.save(dropdownValue);
         } else {
@@ -190,7 +227,7 @@ public class DropdownValueService {
     }
 
     /**
-     * Convenience methods for TASK subcategories
+     * Convenience methods for TASK subcategories - ACTIVE ONLY (for dropdowns in forms)
      */
     @Transactional(readOnly = true)
     public List<DropdownValue> getActiveClients() {
@@ -208,6 +245,30 @@ public class DropdownValueService {
     public List<DropdownValue> getActivePhases() {
         return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
                 CATEGORY_TASK, SUBCATEGORY_PHASE);
+    }
+
+    /**
+     * Convenience methods for TASK subcategories - ALL (for management interfaces)
+     *
+     * @author Dean Ammons
+     * @since February 2026
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAllClients() {
+        return dropdownValueRepository
+                .findByCategoryAndSubcategoryOrderByDisplayOrder(CATEGORY_TASK, SUBCATEGORY_CLIENT);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAllProjects() {
+        return dropdownValueRepository.findByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_TASK, SUBCATEGORY_PROJECT);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAllPhases() {
+        return dropdownValueRepository
+                .findByCategoryAndSubcategoryOrderByDisplayOrder(CATEGORY_TASK, SUBCATEGORY_PHASE);
     }
 
     /**

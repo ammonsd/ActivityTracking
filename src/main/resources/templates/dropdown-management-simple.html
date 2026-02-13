@@ -51,6 +51,10 @@
                 font-weight: bold;
                 color: #333;
             }
+            .category-title:hover {
+                color: #0056b3;
+                text-decoration: underline !important;
+            }
             .category-content {
                 padding: 15px;
             }
@@ -168,7 +172,9 @@
                 <!-- Clients Section -->
                 <div class="category-section clients-section">
                     <div class="category-header">
-                        <span class="category-title">Clients</span>
+                        <a th:href="@{/task-activity/manage-clients}" class="category-title" style="color: #333; text-decoration: none;">
+                            Clients 🔗
+                        </a>
                         <span th:text="${#lists.size(clients)} + ' items'"
                             >0 items</span
                         >
@@ -190,6 +196,15 @@
                                 placeholder="Enter new client name"
                                 required
                             />
+                            <label style="display: flex; align-items: center; margin: 0 10px;">
+                                <input
+                                    type="checkbox"
+                                    name="nonBillable"
+                                    value="true"
+                                    style="margin-right: 5px;"
+                                />
+                                Non-Billable
+                            </label>
                             <button type="submit" class="btn btn-success">
                                 Add Client
                             </button>
@@ -200,11 +215,17 @@
                                 class="item-row"
                                 th:classappend="${!client.isActive} ? 'inactive' : ''"
                             >
-                                <span
-                                    class="item-value"
-                                    th:text="${client.itemValue}"
-                                    >Client Name</span
-                                >
+                                <span class="item-value">
+                                    <span th:text="${client.itemValue}">Client Name</span>
+                                    <span
+                                        th:if="${client.nonBillable}"
+                                        class="badge badge-warning"
+                                        style="margin-left: 10px; padding: 3px 8px; font-size: 11px; background-color: #ffc107; color: #212529; border-radius: 4px;"
+                                        title="Non-billable client"
+                                    >
+                                        🚫 Non-Billable
+                                    </span>
+                                </span>
                                 <div class="item-actions">
                                     <form
                                         th:action="@{/task-activity/toggle-dropdown/{id}(id=${client.id})}"
@@ -256,7 +277,9 @@
                 <!-- Projects Section -->
                 <div class="category-section projects-section">
                     <div class="category-header">
-                        <span class="category-title">Projects</span>
+                        <a th:href="@{/task-activity/manage-projects}" class="category-title" style="color: #333; text-decoration: none;">
+                            Projects 🔗
+                        </a>
                         <span th:text="${#lists.size(projects)} + ' items'"
                             >0 items</span
                         >
@@ -278,6 +301,15 @@
                                 placeholder="Enter new project name"
                                 required
                             />
+                            <label style="display: flex; align-items: center; margin: 0 10px;">
+                                <input
+                                    type="checkbox"
+                                    name="nonBillable"
+                                    value="true"
+                                    style="margin-right: 5px;"
+                                />
+                                Non-Billable
+                            </label>
                             <button type="submit" class="btn btn-success">
                                 Add Project
                             </button>
@@ -288,11 +320,17 @@
                                 class="item-row"
                                 th:classappend="${!project.isActive} ? 'inactive' : ''"
                             >
-                                <span
-                                    class="item-value"
-                                    th:text="${project.itemValue}"
-                                    >Project Name</span
-                                >
+                                <span class="item-value">
+                                    <span th:text="${project.itemValue}">Project Name</span>
+                                    <span
+                                        th:if="${project.nonBillable}"
+                                        class="badge badge-warning"
+                                        style="margin-left: 10px; padding: 3px 8px; font-size: 11px; background-color: #ffc107; color: #212529; border-radius: 4px;"
+                                        title="Non-billable project"
+                                    >
+                                        🚫 Non-Billable
+                                    </span>
+                                </span>
                                 <div class="item-actions">
                                     <form
                                         th:action="@{/task-activity/toggle-dropdown/{id}(id=${project.id})}"
@@ -344,7 +382,9 @@
                 <!-- Phases Section -->
                 <div class="category-section phases-section">
                     <div class="category-header">
-                        <span class="category-title">Phases</span>
+                        <a th:href="@{/task-activity/manage-phases}" class="category-title" style="color: #333; text-decoration: none;">
+                            Phases 🔗
+                        </a>
                         <span th:text="${#lists.size(phases)} + ' items'"
                             >0 items</span
                         >
@@ -366,6 +406,15 @@
                                 placeholder="Enter new phase name"
                                 required
                             />
+                            <label style="display: flex; align-items: center; margin: 0 10px;">
+                                <input
+                                    type="checkbox"
+                                    name="nonBillable"
+                                    value="true"
+                                    style="margin-right: 5px;"
+                                />
+                                Non-Billable
+                            </label>
                             <button type="submit" class="btn btn-success">
                                 Add Phase
                             </button>
@@ -376,11 +425,17 @@
                                 class="item-row"
                                 th:classappend="${!phase.isActive} ? 'inactive' : ''"
                             >
-                                <span
-                                    class="item-value"
-                                    th:text="${phase.itemValue}"
-                                    >Phase Name</span
-                                >
+                                <span class="item-value">
+                                    <span th:text="${phase.itemValue}">Phase Name</span>
+                                    <span
+                                        th:if="${phase.nonBillable}"
+                                        class="badge badge-warning"
+                                        style="margin-left: 10px; padding: 3px 8px; font-size: 11px; background-color: #ffc107; color: #212529; border-radius: 4px;"
+                                        title="Non-billable phase"
+                                    >
+                                        🚫 Non-Billable
+                                    </span>
+                                </span>
                                 <div class="item-actions">
                                     <form
                                         th:action="@{/task-activity/toggle-dropdown/{id}(id=${phase.id})}"

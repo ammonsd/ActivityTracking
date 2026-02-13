@@ -98,10 +98,11 @@ public class DropdownAdminController {
     @PostMapping("/add")
     public String addDropdownValue(@RequestParam String category, @RequestParam String subcategory,
             @RequestParam String value,
+            @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
             RedirectAttributes redirectAttributes) {
         try {
             // Delegate business logic to service layer
-            dropdownValueService.createDropdownValue(category, subcategory, value);
+            dropdownValueService.createDropdownValue(category, subcategory, value, nonBillable);
 
             // Success message via flash attribute (available for next request only)
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
@@ -123,7 +124,9 @@ public class DropdownAdminController {
      */
     @PostMapping("/add-category")
     public String addNewCategory(@RequestParam String category, @RequestParam String subcategory,
-            @RequestParam String value, RedirectAttributes redirectAttributes) {
+            @RequestParam String value,
+            @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
+            RedirectAttributes redirectAttributes) {
         try {
             // Ensure category is uppercase
             String upperCategory = category.toUpperCase().trim();
@@ -137,7 +140,8 @@ public class DropdownAdminController {
             }
 
             // Create the first value for the new category
-            dropdownValueService.createDropdownValue(upperCategory, subcategory, value);
+            dropdownValueService.createDropdownValue(upperCategory, subcategory, value,
+                    nonBillable);
 
             // Success message
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
@@ -179,10 +183,12 @@ public class DropdownAdminController {
     public String updateDropdownValue(@PathVariable Long id, @RequestParam String value,
             @RequestParam Integer displayOrder,
             @RequestParam(defaultValue = "false") Boolean isActive,
+            @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
             RedirectAttributes redirectAttributes) {
         try {
             DropdownValue updated =
-                    dropdownValueService.updateDropdownValue(id, value, displayOrder, isActive);
+                    dropdownValueService.updateDropdownValue(id, value, displayOrder, isActive,
+                            nonBillable);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Successfully updated dropdown value.");
 

@@ -149,6 +149,13 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="nonBillable">
+                            <input type="checkbox" id="nonBillable" name="nonBillable" value="true">
+                            Non-Billable
+                        </label>
+                    </div>
+
+                    <div class="form-group">
                         <div class="spacer"></div>
                         <button type="submit" class="btn btn-primary" th:text="'Add ' + ${categoryDisplayName}">Add Value</button>
                     </div>
@@ -163,6 +170,7 @@
                     <tr>
                         <th th:text="${categoryDisplayName} + ' Name'">Value Name</th>
                         <th>Display Order</th>
+                        <th>Billability</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -171,6 +179,14 @@
                     <tr th:each="value : ${dropdownValues}">
                         <td th:text="${value.itemValue}"></td>
                         <td th:text="${value.displayOrder}"></td>
+                        <td>
+                            <span th:if="${value.nonBillable}"
+                                  class="status-inactive"
+                                  style="background-color: #ffc107; color: #212529;"
+                                  title="Non-billable">Non-Billable</span>
+                            <span th:unless="${value.nonBillable}"
+                                  class="status-active">Billable</span>
+                        </td>
                         <td>
                             <span th:if="${value.isActive}" class="status-active">Active</span>
                             <span th:unless="${value.isActive}" class="status-inactive">Inactive</span>
