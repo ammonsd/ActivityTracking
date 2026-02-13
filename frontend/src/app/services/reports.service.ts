@@ -23,17 +23,71 @@ import {
   UserActivityByDateDto,
 } from '../models/report.model';
 import { TaskActivityService } from './task-activity.service';
-import { TaskActivity } from '../models/task-activity.model';
+import { TaskActivity, DropdownValue } from '../models/task-activity.model';
 import { AuthService } from './auth.service';
+import { DropdownService } from './dropdown.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ReportsService {
+  private readonly dropdownCache: DropdownValue[] = [];
+
   constructor(
     private readonly taskActivityService: TaskActivityService,
     private readonly authService: AuthService,
-  ) {}
+    private readonly dropdownService: DropdownService,
+  ) {
+    // Load dropdowns on service initialization
+    this.loadDropdownsForBillability();
+  }
+
+  /**
+   * Loads dropdown values into cache for billability checks.
+   * Called once during service initialization.
+   */
+  private loadDropdownsForBillability(): void {
+    this.dropdownService.getAllDropdownValues().subscribe({
+      next: (dropdowns) => {
+        this.dropdownCache.push(...dropdowns);
+      },
+      error: (err) => {
+        console.error('Failed to load dropdowns for billability checks:', err);
+      },
+    });
+  }
+
+  /**
+   * Evaluates if a task is billable based on dropdown flags.
+   * Uses AND logic (all must be billable) which is equivalent to OR logic for non-billable flags:
+   * If ANY component (client/project/phase) is non-billable, returns false.
+   */
+  private isTaskBillable(task: TaskActivity): boolean {
+    return (
+      this.isBillable(task.client, 'CLIENT', 'TASK') &&
+      this.isBillable(task.project, 'PROJECT', 'TASK') &&
+      this.isBillable(task.phase, 'PHASE', 'TASK')
+    );
+  }
+
+  /**
+   * Checks if a specific dropdown value is billable.
+   * Returns true if dropdown is not found (fail-safe default) or if nonBillable flag is false.
+   */
+  private isBillable(
+    value: string,
+    subcategory: string,
+    category: string,
+  ): boolean {
+    const dropdown = this.dropdownCache.find(
+      (d) =>
+        d.category === category &&
+        d.subcategory === subcategory &&
+        d.itemValue === value,
+    );
+    // Return true (billable) if dropdown not found or nonBillable flag is false/undefined
+    return !(dropdown?.nonBillable ?? false);
+  }
 
   // Helper method to get date range for current month
   private getCurrentMonthRange(): { startDate: string; endDate: string } {
@@ -109,7 +163,7 @@ export class ReportsService {
             endDate: endDate.toISOString().split('T')[0],
           }
         : this.getCurrentMonthRange();
-    
+
     // Always show current week as a reference point
     const weekRange = this.getCurrentWeekRange();
 
@@ -604,29 +658,26 @@ export class ReportsService {
           const totalHours = userTasks.reduce((sum, t) => sum + t.hours, 0);
           const taskCount = userTasks.length;
 
-          // Separate billable and non-billable hours
-          // Non-billable hours are identified by project = "Non-Billable"
+          // Separate billable and non-billable hours using flag-based evaluation
           const billableHours = userTasks
-            .filter((t) => t.project !== 'Non-Billable')
+            .filter((t) => this.isTaskBillable(t))
             .reduce((sum, t) => sum + t.hours, 0);
           const nonBillableHours = userTasks
-            .filter((t) => t.project === 'Non-Billable')
+            .filter((t) => !this.isTaskBillable(t))
             .reduce((sum, t) => sum + t.hours, 0);
 
           // Calculate date range for billable hours only
           const billableDates = new Set(
             userTasks
-              .filter((t) => t.project !== 'Non-Billable')
+              .filter((t) => this.isTaskBillable(t))
               .map((t) => t.taskDate),
           );
           const daysWorked = billableDates.size;
           const avgHoursPerDay =
             daysWorked > 0 ? billableHours / daysWorked : 0;
 
-          // Get top client and project (excluding Non-Billable)
-          const billableTasks = userTasks.filter(
-            (t) => t.project !== 'Non-Billable',
-          );
+          // Get top client and project (excluding non-billable)
+          const billableTasks = userTasks.filter((t) => this.isTaskBillable(t));
           const clientHours = this.groupByClient(billableTasks);
           const projectCounts = this.groupByProject(billableTasks);
 
