@@ -393,6 +393,35 @@ The timesheet displays:
 2. **Next Week**: Click **"Next Week ►"** button
 3. **Specific Week**: Use the date picker to jump to any week
 
+### Filtering by Billability
+
+You can filter the timesheet to show only billable or non-billable tasks:
+
+**Billability Filter Options:**
+- **All** (default): Shows all tasks regardless of billability status
+- **Billable**: Shows only tasks where the client, project, AND phase are all marked as billable
+- **Non-Billable**: Shows tasks where any component (client, project, or phase) is marked as non-billable
+
+**How Billability is Determined:**
+- Each dropdown value (client, project, phase, expense type) can be marked as "Non-Billable" by administrators
+- A task is considered billable only if ALL its components (client, project, phase) are billable
+- If ANY component is marked as non-billable, the entire task is classified as non-billable
+
+**To Filter Tasks:**
+1. Locate the **Billability** dropdown below the week navigation
+2. Select your desired filter:
+   - **All**: View all tasks (default)
+   - **Billable**: View only billable tasks
+   - **Non-Billable**: View only non-billable tasks
+3. The timesheet automatically refreshes with filtered results
+4. Daily and weekly totals recalculate based on filtered tasks
+5. The filter persists when navigating to different weeks
+
+**Filter Use Cases:**
+- **Client Billing**: Filter to "Billable" to see only hours that should be invoiced to clients
+- **Overhead Tracking**: Filter to "Non-Billable" to review internal time (meetings, training, admin work)
+- **Reporting**: Export filtered timesheets for specific billing or accounting purposes
+
 ### Exporting Timesheet Data
 
 You can export your weekly timesheet data to CSV format for easy sharing or importing into other applications.
@@ -755,6 +784,26 @@ Similar to the weekly timesheet, the expense sheet shows your expenses for the c
 2. **View Current Week**: See all expenses from Monday through Sunday
 3. **See Totals**: View total expenses by day and for the week
 4. **Filter by Client/Project**: Filter to see expenses for specific work
+
+**Filtering by Billability:**
+
+Just like the weekly timesheet, you can filter expenses by billability status:
+
+- **All** (default): Shows all expenses
+- **Billable**: Shows only expenses where client, project, AND expense type are all billable
+- **Non-Billable**: Shows expenses where any component is marked as non-billable
+
+**To Filter Expenses:**
+1. Locate the **Billability** dropdown below the week navigation
+2. Select your desired filter (All/Billable/Non-Billable)
+3. The expense sheet refreshes automatically with filtered results
+4. Expense totals recalculate based on filtered expenses
+5. The filter persists when navigating between weeks
+
+**Expense Billability Determination:**
+- An expense is billable only if its client, project, AND expense type are all marked as billable
+- If ANY component (client, project, or type) is non-billable, the entire expense is classified as non-billable
+- Administrators configure billability flags for dropdown values (clients, projects, types)
 
 ### Exporting Expenses to CSV
 
