@@ -747,6 +747,149 @@ export class ReportNameComponent implements OnInit {
   - Legend positioning
   - Color palettes from predefined arrays
 
+### BillabilityService
+
+**File:** `src/main/java/com/ammons/taskactivity/service/BillabilityService.java`
+
+**Purpose:** Centralizes business logic for determining whether tasks and expenses are billable based on dropdown value flags.
+
+**Overview:**
+
+The BillabilityService provides a flexible, flag-based system for tracking billability that replaces the previous "magic string" approach (checking if project name contains "Non-Billable"). Each dropdown value (Client, Project, Phase, Expense Type) can be marked as non-billable using a boolean flag in the database.
+
+**Core Methods:**
+
+```java
+/**
+ * Evaluates if a task is billable based on client, project, and phase flags.
+ * Uses OR logic: if ANY component is non-billable, the entire task is non-billable.
+ * 
+ * @param client Client name
+ * @param project Project name
+ * @param phase Phase name
+ * @return true if task is billable (all components billable), false otherwise
+ */
+public boolean isTaskBillable(String client, String project, String phase)
+
+/**
+ * Evaluates if an expense is billable based on client, project, and expense type flags.
+ * Uses OR logic: if ANY component is non-billable, the entire expense is non-billable.
+ * 
+ * @param client Client name
+ * @param project Project name
+ * @param expenseType Expense type name
+ * @return true if expense is billable (all components billable), false otherwise
+ */
+public boolean isExpenseBillable(String client, String project, String expenseType)
+```
+
+**Billability Logic:**
+
+```java
+// Task billability (AND logic - all must be billable)
+isBillable = !isClientNonBillable(client) 
+          && !isProjectNonBillable(project) 
+          && !isPhaseNonBillable(phase)
+
+// Expense billability (AND logic - all must be billable)
+isBillable = !isClientNonBillable(client) 
+          && !isProjectNonBillable(project) 
+          && !isExpenseTypeNonBillable(expenseType)
+```
+
+**Helper Methods:**
+
+```java
+private boolean isClientNonBillable(String client)
+private boolean isProjectNonBillable(String project)
+private boolean isPhaseNonBillable(String phase)
+private boolean isExpenseTypeNonBillable(String expenseType)
+```
+
+**Database Integration:**
+
+```java
+Optional<DropdownValue> dropdownValueRepository.findByCategoryAndSubcategoryAndItemValue(
+    String category,
+    String subcategory,
+    String itemValue
+)
+```
+
+**Fail-Safe Design:**
+
+- **Missing dropdown**: If a dropdown value doesn't exist in database → defaults to billable
+- **Null values**: Null or empty strings → defaults to billable
+- **Conservative approach**: Only explicit `nonBillable = true` flag marks entry as non-billable
+
+**Usage Examples:**
+
+```java
+// In controllers
+@Autowired
+private BillabilityService billabilityService;
+
+public String showWeeklyTimesheet(@RequestParam String billability, Model model) {
+    List<TaskActivity> tasks = taskActivityRepository.findByWeek(date);
+    
+    if ("Billable".equals(billability)) {
+        tasks = tasks.stream()
+            .filter(t -> billabilityService.isTaskBillable(
+                t.getClient(), t.getProject(), t.getPhase()))
+            .collect(Collectors.toList());
+    } else if ("Non-Billable".equals(billability)) {
+        tasks = tasks.stream()
+            .filter(t -> !billabilityService.isTaskBillable(
+                t.getClient(), t.getProject(), t.getPhase()))
+            .collect(Collectors.toList());
+    }
+    
+    model.addAttribute("tasks", tasks);
+    return "weekly-timesheet";
+}
+```
+
+**Integration Points:**
+
+1. **Thymeleaf Controllers:**
+   - `TaskActivityWebController.showWeeklyTimesheet()` - Filters timesheet by billability
+   - `ExpenseViewController.showWeeklyExpenseSheet()` - Filters expense sheet by billability
+
+2. **Angular Dashboard:**
+   - `ReportsService.isTaskBillable()` - Client-side evaluation using cached dropdowns
+   - `ReportsService.isExpenseBillable()` - Client-side evaluation for expense reports
+
+3. **React Admin Dashboard:**
+   - Dropdown management UI allows admins to set/unset non-billable flags
+   - Visual indicators (🚫 chip) show non-billable items in tables
+
+**Configuration Examples:**
+
+| Scenario | Flag Configuration | Result |
+|----------|-------------------|--------|
+| PTO/Vacation time | Phase "PTO" marked non-billable | All PTO tasks non-billable regardless of client/project |
+| Internal projects | Client "Internal" marked non-billable | All tasks for Internal client are non-billable |
+| Training activities | Project "Training" marked non-billable | All training tasks non-billable |
+| Corporate overhead | Client "Corporate" marked non-billable | All corporate tasks non-billable |
+| Mixed scenario | Billable client + Non-billable project | Task is non-billable (OR logic) |
+
+**Testing:**
+
+Comprehensive unit tests in `BillabilityServiceTest.java` covering:
+- Individual component checks (client, project, phase, expense type)
+- OR logic verification (any non-billable flag triggers non-billable result)
+- Edge cases (null values, missing dropdowns, empty strings)
+- All combinations for tasks (3^3 = 27 scenarios)
+- All combinations for expenses (3^3 = 27 scenarios)
+
+**Benefits:**
+
+1. **Flexibility**: Mark any component as non-billable without code changes
+2. **Maintainability**: No magic strings or hardcoded project names
+3. **Accuracy**: Consistent billability evaluation across all UIs
+4. **Auditability**: Database flags provide clear configuration trail
+5. **User-Friendly**: Administrators can configure without developer involvement
+
 ### Role-Based Visibility
 
 **Implementation:** `reports.component.ts`
