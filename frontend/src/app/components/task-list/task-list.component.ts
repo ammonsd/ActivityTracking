@@ -1084,11 +1084,10 @@ export class TaskListComponent implements OnInit {
     });
   }
 
+  // Modified by: Dean Ammons - February 2026
+  // Change: Align task-level billability check with ReportsService signature to remove extra parameters
+  // Reason: Angular build failed (TS2554) after ReportsService exposed a method that accepts the TaskActivity model
   isTaskBillable(task: TaskActivity): boolean {
-    return this.reportsService.isTaskBillable(
-      task.client,
-      task.project,
-      task.phase,
-    );
+    return this.reportsService.isTaskBillable(task);
   }
 }
