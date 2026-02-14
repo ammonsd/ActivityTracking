@@ -73,6 +73,23 @@ export class ReportsComponent implements OnInit {
     const today = new Date();
 
     switch (range) {
+      case 'currentWeek': {
+        // Calculate Monday of current week (week starts on Monday)
+        const dayOfWeek = today.getDay();
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday (0), go back 6 days; otherwise go back to Monday
+        this.startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() + diff,
+        );
+        // Calculate Sunday of current week
+        this.endDate = new Date(
+          this.startDate.getFullYear(),
+          this.startDate.getMonth(),
+          this.startDate.getDate() + 6,
+        );
+        break;
+      }
       case 'currentMonth':
         this.startDate = new Date(today.getFullYear(), today.getMonth(), 1);
         this.endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);

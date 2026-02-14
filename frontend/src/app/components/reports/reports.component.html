@@ -9,6 +9,7 @@
     <mat-card-content>
       <div class="date-filter-section">
         <div class="preset-buttons">
+          <button mat-raised-button (click)="setDateRange('currentWeek')">Current Week</button>
           <button mat-raised-button (click)="setDateRange('currentMonth')">This Month</button>
           <button mat-raised-button (click)="setDateRange('lastMonth')">Last Month</button>
           <button mat-raised-button (click)="setDateRange('last3Months')">Last 3 Months</button>
