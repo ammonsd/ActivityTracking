@@ -12,6 +12,7 @@ export interface DropdownValue {
     itemValue: string;
     displayOrder: number;
     isActive: boolean;
+    nonBillable: boolean;
 }
 
 export interface DropdownFilters {
@@ -35,6 +36,7 @@ export interface UpdateValueRequest {
     itemValue: string;
     displayOrder: number;
     isActive: boolean;
+    nonBillable: boolean;
 }
 
 export interface DropdownStats {

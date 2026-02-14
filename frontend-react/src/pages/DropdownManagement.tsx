@@ -148,7 +148,7 @@ export const DropdownManagement: React.FC = () => {
     const handleAddCategory = async (
         category: string,
         subcategory: string,
-        value: string
+        value: string,
     ) => {
         try {
             await dropdownApi.addValue({
@@ -157,6 +157,7 @@ export const DropdownManagement: React.FC = () => {
                 itemValue: value,
                 displayOrder: 0,
                 isActive: true,
+                nonBillable: false,
             });
             showSnackbar("Category added successfully", "success");
             fetchCategories();
@@ -168,7 +169,11 @@ export const DropdownManagement: React.FC = () => {
     };
 
     // Add value handler
-    const handleAddValue = async (subcategory: string, value: string) => {
+    const handleAddValue = async (
+        subcategory: string,
+        value: string,
+        nonBillable: boolean,
+    ) => {
         if (!selectedCategory) return;
 
         try {
@@ -178,6 +183,7 @@ export const DropdownManagement: React.FC = () => {
                 itemValue: value,
                 displayOrder: 0,
                 isActive: true,
+                nonBillable,
             });
             showSnackbar("Value added successfully", "success");
             fetchAllValues();
@@ -197,13 +203,15 @@ export const DropdownManagement: React.FC = () => {
         id: number,
         itemValue: string,
         displayOrder: number,
-        isActive: boolean
+        isActive: boolean,
+        nonBillable: boolean,
     ) => {
         try {
             await dropdownApi.updateValue(id, {
                 itemValue,
                 displayOrder,
                 isActive,
+                nonBillable,
             });
             showSnackbar("Value updated successfully", "success");
             setEditDialogOpen(false);

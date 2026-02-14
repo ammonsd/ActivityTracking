@@ -28,6 +28,7 @@ interface EditDialogProps {
         itemValue: string,
         displayOrder: number,
         isActive: boolean,
+        nonBillable: boolean,
     ) => void;
 }
 
@@ -40,18 +41,26 @@ export const EditDialog: React.FC<EditDialogProps> = ({
     const [itemValue, setItemValue] = useState("");
     const [displayOrder, setDisplayOrder] = useState(0);
     const [isActive, setIsActive] = useState(true);
+    const [nonBillable, setNonBillable] = useState(false);
 
     useEffect(() => {
         if (dropdownValue) {
             setItemValue(dropdownValue.itemValue);
             setDisplayOrder(dropdownValue.displayOrder);
             setIsActive(dropdownValue.isActive);
+            setNonBillable(dropdownValue.nonBillable || false);
         }
     }, [dropdownValue]);
 
     const handleSubmit = () => {
         if (dropdownValue && itemValue.trim()) {
-            onSave(dropdownValue.id, itemValue.trim(), displayOrder, isActive);
+            onSave(
+                dropdownValue.id,
+                itemValue.trim(),
+                displayOrder,
+                isActive,
+                nonBillable,
+            );
         }
     };
 
@@ -102,6 +111,17 @@ export const EditDialog: React.FC<EditDialogProps> = ({
                                     )
                                 }
                                 fullWidth
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={nonBillable}
+                                        onChange={(e) =>
+                                            setNonBillable(e.target.checked)
+                                        }
+                                    />
+                                }
+                                label="Non-Billable"
                             />
                             <FormControlLabel
                                 control={

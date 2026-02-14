@@ -13,12 +13,14 @@ import {
     Paper,
     Typography,
     Alert,
+    FormControlLabel,
+    Checkbox,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
 interface AddValueFormProps {
     selectedCategory: string;
-    onAdd: (subcategory: string, value: string) => void;
+    onAdd: (subcategory: string, value: string, nonBillable: boolean) => void;
 }
 
 export const AddValueForm: React.FC<AddValueFormProps> = ({
@@ -27,13 +29,15 @@ export const AddValueForm: React.FC<AddValueFormProps> = ({
 }) => {
     const [subcategory, setSubcategory] = useState("");
     const [value, setValue] = useState("");
+    const [nonBillable, setNonBillable] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (subcategory.trim() && value.trim()) {
-            onAdd(subcategory.trim(), value.trim());
+            onAdd(subcategory.trim(), value.trim(), nonBillable);
             setSubcategory("");
             setValue("");
+            setNonBillable(false);
         }
     };
 
@@ -61,6 +65,7 @@ export const AddValueForm: React.FC<AddValueFormProps> = ({
                     display: "flex",
                     gap: 2,
                     alignItems: "flex-start",
+                    flexWrap: "wrap",
                     opacity: isDisabled ? 0.6 : 1,
                     pointerEvents: isDisabled ? "none" : "auto",
                 }}
@@ -71,7 +76,7 @@ export const AddValueForm: React.FC<AddValueFormProps> = ({
                     onChange={(e) => setSubcategory(e.target.value)}
                     disabled={isDisabled}
                     required
-                    sx={{ flex: 1 }}
+                    sx={{ flex: "1 1 200px" }}
                     placeholder="Enter subcategory"
                 />
                 <TextField
@@ -80,8 +85,19 @@ export const AddValueForm: React.FC<AddValueFormProps> = ({
                     onChange={(e) => setValue(e.target.value)}
                     disabled={isDisabled}
                     required
-                    sx={{ flex: 2 }}
+                    sx={{ flex: "2 1 300px" }}
                     placeholder="Enter dropdown value"
+                />
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={nonBillable}
+                            onChange={(e) => setNonBillable(e.target.checked)}
+                            disabled={isDisabled}
+                        />
+                    }
+                    label="Non-Billable"
+                    sx={{ mt: 1 }}
                 />
                 <Button
                     type="submit"
