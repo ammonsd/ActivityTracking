@@ -535,14 +535,14 @@ public class ExpenseViewController {
     public String updateExpense(@PathVariable Long id, @Valid @ModelAttribute ExpenseDto expenseDto,
             BindingResult bindingResult,
             @RequestParam(value = "receipt", required = false) MultipartFile receipt,
-            @RequestParam(required = false) String client,
-            @RequestParam(required = false) String project,
-            @RequestParam(required = false) String expenseType,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) @DateTimeFormat(
+            @RequestParam(name = "filterClient", required = false) String client,
+            @RequestParam(name = "filterProject", required = false) String project,
+            @RequestParam(name = "filterExpenseType", required = false) String expenseType,
+            @RequestParam(name = "filterStatus", required = false) String status,
+            @RequestParam(name = "filterUsername", required = false) String username,
+            @RequestParam(name = "filterStartDate", required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(
+            @RequestParam(name = "filterEndDate", required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         if (bindingResult.hasErrors()) {

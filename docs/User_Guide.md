@@ -22,6 +22,7 @@ Tasks are displayed in a table with the following columns:
 - **Project**: The specific project
 - **Phase**: The work phase (Development, Testing, etc.)
 - **Hours**: Time spent on the task
+  - **Visual Indicator**: Non-billable hours are displayed in **red bold text** to help you quickly identify overhead or internal time that won't be billed to clients
 - **Details**: Description of work performed
 - **Actions**: Edit, Delete, and Clone buttons
 
@@ -397,6 +398,8 @@ The timesheet displays:
 
 You can filter the timesheet to show only billable or non-billable tasks:
 
+**Visual Indicator**: Non-billable task hours are displayed in **red bold text** throughout the timesheet, making it easy to distinguish billable client work from internal overhead at a glance.
+
 **Billability Filter Options:**
 - **All** (default): Shows all tasks regardless of billability status
 - **Billable**: Shows only tasks where the client, project, AND phase are all marked as billable
@@ -579,6 +582,7 @@ The expense list shows all your recorded expenses with the following information
 - **Project**: Project the expense is related to
 - **Type**: Category of expense (Travel, Home Office, etc.)
 - **Amount**: Expense amount with currency (formatted with comma separators for readability)
+  - **Visual Indicator**: Non-billable amounts are displayed in **red bold text** to help you quickly identify expenses that won't be charged back to clients
 - **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
 - **Actions**: Edit, Clone, and Delete buttons for managing your expenses
 
@@ -780,10 +784,12 @@ Each email includes:
 
 Similar to the weekly timesheet, the expense sheet shows your expenses for the current week:
 
-1. **Access Expense Sheet**: Click **"📊 Weekly Expense Sheet"** from navigation
+1. **Access Expense Sheet**: Click **"📊 Weekly Expenses"** from navigation
 2. **View Current Week**: See all expenses from Monday through Sunday
 3. **See Totals**: View total expenses by day and for the week
 4. **Filter by Client/Project**: Filter to see expenses for specific work
+
+**Visual Indicator**: Non-billable expense amounts are displayed in **red bold text** throughout the expense sheet, making it easy to distinguish billable expenses from internal or non-reimbursable costs at a glance.
 
 **Filtering by Billability:**
 

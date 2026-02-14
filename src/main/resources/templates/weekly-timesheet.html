@@ -361,6 +361,7 @@
                                     <td
                                         class="task-hours"
                                         th:text="${#numbers.formatDecimal(task.hours, 1, 2)}"
+                                        th:style="${@billabilityService.isTaskBillable(task.client, task.project, task.phase) ? '' : 'color: red; font-weight: bold;'}"
                                     ></td>
                                     <td
                                         class="task-details"
@@ -380,10 +381,7 @@
                         </th:block>
 
                         <!-- Week Total -->
-                        <tr
-                            class="week-total-row"
-                            th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                        >
+                        <tr class="week-total-row">
                             <td colspan="3"><strong>Total Hours</strong></td>
                             <td>
                                 <strong

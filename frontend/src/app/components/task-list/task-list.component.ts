@@ -26,6 +26,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TaskActivityService } from '../../services/task-activity.service';
 import { AuthService } from '../../services/auth.service';
+import { ReportsService } from '../../services/reports.service';
 import { TaskActivity } from '../../models/task-activity.model';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -264,7 +265,16 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 
               <ng-container matColumnDef="hours">
                 <th mat-header-cell *matHeaderCellDef>Hours</th>
-                <td mat-cell *matCellDef="let task">{{ task.hours }}</td>
+                <td
+                  mat-cell
+                  *matCellDef="let task"
+                  [ngStyle]="{
+                    color: isTaskBillable(task) ? 'inherit' : 'red',
+                    'font-weight': isTaskBillable(task) ? 'normal' : 'bold',
+                  }"
+                >
+                  {{ task.hours }}
+                </td>
               </ng-container>
 
               <ng-container matColumnDef="details">
@@ -652,6 +662,7 @@ export class TaskListComponent implements OnInit {
   constructor(
     private readonly taskService: TaskActivityService,
     private readonly authService: AuthService,
+    private readonly reportsService: ReportsService,
     private readonly dialog: MatDialog,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar,
@@ -1071,5 +1082,12 @@ export class TaskListComponent implements OnInit {
         });
       }
     });
+  }
+
+  // Modified by: Dean Ammons - February 2026
+  // Change: Align task-level billability check with ReportsService signature to remove extra parameters
+  // Reason: Angular build failed (TS2554) after ReportsService exposed a method that accepts the TaskActivity model
+  isTaskBillable(task: TaskActivity): boolean {
+    return this.reportsService.isTaskBillable(task);
   }
 }

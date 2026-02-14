@@ -260,7 +260,7 @@
         <div class="container">
             <div class="header">
                 <div>
-                    <h1>Weekly Expense Sheet</h1>
+                    <h1>Weekly Expenses</h1>
                     <div class="week-info" th:if="${weeklyData}">
                         Week of
                         <span
@@ -392,6 +392,7 @@
                                     <td
                                         class="expense-amount"
                                         th:text="${(expense.currency != 'USD' ? expense.currency + ' ' : '') + #numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}"
+                                        th:style="${@billabilityService.isExpenseBillable(expense.client, expense.project, expense.expenseType) ? '' : 'color: red; font-weight: bold;'}"
                                     ></td>
                                     <td
                                         class="expense-description"
@@ -411,10 +412,7 @@
                         </th:block>
 
                         <!-- Week Total -->
-                        <tr
-                            class="week-total-row"
-                            th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                        >
+                        <tr class="week-total-row">
                             <td colspan="3"><strong>Total Expenses</strong></td>
                             <td>
                                 <strong
