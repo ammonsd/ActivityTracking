@@ -907,6 +907,7 @@
                             <td
                                 class="task-hours"
                                 th:text="${#numbers.formatDecimal(task.hours, 1, 'COMMA', 2, 'POINT')}"
+                                th:style="${@billabilityService.isTaskBillable(task.client, task.project, task.phase) ? '' : 'color: red; font-weight: bold;'}"
                             ></td>
                             <td
                                 class="task-details"

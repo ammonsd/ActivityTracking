@@ -61,12 +61,31 @@ export class ReportsService {
    * Evaluates if a task is billable based on dropdown flags.
    * Uses AND logic (all must be billable) which is equivalent to OR logic for non-billable flags:
    * If ANY component (client/project/phase) is non-billable, returns false.
+   * Made public for use in components.
    */
-  private isTaskBillable(task: TaskActivity): boolean {
+  public isTaskBillable(task: TaskActivity): boolean {
     return (
       this.isBillable(task.client, 'CLIENT', 'TASK') &&
       this.isBillable(task.project, 'PROJECT', 'TASK') &&
       this.isBillable(task.phase, 'PHASE', 'TASK')
+    );
+  }
+
+  /**
+   * Evaluates if an expense is billable based on dropdown flags.
+   * Uses AND logic (all must be billable) which is equivalent to OR logic for non-billable flags:
+   * If ANY component (client/project/expenseType) is non-billable, returns false.
+   * Made public for use in components.
+   */
+  public isExpenseBillable(expense: {
+    client: string;
+    project?: string;
+    expenseType: string;
+  }): boolean {
+    return (
+      this.isBillable(expense.client, 'CLIENT', 'EXPENSE') &&
+      this.isBillable(expense.project || '', 'PROJECT', 'EXPENSE') &&
+      this.isBillable(expense.expenseType, 'EXPENSE_TYPE', 'EXPENSE')
     );
   }
 
