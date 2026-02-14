@@ -381,10 +381,7 @@
                         </th:block>
 
                         <!-- Week Total -->
-                        <tr
-                            class="week-total-row"
-                            th:if="${weeklyData.weekTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                        >
+                        <tr class="week-total-row">
                             <td colspan="3"><strong>Total Hours</strong></td>
                             <td>
                                 <strong

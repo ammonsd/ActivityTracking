@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -892,8 +893,9 @@ public class TaskActivityWebController {
         }
 
         boolean showBillable = "Billable".equals(billability);
+        BigDecimal newWeekTotal = BigDecimal.ZERO;
 
-        // Filter tasks in each daily data
+        // Filter tasks in each daily data and recalculate totals
         for (var dailyData : weeklyData.getAllDays()) {
             if (dailyData.getTasks() != null) {
                 List<TaskActivity> filteredTasks = dailyData.getTasks().stream()
@@ -904,8 +906,17 @@ public class TaskActivityWebController {
                     })
                     .toList();
                 dailyData.setTasks(filteredTasks);
+
+                // Recalculate day total based on filtered tasks
+                BigDecimal dayTotal = filteredTasks.stream().map(TaskActivity::getHours)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                dailyData.setDayTotal(dayTotal);
+                newWeekTotal = newWeekTotal.add(dayTotal);
             }
         }
+
+        // Update week total to reflect filtered tasks
+        weeklyData.setWeekTotal(newWeekTotal);
 
         return weeklyData;
     }
