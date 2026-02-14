@@ -6,6 +6,7 @@ import com.ammons.taskactivity.service.ExpenseService;
 import com.ammons.taskactivity.service.DropdownValueService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.ReceiptStorageService;
+import com.ammons.taskactivity.service.BillabilityService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -79,17 +80,19 @@ public class ExpenseViewController {
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
     private final ReceiptStorageService storageService;
+    private final BillabilityService billabilityService;
 
     @Value("${app.upload.max-file-size}")
     private long maxFileSize;
 
     public ExpenseViewController(ExpenseService expenseService,
             DropdownValueService dropdownValueService, UserService userService,
-            ReceiptStorageService storageService) {
+            ReceiptStorageService storageService, BillabilityService billabilityService) {
         this.expenseService = expenseService;
         this.dropdownValueService = dropdownValueService;
         this.userService = userService;
         this.storageService = storageService;
+        this.billabilityService = billabilityService;
     }
 
     /**
@@ -723,6 +726,7 @@ public class ExpenseViewController {
     public String showWeeklyExpenseSheet(
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false, defaultValue = "All") String billability,
             Model model, Authentication authentication) {
         addUserInfo(model, authentication);
 
@@ -735,6 +739,11 @@ public class ExpenseViewController {
         List<Expense> expenses =
                 expenseService.getExpensesInDateRangeForUser(username, startOfWeek, endOfWeek);
 
+        // Apply billability filter if not "All"
+        if (!"All".equals(billability)) {
+            expenses = filterExpensesByBillability(expenses, billability);
+        }
+
         // Build weekly data structure
         WeeklyExpenseData weeklyData = buildWeeklyExpenseData(startOfWeek, endOfWeek, expenses);
 
@@ -742,6 +751,7 @@ public class ExpenseViewController {
         model.addAttribute("startDate", startOfWeek);
         model.addAttribute("endDate", endOfWeek);
         model.addAttribute("targetDate", targetDate);
+        model.addAttribute("billability", billability);
 
         return EXPENSE_SHEET_VIEW;
     }
@@ -1377,6 +1387,28 @@ public class ExpenseViewController {
         dto.setNotes(expense.getNotes());
         dto.setUsername(expense.getUsername());
         return dto;
+    }
+
+    /**
+     * Filters expenses list based on billability selection.
+     * @param expenses The original expenses list
+     * @param billability Filter value: "Billable" or "Non-Billable"
+     * @return Filtered expenses list
+     */
+    private List<Expense> filterExpensesByBillability(List<Expense> expenses, String billability) {
+        if (expenses == null || expenses.isEmpty()) {
+            return expenses;
+        }
+
+        boolean showBillable = "Billable".equals(billability);
+
+        return expenses.stream()
+            .filter(expense -> {
+                boolean isBillable = billabilityService.isExpenseBillable(
+                    expense.getClient(), expense.getProject(), expense.getExpenseType());
+                return showBillable ? isBillable : !isBillable;
+            })
+            .toList();
     }
 }
 

@@ -1125,9 +1125,6 @@ Dropdown management has been consolidated into a single, dynamic interface that 
     - **All Categories**: View all dropdown values across all categories
     - **CLIENT**: Manage client list
     - **PROJECT**: Manage project names
-      - **Important**: Create a project named "Non-Billable" for tracking overhead activities
-      - Users should log meetings, training, and administrative tasks to this project
-      - The Reports system uses this project name to distinguish billable from non-billable hours
     - **PHASE**: Manage work phases (with TASK subcategory)
     - **EXPENSE**: Manage expense-related dropdowns with subcategories:
         - **EXPENSE_TYPE**: Types of expenses (Travel - Airfare, Hotel, Meals, Home Office Equipment, etc.)
@@ -1135,6 +1132,31 @@ Dropdown management has been consolidated into a single, dynamic interface that 
         - **RECEIPT_STATUS**: Receipt availability (Attached, Pending, Not Available)
         - **EXPENSE_STATUS**: Workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
     - **Note**: New categories added to the database automatically appear in this list
+
+**Billability Configuration:**
+
+Each dropdown value can be marked as "Non-Billable" to classify work that should not be invoiced to clients:
+
+- **Non-Billable Checkbox**: When adding or editing any dropdown value, check the "Non-Billable" box for:
+  - **Clients**: Internal clients or corporate overhead
+  - **Projects**: Internal projects, training, meetings, administrative work
+  - **Phases**: Non-billable work phases (proposals, research, internal meetings)
+  - **Expense Types**: Non-reimbursable expense categories
+
+- **How It Works**:
+  - **Tasks**: A task is billable only if its client, project, AND phase are ALL billable
+  - **Expenses**: An expense is billable only if its client, project, AND type are ALL billable
+  - **Filtering**: Users can filter weekly timesheets and expense sheets by billability status
+  - **Reports**: Analytics dashboards distinguish billable from non-billable hours
+
+- **Visual Indicators**:
+  - Non-billable dropdown values display a 🚫 badge in management interfaces
+  - Billable/non-billable status appears in the "Billability" column when managing dropdowns
+
+- **Example Configuration**:
+  - Mark "Corporate" client as non-billable → All tasks for this client are non-billable
+  - Mark "Training" project as non-billable → Training tasks are always non-billable
+  - Mark "Internal Meeting" phase as non-billable → Meeting time is excluded from billable hours
 
 3. **Filter by Subcategory** (Optional):
     - After selecting a category, use the subcategory dropdown to further narrow results
@@ -1299,21 +1321,33 @@ The User Performance Summary displays a comprehensive view of all users' activit
   - 🥉 Bronze medal for #3 performer
 - **Username**: User's login identifier
 - **Total Hours**: Cumulative hours worked in the selected period
-- **Billable**: Hours worked on billable client projects (excludes Non-Billable project)
-- **Non-Billable**: Hours logged to the "Non-Billable" project (overhead, meetings, training, admin)
+- **Billable**: Hours worked on billable client projects (determined by dropdown flags)
+- **Non-Billable**: Hours logged to tasks with non-billable components (overhead, meetings, training, admin)
 - **Tasks**: Number of task activities submitted
 - **Avg Billable/Day**: Average billable hours per day (calculated only from days with billable work)
-- **Top Client**: Client with most hours for this user (excludes Non-Billable project)
-- **Top Project**: Project with most hours for this user (excludes Non-Billable project)
+- **Top Client**: Client with most hours for this user (excludes non-billable clients)
+- **Top Project**: Project with most hours for this user (excludes non-billable projects)
 - **Last Activity**: Date of most recent task submission
 
 **Billable vs. Non-Billable Tracking:**
-The system distinguishes between billable and non-billable hours using a simple naming convention:
-- **Billable Hours**: All tasks logged to any project EXCEPT "Non-Billable"
-- **Non-Billable Hours**: Tasks logged to the project named "Non-Billable"
+
+The system uses a flexible flag-based approach to distinguish billable from non-billable hours:
+
+- **Flag-Based System**: Each dropdown value (client, project, phase, expense type) has a "Non-Billable" flag
+- **Task Billability**: A task is billable only if its client, project, AND phase are ALL marked as billable
+- **Expense Billability**: An expense is billable only if its client, project, AND type are ALL marked as billable
+- **ANY Non-Billable Component**: If any component is flagged as non-billable, the entire entry is non-billable
 - **Visual Indicators**: Billable hours appear in green, non-billable in orange
 - **Average Calculation**: Avg Billable/Day only includes days where billable work was performed
-- **Top Client/Project**: These fields exclude the Non-Billable project to show actual client work
+- **Top Client/Project**: These fields exclude non-billable clients and projects to show actual client work
+- **Configuration**: Administrators set billability flags when creating or editing dropdown values
+
+**Filtering by Billability:**
+
+Users can filter their weekly timesheets and expense sheets by billability status:
+- **All**: Shows all tasks/expenses (default view)
+- **Billable**: Shows only entries where all components are billable
+- **Non-Billable**: Shows entries with any non-billable component
 
 **Features:**
 - Sortable columns: Click any column header to sort

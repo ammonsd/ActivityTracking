@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import BlockIcon from "@mui/icons-material/Block";
 import type { DropdownValue } from "../../types/dropdown.types";
 
 interface DropdownTableProps {
@@ -66,6 +67,9 @@ export const DropdownTable: React.FC<DropdownTableProps> = ({
                             Display Order
                         </TableCell>
                         <TableCell sx={{ fontWeight: "bold" }}>
+                            Billability
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: "bold" }}>
                             Status
                         </TableCell>
                         <TableCell sx={{ fontWeight: "bold" }}>
@@ -88,6 +92,16 @@ export const DropdownTable: React.FC<DropdownTableProps> = ({
                             <TableCell>{value.subcategory}</TableCell>
                             <TableCell>{value.itemValue}</TableCell>
                             <TableCell>{value.displayOrder}</TableCell>
+                            <TableCell>
+                                {value.nonBillable && (
+                                    <Chip
+                                        label="Non-Billable"
+                                        color="warning"
+                                        size="small"
+                                        icon={<BlockIcon />}
+                                    />
+                                )}
+                            </TableCell>
                             <TableCell>
                                 <Chip
                                     label={

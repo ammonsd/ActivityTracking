@@ -39,6 +39,7 @@ export interface DropdownValue {
   itemValue: string;
   displayOrder: number;
   isActive: boolean;
+  nonBillable: boolean;
 }
 
 export interface ApiResponse<T> {

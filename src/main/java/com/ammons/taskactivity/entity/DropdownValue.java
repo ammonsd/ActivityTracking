@@ -41,6 +41,9 @@ public class DropdownValue {
     @Column(name = "isactive", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "non_billable", nullable = false)
+    private Boolean nonBillable = false;
+
     public DropdownValue() {}
 
     public DropdownValue(String category, String subcategory, String itemValue,
@@ -51,6 +54,17 @@ public class DropdownValue {
         this.itemValue = itemValue;
         this.displayOrder = displayOrder;
         this.isActive = isActive;
+        this.nonBillable = false; // Default to billable
+    }
+
+    public DropdownValue(String category, String subcategory, String itemValue,
+            Integer displayOrder, Boolean isActive, Boolean nonBillable) {
+        this.category = category;
+        this.subcategory = subcategory;
+        this.itemValue = itemValue;
+        this.displayOrder = displayOrder;
+        this.isActive = isActive;
+        this.nonBillable = nonBillable;
     }
 
     public Long getId() {
@@ -101,11 +115,19 @@ public class DropdownValue {
         this.isActive = isActive;
     }
 
+    public Boolean getNonBillable() {
+        return nonBillable;
+    }
+
+    public void setNonBillable(Boolean nonBillable) {
+        this.nonBillable = nonBillable;
+    }
+
     @Override
     public String toString() {
         return "DropdownValue{" + "id=" + id + ", category='" + category + '\'' + ", subcategory='"
                 + subcategory + '\'' + ", itemValue='" + itemValue + '\'' + ", displayOrder="
-                + displayOrder + ", isActive=" + isActive
+                + displayOrder + ", isActive=" + isActive + ", nonBillable=" + nonBillable
                 + '}';
     }
 

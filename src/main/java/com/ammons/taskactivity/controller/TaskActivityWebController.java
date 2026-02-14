@@ -9,6 +9,7 @@ import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.WeeklyTimesheetService;
 import com.ammons.taskactivity.service.DropdownValueService;
 import com.ammons.taskactivity.service.UserService;
+import com.ammons.taskactivity.service.BillabilityService;
 import com.ammons.taskactivity.entity.DropdownValue;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -71,17 +72,19 @@ public class TaskActivityWebController {
     private final WeeklyTimesheetService weeklyTimesheetService;
     private final UserService userService;
     private final TaskListSortConfig taskListSortConfig;
+    private final BillabilityService billabilityService;
 
     public TaskActivityWebController(TaskActivityService taskActivityService,
             DropdownConfig dropdownConfig, DropdownValueService dropdownValueService,
             WeeklyTimesheetService weeklyTimesheetService, UserService userService,
-            TaskListSortConfig taskListSortConfig) {
+            TaskListSortConfig taskListSortConfig, BillabilityService billabilityService) {
         this.taskActivityService = taskActivityService;
         this.dropdownConfig = dropdownConfig;
         this.dropdownValueService = dropdownValueService;
         this.weeklyTimesheetService = weeklyTimesheetService;
         this.userService = userService;
         this.taskListSortConfig = taskListSortConfig;
+        this.billabilityService = billabilityService;
     }
 
     @GetMapping
@@ -565,10 +568,10 @@ public class TaskActivityWebController {
     public String showDropdownManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            // Get all dropdown values by category and subcategory
-            List<DropdownValue> clients = dropdownValueService.getActiveClients();
-            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
-            List<DropdownValue> phases = dropdownValueService.getActivePhases();
+            // Get ALL dropdown values (active and inactive) for management
+            List<DropdownValue> clients = dropdownValueService.getAllClients();
+            List<DropdownValue> projects = dropdownValueService.getAllProjects();
+            List<DropdownValue> phases = dropdownValueService.getAllPhases();
 
             model.addAttribute("clients", clients);
             model.addAttribute("projects", projects);
@@ -586,7 +589,7 @@ public class TaskActivityWebController {
     public String showClientManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> clients = dropdownValueService.getActiveClients();
+            List<DropdownValue> clients = dropdownValueService.getAllClients();
             model.addAttribute(DROPDOWN_VALUES_ATTR, clients);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_CLIENT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Clients");
@@ -602,7 +605,7 @@ public class TaskActivityWebController {
     public String showProjectManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> projects = dropdownValueService.getActiveProjects();
+            List<DropdownValue> projects = dropdownValueService.getAllProjects();
             model.addAttribute(DROPDOWN_VALUES_ATTR, projects);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PROJECT);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Projects");
@@ -618,7 +621,7 @@ public class TaskActivityWebController {
     public String showPhaseManagement(Model model, Authentication authentication) {
         try {
             addUserInfo(model, authentication);
-            List<DropdownValue> phases = dropdownValueService.getActivePhases();
+            List<DropdownValue> phases = dropdownValueService.getAllPhases();
             model.addAttribute(DROPDOWN_VALUES_ATTR, phases);
             model.addAttribute(CATEGORY_ATTR, DropdownValueService.SUBCATEGORY_PHASE);
             model.addAttribute(CATEGORY_DISPLAY_NAME_ATTR, "Phases");
@@ -632,9 +635,10 @@ public class TaskActivityWebController {
 
     @PostMapping("/add-dropdown")
     public String addDropdownValue(@RequestParam String category, @RequestParam String value,
+            @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
             RedirectAttributes redirectAttributes) {
         try {
-            dropdownValueService.createDropdownValue(category, "TASK", value);
+            dropdownValueService.createDropdownValue(category, "TASK", value, nonBillable);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR, "Successfully added '"
                     + value
                     + "' to " + category.toLowerCase() + " dropdown.");
@@ -706,7 +710,9 @@ public class TaskActivityWebController {
 
     @GetMapping("/weekly-timesheet")
     public String showWeeklyTimesheet(@RequestParam(required = false) @DateTimeFormat(
-            iso = DateTimeFormat.ISO.DATE) LocalDate date, Model model,
+            iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false, defaultValue = "All") String billability,
+            Model model,
             Authentication authentication) {
         try {
             addUserInfo(model, authentication);
@@ -721,7 +727,13 @@ public class TaskActivityWebController {
                 weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet(username);
             }
 
+            // Apply billability filter if not "All"
+            if (!"All".equals(billability) && weeklyData != null) {
+                weeklyData = filterWeeklyTimesheetByBillability(weeklyData, billability);
+            }
+
             model.addAttribute("weeklyData", weeklyData);
+            model.addAttribute("billability", billability);
             return WEEKLY_TIMESHEET_VIEW;
 
         } catch (Exception e) {
@@ -865,6 +877,37 @@ public class TaskActivityWebController {
             return "\"" + field.replace("\"", "\"\"") + "\"";
         }
         return field;
+    }
+
+    /**
+     * Filters weekly timesheet data based on billability selection.
+     * @param weeklyData The original weekly timesheet data
+     * @param billability Filter value: "Billable" or "Non-Billable"
+     * @return Filtered weekly timesheet data
+     */
+    private WeeklyTimesheetService.WeeklyTimesheetData filterWeeklyTimesheetByBillability(
+            WeeklyTimesheetService.WeeklyTimesheetData weeklyData, String billability) {
+        if (weeklyData == null || weeklyData.getAllDays() == null) {
+            return weeklyData;
+        }
+
+        boolean showBillable = "Billable".equals(billability);
+
+        // Filter tasks in each daily data
+        for (var dailyData : weeklyData.getAllDays()) {
+            if (dailyData.getTasks() != null) {
+                List<TaskActivity> filteredTasks = dailyData.getTasks().stream()
+                    .filter(task -> {
+                        boolean isBillable = billabilityService.isTaskBillable(
+                            task.getClient(), task.getProject(), task.getPhase());
+                        return showBillable ? isBillable : !isBillable;
+                    })
+                    .toList();
+                dailyData.setTasks(filteredTasks);
+            }
+        }
+
+        return weeklyData;
     }
 }
 

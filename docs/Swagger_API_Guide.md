@@ -444,6 +444,112 @@ Content-Type: application/json
 - Email address is required for expense management access
 - Changes are immediately reflected in the Angular UI and backend templates
 
+### Dropdown Management Endpoints
+
+These endpoints manage system dropdown values used for categorizing tasks and expenses (Clients, Projects, Phases, Expense Types).
+
+| Method | Endpoint                   | Description                      | Auth Required | Role Required |
+| ------ | -------------------------- | -------------------------------- | ------------- | ------------- |
+| GET    | `/api/dropdowns`           | Get all dropdown values          | Yes           | USER+         |
+| GET    | `/api/dropdowns/categories`| Get all categories               | Yes           | USER+         |
+| GET    | `/api/dropdowns/{id}`      | Get dropdown value by ID         | Yes           | USER+         |
+| POST   | `/api/dropdowns`           | Create new dropdown value        | Yes           | ADMIN         |
+| PUT    | `/api/dropdowns/{id}`      | Update dropdown value            | Yes           | ADMIN         |
+| DELETE | `/api/dropdowns/{id}`      | Delete dropdown value            | Yes           | ADMIN         |
+
+**Example: Get All Dropdown Values**
+
+```bash
+GET /api/dropdowns
+```
+
+Response:
+```json
+[
+  {
+    "id": 1,
+    "category": "TASK",
+    "subcategory": "CLIENT",
+    "itemValue": "Acme Corp",
+    "displayOrder": 1,
+    "isActive": true,
+    "nonBillable": false
+  },
+  {
+    "id": 25,
+    "category": "TASK",
+    "subcategory": "PROJECT",
+    "itemValue": "Training",
+    "displayOrder": 5,
+    "isActive": true,
+    "nonBillable": true
+  }
+]
+```
+
+**Example: Create Dropdown Value**
+
+```bash
+POST /api/dropdowns
+Content-Type: application/json
+
+{
+  "category": "TASK",
+  "subcategory": "CLIENT",
+  "itemValue": "New Client Corp",
+  "displayOrder": 10,
+  "isActive": true,
+  "nonBillable": false
+}
+```
+
+**Example: Update Dropdown Value**
+
+```bash
+PUT /api/dropdowns/25
+Content-Type: application/json
+
+{
+  "itemValue": "Training",
+  "displayOrder": 5,
+  "isActive": true,
+  "nonBillable": true
+}
+```
+
+**Dropdown Field Descriptions:**
+
+- `category` - Top-level category: `TASK` or `EXPENSE`
+- `subcategory` - Item type: `CLIENT`, `PROJECT`, `PHASE`, `TYPE`
+- `itemValue` - Display value shown in dropdowns
+- `displayOrder` - Sort order (lower numbers appear first)
+- `isActive` - Whether value is available for selection
+- **`nonBillable`** - **NEW**: Flag indicating if this value should be treated as non-billable
+
+**Billability System:**
+
+The `nonBillable` field enables flexible billability tracking:
+
+- **Tasks**: If Client, Project, OR Phase is marked `nonBillable: true`, the entire task is non-billable
+- **Expenses**: If Client, Project, OR Expense Type is marked `nonBillable: true`, the entire expense is non-billable
+- **Default**: `nonBillable: false` (billable)
+- **OR Logic**: ANY non-billable component makes the entire entry non-billable
+
+**Common Use Cases:**
+
+| Scenario | Configuration | Result |
+|----------|--------------|--------|
+| PTO/Vacation | Phase "PTO" with `nonBillable: true` | All PTO tasks non-billable |
+| Internal projects | Client "Internal" with `nonBillable: true` | All internal client tasks non-billable |
+| Training time | Project "Training" with `nonBillable: true` | All training project tasks non-billable |
+| Corporate overhead | Expense Type "Overhead" with `nonBillable: true` | All overhead expenses non-billable |
+
+**Notes:**
+- Only ADMIN users can create/update/delete dropdown values
+- All authenticated users can read dropdown values
+- The `nonBillable` field is used by BillabilityService for calculating billable hours
+- Reports and timesheet views can filter by billability status
+
 ### Health Check Endpoints
 
 | Method | Endpoint           | Description               | Auth Required | Details Shown |

@@ -14,9 +14,12 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - Phase distribution analysis
   - ADMIN-only user performance analytics
 - 📊 Weekly timesheet view (Monday-Sunday format)
+  - **Filter by billability**: View all tasks, only billable tasks, or only non-billable tasks
+  - Billable hours calculated based on client/project/phase flags
 - 📥 Export filtered tasks and weekly timesheets to CSV format
-- � **Bulk CSV import** for TaskActivity records (ADMIN/MANAGER roles)
-- �🔍 Filter and search capabilities
+- 📥 **Bulk CSV import** for TaskActivity records (ADMIN/MANAGER roles)
+- 🔍 Filter and search capabilities
+- 🏷️ **Flexible billability tracking**: Mark clients, projects, or phases as non-billable for accurate billing reports
 
 ### Expense Management
 
@@ -41,9 +44,11 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - **ADMIN**: Full expense management and approval authority
 - 📊 Expense filtering by client, project, type, status, and date range
 - 💵 Automatic expense totals and status tracking
-- � **Bulk CSV import** for Expense records (ADMIN/MANAGER roles)
-- �🔒 Users can only modify Draft, Submitted, or Resubmitted status
+- 📥 **Bulk CSV import** for Expense records (ADMIN/MANAGER roles)
+- 🔒 Users can only modify Draft, Submitted, or Resubmitted status
 - 🚫 Non-admins cannot modify approval/reimbursement fields
+- 📊 **Weekly expense sheet with billability filtering**: View all expenses, only billable, or only non-billable
+- 🏷️ **Expense billability tracking**: Mark clients, projects, or expense types as non-billable
 
 ### Profile Management
 
