@@ -1083,7 +1083,7 @@ public class EmailService {
         String body = buildJenkinsDeployEmailBody(buildNumber, branch, commit, deployUrl, false,
                 consoleUrl, environment);
 
-        sendEmailsWithGrouping(jenkinsDeployNotificationEmail, subject, body, "deploy failure");
+        sendEmailsWithGrouping(jenkinsBuildNotificationEmail, subject, body, "deploy failure");
     }
 
     /**
