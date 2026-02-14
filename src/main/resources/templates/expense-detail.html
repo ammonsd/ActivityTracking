@@ -278,13 +278,13 @@
                     enctype="multipart/form-data"
                 >
                     <!-- Hidden fields to preserve filter parameters -->
-                    <input type="hidden" name="client" th:value="${selectedClient}" />
-                    <input type="hidden" name="project" th:value="${selectedProject}" />
-                    <input type="hidden" name="expenseType" th:value="${selectedExpenseType}" />
-                    <input type="hidden" name="status" th:value="${selectedStatus}" />
-                    <input type="hidden" name="username" th:value="${selectedUsername}" />
-                    <input type="hidden" name="startDate" th:value="${selectedStartDate}" />
-                    <input type="hidden" name="endDate" th:value="${selectedEndDate}" />
+                    <input type="hidden" name="filterClient" th:value="${selectedClient}" />
+                    <input type="hidden" name="filterProject" th:value="${selectedProject}" />
+                    <input type="hidden" name="filterExpenseType" th:value="${selectedExpenseType}" />
+                    <input type="hidden" name="filterStatus" th:value="${selectedStatus}" />
+                    <input type="hidden" name="filterUsername" th:value="${selectedUsername}" />
+                    <input type="hidden" name="filterStartDate" th:value="${selectedStartDate}" />
+                    <input type="hidden" name="filterEndDate" th:value="${selectedEndDate}" />
                     
                     <!-- Expense Date -->
                     <div class="form-group">
