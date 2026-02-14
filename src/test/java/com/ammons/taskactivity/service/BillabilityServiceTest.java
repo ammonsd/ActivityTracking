@@ -93,10 +93,7 @@ class BillabilityServiceTest {
         // Given: Client is non-billable (Corporate)
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "CLIENT", "Corporate"))
                 .thenReturn(nonBillableClient);
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PROJECT", "Consulting"))
-                .thenReturn(billableProject);
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PHASE", "Development"))
-                .thenReturn(billablePhase);
+        // Note: Project and phase stubs removed - not called due to short-circuit evaluation
 
         // When: Check task billability
         boolean result =
@@ -113,8 +110,7 @@ class BillabilityServiceTest {
                 .thenReturn(billableClient);
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PROJECT", "Training"))
                 .thenReturn(nonBillableProject);
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PHASE", "Development"))
-                .thenReturn(billablePhase);
+        // Note: Phase stub removed - not called due to short-circuit evaluation
 
         // When: Check task billability
         boolean result = billabilityService.isTaskBillable("Acme Corp", "Training", "Development");
@@ -145,10 +141,8 @@ class BillabilityServiceTest {
         // Given: Multiple components are non-billable (testing OR logic)
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "CLIENT", "Corporate"))
                 .thenReturn(nonBillableClient);
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PROJECT", "Training"))
-                .thenReturn(nonBillableProject);
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("TASK", "PHASE", "PTO"))
-                .thenReturn(nonBillablePhase);
+        // Note: Project and phase stubs removed - not called due to short-circuit evaluation
+        // Client is checked first, returns non-billable, and method returns immediately
 
         // When: Check task billability
         boolean result = billabilityService.isTaskBillable("Corporate", "Training", "PTO");
@@ -208,11 +202,7 @@ class BillabilityServiceTest {
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "CLIENT",
                 "Corporate")).thenReturn(
                         new DropdownValue("EXPENSE", "CLIENT", "Corporate", 1, true, true));
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "PROJECT",
-                "Consulting")).thenReturn(
-                        new DropdownValue("EXPENSE", "PROJECT", "Consulting", 1, true, false));
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "EXPENSE_TYPE",
-                "Travel - Airfare")).thenReturn(billableExpenseType);
+        // Note: Project and type stubs removed - not called due to short-circuit evaluation
 
         // When: Check expense billability
         boolean result =
@@ -231,8 +221,7 @@ class BillabilityServiceTest {
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "PROJECT",
                 "Training")).thenReturn(
                         new DropdownValue("EXPENSE", "PROJECT", "Training", 1, true, true));
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "EXPENSE_TYPE",
-                "Travel - Airfare")).thenReturn(billableExpenseType);
+        // Note: Type stub removed - not called due to short-circuit evaluation
 
         // When: Check expense billability
         boolean result =
@@ -268,11 +257,8 @@ class BillabilityServiceTest {
         when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "CLIENT",
                 "Corporate")).thenReturn(
                         new DropdownValue("EXPENSE", "CLIENT", "Corporate", 1, true, true));
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "PROJECT",
-                "Training")).thenReturn(
-                        new DropdownValue("EXPENSE", "PROJECT", "Training", 1, true, true));
-        when(dropdownRepo.findByCategoryAndSubcategoryAndItemValue("EXPENSE", "EXPENSE_TYPE",
-                "Home Office - Internet")).thenReturn(nonBillableExpenseType);
+        // Note: Project and type stubs removed - not called due to short-circuit evaluation
+        // Client is checked first, returns non-billable, and method returns immediately
 
         // When: Check expense billability
         boolean result = billabilityService.isExpenseBillable("Corporate", "Training",
