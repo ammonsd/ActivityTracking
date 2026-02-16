@@ -283,7 +283,12 @@
                 .filter-actions {
                     grid-column: 1;
                 }
+                /* Extend navbar and header to match table width on mobile */
+                .navbar .nav-content {
+                    min-width: 800px;
+                }
                 .header {
+                    min-width: 800px;
                     flex-direction: column;
                     gap: 10px;
                     text-align: center;
@@ -892,7 +897,7 @@
                             >
                                 Username
                             </th>
-                            <th></th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -418,8 +418,10 @@
 
             /* MOBILE STYLES */
             @media (max-width: 768px) {
+                /* Allow container to show horizontal overflow on mobile */
                 .container {
-                    overflow-x: visible;
+                    overflow-x: visible !important;
+                    max-width: none !important;
                 }
                 .filters .filter-row {
                     grid-template-columns: 1fr;
@@ -427,7 +429,13 @@
                 .filter-actions {
                     grid-column: 1;
                 }
+                /* Extend navbar and header to match table width on mobile */
+                .navbar .nav-content {
+                    min-width: 900px !important;
+                    max-width: none !important;
+                }
                 .header {
+                    min-width: 900px !important;
                     flex-direction: column;
                     gap: 10px;
                     text-align: center;
@@ -852,7 +860,7 @@
                             >
                                 Username
                             </th>
-                            <th></th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
