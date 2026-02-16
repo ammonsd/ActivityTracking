@@ -420,8 +420,7 @@
             @media (max-width: 768px) {
                 /* Allow container to show horizontal overflow on mobile */
                 .container {
-                    overflow-x: visible !important;
-                    max-width: none !important;
+                    overflow-x: visible;
                 }
                 .filters .filter-row {
                     grid-template-columns: 1fr;
@@ -431,11 +430,10 @@
                 }
                 /* Extend navbar and header to match table width on mobile */
                 .navbar .nav-content {
-                    min-width: 900px !important;
-                    max-width: none !important;
+                    min-width: 900px;
                 }
                 .header {
-                    min-width: 900px !important;
+                    min-width: 900px;
                     flex-direction: column;
                     gap: 10px;
                     text-align: center;
@@ -475,46 +473,45 @@
                 table {
                     width: 100%;
                     table-layout: fixed;
-                    min-width: 1400px;
                 }
                 table th:nth-child(1),
                 table td:nth-child(1) {
-                    width: 130px;
+                    width: 110px;
                 } /* Date */
                 table th:nth-child(2),
                 table td:nth-child(2) {
-                    width: 220px;
+                    width: 180px;
                 } /* Client */
                 table th:nth-child(3),
                 table td:nth-child(3) {
-                    width: 220px;
+                    width: 180px;
                 } /* Project */
                 table th:nth-child(4),
                 table td:nth-child(4) {
-                    width: 180px;
+                    width: 150px;
                 } /* Type */
                 table th:nth-child(5),
                 table td:nth-child(5) {
-                    width: 130px;
+                    width: 110px;
                 } /* Amount */
                 table th:nth-child(6),
                 table td:nth-child(6) {
-                    width: 140px;
+                    width: 110px;
                 } /* Status */
                 table th:nth-child(7),
                 table td:nth-child(7) {
-                    width: 100px;
+                    width: 80px;
                     text-align: center;
                 } /* Receipt */
                 table th.username-header,
                 table td.username-column {
-                    width: 140px;
+                    width: 120px;
                     text-align: left;
                     padding-left: 10px;
                 }
                 table th:last-child,
                 table td.actions-column {
-                    width: 220px;
+                    width: 160px;
                     white-space: nowrap;
                     text-align: right;
                     padding-right: 0;
