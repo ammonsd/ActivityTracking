@@ -235,18 +235,47 @@ public class SecurityConfig {
                                                                 "/api/dropdownvalues/**")
                                                 .hasRole(ADMIN_ROLE)
 
-                                                // Swagger/OpenAPI endpoints - only accessible when
-                                                // explicitly enabled
+                                                // Swagger/OpenAPI endpoints - environment-aware
+                                                // access control
+                                                // Modified by: Dean Ammons - February 2026
+                                                // Change: Added environment-aware security (ADMIN
+                                                // for AWS, authenticated for local)
+                                                // Reason: Restrict to ADMIN in production, allow
+                                                // all authenticated users in development
                                                 .requestMatchers("/swagger-ui/**",
                                                                 "/swagger-ui.html",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-resources/**",
                                                                 "/webjars/**")
-                                                .access((authentication, context) -> swaggerEnabled
-                                                                ? new org.springframework.security.authorization.AuthorizationDecision(
-                                                                                true)
-                                                                : new org.springframework.security.authorization.AuthorizationDecision(
-                                                                                false))
+                                                .access((authentication, context) -> {
+                                                        if (!swaggerEnabled) {
+                                                                return new org.springframework.security.authorization.AuthorizationDecision(
+                                                                                false);
+                                                        }
+
+                                                        boolean isAuthenticated = authentication
+                                                                        .get().isAuthenticated();
+
+                                                        // AWS deployment: Require ADMIN role for
+                                                        // security
+                                                        if (environment.acceptsProfiles(
+                                                                        Profiles.of("aws"))) {
+                                                                boolean hasAdminRole =
+                                                                                authentication.get()
+                                                                                                .getAuthorities()
+                                                                                                .stream()
+                                                                                                .anyMatch(grantedAuthority -> grantedAuthority
+                                                                                                                .getAuthority()
+                                                                                                                .equals("ROLE_" + ADMIN_ROLE));
+                                                                return new org.springframework.security.authorization.AuthorizationDecision(
+                                                                                isAuthenticated && hasAdminRole);
+                                                        }
+
+                                                        // Local/Docker deployment: Any
+                                                        // authenticated user can access
+                                                        return new org.springframework.security.authorization.AuthorizationDecision(
+                                                                        isAuthenticated);
+                                                })
                                                 // API endpoints - require authentication
                                                 .requestMatchers(HttpMethod.GET, API_PATTERN)
                                                 .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
