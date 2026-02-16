@@ -1,14 +1,14 @@
 # Jenkins Token Renewal - Quick Start
 
-**When**: Every 30 days (Set reminder for **February 16, 2026**)
+**When**: Every 30 days
 
 **Where**: Run from `C:\Users\deana\GitHub\ActivityTracking`
 
-**Commands** (copy-paste these 3 lines):
+**Commands**
 
 ```powershell
 # Get production secret, generate token, update Jenkins
-$secretJson = aws secretsmanager get-secret-value --secret-id "taskactivity/jwt/secret" --region us-east-1 --query 'SecretString' --output text | ConvertFrom-Json; $env:JWT_SECRET = $secretJson.secret; .\scripts\generate-token.ps1
+$secretJson = aws secretsmanager get-secret-value --secret-id "taskactivity/jwt/secret" --region us-east-1 --query 'SecretString' --output text | ConvertFrom-Json; $env:JWT_SECRET = $secretJson.secret; CD "c:\Users\deana\GitHub\ActivityTracking"; .\scripts\generate-token.ps1
 ```
 
 **Then**:

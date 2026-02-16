@@ -101,6 +101,6 @@ Write-Host "  5. Paste token in Secret field → Save"
 Write-Host "  6. Test with a Jenkins build"
 Write-Host ""
 Write-Host "Token expires on: $([DateTimeOffset]::FromUnixTimeSeconds($exp).LocalDateTime)" -ForegroundColor Yellow
-Write-Host "Set reminder to regenerate: February 16, 2026" -ForegroundColor Yellow
+Write-Host "Set reminder to regenerate: $([DateTimeOffset]::FromUnixTimeSeconds($exp).AddDays(-1).ToString('MMMM d, yyyy'))" -ForegroundColor Yellow
 Write-Host "=" * 70
 Write-Host ""
