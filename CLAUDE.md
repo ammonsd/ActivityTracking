@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 * ALWAYS prefer editing an existing file to creating a new one.
 * If you create any temporary new files, scripts, or helper files for iteration, clean up these files by removing them at the end of the task.
 * When you update or modify core context files, also update markdown documentation and memory banks (see Memory Bank System section below)
-* When asked to commit changes, exclude CLAUDE.md, all /ai/ memory bank files, and /memories/ conversation memory files from commits unless explicitly updating them as part of documentation work. Never delete these files.
+* When asked to commit changes, exclude CLAUDE.md and all /ai/ memory bank files from commits unless explicitly updating them as part of documentation work. Never delete these files.
 * **When a user request goes against established conventions or best practices (e.g., inverting standard exit codes, breaking naming conventions, skipping security measures), ALWAYS confirm the intent before implementing.** Ask: "Just to clarify - this goes against [standard convention/best practice]. Is that intentional?" Better to ask one clarifying question than to implement something incorrectly and have to redo it.
 
 <investigate_before_answering>
@@ -58,13 +58,7 @@ Memory banks are stored in the `/ai/` directory:
 - Update relevant memory bank files following `memory-bank-maintenance.md`
 - Update this CLAUDE.md file if needed
 
-### Conversation Memory
-
-In addition to memory banks, conversation-specific preferences are stored in `/memories/`:
-- `/memories/dean-preferences.md` - Dean's coding preferences and working style
-- `/memories/recent-work.md` - Recent work, decisions, and to-do items
-
-**Important**: When asked to commit changes, **exclude CLAUDE.md and all files in /ai/ and /memories/ from commits** unless explicitly updating them as part of documentation work.
+**Important**: When asked to commit changes, **exclude CLAUDE.md and all files in /ai/ from commits** unless explicitly updating them as part of documentation work.
 
 ## Agent Skills
 
@@ -74,217 +68,93 @@ This project includes GitHub Copilot Agent Skills for common workflows. Skills p
 
 Skills are located in the `/skills/` directory:
 
-- **[csv-bulk-import](skills/csv-bulk-import/SKILL.md)** - CSV import automation with templates and validation
-- **[aws-deployment](skills/aws-deployment/SKILL.md)** - AWS ECS deployment workflows and monitoring
-- **[database-migration](skills/database-migration/SKILL.md)** - PostgreSQL schema migration patterns
-- **[spring-boot-entity](skills/spring-boot-entity/SKILL.md)** - Complete entity creation (entity, repository, service, controller, tests)
-- **[security-audit](skills/security-audit/SKILL.md)** - Comprehensive security checklist and scanning
-- **[docker-operations](skills/docker-operations/SKILL.md)** - Docker build strategies, troubleshooting, optimization
 - **[api-endpoint](skills/api-endpoint/SKILL.md)** - REST API endpoint creation with validation and documentation
+- **[aws-deployment](skills/aws-deployment/SKILL.md)** - AWS ECS deployment workflows and monitoring
+- **[csv-bulk-import](skills/csv-bulk-import/SKILL.md)** - CSV import automation with templates and validation
+- **[database-migration](skills/database-migration/SKILL.md)** - PostgreSQL schema migration patterns
+- **[docker-operations](skills/docker-operations/SKILL.md)** - Docker build strategies, troubleshooting, optimization
+- **[explaining-code](skills/explaining-code/SKILL.md)** - Code explanation patterns and documentation
+- **[security-audit](skills/security-audit/SKILL.md)** - Comprehensive security checklist and scanning
+- **[spring-boot-entity](skills/spring-boot-entity/SKILL.md)** - Complete entity creation (entity, repository, service, controller, tests)
 
 ### When to Use Skills
 
-**Common workflow tasks:**
-- Creating new entities → Use `spring-boot-entity` skill
-- Building/troubleshooting Docker → Use `docker-operations` skill
-- Creating REST APIs → Use `api-endpoint` skill
-- Importing CSV data → Use `csv-bulk-import` skill
+- Creating new entities → `spring-boot-entity`
+- Creating REST APIs → `api-endpoint`
+- Importing CSV data → `csv-bulk-import`
+- Building/troubleshooting Docker → `docker-operations`
+- Deploying to AWS → `aws-deployment`
+- Database changes → `database-migration`
+- Security reviews → `security-audit`
+- Code explanation → `explaining-code`
 
-**Deployment and operations:**
-- Deploying to AWS → Use `aws-deployment` skill
-- Database changes → Use `database-migration` skill
-- Security reviews → Use `security-audit` skill
+Each skill includes templates, checklists, and troubleshooting guides.
 
-Each skill includes templates, checklists, troubleshooting guides, and references to relevant memory bank files.
+## Quick Setup Reference
 
-## Prerequisites
+**For complete setup instructions, see `README.md`**
 
-### Required Software
+### Essential Prerequisites
 
-- **Java**: OpenJDK or Oracle JDK 21
-- **Node.js**: v20.11.1+ (CRITICAL - v20.11.0 is incompatible with Angular 19.2)
-- **npm**: 10.2.4+
-- **PostgreSQL**: 15+ (local installation or Docker)
-- **Git**: Latest version
-- **Docker & Docker Compose**: Optional, for containerized development
+- Java 21 (OpenJDK or Oracle)
+- Node.js v20.11.1+ (CRITICAL: v20.11.0 incompatible)
+- PostgreSQL 15+
+- Docker (optional)
 
-### Verify Installations
+### Required Environment Variables
 
 ```bash
-# Check Java version
-java -version  # Should show version 21
+# Generate JWT secret (256-bit minimum)
+JWT_SECRET=$(openssl rand -base64 32)
 
-# Check Node.js version (must be v20.11.1+)
-node --version
+# Admin password (min 12 chars, mixed case, numbers, special)
+APP_ADMIN_INITIAL_PASSWORD="SecurePassword123!"
 
-# Check npm version
-npm --version
-
-# Check PostgreSQL
-psql --version
-
-# Check Docker (optional)
-docker --version
-docker-compose --version
+# Database credentials
+DB_USERNAME="postgres"
+DB_PASSWORD="your-db-password"
 ```
 
-## First-Time Setup
-
-### 1. Clone the Repository
+### Quick Start
 
 ```bash
+# Clone and setup database
 git clone https://github.com/ammonsd/ActivityTracking.git
 cd ActivityTracking
-```
-
-### 2. Set Required Environment Variables
-
-**CRITICAL**: These environment variables are REQUIRED. The application will fail to start without them.
-
-```bash
-# Generate a secure JWT secret (256-bit minimum)
-openssl rand -base64 32
-
-# Set environment variables (Windows PowerShell)
-$env:JWT_SECRET = "your-generated-secret-from-above"
-$env:APP_ADMIN_INITIAL_PASSWORD = "SecurePassword123!"  # Min 12 chars, mixed case, numbers, special
-$env:DB_USERNAME = "postgres"
-$env:DB_PASSWORD = "your-db-password"
-
-# Set environment variables (Linux/Mac)
-export JWT_SECRET="your-generated-secret-from-above"
-export APP_ADMIN_INITIAL_PASSWORD="SecurePassword123!"
-export DB_USERNAME="postgres"
-export DB_PASSWORD="your-db-password"
-```
-
-### 3. Start PostgreSQL Database
-
-**Option A: Local PostgreSQL**
-
-```bash
-# Create database
-psql -U postgres
-CREATE DATABASE AmmoP1DB;
-\q
-```
-
-**Option B: Docker PostgreSQL**
-
-```bash
-# Start PostgreSQL container
-docker run -d \
-  --name taskactivity-postgres \
-  -e POSTGRES_DB=AmmoP1DB \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=your-db-password \
-  -p 5432:5432 \
-  postgres:15
-```
-
-### 4. Initialize Database Schema
-
-**IMPORTANT**: Schema is managed via `src/main/resources/schema.sql`
-
-- **First-time setup**: Run schema.sql manually or use Docker profile
-- **Production/Local**: `spring.sql.init.mode=never` (schema NOT auto-created for safety)
-- **Docker profile**: `spring.sql.init.mode=always` (auto-runs schema.sql in fresh containers)
-
-```bash
-# Manual schema initialization (if needed)
+psql -U postgres -c "CREATE DATABASE AmmoP1DB;"
 psql -U postgres -d AmmoP1DB -f src/main/resources/schema.sql
-```
 
-### 5. Build and Run the Application
-
-```bash
-# Full build (includes frontend)
+# Build and run
 ./mvnw.cmd clean package
-
-# Run the application
-./mvnw.cmd spring-boot:run --spring.profiles.active=local
-```
-
-### 6. Access the Application
-
-- **Backend API**: http://localhost:8080
-- **Angular Frontend**: http://localhost:8080/app/ (after build)
-- **Frontend Dev Server**: http://localhost:4200 (run `cd frontend && npm start`)
-- **Swagger UI**: http://localhost:8080/swagger-ui.html (enable in application-local.properties first)
-
-### 7. First Login
-
-**Admin Account** (automatically created on first startup):
-
-- **Username**: `admin`
-- **Password**: Value from `APP_ADMIN_INITIAL_PASSWORD` environment variable
-- **Password Expiration**: 90 days from first login
-
-## Port Configuration
-
-| Service             | Port | Configurable Via                                      |
-| ------------------- | ---- | ----------------------------------------------------- |
-| Backend API         | 8080 | `PORT` environment variable or `server.port` property |
-| Frontend Dev Server | 4200 | Angular configuration                                 |
-| PostgreSQL          | 5432 | Docker/PostgreSQL config                              |
-| Jenkins (optional)  | 8081 | Jenkins configuration                                 |
-
-## Build and Test Commands
-
-### Backend (Spring Boot + Maven)
-
-```bash
-# Full build with frontend (takes ~120s)
-./mvnw.cmd clean package
-
-# Backend-only build (skip Angular build)
-./mvnw.cmd clean package -Dskip.frontend.build=true
-
-# Run tests only
-./mvnw.cmd test
-
-# Run backend locally (requires PostgreSQL running)
 ./mvnw.cmd spring-boot:run
-
-# Skip tests during build
-./mvnw.cmd clean package -DskipTests
 ```
 
-### Frontend (Angular 19)
+**Access**: http://localhost:8080 (login: admin / your-password)
 
+## Build Commands Quick Reference
+
+**Backend (Maven)**:
+```bash
+./mvnw.cmd clean package                       # Full build with frontend (~120s)
+./mvnw.cmd clean package -Dskip.frontend.build=true  # Skip frontend
+./mvnw.cmd test                                # Run tests
+./mvnw.cmd spring-boot:run                     # Run locally
+```
+
+**Frontend (Angular)**:
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Development server (localhost:4200)
-npm start
-
-# Production build (outputs to dist/app)
-npm run build:prod
-
-# Run tests once with coverage
-npm run test:once
-
-# Run tests in watch mode
-npm test
+npm install           # Install dependencies
+npm start             # Dev server (localhost:4200)
+npm run build:prod    # Production build
+npm run test:once     # Tests with coverage
 ```
 
-### Docker
-
+**Docker**:
 ```bash
-# Build and run with host PostgreSQL (standard multi-stage build)
-docker-compose --profile host-db up -d
-
-# Fast build (requires pre-built JAR: mvnw.cmd clean package -DskipTests)
-docker-compose --profile local-fast up -d
-
-# Full containerized stack (app + PostgreSQL)
-docker-compose --profile containerized-db up -d
-
-# Production with Docker secrets
-docker-compose --profile production up -d
+docker-compose --profile host-db up -d          # Standard build
+docker-compose --profile local-fast up -d       # Fast (requires pre-built JAR)
+docker-compose --profile containerized-db up -d # Full stack with PostgreSQL
 ```
 
 ## Architecture Overview
@@ -558,37 +428,21 @@ springdoc.api-docs.enabled=true
 
 Access at `http://localhost:8080/swagger-ui.html`
 
-### Common Development Scenarios
+## Development Scenarios Quick Reference
 
-#### Running Backend Tests Against PostgreSQL
+**JWT Authentication Testing**:
+1. `POST /api/auth/login` → get `{accessToken, refreshToken}`
+2. Add `Authorization: Bearer <token>` to API requests
+3. `POST /api/auth/refresh` → get new tokens
+4. `POST /api/auth/logout` → blacklist token
 
-Tests use H2 in-memory database by default. For PostgreSQL integration tests:
+**Adding DropdownValues**: Insert via SQL or `DropdownRestController` API (categories: `client`, `project`, `phase`, `expense_type`, `payment_method`)
 
-```bash
-# Start Testcontainers PostgreSQL (automatic in integration tests)
-./mvnw.cmd test
-```
+**Debugging Expenses**: Check logs for `EmailService`, permission issues (`@RequirePermission`), status transitions (`ExpenseService`)
 
-#### Testing JWT Authentication Flow
+**PostgreSQL Tests**: Integration tests auto-start Testcontainers PostgreSQL
 
-1. Login: `POST /api/auth/login` with `{username, password}` → returns `{accessToken, refreshToken}`
-2. Use access token: Add `Authorization: Bearer <accessToken>` header to `/api/*` requests
-3. Refresh: `POST /api/auth/refresh` with `{refreshToken}` → returns new `{accessToken, refreshToken}`
-4. Logout: `POST /api/auth/logout` with `{token}` → blacklists token server-side
-
-#### Debugging Expense Workflow Issues
-
-Check logs for:
-
-- Email sending failures (`EmailService`)
-- Permission issues (`@RequirePermission` annotations)
-- Status transition validation (`ExpenseService.updateExpenseStatus()`)
-
-#### Adding New DropdownValue Types
-
-1. Insert via SQL or `DropdownRestController` API
-2. Frontend automatically fetches via `DropdownService.getDropdownValues(category)`
-3. Categories: `client`, `project`, `phase`, `expense_type`, `payment_method`, etc.
+**For complete development scenarios**, see `docs/Developer_Guide.md`.
 
 ### Deployment
 
@@ -621,40 +475,17 @@ Check logs for:
 
 ## Scripts and Utilities
 
-The `scripts/` directory contains operational and development utilities:
+**Deployment**: `scripts/docker-*.sh`, `scripts/setup-*.sh`
 
-### Deployment Scripts
+**Data Management**: `scripts/Import-CsvData.ps1`, `scripts/execute-sql-to-csv-api.ps1`
 
-- `docker-deployment.sh` - Automated Docker build and deployment
-- `docker-rebuild-and-start.sh` - Quick rebuild and restart of containers
-- `setup-production.sh` - Production environment initialization
-- `setup-docker-secrets.sh` - Docker secrets configuration for sensitive data
+**Development**: `scripts/set-env-values.ps1`, `scripts/generate-token.ps1`, `scripts/start-jenkins.ps1`
 
-### Monitoring and Health
+**Monitoring**: `scripts/monitor-health.sh`, `scripts/rotate-secrets.sh`
 
-- `monitor-health.sh` - Application health check monitoring
-- `rotate-secrets.sh` - Automated secret rotation for security compliance
+**Database Optimization**: `sql/production_optimization.sql` - Run after deployment for performance tuning
 
-### Data Management
-
-- `Import-CsvData.ps1` - PowerShell script for bulk CSV import (TaskActivity/Expense)
-- `execute-sql-to-csv-api.ps1` - Execute SQL queries and export results to CSV
-
-### Development Utilities
-
-- `set-env-values.ps1` - PowerShell script to set environment variables
-- `generate-token.ps1` - JWT token generation for testing
-- `generate-jenkins-token.ps1` / `generate-jenkins-token-simple.ps1` - Jenkins API token generation
-- `start-jenkins.ps1` - Local Jenkins startup script
-
-### Database Optimization
-
-The `sql/` directory contains performance optimization scripts:
-
-- `production_optimization.sql` - Database indexes and query optimization for production
-- `production_optimization_concurrent_alternative.sql` - Concurrent index creation (no downtime)
-
-**Usage**: Run after initial deployment or when performance tuning is needed.
+**For detailed usage**, see script comments or `docs/` directory.
 
 ## Coding Standards and Best Practices
 
@@ -727,241 +558,52 @@ For comprehensive coding standards, refer to the **`.github/instructions/`** dir
 - **Service tests**: Mock HttpClient responses
 - **Run once with coverage**: `npm run test:once`
 
-## Troubleshooting
+## Critical Configuration Notes
 
-### Critical Configuration Issues
+**Required Environment Variables** (application will NOT start without these):
+- `JWT_SECRET` - 256-bit minimum (generate: `openssl rand -base64 32`)
+- `APP_ADMIN_INITIAL_PASSWORD` - Min 12 chars, mixed case, numbers, special chars
+- `DB_USERNAME` and `DB_PASSWORD`
 
-#### Application Won't Start
+**Key Constraints**:
+- Node.js v20.11.1+ required (v20.11.0 incompatible with Angular 19.2)
+- Docker Compose requires explicit profile: `--profile host-db|local-fast|containerized-db`
+- Schema management: Manual migrations only (no Flyway/Liquibase)
+- Password expiration: 90 days for all users including admin
+- Rate limiting: 5 requests/minute on auth endpoints
+- File uploads: Magic number validation (checks content, not just extension)
 
-**Symptoms**: Application fails immediately on startup with configuration error
+**Common Issues**:
+- Swagger UI disabled by default (enable in application-local.properties)
+- Schema not auto-created in local/production profiles (run schema.sql manually)
+- JWT tokens invalidated on password change or server restart
+- Frontend build takes ~120s (skip with `-Dskip.frontend.build=true`)
 
-**Common Causes**:
+**For detailed troubleshooting**, see:
+- `docs/Developer_Guide.md` - Complete technical reference
+- `docs/Docker_Build_Guide.md` - Docker-specific issues
+- Application logs: `/var/log/app/application.log` (Docker) or console output
 
-1. **Missing JWT_SECRET** - Application requires 256-bit minimum JWT secret
+## Tech Stack Summary
 
-    ```bash
-    # Generate secure secret
-    openssl rand -base64 32
-    # Set environment variable
-    export JWT_SECRET="<generated-secret>"
-    ```
+**Backend**: Spring Boot 3.5.7 (Java 21), Spring Security 6, Spring Data JPA, JWT (JJWT 0.12.6), PostgreSQL 15+
 
-2. **Missing APP_ADMIN_INITIAL_PASSWORD** - Required for admin user creation
-    - Minimum 12 characters
-    - Must include uppercase, lowercase, number, and special character
+**Frontend**: Angular 19.2 standalone components, Angular Material, Chart.js, Node.js v20.11.1+ (CRITICAL)
 
-    ```bash
-    export APP_ADMIN_INITIAL_PASSWORD="SecurePass123!"
-    ```
+**Infrastructure**: Docker, Docker Compose, AWS ECS/Fargate, RDS PostgreSQL, S3, SES
 
-3. **Database connection failure** - Verify DB_USERNAME, DB_PASSWORD, and DATABASE_URL
-    ```bash
-    # Test PostgreSQL connection
-    psql -h localhost -U postgres -d AmmoP1DB
-    ```
+**For complete version details**, see `pom.xml` and `frontend/package.json`
 
-#### Authentication Issues
+## Key Documentation Reference
 
-**Rate Limiting During Development**
-
-- **Symptom**: "Too many requests" error when testing authentication
-- **Solution**: Disable rate limiting in `application-local.properties`
-    ```properties
-    security.rate-limit.enabled=false
-    ```
-
-**JWT Token Validation Failures**
-
-- **Cause**: Token blacklist not synchronized (server restart)
-- **Solution**: Re-login to get fresh token
-- **Note**: Password changes and logout invalidate all existing tokens
-
-**Account Locked After Failed Logins**
-
-- **Cause**: 5 failed login attempts triggers lockout
-- **Solution**: Admin must unlock in database or wait for timeout
-    ```sql
-    UPDATE users SET account_locked = false WHERE username = 'user';
-    ```
-
-#### Database Issues
-
-**Connection Pool Exhausted**
-
-- **Symptom**: "Unable to acquire JDBC Connection" errors
-- **Cause**: All 20 connections in use (high load or connection leaks)
-- **Solution**: Increase pool size or investigate connection leaks
-    ```properties
-    spring.datasource.hikari.maximum-pool-size=30
-    ```
-
-**Schema Not Created**
-
-- **Symptom**: "Table does not exist" errors
-- **Cause**: `spring.sql.init.mode=never` (default in local/production)
-- **Solution**: Run schema.sql manually
-    ```bash
-    psql -U postgres -d AmmoP1DB -f src/main/resources/schema.sql
-    ```
-
-**Timezone Issues**
-
-- **Symptom**: Dates off by several hours
-- **Cause**: PostgreSQL and Java using different timezones
-- **Solution**: Application uses UTC in Java code; set Docker timezone
-    ```bash
-    docker run -e TZ=America/New_York ...
-    ```
-
-#### Build and Deployment Issues
-
-**Frontend Build Fails**
-
-- **Node.js version incompatibility** (CRITICAL)
-    - **Symptom**: Angular compiler errors during Maven build
-    - **Cause**: Node.js v20.11.0 incompatible with Angular 19.2
-    - **Solution**: Use Node.js v20.11.1+ (specified in pom.xml)
-    - **Verify**: Check `pom.xml` line 266 has `<nodeVersion>v20.11.1</nodeVersion>`
-
-**Docker Compose Profile Required**
-
-- **Symptom**: "No service selected" error
-- **Solution**: Must specify profile explicitly
-    ```bash
-    docker-compose --profile host-db up -d
-    ```
-
-**Maven Build Slow**
-
-- **Cause**: Frontend build takes ~120 seconds
-- **Solution**: Skip frontend for backend-only changes
-    ```bash
-    ./mvnw.cmd clean package -Dskip.frontend.build=true
-    ```
-
-#### Runtime Issues
-
-**Swagger UI Not Accessible**
-
-- **Cause**: Disabled by default for security
-- **Solution**: Enable in `application-local.properties`
-    ```properties
-    springdoc.swagger-ui.enabled=true
-    springdoc.api-docs.enabled=true
-    ```
-
-**Email Notifications Not Sending**
-
-- **Development**: Verify Spring Boot Mail configuration
-- **Production**: Check AWS SES credentials and region
-- **Common issue**: Email not configured in user profile
-    ```properties
-    # AWS SES configuration
-    mail.region=us-east-1
-    spring.mail.username=<AWS-SES-SMTP-USERNAME>
-    spring.mail.password=<AWS-SES-SMTP-PASSWORD>
-    ```
-
-**Receipt Upload Fails**
-
-- **Symptom**: "Invalid file type" despite correct extension
-- **Cause**: Magic number validation checks file content, not extension
-- **Solution**: Ensure file is genuine JPEG/PNG/PDF (not renamed)
-
-**Admin Password Expired**
-
-- **Symptom**: Cannot login after 90 days
-- **Solution**: Update password in database or reset
-    ```sql
-    UPDATE users
-    SET password_last_changed = CURRENT_TIMESTAMP
-    WHERE username = 'admin';
-    ```
-
-#### Docker Volume Permissions
-
-- **Symptom**: Permission denied errors for logs or receipts
-- **Linux/Mac**: Ensure Docker has write permissions
-    ```bash
-    chmod 777 ./logs ./receipts
-    ```
-
-### Important Configuration Notes
-
-1. **JWT_SECRET**: 256-bit minimum, application fails without it
-2. **Password expiration**: 90-day policy, admin included
-3. **Token revocation**: Server-side blacklist, persisted in database
-4. **File upload security**: Magic number validation prevents extension spoofing
-5. **Rate limiting**: 5 requests/minute on auth endpoints
-6. **CORS**: Configure allowed origins for API access
-7. **Schema management**: Manual migrations, no Flyway/Liquibase
-8. **Node.js version**: Must use v20.11.1+ for Angular 19.2
-9. **Docker profiles**: No default, must specify explicitly
-10. **Email configuration**: AWS SES (production) or local SMTP (development)
-
-## Useful Log Locations
-
-- **Application logs**: `/var/log/app/application.log` (Docker volume-mounted to host)
-- **Spring Boot logs**: Console output (stdout) in Docker
-- **PostgreSQL logs**: Via `docker logs <postgres-container>`
-- **Jenkins build logs**: Jenkins UI under build history
-
-## Version Reference
-
-Consolidated version information for all major dependencies:
-
-### Backend
-
-| Component      | Version    | Notes                          |
-| -------------- | ---------- | ------------------------------ |
-| Spring Boot    | 3.5.7      | Latest stable                  |
-| Java           | 21         | LTS version, OpenJDK or Oracle |
-| PostgreSQL     | 15+        | Client driver auto-configured  |
-| AWS SDK        | 2.21.0     | For S3 and SES integration     |
-| JJWT           | 0.12.6     | JWT authentication library     |
-| HikariCP       | (included) | Connection pooling             |
-| Testcontainers | (included) | Integration testing            |
-
-### Frontend
-
-| Component        | Version   | Notes                               |
-| ---------------- | --------- | ----------------------------------- |
-| Angular          | 19.2.15   | Standalone components               |
-| Angular Material | 19.2.19   | UI component library                |
-| Node.js          | v20.11.1+ | **CRITICAL**: v20.11.0 incompatible |
-| npm              | 10.2.4+   | Package manager                     |
-| TypeScript       | ~5.7.2    | (Angular dependency)                |
-| RxJS             | ~7.8.0    | Reactive programming                |
-| Chart.js         | ^4.5.1    | Data visualization                  |
-| ng2-charts       | ^8.0.0    | Angular wrapper for Chart.js        |
-
-### Build Tools
-
-| Component             | Version | Notes                   |
-| --------------------- | ------- | ----------------------- |
-| Maven Wrapper         | 3.9.9   | Included in project     |
-| frontend-maven-plugin | 1.12.1  | Builds Angular in Maven |
-
-### Infrastructure
-
-| Component      | Version | Notes                         |
-| -------------- | ------- | ----------------------------- |
-| Docker         | 20.10+  | Container runtime             |
-| Docker Compose | 3.8+    | Multi-container orchestration |
-| Kubernetes     | 1.24+   | Optional, for K8s deployment  |
-| Jenkins        | 2.400+  | CI/CD automation              |
-
-**Version Pinning**: Node.js version is pinned in `pom.xml` (line 266) to ensure consistent builds across environments.
-
-## Key Documentation Files
-
-Comprehensive documentation in `docs/` directory:
-
-- `Developer_Guide.md` - Technical deep dive (most detailed reference)
-- `Administrator_User_Guide.md` - Admin features and 12-Factor App compliance
+**In `docs/` directory**:
+- `Developer_Guide.md` - Most comprehensive technical reference
+- `Administrator_User_Guide.md` - Admin features and operations
 - `Security_Measures_and_Best_Practices.md` - Complete security documentation
 - `CSV_Import_User_Guide.md` - Bulk data import procedures
+- `Docker_Build_Guide.md` - Docker containerization guide
 - `Concurrency_and_Scaling_Guide.md` - Horizontal scaling strategies
-- `Docker_Build_Guide.md` - Complete Docker containerization guide
 
-AWS and Kubernetes deployment guides in `aws/`, `cloudformation/`, and `k8s/` directories.
+**AWS and Kubernetes guides** in `aws/`, `cloudformation/`, and `k8s/` directories.
+
+**Coding standards** in `.github/instructions/` (see Coding Standards section above).
