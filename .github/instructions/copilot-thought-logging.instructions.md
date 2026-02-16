@@ -5,9 +5,21 @@ description: 'See process Copilot is following where you can edit this to reshap
 
 # Copilot Process tracking Instructions
 
-**ABSOLUTE MANDATORY RULES:**
+## ACTIVATION TRIGGER
+
+**MANDATORY:** Execute Phase 1 IMMEDIATELY when the user request involves ANY of the following:
+- Code changes (creating, modifying, or refactoring code files)
+- Configuration changes (modifying config files, environment variables, etc.)
+- Multi-file operations or architectural changes
+- Bug fixes or feature implementations
+- Documentation updates that accompany code changes
+
+**EXEMPT from this process:** Simple information queries, read-only analysis, or trivial single-line changes.
+
+## ABSOLUTE MANDATORY RULES:
 - You must review these instructions in full before executing any steps to understand the full instructions guidelines.
 - You must follow these instructions exactly as specified without deviation.
+- **IMMEDIATELY create `\Copilot-Processing.md` when the activation trigger is met.**
 - Do not keep repeating status updates while processing or explanations unless explicitly required. This is bad and will flood Copilot session context.
 - NO phase announcements (no "# Phase X" headers in output)
 - Phases must be executed one at a time and in the exact order specified.

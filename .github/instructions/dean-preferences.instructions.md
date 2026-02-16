@@ -7,6 +7,17 @@ applyTo: "**"
 
 This instruction file defines Dean's preferred workflows, coding style, and communication preferences that should be automatically applied in all GitHub Copilot interactions.
 
+## Session Initialization
+
+**CRITICAL FIRST STEP:** Before beginning any development work involving code or configuration changes, you MUST:
+
+1. **Create `Copilot-Processing.md`** in the workspace root
+2. **Initialize it** with the user's request and session context
+3. **Maintain it** throughout the development session with all changes tracked
+4. **Remind the user** to review and remove it before committing
+
+See the "Processing Documentation for Development Sessions" section below for complete details on when and how to create this file.
+
 ## Communication Style
 
 ### General Communication
@@ -16,9 +27,22 @@ This instruction file defines Dean's preferred workflows, coding style, and comm
 - Thorough explanations for complex topics
 - Do not create unnecessary markdown documentation files unless specifically requested
 
-### Processing Documentation for Complex Tasks
+### Processing Documentation for Development Sessions
 
-For complex multi-step tasks (especially large documentation updates, architectural changes, or major refactoring), **always create** a temporary `Copilot-Processing.md` summary file that includes:
+**MANDATORY:** At the start of EVERY development session involving code or configuration changes, **immediately create** a temporary `Copilot-Processing.md` summary file in the workspace root.
+
+**This file MUST be created and maintained throughout the session for:**
+
+- **ALL code changes** - Creating, modifying, or refactoring code in any language
+- **Configuration changes** - Modifying config files, environment variables, build scripts
+- **Multi-file operations** - Any changes affecting 2+ files
+- **Architectural or design pattern changes** - Affecting system structure or patterns
+- **Bug fixes** - Especially those touching multiple systems or requiring investigation
+- **Feature implementations** - New functionality or enhancements
+- **Refactoring** - Code restructuring or optimization
+- **Documentation updates** - When accompanying code/config changes
+
+**The file must include:**
 
 - **Original request and context** - What was asked and why
 - **Detailed changelog** - All files modified with line numbers and file paths
@@ -32,21 +56,12 @@ For complex multi-step tasks (especially large documentation updates, architectu
 
 **Purpose:** This provides an audit trail for review and confirmation before committing changes. The file should be removed after review.
 
-**When to create:**
+**EXEMPT from this requirement:**
 
-- Multi-file changes (3+ files)
-- Architectural or design pattern changes
-- Major refactoring or restructuring
-- Complex bug fixes that touch multiple systems
-- Documentation updates that span multiple files
-- Any change that requires careful review before commit
-
-**When NOT to create:**
-
-- Simple bug fixes in a single file
-- Minor text/comment updates
-- Obvious typo corrections
-- Trivial code changes with no architectural impact
+- Simple information queries or read-only analysis
+- Minor single-line typo corrections with no functional impact
+- Trivial comment-only changes
+- Pure documentation edits with no code/config changes
 
 ## Code Review & Validation
 
