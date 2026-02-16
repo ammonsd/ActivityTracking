@@ -1,0 +1,242 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rate Limit Exceeded - Task Activity Tracker</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+
+        <style>
+            /* Page-specific styles */
+            .error-header {
+                background-color: #ff6b35;
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            .error-header h1 {
+                margin: 0;
+                font-size: 2.5rem;
+                font-weight: 300;
+            }
+            .error-header .error-code {
+                font-size: 1.2rem;
+                opacity: 0.9;
+                margin-top: 10px;
+            }
+            .error-content {
+                padding: 40px;
+                text-align: center;
+            }
+            .countdown-display {
+                background-color: #fff3cd;
+                border: 2px solid #ffc107;
+                border-radius: 8px;
+                padding: 25px;
+                margin: 30px auto;
+                max-width: 400px;
+            }
+            .countdown-display .timer {
+                font-size: 3rem;
+                font-weight: bold;
+                color: #ff6b35;
+                margin: 10px 0;
+                font-family: "Courier New", monospace;
+            }
+            .countdown-display .label {
+                font-size: 1rem;
+                color: #666;
+                margin-bottom: 5px;
+            }
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-top: 30px;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+            .btn-secondary:hover {
+                background-color: #545b62;
+                transform: translateY(-2px);
+            }
+            .icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+            }
+            .help-section {
+                background-color: #f8f9fa;
+                border-left: 4px solid #ffc107;
+                padding: 20px;
+                margin: 30px auto;
+                max-width: 600px;
+                text-align: left;
+            }
+            .help-section h3 {
+                margin: 0 0 10px 0;
+                color: #ff6b35;
+                font-size: 1.1rem;
+            }
+            .help-section p {
+                margin: 0;
+                color: #666;
+                line-height: 1.5;
+            }
+            @media (max-width: 768px) {
+                .action-buttons {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .error-header h1 {
+                    font-size: 2rem;
+                }
+                .countdown-display .timer {
+                    font-size: 2rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="current-date">
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                }),
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="error-header">
+                <div class="icon">⏱️</div>
+                <h1>Too Many Requests</h1>
+                <div class="error-code">Error 429 - Rate Limit Exceeded</div>
+            </div>
+
+            <div class="error-content">
+                <div class="error-message">
+                    You've made too many login attempts in a short period of
+                    time. Please wait before trying again.
+                </div>
+
+                <div class="countdown-display">
+                    <div class="label">Please wait:</div>
+                    <div class="timer" id="countdown">calculating...</div>
+                    <div class="label">before trying again</div>
+                </div>
+
+                <div class="help-section">
+                    <h3>Why did this happen?</h3>
+                    <p>
+                        To protect against automated attacks and unauthorized
+                        access attempts, we limit the number of login requests
+                        that can be made from a single location within a
+                        specific time period.
+                    </p>
+                    <br />
+                    <p>
+                        <strong>What you can do:</strong><br />
+                        • Wait for the countdown timer to reach zero<br />
+                        • Make sure you're using the correct username and
+                        password<br />
+                        • If you've forgotten your password, use the "Forgot
+                        Password" link<br />
+                        • Contact support if you continue to experience issues
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <a
+                        href="/login"
+                        class="btn btn-primary"
+                        id="tryAgainBtn"
+                        style="display: none"
+                    >
+                        🔑 Try Login Again
+                    </a>
+                    <a href="/reset-password" class="btn btn-secondary">
+                        🔄 Reset Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            // Get retry-after value from server (in seconds)
+            var retryAfterSeconds = /*[[${retryAfter}]]*/ 60;
+
+            // Calculate end time
+            var endTime = new Date().getTime() + retryAfterSeconds * 1000;
+
+            function updateCountdown() {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+
+                if (distance < 0) {
+                    document.getElementById("countdown").innerHTML = "00:00";
+                    document.getElementById("tryAgainBtn").style.display =
+                        "inline-block";
+                    return;
+                }
+
+                var minutes = Math.floor(
+                    (distance % (1000 * 60 * 60)) / (1000 * 60),
+                );
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                // Format with leading zeros
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById("countdown").innerHTML =
+                    minutes + ":" + seconds;
+
+                setTimeout(updateCountdown, 1000);
+            }
+
+            // Start countdown
+            updateCountdown();
+        </script>
+    </body>
+</html>

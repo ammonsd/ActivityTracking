@@ -176,6 +176,7 @@ public class SecurityConfig {
                                                 .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                                 "/access-denied",
                                                                 "/clear-access-denied-session",
+                                                                "/rate-limit",
                                                                 "/reset-password")
                                                 .permitAll()
                                                 // Allow unauthenticated access to password reset

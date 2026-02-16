@@ -66,10 +66,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
             } else {
                 // Rate limit exceeded
                 logger.warn("Rate limit exceeded for IP: {} on endpoint: {}", clientIp, requestUri);
-                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.setContentType("application/json");
-                response.getWriter().write(
-                        "{\"error\":\"Too Many Requests\",\"message\":\"Rate limit exceeded. Please try again later.\"}");
+
+                // Check if client accepts HTML (browser) or JSON (API)
+                String acceptHeader = request.getHeader("Accept");
+                boolean isBrowserRequest =
+                        acceptHeader != null && acceptHeader.contains("text/html");
+
+                if (isBrowserRequest) {
+                    // Redirect browser to pretty error page
+                    request.setAttribute("retryAfter", refillMinutes * 60);
+                    request.getRequestDispatcher("/rate-limit").forward(request, response);
+                } else {
+                    // Return JSON for API requests
+                    response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                    response.setContentType("application/json");
+                    response.setHeader("Retry-After", String.valueOf(refillMinutes * 60));
+                    response.getWriter().write(
+                            "{\"error\":\"Too Many Requests\",\"message\":\"Rate limit exceeded. Please try again later.\"}");
+                }
             }
         } else {
             // No rate limiting for other endpoints

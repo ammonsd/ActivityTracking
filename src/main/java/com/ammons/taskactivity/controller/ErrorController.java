@@ -1,6 +1,7 @@
 package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,6 +36,22 @@ public class ErrorController {
             addUserDisplayInfo(model, authentication);
         }
         return "access-denied";
+    }
+
+    /**
+     * Display the rate limit exceeded page with countdown timer
+     */
+    @GetMapping("/rate-limit")
+    public String rateLimit(Model model, HttpServletRequest request) {
+        // Get retry-after value from request attribute (set by RateLimitFilter)
+        Object retryAfter = request.getAttribute("retryAfter");
+        if (retryAfter != null) {
+            model.addAttribute("retryAfter", retryAfter);
+        } else {
+            // Default to 60 seconds if not set
+            model.addAttribute("retryAfter", 60);
+        }
+        return "rate-limit";
     }
 
     /**
