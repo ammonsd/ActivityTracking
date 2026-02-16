@@ -303,13 +303,113 @@ public double convertToMetric(double value, int conversionType) {
 
 ## Modification Attribution
 
-When modifying existing code, add modification comments:
+When making significant changes to existing code, document the modification with clear attribution.
+
+### Java - Significant Code Changes
+
+For substantial modifications to Java classes, methods, or logic, use JavaDoc-style comments:
 
 ```java
-// Modified by: Dean Ammons - January 2026
-// Change: Added support for temperature conversions
-// Reason: User requirement for Fahrenheit to Celsius conversion
+/**
+ * Modified by: Dean Ammons - February 2026
+ * Change: Removed trust in X-Forwarded-For and similar proxy headers
+ * Reason: Prevent spoofed source IP in login audit and lockout flows
+ */
 ```
+
+Place this comment:
+- **Above the modified method** - For method-level changes
+- **Within the class JavaDoc** - For class-level architectural changes
+- **As inline block comment** - For changes to specific code blocks
+
+**Example - Method-level modification:**
+
+```java
+/**
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added input validation and sanitization
+ * Reason: Prevent SQL injection vulnerabilities
+ */
+public User findUserByEmail(String email) {
+    // Validate and sanitize input
+    if (email == null || !isValidEmail(email)) {
+        throw new IllegalArgumentException("Invalid email format");
+    }
+    // implementation
+}
+```
+
+**Example - Class-level modification (add to existing class JavaDoc):**
+
+```java
+/**
+ * Description: User authentication and authorization service
+ *
+ * @author Dean Ammons
+ * @version 1.0
+ * @since January 2026
+ *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Implemented rate limiting and account lockout
+ * Reason: Prevent brute force attacks on user accounts
+ */
+public class AuthenticationService {
+    // implementation
+}
+```
+
+### Other Languages - Significant Code Changes
+
+For significant modifications in other languages, use similar multi-line format:
+
+```javascript
+/**
+ * Modified by: Dean Ammons - February 2026
+ * Change: Migrated from callbacks to async/await
+ * Reason: Improve code readability and error handling
+ */
+async function processData(data) {
+    // implementation
+}
+```
+
+```python
+"""
+Modified by: Dean Ammons - February 2026
+Change: Replaced deprecated pandas.append with concat
+Reason: pandas.append removed in pandas 2.0
+"""
+def process_dataframe(df):
+    # implementation
+```
+
+### Minor Code Changes
+
+For small, incremental changes or bug fixes, use inline comments:
+
+```java
+// Modified by: Dean Ammons - February 2026: Fixed off-by-one error
+for (int i = 0; i <= array.length - 1; i++) {
+    // implementation
+}
+```
+
+### When to Use Each Format
+
+**Use JavaDoc/multi-line format when:**
+- Changing security-related logic
+- Modifying authentication or authorization flows
+- Refactoring algorithms or business logic
+- Fixing critical bugs with production impact
+- Making architectural or design pattern changes
+- Changes requiring detailed explanation for future maintainers
+
+**Use inline comment format when:**
+- Fixing minor bugs (typos, off-by-one errors)
+- Updating dependencies or library calls
+- Adjusting formatting or styling
+- Making small performance optimizations
+- Changes that are self-explanatory from the code itself
 
 ## Placement Rules by Language
 
@@ -377,10 +477,12 @@ When modifying existing code, add modification comments:
 - [ ] Description explains WHAT the code does and WHY it exists
 - [ ] Author name is "Dean Ammons"
 - [ ] Version starts at "1.0" for new files
-- [ ] Date/Since includes current month and year (e.g., "January 2026")
+- [ ] Date/Since includes current month and year (e.g., "February 2026")
 - [ ] Method/function comments do NOT include attribution annotations
 - [ ] Significant functions/methods have descriptive comments
-- [ ] Modifications include change description and reason
+- [ ] **Significant code modifications have JavaDoc-style modification comments with Modified by, Change, and Reason**
+- [ ] Minor modifications use inline comment format
+- [ ] Modification comments clearly explain what was changed and why
 
 ## Notes
 
@@ -390,6 +492,7 @@ When modifying existing code, add modification comments:
 - **Other languages**: Use freeform Author and Date fields
 - @version typically stays at 1.0 unless the entire class undergoes major revision
 - Update @since or Date when making significant modifications to the file
-- For minor changes, modification comments are sufficient
+- **For significant code changes, use the JavaDoc-style modification format with Modified by, Change, and Reason**
+- For minor changes, inline modification comments are sufficient
 - Never place comments before package or using declarations in Java/C#
 - **Attribution annotations should appear exactly once per file, in the main description comment only**
