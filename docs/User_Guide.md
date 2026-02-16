@@ -57,8 +57,8 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 - **👤 Update Profile**: Access your profile to update your information and password
 - **👥 Manage Users** (Admin only): Manage user accounts
-- **� Manage Roles** (Admin only): Manage user roles and permissions
-- **�📊 Guest Activity** (Admin only): View guest user activity reports
+- **🔐 Manage Roles** (Admin only): Manage user roles and permissions
+- **📊 Guest Activity** (Admin only): View guest user activity reports
 - **🔧 Manage Dropdowns** (Admin only): Configure dropdown options for clients, projects, and phases
 - **📋 Export CSV**: Export filtered task list to CSV format
 
