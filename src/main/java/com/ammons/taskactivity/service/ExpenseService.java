@@ -380,13 +380,26 @@ public class ExpenseService {
     }
 
     /**
-     * Get expenses with flexible filters and pagination
+     * Modified by: Dean Ammons - February 2026 Change: Added authenticatedUser parameter for draft
+     * expense access control Reason: Enforce security policy that draft expenses are only visible
+     * to their owner
+     */
+    /**
+     * Get expenses with flexible filters and pagination. Draft expenses are only visible to the
+     * authenticated user.
+     * 
+     * @param authenticatedUser the currently authenticated user (for draft filtering)
+     * @param filter the filter criteria
+     * @param pageable pagination information
+     * @return page of expenses
      */
     @Transactional(readOnly = true)
-    public Page<Expense> getExpensesByFilters(ExpenseFilterDto filter, Pageable pageable) {
-        return expenseRepository.findByFilters(filter.getUsername(), filter.getClient(),
-                filter.getProject(), filter.getExpenseType(), filter.getStatus(),
-                filter.getPaymentMethod(), filter.getStartDate(), filter.getEndDate(), pageable);
+    public Page<Expense> getExpensesByFilters(String authenticatedUser, ExpenseFilterDto filter,
+            Pageable pageable) {
+        return expenseRepository.findByFilters(authenticatedUser, filter.getUsername(),
+                filter.getClient(), filter.getProject(), filter.getExpenseType(),
+                filter.getStatus(), filter.getPaymentMethod(), filter.getStartDate(),
+                filter.getEndDate(), pageable);
     }
 
     /**

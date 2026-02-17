@@ -102,8 +102,16 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     Page<Expense> findByUsernameAndExpenseStatusIgnoreCase(String username, String status,
             Pageable pageable);
 
+    /**
+     * Modified by: Dean Ammons - February 2026 Change: Added draft expense filtering to restrict
+     * visibility to owner only Reason: Security requirement - draft expenses should only be visible
+     * to their owner, regardless of user role (ADMIN/EXPENSE_ADMIN cannot see other users' drafts)
+     */
     // Flexible filter query (matches TaskActivity pattern)
+    // Draft expenses are only visible to the owner (authenticatedUser)
+    // All other expenses follow normal filtering rules
     @Query(value = "SELECT * FROM expenses e WHERE "
+                    + "(e.expense_status != 'Draft' OR e.username = :authenticatedUser) AND "
             + "(CAST(:username AS text) IS NULL OR e.username = :username) AND "
             + "(CAST(:client AS text) IS NULL OR e.client = :client) AND "
             + "(CAST(:project AS text) IS NULL OR e.project = :project) AND "
@@ -113,7 +121,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             + "(CAST(:startDate AS date) IS NULL OR e.expense_date >= CAST(:startDate AS date)) AND "
             + "(CAST(:endDate AS date) IS NULL OR e.expense_date <= CAST(:endDate AS date))",
             nativeQuery = true)
-    Page<Expense> findByFilters(@Param("username") String username, @Param("client") String client,
+    Page<Expense> findByFilters(@Param("authenticatedUser") String authenticatedUser,
+                    @Param("username") String username, @Param("client") String client,
             @Param("project") String project, @Param("expenseType") String expenseType,
             @Param("status") String status, @Param("paymentMethod") String paymentMethod,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,

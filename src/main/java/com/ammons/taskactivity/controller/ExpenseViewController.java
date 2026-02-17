@@ -152,7 +152,16 @@ public class ExpenseViewController {
                 new com.ammons.taskactivity.dto.ExpenseFilterDto(filterUsername, filterClient,
                         filterProject, filterExpenseType, filterStatus, null, startDate, endDate);
 
-        Page<Expense> expensesPage = expenseService.getExpensesByFilters(filter, pageable);
+        /**
+         * Modified by: Dean Ammons - February 2026 Change: Pass authenticated username to service
+         * for draft expense filtering Reason: Enforce that draft expenses are only visible to their
+         * owner, preventing ADMIN/EXPENSE_ADMIN from accessing other users' draft expenses
+         */
+        // Always pass authenticated username for draft filtering
+        // Draft expenses are ONLY visible to their owner (even for admins)
+        String authenticatedUsername = authentication.getName();
+        Page<Expense> expensesPage =
+                expenseService.getExpensesByFilters(authenticatedUsername, filter, pageable);
 
         // Create a map to track which expenses can be edited
         java.util.Map<Long, Boolean> editableExpenses = new java.util.HashMap<>();
@@ -211,9 +220,12 @@ public class ExpenseViewController {
                 new com.ammons.taskactivity.dto.ExpenseFilterDto(filterUsername, filterClient,
                         filterProject, filterExpenseType, filterStatus, null, startDate, endDate);
 
+        // Always pass authenticated username for draft filtering (even for CSV export)
+        String authenticatedUsername = authentication.getName();
+
         // Get all expenses without pagination
-        Page<Expense> allExpensesPage =
-                expenseService.getExpensesByFilters(filter, Pageable.unpaged());
+        Page<Expense> allExpensesPage = expenseService.getExpensesByFilters(authenticatedUsername,
+                filter, Pageable.unpaged());
         List<Expense> filteredExpenses = allExpensesPage.getContent();
 
         // Generate CSV

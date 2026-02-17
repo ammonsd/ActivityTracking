@@ -402,17 +402,18 @@ class ExpenseServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<Expense> page = new PageImpl<>(Arrays.asList(testExpense));
             when(expenseRepository.findByFilters(any(), any(), any(), any(), any(), any(), any(),
-                    any(), any(Pageable.class))).thenReturn(page);
+                    any(), any(), any(Pageable.class))).thenReturn(page);
 
             // When
             ExpenseFilterDto filter = new ExpenseFilterDto("testuser", "Test Client", null, null,
                     "Draft", null, null, null);
-            Page<Expense> result = expenseService.getExpensesByFilters(filter, pageable);
+            Page<Expense> result =
+                    expenseService.getExpensesByFilters("testuser", filter, pageable);
 
             // Then
             assertThat(result.getContent()).hasSize(1);
             verify(expenseRepository, times(1)).findByFilters(any(), any(), any(), any(), any(),
-                    any(), any(), any(), any(Pageable.class));
+                    any(), any(), any(), any(), any(Pageable.class));
         }
 
         @Test

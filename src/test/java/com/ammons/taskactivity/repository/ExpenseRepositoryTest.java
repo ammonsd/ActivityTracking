@@ -306,7 +306,8 @@ class ExpenseRepositoryTest {
     void shouldFindExpensesWithFilters() {
         // When
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Expense> page = expenseRepository.findByFilters("testuser", // username
+        Page<Expense> page = expenseRepository.findByFilters("testuser", // authenticatedUser
+                "testuser", // username
                 "Client A", // client
                 null, // project
                 null, // expenseType
@@ -327,8 +328,8 @@ class ExpenseRepositoryTest {
     void shouldFindAllExpensesWhenFiltersAreNull() {
         // When
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Expense> page = expenseRepository.findByFilters(null, null, null, null, null, null,
-                null, null, pageable);
+        Page<Expense> page = expenseRepository.findByFilters("testuser", // authenticatedUser
+                null, null, null, null, null, null, null, null, pageable);
 
         // Then
         assertThat(page.getContent()).hasSize(3);

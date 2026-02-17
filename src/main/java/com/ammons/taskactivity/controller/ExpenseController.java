@@ -176,7 +176,15 @@ public ResponseEntity<ApiResponse<Boolean>> canAccessExpenses(Authentication aut
         ExpenseFilterDto filter = new ExpenseFilterDto(filterUsername, client, project, expenseType,
                 status, paymentMethod, startDate, endDate);
 
-        Page<Expense> expenses = expenseService.getExpensesByFilters(filter, pageable);
+        /**
+         * Modified by: Dean Ammons - February 2026 Change: Pass authenticated username to service
+         * for draft expense filtering Reason: Enforce that draft expenses are only visible to their
+         * owner, preventing ADMIN/EXPENSE_ADMIN from accessing other users' draft expenses
+         */
+        // Always pass authenticated user for draft filtering
+        // Draft expenses are ONLY visible to their owner (even for admins)
+        Page<Expense> expenses = expenseService.getExpensesByFilters(authenticatedUsername, filter,
+                        pageable);
 
         return ResponseEntity.ok(ApiResponse.success("Expenses retrieved successfully", expenses));
     }
