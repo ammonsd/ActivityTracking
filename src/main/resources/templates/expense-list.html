@@ -560,6 +560,19 @@
                             method="post"
                             style="margin: 0"
                         >
+                            <!--
+                                Description: Include CSRF token with the expense list logout
+                                form so Spring Security accepts POST-based logout submissions
+                                after users navigate through Angular routes.
+
+                                Author: Dean Ammons
+                                Date: February 2026
+                            -->
+                            <input
+                                type="hidden"
+                                th:name="${_csrf.parameterName}"
+                                th:value="${_csrf.token}"
+                            />
                             <button
                                 type="submit"
                                 class="btn btn-secondary btn-sm"

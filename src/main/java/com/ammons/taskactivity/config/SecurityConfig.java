@@ -31,6 +31,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 import java.util.Arrays;
 import java.util.List;
@@ -125,6 +126,9 @@ public class SecurityConfig {
                                 new CsrfTokenRequestAttributeHandler();
                 requestHandler.setCsrfRequestAttributeName("_csrf");
 
+                RegexRequestMatcher logoutPostMatcher = new RegexRequestMatcher(
+                                "^" + LOGOUT_URL + "$", HttpMethod.POST.name());
+
                 http.csrf(csrf -> csrf
                                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                                 .csrfTokenRequestHandler(requestHandler)
@@ -132,6 +136,15 @@ public class SecurityConfig {
                                                 "/swagger-ui.html", API_PATTERN) // Disable CSRF for
                                                                                  // API
                                                                                  // endpoints
+                                /**
+                                 * Modified by: Dean Ammons - February 2026 Change: Exempt POST
+                                 * /logout from CSRF to prevent false "invalid token" errors when
+                                 * users transition between Angular and Thymeleaf flows Reason:
+                                 * Logout is an idempotent, user-initiated action and should always
+                                 * succeed even if a stale token is present.
+                                 */
+                                .ignoringRequestMatchers(
+                                                logoutPostMatcher)
                 ).cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 // Security Headers - Protection against common web vulnerabilities
                                 .headers(headers -> headers
