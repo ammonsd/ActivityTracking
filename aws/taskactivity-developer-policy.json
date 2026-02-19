@@ -124,6 +124,12 @@
             "Resource": "*"
         },
         {
+            "Sid": "SSMDeployStateAccess",
+            "Effect": "Allow",
+            "Action": ["ssm:GetParameter", "ssm:PutParameter"],
+            "Resource": "arn:aws:ssm:us-east-1:378010131175:parameter/taskactivity/*"
+        },
+        {
             "Sid": "Route53Access",
             "Effect": "Allow",
             "Action": [
