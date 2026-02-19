@@ -212,30 +212,25 @@ pipeline {
                     if (isScheduledBuild) {
                         echo "========================================="
                         echo "Checking scheduled deployment eligibility..."
-                        echo "Current build number: ${env.BUILD_NUMBER}"
+                        echo "Current commit: ${env.GIT_COMMIT}"
                         echo "========================================="
                         
-                        // Get the last successful build number
-                        def lastBuildNumber = getLastSuccessfulBuildNumber('build-only')
-                        def lastDeployNumber = getLastSuccessfulBuildNumber('deploy')
+                        // Compare current HEAD commit against last successfully deployed commit (stored in SSM)
+                        def lastDeployedCommit = getLastDeployedCommit()
                         
-                        echo "Last successful build-only: ${lastBuildNumber ?: 'none'}"
-                        echo "Last successful deploy: ${lastDeployNumber ?: 'none'}"
-                        echo "Comparison: ${lastBuildNumber} > ${lastDeployNumber} = ${lastBuildNumber != null && lastDeployNumber != null ? (lastBuildNumber > lastDeployNumber) : 'N/A'}"
+                        echo "Last deployed commit: ${lastDeployedCommit ?: 'none'}"
                         
                         // Determine if we should deploy
                         def shouldDeploy = false
                         
-                        if (lastBuildNumber == null) {
-                            echo "No successful builds found - skipping deployment"
-                        } else if (lastDeployNumber == null) {
-                            echo "No previous deployments found - will deploy latest build"
+                        if (lastDeployedCommit == null) {
+                            echo "No previous deployments found - will deploy"
                             shouldDeploy = true
-                        } else if (lastBuildNumber > lastDeployNumber) {
-                            echo "New builds available since last deployment - will deploy"
-                            shouldDeploy = true
+                        } else if (lastDeployedCommit == env.GIT_COMMIT) {
+                            echo "Current commit already deployed - skipping deployment"
                         } else {
-                            echo "No new builds since last deployment - skipping deployment"
+                            echo "New commit detected since last deployment - will deploy"
+                            shouldDeploy = true
                         }
                         
                         env.SHOULD_DEPLOY = shouldDeploy.toString()
@@ -463,6 +458,8 @@ pipeline {
                     expression { 
                         return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
                     }
+                    // Only proceed if build and tests passed
+                    expression { currentBuild.currentResult == 'SUCCESS' }
                 }
             }
             steps {
@@ -500,6 +497,8 @@ pipeline {
                     expression { 
                         return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
                     }
+                    // Only proceed if build and tests passed
+                    expression { currentBuild.currentResult == 'SUCCESS' }
                 }
             }
             steps {
@@ -529,6 +528,8 @@ pipeline {
                     expression { 
                         return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
                     }
+                    // Only proceed if build and tests passed
+                    expression { currentBuild.currentResult == 'SUCCESS' }
                 }
             }
             steps {
@@ -563,6 +564,8 @@ pipeline {
                     expression { 
                         return !(env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'false')
                     }
+                    // Only proceed if build and tests passed
+                    expression { currentBuild.currentResult == 'SUCCESS' }
                 }
             }
             steps {
@@ -764,16 +767,14 @@ pipeline {
                     return
                 }
                 
-                // Record successful build in history
+                // Record deployed commit to SSM for future scheduled deployment eligibility checks
                 def actualAction = params.DEPLOY_ACTION
                 if (env.IS_SCHEDULED_BUILD == 'true' && env.SHOULD_DEPLOY == 'true') {
                     actualAction = 'deploy'
                 }
                 
-                if (actualAction == 'build-only') {
-                    recordSuccessfulBuild('build-only')
-                } else if (actualAction == 'deploy') {
-                    recordSuccessfulBuild('deploy')
+                if (actualAction == 'deploy') {
+                    recordDeployedCommit()
                 }
                 
                 echo "========================================="
@@ -1012,58 +1013,58 @@ This is an automated notification. Do not reply to this email.
  * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
  * @return The build number of the last successful build, or null if none found
  */
-def getLastSuccessfulBuildNumber(String actionType) {
+/**
+ * Retrieve the last successfully deployed Git commit SHA from SSM Parameter Store.
+ * Returns null if no deployment has been recorded yet.
+ */
+def getLastDeployedCommit() {
     try {
-        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
-        def s3Bucket = "taskactivity-logs-archive"
-        
-        // Try to read from S3 with credentials
         def result = null
         withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
             result = sh(
                 script: """
-                    aws s3 cp s3://${s3Bucket}/${s3Key} - 2>/dev/null || echo ""
+                    aws ssm get-parameter \\
+                        --name /taskactivity/last-deployed-commit \\
+                        --query 'Parameter.Value' \\
+                        --output text 2>/dev/null || echo ""
                 """,
                 returnStdout: true
             ).trim()
         }
         
-        if (result && result.isInteger()) {
-            echo "Found last successful ${actionType} at build #${result} (from S3)"
-            return result.toInteger()
+        if (result && result.length() > 0) {
+            echo "Last deployed commit: ${result} (from SSM)"
+            return result
         }
         
-        echo "No successful ${actionType} builds found in S3 history"
+        echo "No deployed commit found in SSM - first deployment"
         return null
         
     } catch (Exception e) {
-        echo "ERROR: Exception while reading build history from S3: ${e.message}"
+        echo "ERROR: Exception while reading last deployed commit from SSM: ${e.message}"
         return null
     }
 }
 
 /**
- * Record successful build in S3 for future reference.
- * Called at the end of successful builds to track deployment state.
- * S3 provides durable storage that persists across Jenkins restarts and container replacements.
- * 
- * @param actionType The DEPLOY_ACTION that was performed ('build-only' or 'deploy')
+ * Record the successfully deployed Git commit SHA to SSM Parameter Store.
+ * Called after a successful deployment so the next scheduled run can compare
+ * the current HEAD commit against this value to skip unnecessary deployments.
  */
-def recordSuccessfulBuild(String actionType) {
+def recordDeployedCommit() {
     try {
-        def s3Key = "jenkins-build-history/TaskActivity-Pipeline-${actionType}-last-build.txt"
-        def s3Bucket = "taskactivity-logs-archive"
-        
         withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
             sh """
-                echo "${env.BUILD_NUMBER}" | aws s3 cp - s3://${s3Bucket}/${s3Key} \
-                    --content-type text/plain \
-                    --metadata buildNumber=${env.BUILD_NUMBER},actionType=${actionType},timestamp=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                aws ssm put-parameter \\
+                    --name /taskactivity/last-deployed-commit \\
+                    --value "${env.GIT_COMMIT}" \\
+                    --type String \\
+                    --overwrite
             """
-            echo "Recorded successful ${actionType} build #${env.BUILD_NUMBER} to S3"
+            echo "Recorded deployed commit ${env.GIT_COMMIT} to SSM"
         }
     } catch (Exception e) {
-        echo "WARNING: Failed to record build history to S3: ${e.message}"
+        echo "WARNING: Failed to record deployed commit to SSM: ${e.message}"
         echo "This is non-critical - deployment eligibility checks may be affected on next scheduled build"
     }
 }
