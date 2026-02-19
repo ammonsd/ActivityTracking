@@ -208,7 +208,7 @@ public class TaskActivityWebController {
             // Handle duplicate task entry
             logger.warn("Duplicate task entry attempt by user {}: {}", username, e.getMessage());
             model.addAttribute(ERROR_MESSAGE_ATTR,
-                    "A task with the same date, client, project, phase, and details already exists.");
+                    "A task with the same date, client, project, phase, Task ID, Task Name, and details already exists.");
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             addDropdownOptions(model);
             return TASK_ACTIVITY_FORM_VIEW;

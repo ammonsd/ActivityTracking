@@ -4023,7 +4023,7 @@ file: expense-data.csv
 ```
 
 **Duplicate Handling:**
-- TaskActivities: Detected by unique constraint (taskdate, client, project, phase, details, username)
+- TaskActivities: Detected by unique constraint (taskdate, client, project, phase, taskid, taskname, details, username)
 - Expenses: Detected by unique constraint (expense_date, client, project, expense_type, expense_amount, username)
 - Duplicates are silently skipped without errors
 - Success count reflects only new records inserted

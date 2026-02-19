@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS public.taskactivity (
     taskname VARCHAR(120),
     details VARCHAR(255),
     username VARCHAR(50) NOT NULL,
-    CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, taskid, taskname, username),
+    CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, taskid, taskname, details, username),
     CONSTRAINT fk_taskactivity_username 
         FOREIGN KEY (username) REFERENCES public.users(username)
         ON DELETE RESTRICT

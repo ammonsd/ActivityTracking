@@ -73,8 +73,9 @@ public class CsvImportService {
      * Import TaskActivity records from CSV file.
      * 
      * <p>
-     * Expected CSV format (with header): taskDate,client,project,phase,hours,details,username
-     * 2026-01-15,ClientA,ProjectX,Development,8.00,Implementation work,john.doe
+     * Expected CSV format (with header):
+     * taskdate,client,project,phase,taskhours,taskid,taskname,details,username
+     * 2026-01-15,ClientA,ProjectX,Development,8.00,TA-001,My Task,Implementation work,john.doe
      * </p>
      *
      * @param file CSV file to import

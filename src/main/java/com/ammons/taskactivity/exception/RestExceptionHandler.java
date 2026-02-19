@@ -91,7 +91,7 @@ public class RestExceptionHandler {
 
         // Provide a user-friendly message for duplicate task entries
         String errorMessage =
-                "A task with the same date, client, project, phase, and details already exists.";
+                "A task with the same date, client, project, phase, Task ID, Task Name, and details already exists.";
 
         // Check if it's a different type of constraint violation
         if (ex.getMessage() != null && !ex.getMessage().toLowerCase().contains("duplicate")) {
