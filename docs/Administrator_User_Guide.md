@@ -731,7 +731,7 @@ Both the Thymeleaf and Angular UIs provide comprehensive task management capabil
 
 1. **Access Task List**: Navigate to the task list page
 2. **Click "Add Task Activity"**: Opens task creation form
-3. **Fill Out Form**: Enter task date, client, project, phase, hours, and details
+3. **Fill Out Form**: Enter task date, client, project, phase, hours, optional Task ID, optional Task Name, and details
 4. **Submit**: Click "Save" to create the task
 
 #### Cloning Existing Tasks
@@ -743,7 +743,7 @@ The **Clone** feature allows you to quickly duplicate an existing task with toda
 1. **Locate Task to Clone**: Find the task in the task list table
 2. **Click Clone Button**: Click the **content_copy icon** (📋) in the Actions column
 3. **Review Cloned Data**: A dialog opens with:
-    - All original task data (client, project, phase, hours, details) preserved
+    - All original task data (client, project, phase, hours, Task ID, Task Name, details) preserved
     - **Task Date automatically set to today**
     - Dialog title shows "Add Task Activity"
 4. **Modify if Needed**: Update any fields (e.g., adjust hours or details)

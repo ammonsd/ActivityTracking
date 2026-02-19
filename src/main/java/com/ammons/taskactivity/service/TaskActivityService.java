@@ -187,10 +187,10 @@ public class TaskActivityService {
      */
     @Transactional(readOnly = true)
     public Page<TaskActivity> getTaskActivitiesByFilters(String username, String client,
-            String project, String phase, LocalDate startDate, LocalDate endDate,
+            String project, String phase, String taskId, LocalDate startDate, LocalDate endDate,
             Pageable pageable) {
-        return taskActivityRepository.findByFilters(username, client, project, phase, startDate,
-                endDate, pageable);
+        return taskActivityRepository.findByFilters(username, client, project, phase, taskId,
+                startDate, endDate, pageable);
     }
 
     /**
@@ -214,6 +214,8 @@ public class TaskActivityService {
         entity.setProject(dto.getProject());
         entity.setPhase(dto.getPhase());
         entity.setHours(dto.getHours());
+        entity.setTaskId(dto.getTaskId());
+        entity.setTaskName(dto.getTaskName());
         entity.setDetails(dto.getDetails());
         entity.setUsername(dto.getUsername());
         return entity;
@@ -229,6 +231,8 @@ public class TaskActivityService {
         entity.setProject(dto.getProject());
         entity.setPhase(dto.getPhase());
         entity.setHours(dto.getHours());
+        entity.setTaskId(dto.getTaskId());
+        entity.setTaskName(dto.getTaskName());
         entity.setDetails(dto.getDetails());
         // Username is NOT updated - it remains the original creator
     }

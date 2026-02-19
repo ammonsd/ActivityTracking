@@ -74,11 +74,12 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/import/dropdownvalues" `
 ### TaskActivity Template
 
 ```csv
-taskdate,client,project,phase,taskhours,details,username
-2026-01-15,Acme Corp,Website,Development,8.00,Coding work,john.doe
+taskdate,client,project,phase,taskhours,taskid,taskname,details,username
+2026-01-15,Acme Corp,Website,Development,8.00,TA-001,Implement feature,Coding work,john.doe
 ```
 
-**Required fields:** taskdate, client, project, phase, taskhours, username
+**Required fields:** taskdate, client, project, phase, taskhours, username  
+**Optional fields:** taskid (max 50 chars), taskname (max 255 chars), details
 
 ### Expense Template
 

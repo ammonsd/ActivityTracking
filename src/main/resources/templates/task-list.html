@@ -121,10 +121,18 @@
                 font-weight: bold;
             }
             .task-details {
-                max-width: 300px;
+                max-width: 150px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+            .task-id {
+                white-space: nowrap;
+            }
+            .task-name {
+                max-width: 200px;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
             }
             .actions-column {
                 white-space: nowrap;
@@ -301,7 +309,7 @@
                 /* Remove fixed width constraints on mobile to allow natural table sizing */
                 table {
                     table-layout: auto;
-                    min-width: 800px; /* Ensures table is wide enough to show all columns */
+                    min-width: 1100px; /* Ensures table is wide enough to show all columns */
                 }
                 th,
                 td {
@@ -309,8 +317,12 @@
                     font-size: 13px;
                 }
                 .task-details {
-                    max-width: 200px;
-                    min-width: 150px;
+                    max-width: 150px;
+                    min-width: 100px;
+                }
+                .task-name {
+                    max-width: 150px;
+                    min-width: 100px;
                 }
                 .actions-column {
                     padding-right: 8px;
@@ -359,6 +371,14 @@
                 table td:nth-child(5) {
                     width: 80px;
                 } /* Hours */
+                table th:nth-child(6),
+                table td:nth-child(6) {
+                    width: 100px;
+                } /* Task ID */
+                table th:nth-child(7),
+                table td:nth-child(7) {
+                    width: 350px;
+                } /* Task Name */
                 /* Details column gets remaining space */
                 /* Username column - fixed width and alignment */
                 table th.username-header,
@@ -792,6 +812,18 @@
                         </div>
 
                         <div class="filter-group">
+                            <label for="taskId">Task ID</label>
+                            <input
+                                type="text"
+                                id="taskId"
+                                name="taskId"
+                                th:value="${selectedTaskId}"
+                                placeholder="e.g. TA-001"
+                                maxlength="10"
+                            />
+                        </div>
+
+                        <div class="filter-group">
                             <label for="startDate">Start Date</label>
                             <input
                                 type="date"
@@ -830,7 +862,7 @@
                 <!-- First page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=0, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/task-activity/list(page=0, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate}, taskId=${selectedTaskId})}"
                     th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == 0} ? 'return false;' : null"
                 >
@@ -840,7 +872,7 @@
                 <!-- Previous page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/task-activity/list(page=${currentPage - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate}, taskId=${selectedTaskId})}"
                     th:class="${!hasPrevious} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasPrevious} ? 'return false;' : null"
                 >
@@ -857,7 +889,7 @@
                 <!-- Next page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/task-activity/list(page=${currentPage + 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate}, taskId=${selectedTaskId})}"
                     th:class="${!hasNext} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${!hasNext} ? 'return false;' : null"
                 >
@@ -867,7 +899,7 @@
                 <!-- Last page -->
                 <a
                     th:if="${totalPages > 1}"
-                    th:href="@{/task-activity/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate})}"
+                    th:href="@{/task-activity/list(page=${totalPages - 1}, client=${selectedClient}, project=${selectedProject}, phase=${selectedPhase}, username=${selectedUsername}, startDate=${startDate}, endDate=${endDate}, taskId=${selectedTaskId})}"
                     th:class="${currentPage == totalPages - 1} ? 'pagination-btn disabled' : 'pagination-btn'"
                     th:attr="onclick=${currentPage == totalPages - 1} ? 'return false;' : null"
                 >
@@ -890,6 +922,8 @@
                             <th>Project</th>
                             <th>Phase</th>
                             <th class="hours-header">Hours</th>
+                            <th>Task ID</th>
+                            <th>Task Name</th>
                             <th>Details</th>
                             <th
                                 class="username-header"
@@ -913,6 +947,15 @@
                                 class="task-hours"
                                 th:text="${#numbers.formatDecimal(task.hours, 1, 'COMMA', 2, 'POINT')}"
                                 th:style="${@billabilityService.isTaskBillable(task.client, task.project, task.phase) ? '' : 'color: red; font-weight: bold;'}"
+                            ></td>
+                            <td
+                                class="task-id"
+                                th:text="${task.taskId}"
+                            ></td>
+                            <td
+                                class="task-name"
+                                th:text="${task.taskName != null and #strings.length(task.taskName) > 60 ? #strings.substring(task.taskName, 0, 60) + '...' : task.taskName}"
+                                th:title="${task.taskName}"
                             ></td>
                             <td
                                 class="task-details"
@@ -1034,6 +1077,7 @@
                 const client = document.getElementById("client")?.value;
                 const project = document.getElementById("project")?.value;
                 const phase = document.getElementById("phase")?.value;
+                const taskId = document.getElementById("taskId")?.value;
                 const username = document.getElementById("username")?.value;
                 const startDate = document.getElementById("startDate")?.value;
                 const endDate = document.getElementById("endDate")?.value;
@@ -1041,6 +1085,7 @@
                 if (client) exportParams.set("client", client);
                 if (project) exportParams.set("project", project);
                 if (phase) exportParams.set("phase", phase);
+                if (taskId) exportParams.set("taskId", taskId);
                 if (username) exportParams.set("username", username);
                 if (startDate) exportParams.set("startDate", startDate);
                 if (endDate) exportParams.set("endDate", endDate);

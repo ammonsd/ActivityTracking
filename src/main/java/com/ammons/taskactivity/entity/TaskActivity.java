@@ -46,6 +46,14 @@ public class TaskActivity {
     @Column(name = "taskhours", nullable = false, precision = 4, scale = 2)
     private BigDecimal hours;
 
+    @Size(max = 10, message = "Task ID cannot exceed 10 characters")
+    @Column(name = "taskid", nullable = true, length = 10)
+    private String taskId;
+
+    @Size(max = 120, message = "Task name cannot exceed 120 characters")
+    @Column(name = "taskname", nullable = true, length = 120)
+    private String taskName;
+
     @Size(max = 255, message = "Details cannot exceed 255 characters")
     @Column(name = "details", nullable = true, length = 255)
     private String details;
@@ -58,12 +66,14 @@ public class TaskActivity {
     public TaskActivity() {}
 
     public TaskActivity(LocalDate taskDate, String client, String project, String phase,
-            BigDecimal hours, String details, String username) {
+            BigDecimal hours, String taskId, String taskName, String details, String username) {
         this.taskDate = taskDate;
         this.client = client;
         this.project = project;
         this.phase = phase;
         this.hours = hours;
+        this.taskId = taskId;
+        this.taskName = taskName;
         this.details = details;
         this.username = username;
     }
@@ -121,6 +131,24 @@ public class TaskActivity {
         this.hours = hours;
     }
 
+    // Task ID getter/setter
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
+    // Task Name getter/setter
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
     // Details getter/setter
     public String getDetails() {
         return details;
@@ -143,7 +171,8 @@ public class TaskActivity {
     public String toString() {
         return "TaskActivity{" + "id=" + id + ", taskDate=" + taskDate + ", client='" + client
                 + '\'' + ", project='" + project + '\'' + ", phase='" + phase + '\'' + ", hours="
-                + hours + ", details='" + details + '\'' + ", username='" + username + '\'' + '}';
+                + hours + ", taskId='" + taskId + '\'' + ", taskName='" + taskName + '\''
+                + ", details='" + details + '\'' + ", username='" + username + '\'' + '}';
     }
 
     @Override

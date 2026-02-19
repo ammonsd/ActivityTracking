@@ -108,6 +108,7 @@ public class TaskActivityWebController {
     public String cloneTask(@PathVariable Long id, @RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -119,7 +120,8 @@ public class TaskActivityWebController {
             if (id == null || id <= 0) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Invalid task ID provided.");
-                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+                return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                        endDate);
             }
 
             Optional<TaskActivity> taskActivity = taskActivityService.getTaskActivityById(id);
@@ -147,12 +149,14 @@ public class TaskActivityWebController {
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
                 addDropdownOptions(model, dto);
-                addFilterAttributes(model, client, project, phase, username, startDate, endDate);
+                addFilterAttributes(model, client, project, phase, taskId, username, startDate,
+                        endDate);
                 return TASK_ACTIVITY_FORM_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Task not found with ID: " + id);
-                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+                return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                        endDate);
             }
 
         } catch (Exception e) {
@@ -223,6 +227,7 @@ public class TaskActivityWebController {
     public String showTaskList(@RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -247,12 +252,12 @@ public class TaskActivityWebController {
                         : currentUsername;
 
         // Fetch tasks based on filters and user role
-        Page<TaskActivity> tasksPage = fetchTasksPage(client, project, startDate, endDate, pageable,
-                isUserAdmin, filterUsername, phase);
+        Page<TaskActivity> tasksPage = fetchTasksPage(client, project, taskId, startDate, endDate,
+                pageable, isUserAdmin, filterUsername, phase);
 
         // Add pagination and filtering attributes to model
         addPaginationAttributes(model, tasksPage, page, tasksPage.getContent());
-        addFilterAttributes(model, client, project, phase, username, startDate, endDate);
+        addFilterAttributes(model, client, project, phase, taskId, username, startDate, endDate);
         addDropdownOptions(model);
 
         // Add users list for admin filter (only if user is admin)
@@ -263,17 +268,18 @@ public class TaskActivityWebController {
         return TASK_LIST_VIEW;
     }
 
-    private Page<TaskActivity> fetchTasksPage(String client, String project, LocalDate startDate,
-            LocalDate endDate, Pageable pageable, boolean isUserAdmin, String username,
-            String phase) {
+    private Page<TaskActivity> fetchTasksPage(String client, String project, String taskId,
+            LocalDate startDate, LocalDate endDate, Pageable pageable, boolean isUserAdmin,
+            String username, String phase) {
         // Convert empty strings to null for proper SQL NULL handling
         String clientFilter = (client != null && !client.trim().isEmpty()) ? client : null;
         String projectFilter = (project != null && !project.trim().isEmpty()) ? project : null;
         String phaseFilter = (phase != null && !phase.trim().isEmpty()) ? phase : null;
+        String taskIdFilter = (taskId != null && !taskId.trim().isEmpty()) ? taskId : null;
 
         // Use the comprehensive filter method that handles ALL filter combinations
         return taskActivityService.getTaskActivitiesByFilters(username, clientFilter, projectFilter,
-                phaseFilter, startDate, endDate, pageable);
+                phaseFilter, taskIdFilter, startDate, endDate, pageable);
     }
 
     private void addPaginationAttributes(Model model, Page<TaskActivity> tasksPage, int page,
@@ -292,10 +298,11 @@ public class TaskActivityWebController {
     }
 
     private void addFilterAttributes(Model model, String client, String project, String phase,
-            String username, LocalDate startDate, LocalDate endDate) {
+            String taskId, String username, LocalDate startDate, LocalDate endDate) {
         model.addAttribute("selectedClient", client);
         model.addAttribute("selectedProject", project);
         model.addAttribute("selectedPhase", phase);
+        model.addAttribute("selectedTaskId", taskId);
         model.addAttribute("selectedUsername", username);
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
@@ -306,6 +313,7 @@ public class TaskActivityWebController {
             @RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -317,7 +325,8 @@ public class TaskActivityWebController {
             if (id == null || id <= 0) {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Invalid task ID provided.");
-                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+                return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                        endDate);
             }
 
             Optional<TaskActivity> taskActivity = taskActivityService.getTaskActivityById(id);
@@ -329,8 +338,8 @@ public class TaskActivityWebController {
                     if (!taskActivity.get().getUsername().equals(currentUsername)) {
                         redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                                 "Access denied: You can only view your own tasks.");
-                        return buildFilteredRedirect(client, project, phase, username, startDate,
-                                endDate);
+                        return buildFilteredRedirect(client, project, phase, taskId, username,
+                                startDate, endDate);
                     }
                 }
 
@@ -345,12 +354,14 @@ public class TaskActivityWebController {
                 model.addAttribute("isReadOnly", isReadOnly);
 
                 addDropdownOptions(model, dto);
-                addFilterAttributes(model, client, project, phase, username, startDate, endDate);
+                addFilterAttributes(model, client, project, phase, taskId, username, startDate,
+                        endDate);
                 return TASK_DETAIL_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                         "Task not found with ID: " + id);
-                return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+                return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                        endDate);
             }
         } catch (NumberFormatException e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -376,6 +387,7 @@ public class TaskActivityWebController {
             @RequestParam(required = false) String filterClient,
             @RequestParam(required = false) String filterProject,
             @RequestParam(required = false) String filterPhase,
+            @RequestParam(required = false) String filterTaskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -399,17 +411,16 @@ public class TaskActivityWebController {
                         && !existingTask.get().getUsername().equals(currentUsername)) {
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Access denied: You can only update your own tasks.");
-                    return buildFilteredRedirect(filterClient, filterProject, filterPhase, username,
-                            startDate,
-                            endDate);
+                    return buildFilteredRedirect(filterClient, filterProject, filterPhase,
+                            filterTaskId, username, startDate, endDate);
                 }
             }
 
             taskActivityService.updateTaskActivity(id, taskActivityDto);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity updated successfully!");
-            return buildFilteredRedirect(filterClient, filterProject, filterPhase, username,
-                    startDate, endDate);
+            return buildFilteredRedirect(filterClient, filterProject, filterPhase, filterTaskId,
+                    username, startDate, endDate);
 
         } catch (Exception e) {
             model.addAttribute(ERROR_MESSAGE_ATTR,
@@ -424,6 +435,7 @@ public class TaskActivityWebController {
     public String deleteTask(@PathVariable Long id, @RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -440,15 +452,16 @@ public class TaskActivityWebController {
                         && !existingTask.get().getUsername().equals(currentUsername)) {
                     redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                             "Access denied: You can only delete your own tasks.");
-                    return buildFilteredRedirect(client, project, phase, username, startDate,
-                            endDate);
+                    return buildFilteredRedirect(client, project, phase, taskId, username,
+                            startDate, endDate);
                 }
             }
 
             taskActivityService.deleteTaskActivity(id);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity deleted successfully!");
-            return buildFilteredRedirect(client, project, phase, username, startDate, endDate);
+            return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                    endDate);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
@@ -467,6 +480,8 @@ public class TaskActivityWebController {
         dto.setProject(entity.getProject());
         dto.setPhase(entity.getPhase());
         dto.setHours(entity.getHours());
+        dto.setTaskId(entity.getTaskId());
+        dto.setTaskName(entity.getTaskName());
         dto.setDetails(entity.getDetails());
         dto.setUsername(entity.getUsername());
         return dto;
@@ -749,6 +764,7 @@ public class TaskActivityWebController {
     public String exportTaskListToCsv(@RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
             @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -769,12 +785,14 @@ public class TaskActivityWebController {
         String clientFilter = (client != null && !client.trim().isEmpty()) ? client : null;
         String projectFilter = (project != null && !project.trim().isEmpty()) ? project : null;
         String phaseFilter = (phase != null && !phase.trim().isEmpty()) ? phase : null;
+        String taskIdFilter = (taskId != null && !taskId.trim().isEmpty()) ? taskId : null;
 
         // Fetch ALL tasks based on filters using the comprehensive filter method (no pagination)
         // Use Pageable.unpaged() to get all results without pagination
         Page<TaskActivity> allTasksPage =
                 taskActivityService.getTaskActivitiesByFilters(filterUsername, clientFilter,
-                        projectFilter, phaseFilter, startDate, endDate, Pageable.unpaged());
+                        projectFilter, phaseFilter, taskIdFilter, startDate, endDate,
+                        Pageable.unpaged());
 
         List<TaskActivity> filteredTasks = allTasksPage.getContent();
 
@@ -787,9 +805,9 @@ public class TaskActivityWebController {
 
         // Add header row
         if (includeUsername) {
-            csv.append("Date,Client,Project,Phase,Hours,Details,Username\n");
+            csv.append("Date,Client,Project,Phase,Hours,Task ID,Task Name,Details,Username\n");
         } else {
-            csv.append("Date,Client,Project,Phase,Hours,Details\n");
+            csv.append("Date,Client,Project,Phase,Hours,Task ID,Task Name,Details\n");
         }
 
         // Sort tasks by date (newest first), then by client, then by project
@@ -812,6 +830,10 @@ public class TaskActivityWebController {
             csv.append(escapeCsvField(task.getProject())).append(",");
             csv.append(escapeCsvField(task.getPhase())).append(",");
             csv.append(task.getHours()).append(",");
+            csv.append(escapeCsvField(task.getTaskId() != null ? task.getTaskId() : ""))
+                    .append(",");
+            csv.append(escapeCsvField(task.getTaskName() != null ? task.getTaskName() : ""))
+                    .append(",");
             csv.append(escapeCsvField(task.getDetails() != null ? task.getDetails() : ""));
 
             if (includeUsername) {
@@ -839,7 +861,7 @@ public class TaskActivityWebController {
      * Build a redirect URL to task list with filter parameters preserved
      */
     private String buildFilteredRedirect(String client, String project, String phase,
-            String username, LocalDate startDate, LocalDate endDate) {
+            String taskId, String username, LocalDate startDate, LocalDate endDate) {
         StringBuilder redirect = new StringBuilder(REDIRECT_TASK_LIST);
         java.util.List<String> params = new java.util.ArrayList<>();
 
@@ -851,6 +873,9 @@ public class TaskActivityWebController {
         }
         if (phase != null && !phase.isEmpty()) {
             params.add("phase=" + phase);
+        }
+        if (taskId != null && !taskId.isEmpty()) {
+            params.add("taskId=" + taskId);
         }
         if (username != null && !username.isEmpty()) {
             params.add("username=" + username);

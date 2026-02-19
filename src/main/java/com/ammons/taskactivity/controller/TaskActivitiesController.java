@@ -74,13 +74,15 @@ public class TaskActivitiesController {
                     @RequestParam(required = false) String client,
                     @RequestParam(required = false) String project,
                     @RequestParam(required = false) String phase,
+                    @RequestParam(required = false) String taskId,
                     @RequestParam(required = false) String startDate,
                     @RequestParam(required = false) String endDate,
             Authentication authentication) {
 
             String username = authentication.getName();
-            logger.info("User {} requesting task activities (page={}, size={}, filters: client={}, project={}, phase={}, startDate={}, endDate={})",
-                            username, page, size, client, project, phase, startDate, endDate);
+            logger.info("User {} requesting task activities (page={}, size={}, filters: client={}, project={}, phase={}, taskId={}, startDate={}, endDate={})",
+                            username, page, size, client, project, phase, taskId, startDate,
+                            endDate);
 
         // Check if user has ADMIN role
         boolean isAdmin = authentication.getAuthorities().stream()
@@ -112,10 +114,11 @@ public class TaskActivitiesController {
         try {
                 // Use filtering query with username restriction for non-admin users
                 String filterUsername = isAdmin ? null : username;
-                logger.info("Executing filter query with: username={}, client={}, project={}, phase={}, start={}, end={}",
-                                filterUsername, client, project, phase, start, end);
+                logger.info("Executing filter query with: username={}, client={}, project={}, phase={}, taskId={}, start={}, end={}",
+                                filterUsername, client, project, phase, taskId, start, end);
+                String taskIdFilter = (taskId != null && !taskId.isEmpty()) ? taskId : null;
                 taskPage = taskActivityService.getTaskActivitiesByFilters(filterUsername, client,
-                                project, phase, start, end, pageable);
+                                project, phase, taskIdFilter, start, end, pageable);
         } catch (Exception e) {
                 logger.error("Error executing filter query", e);
                 ApiResponse<List<TaskActivity>> errorResponse =

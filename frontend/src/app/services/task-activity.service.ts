@@ -25,8 +25,9 @@ export class TaskActivityService {
     client?: string,
     project?: string,
     phase?: string,
+    taskId?: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Observable<ApiResponse<TaskActivity[]>> {
     let params = new HttpParams()
       .set('page', page.toString())
@@ -35,6 +36,7 @@ export class TaskActivityService {
     if (client) params = params.set('client', client);
     if (project) params = params.set('project', project);
     if (phase) params = params.set('phase', phase);
+    if (taskId) params = params.set('taskId', taskId);
     if (startDate) params = params.set('startDate', startDate);
     if (endDate) params = params.set('endDate', endDate);
 
@@ -51,11 +53,11 @@ export class TaskActivityService {
 
   updateTask(
     id: number,
-    task: TaskActivity
+    task: TaskActivity,
   ): Observable<ApiResponse<TaskActivity>> {
     return this.http.put<ApiResponse<TaskActivity>>(
       `${this.apiUrl}/${id}`,
-      task
+      task,
     );
   }
 
@@ -65,7 +67,7 @@ export class TaskActivityService {
 
   getTasksByDateRange(
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Observable<ApiResponse<TaskActivity[]>> {
     const params = new HttpParams()
       .set('startDate', startDate)
@@ -74,7 +76,7 @@ export class TaskActivityService {
       `${this.apiUrl}/by-date-range`,
       {
         params,
-      }
+      },
     );
   }
 }

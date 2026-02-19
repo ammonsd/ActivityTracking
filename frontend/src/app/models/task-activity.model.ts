@@ -12,6 +12,8 @@ export interface TaskActivity {
   project: string;
   phase: string;
   hours: number;
+  taskId?: string;
+  taskName?: string;
   details: string;
   username?: string;
 }

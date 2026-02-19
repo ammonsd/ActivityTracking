@@ -176,7 +176,7 @@ The CSV parser is flexible with column names and accepts common variations:
 **Required Headers:**
 
 ```
-taskdate,client,project,phase,taskhours,details,username
+taskdate,client,project,phase,taskhours,taskid,taskname,details,username
 ```
 
 **Field Specifications:**
@@ -188,16 +188,18 @@ taskdate,client,project,phase,taskhours,details,username
 | project   | Yes      | String  | 255        | Project name                           |
 | phase     | Yes      | String  | 255        | Phase or activity type                 |
 | taskhours | Yes      | Decimal | -          | Range: 0.01 to 24.00                   |
+| taskid    | No       | String  | 50         | External reference / ticket number     |
+| taskname  | No       | String  | 255        | Short label or title for the task      |
 | details   | No       | String  | 255        | Additional details or notes            |
 | username  | Yes      | String  | 50         | User who performed the work            |
 
 **Example File:**
 
 ```csv
-taskdate,client,project,phase,taskhours,details,username
-2026-01-15,Acme Corp,Website Redesign,Development,8.00,Implemented user authentication,john.doe
-2026-01-15,Tech Solutions,Mobile App,Testing,6.50,Performed regression testing,jane.smith
-01/16/2026,Acme Corp,Website Redesign,Design,4.00,Created mockups for dashboard,john.doe
+taskdate,client,project,phase,taskhours,taskid,taskname,details,username
+2026-01-15,Acme Corp,Website Redesign,Development,8.00,TA-001,Implement auth,Implemented user authentication,john.doe
+2026-01-15,Tech Solutions,Mobile App,Testing,6.50,TA-042,Regression suite,Performed regression testing,jane.smith
+01/16/2026,Acme Corp,Website Redesign,Design,4.00,,,Created mockups for dashboard,john.doe
 ```
 
 See [taskactivity-import-template.csv](taskactivity-import-template.csv) for a complete example.

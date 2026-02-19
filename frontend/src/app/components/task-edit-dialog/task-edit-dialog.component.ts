@@ -82,6 +82,8 @@ export class TaskEditDialogComponent implements OnInit {
         data.task.hours,
         [Validators.required, Validators.min(0.25), Validators.max(24)],
       ],
+      taskId: [data.task.taskId || '', [Validators.maxLength(10)]],
+      taskName: [data.task.taskName || '', [Validators.maxLength(120)]],
       details: [data.task.details || ''], // Optional field, no validators
     });
   }

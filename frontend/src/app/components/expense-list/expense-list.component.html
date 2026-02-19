@@ -19,6 +19,16 @@
           <mat-icon>clear</mat-icon>
           <span class="button-text">Clear Filters</span>
         </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="exportToCSV()"
+          [disabled]="currentRole === 'GUEST'"
+          [matTooltip]="currentRole === 'GUEST' ? 'Export disabled for guests' : 'Export filtered expenses to CSV'"
+        >
+          <mat-icon>file_download</mat-icon>
+          <span class="button-text">Export CSV</span>
+        </button>
       </div>
 
       <!-- Filter Section -->

@@ -39,6 +39,12 @@ public class TaskActivityDto {
     @DecimalMax(value = "24.00", message = "Hours cannot exceed 24")
     private BigDecimal hours;
 
+    @Size(max = 10, message = "Task ID cannot exceed 10 characters")
+    private String taskId;
+
+    @Size(max = 120, message = "Task name cannot exceed 120 characters")
+    private String taskName;
+
     @Size(max = 255, message = "Details cannot exceed 255 characters")
     private String details;
 
@@ -49,12 +55,14 @@ public class TaskActivityDto {
     public TaskActivityDto() {}
 
     public TaskActivityDto(LocalDate taskDate, String client, String project, String phase,
-            BigDecimal hours, String details) {
+            BigDecimal hours, String taskId, String taskName, String details) {
         this.taskDate = taskDate;
         this.client = client;
         this.project = project;
         this.phase = phase;
         this.hours = hours;
+        this.taskId = taskId;
+        this.taskName = taskName;
         this.details = details;
     }
 
@@ -99,6 +107,22 @@ public class TaskActivityDto {
         this.hours = hours;
     }
 
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
     public String getDetails() {
         return details;
     }
@@ -119,6 +143,7 @@ public class TaskActivityDto {
     public String toString() {
         return "TaskActivityDto{" + "taskDate=" + taskDate + ", client='" + client + '\''
                 + ", project='" + project + '\'' + ", phase='" + phase + '\'' + ", hours=" + hours
+                + ", taskId='" + taskId + '\'' + ", taskName='" + taskName + '\''
                 + ", details='" + details + '\'' + ", username='" + username + '\'' + '}';
     }
 }
