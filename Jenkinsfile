@@ -217,8 +217,13 @@ pipeline {
                         echo "========================================="
                         
                         // Compare current HEAD commit against last successfully deployed commit (stored in SSM)
+                        // Use git CLI as fallback since env.GIT_COMMIT can be null in some Jenkins configurations
+                        def currentCommit = env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                        env.RESOLVED_GIT_COMMIT = currentCommit
+                        
                         def lastDeployedCommit = getLastDeployedCommit()
                         
+                        echo "Current commit: ${currentCommit}"
                         echo "Last deployed commit: ${lastDeployedCommit ?: 'none'}"
                         
                         // Determine if we should deploy
@@ -227,7 +232,7 @@ pipeline {
                         if (lastDeployedCommit == null) {
                             echo "No previous deployments found - will deploy"
                             shouldDeploy = true
-                        } else if (lastDeployedCommit == env.GIT_COMMIT) {
+                        } else if (lastDeployedCommit == currentCommit) {
                             echo "Current commit already deployed - skipping deployment"
                         } else {
                             echo "New commit detected since last deployment - will deploy"
@@ -1006,15 +1011,6 @@ This is an automated notification. Do not reply to this email.
 }
 
 /**
- * Helper function to get the last successful build number for a specific action type.
- * 
- * Uses S3 to store build metadata, ensuring persistence across Jenkins restarts,
- * container replacements, and workspace cleanups. Works in any environment (local, EC2, ECS).
- * 
- * @param actionType The DEPLOY_ACTION to search for ('build-only' or 'deploy')
- * @return The build number of the last successful build, or null if none found
- */
-/**
  * Retrieve the last successfully deployed Git commit SHA from SSM Parameter Store.
  * Returns null if no deployment has been recorded yet.
  */
@@ -1054,15 +1050,23 @@ def getLastDeployedCommit() {
  */
 def recordDeployedCommit() {
     try {
+        // Use git CLI as fallback since env.GIT_COMMIT can be null in some Jenkins configurations
+        def commitSha = env.RESOLVED_GIT_COMMIT ?: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+        
+        if (!commitSha || commitSha == 'null') {
+            echo "WARNING: Could not determine commit SHA - skipping SSM record"
+            return
+        }
+        
         withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
             sh """
                 aws ssm put-parameter \\
                     --name /taskactivity/last-deployed-commit \\
-                    --value "${env.GIT_COMMIT}" \\
+                    --value "${commitSha}" \\
                     --type String \\
                     --overwrite
             """
-            echo "Recorded deployed commit ${env.GIT_COMMIT} to SSM"
+            echo "Recorded deployed commit ${commitSha} to SSM"
         }
     } catch (Exception e) {
         echo "WARNING: Failed to record deployed commit to SSM: ${e.message}"
