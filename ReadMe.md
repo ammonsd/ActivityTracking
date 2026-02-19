@@ -7,6 +7,8 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 ### Time Tracking
 
 - ✅ Daily task recording with client/project/phase tracking
+  - **Optional Task ID**: Link tasks to external ticket numbers (e.g., `TA-001`, `MP1T-6394`)
+  - **Optional Task Name**: Add a short label or title for quick reference
 - 📊 Analytics & Reports Dashboard with interactive charts and visualizations
   - **Flexible date range filtering** with preset options (This Month, Last Month, Last 3 Months, This Year, All Time) and custom date selection
   - Time distribution by client and project
@@ -16,9 +18,9 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 📊 Weekly timesheet view (Monday-Sunday format)
   - **Filter by billability**: View all tasks, only billable tasks, or only non-billable tasks
   - Billable hours calculated based on client/project/phase flags
-- 📥 Export filtered tasks and weekly timesheets to CSV format
+- 📥 Export filtered tasks and weekly timesheets to CSV format (includes Task ID and Task Name columns)
 - 📥 **Bulk CSV import** for TaskActivity records (ADMIN/MANAGER roles)
-- 🔍 Filter and search capabilities
+- 🔍 Filter and search capabilities including Task ID partial-match filter
 - 🏷️ **Flexible billability tracking**: Mark clients, projects, or phases as non-billable for accurate billing reports
 
 ### Expense Management

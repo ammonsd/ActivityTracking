@@ -63,9 +63,9 @@ curl -X POST http://localhost:8080/api/import/taskactivities \
 ### TaskActivity CSV
 
 ```csv
-taskdate,client,project,phase,taskhours,details,username
-2026-01-15,Acme Corp,Website,Development,8.00,Coding work,john.doe
-01/16/2026,Tech Solutions,Mobile,Testing,7.00,Testing,jane.smith
+taskdate,client,project,phase,taskhours,taskid,taskname,details,username
+2026-01-15,Acme Corp,Website,Development,8.00,TA-001,Implement login,Coding work,john.doe
+01/16/2026,Tech Solutions,Mobile,Testing,7.00,,,Testing,jane.smith
 ```
 
 ### Expense CSV

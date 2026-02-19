@@ -9,6 +9,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,6 +31,7 @@ import { ReportsService } from '../../services/reports.service';
 import { TaskActivity } from '../../models/task-activity.model';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { CsvExportDialogComponent } from '../csv-export-dialog/csv-export-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -139,6 +141,18 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               </mat-form-field>
 
               <mat-form-field appearance="outline">
+                <mat-label>Task ID</mat-label>
+                <input
+                  matInput
+                  [(ngModel)]="selectedTaskId"
+                  (keyup.enter)="applyFilters()"
+                  (blur)="applyFilters()"
+                  maxlength="10"
+                  placeholder="e.g. TA-001"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
                 <mat-label>Start Date</mat-label>
                 <input
                   matInput
@@ -179,6 +193,19 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
               </button>
               <button mat-raised-button color="accent" (click)="clearFilters()">
                 <mat-icon>clear</mat-icon> Clear Filters
+              </button>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="exportToCSV()"
+                [disabled]="currentRole === 'GUEST'"
+                [matTooltip]="
+                  currentRole === 'GUEST'
+                    ? 'Export disabled for guests'
+                    : 'Export filtered tasks to CSV'
+                "
+              >
+                <mat-icon>file_download</mat-icon> Export CSV
               </button>
             </div>
 
@@ -277,9 +304,37 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
                 </td>
               </ng-container>
 
+              <ng-container matColumnDef="taskId">
+                <th mat-header-cell *matHeaderCellDef>Task ID</th>
+                <td
+                  mat-cell
+                  *matCellDef="let task"
+                  style="white-space: nowrap;"
+                >
+                  {{ task.taskId }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="taskName">
+                <th mat-header-cell *matHeaderCellDef>Task Name</th>
+                <td
+                  mat-cell
+                  *matCellDef="let task"
+                  style="max-width: 200px; overflow-wrap: break-word; word-wrap: break-word;"
+                >
+                  {{ task.taskName }}
+                </td>
+              </ng-container>
+
               <ng-container matColumnDef="details">
                 <th mat-header-cell *matHeaderCellDef>Details</th>
-                <td mat-cell *matCellDef="let task">{{ task.details }}</td>
+                <td
+                  mat-cell
+                  *matCellDef="let task"
+                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"
+                >
+                  {{ task.details }}
+                </td>
               </ng-container>
 
               <ng-container matColumnDef="username">
@@ -644,6 +699,7 @@ export class TaskListComponent implements OnInit {
   selectedClient = '';
   selectedProject = '';
   selectedPhase = '';
+  selectedTaskId = '';
   startDate: Date | null = null;
   endDate: Date | null = null;
   uniqueClients: string[] = [];
@@ -666,6 +722,7 @@ export class TaskListComponent implements OnInit {
     private readonly dialog: MatDialog,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar,
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -684,6 +741,8 @@ export class TaskListComponent implements OnInit {
         'project',
         'phase',
         'hours',
+        'taskId',
+        'taskName',
         'details',
         'username',
         'actions',
@@ -695,6 +754,8 @@ export class TaskListComponent implements OnInit {
         'project',
         'phase',
         'hours',
+        'taskId',
+        'taskName',
         'details',
         'actions',
       ];
@@ -745,21 +806,15 @@ export class TaskListComponent implements OnInit {
 
   exportToCSV(): void {
     if (this.currentRole === 'GUEST') {
-      return; // Guests cannot export
+      return;
     }
 
-    // Build export parameters based on current filters
     const params = new URLSearchParams();
 
-    if (this.selectedClient) {
-      params.append('client', this.selectedClient);
-    }
-    if (this.selectedProject) {
-      params.append('project', this.selectedProject);
-    }
-    if (this.selectedPhase) {
-      params.append('phase', this.selectedPhase);
-    }
+    if (this.selectedClient) params.append('client', this.selectedClient);
+    if (this.selectedProject) params.append('project', this.selectedProject);
+    if (this.selectedPhase) params.append('phase', this.selectedPhase);
+    if (this.selectedTaskId) params.append('taskId', this.selectedTaskId);
     if (this.startDate) {
       const year = this.startDate.getFullYear();
       const month = String(this.startDate.getMonth() + 1).padStart(2, '0');
@@ -773,9 +828,25 @@ export class TaskListComponent implements OnInit {
       params.append('endDate', `${year}-${month}-${day}`);
     }
 
-    // Trigger CSV download
     const exportUrl = `/task-activity/list/export-csv?${params.toString()}`;
-    globalThis.location.href = exportUrl;
+    this.http.get(exportUrl, { responseType: 'text' }).subscribe({
+      next: (csvData) => {
+        this.dialog.open(CsvExportDialogComponent, {
+          data: {
+            title: 'Export Task Activity List to CSV',
+            csvData,
+            filename: 'task-activity-export.csv',
+          },
+          width: '700px',
+          maxWidth: '95vw',
+        });
+      },
+      error: () => {
+        this.snackBar.open('Failed to export CSV. Please try again.', 'Close', {
+          duration: 4000,
+        });
+      },
+    });
   }
 
   loadTasks(): void {
@@ -800,6 +871,7 @@ export class TaskListComponent implements OnInit {
       ? this.selectedProject
       : undefined;
     const phaseFilter = this.selectedPhase ? this.selectedPhase : undefined;
+    const taskIdFilter = this.selectedTaskId ? this.selectedTaskId : undefined;
 
     this.taskService
       .getAllTasks(
@@ -808,6 +880,7 @@ export class TaskListComponent implements OnInit {
         clientFilter,
         projectFilter,
         phaseFilter,
+        taskIdFilter,
         startDateStr,
         endDateStr,
       )
@@ -877,6 +950,7 @@ export class TaskListComponent implements OnInit {
     this.selectedClient = '';
     this.selectedProject = '';
     this.selectedPhase = '';
+    this.selectedTaskId = '';
     this.startDate = null;
     this.endDate = null;
     this.applyFilters();

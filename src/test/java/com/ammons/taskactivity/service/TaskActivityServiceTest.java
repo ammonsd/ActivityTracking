@@ -57,6 +57,8 @@ class TaskActivityServiceTest {
         testEntity.setProject("Test Project");
         testEntity.setPhase("Development");
         testEntity.setHours(new BigDecimal("8.00"));
+        testEntity.setTaskId("TA-001");
+        testEntity.setTaskName("Implement feature");
         testEntity.setDetails("Test task details");
 
         testDto = new TaskActivityDto();
@@ -65,6 +67,8 @@ class TaskActivityServiceTest {
         testDto.setProject("Test Project");
         testDto.setPhase("Development");
         testDto.setHours(new BigDecimal("8.00"));
+        testDto.setTaskId("TA-001");
+        testDto.setTaskName("Implement feature");
         testDto.setDetails("Test task details");
     }
 
@@ -88,6 +92,8 @@ class TaskActivityServiceTest {
             assertThat(result.getProject()).isEqualTo("Test Project");
             assertThat(result.getPhase()).isEqualTo("Development");
             assertThat(result.getHours()).isEqualByComparingTo(new BigDecimal("8.00"));
+            assertThat(result.getTaskId()).isEqualTo("TA-001");
+            assertThat(result.getTaskName()).isEqualTo("Implement feature");
             assertThat(result.getDetails()).isEqualTo("Test task details");
 
             verify(taskActivityRepository).save(any(TaskActivity.class));
@@ -268,6 +274,8 @@ class TaskActivityServiceTest {
             updateDto.setProject("Updated Project");
             updateDto.setPhase("Testing");
             updateDto.setHours(new BigDecimal("4.00"));
+            updateDto.setTaskId("TA-002");
+            updateDto.setTaskName("Updated task name");
             updateDto.setDetails("Updated details");
 
             TaskActivity updatedEntity = new TaskActivity();
@@ -277,6 +285,8 @@ class TaskActivityServiceTest {
             updatedEntity.setProject(updateDto.getProject());
             updatedEntity.setPhase(updateDto.getPhase());
             updatedEntity.setHours(updateDto.getHours());
+            updatedEntity.setTaskId(updateDto.getTaskId());
+            updatedEntity.setTaskName(updateDto.getTaskName());
             updatedEntity.setDetails(updateDto.getDetails());
 
             when(taskActivityRepository.findById(1L)).thenReturn(Optional.of(testEntity));
@@ -292,6 +302,8 @@ class TaskActivityServiceTest {
             assertThat(result.getProject()).isEqualTo(updateDto.getProject());
             assertThat(result.getPhase()).isEqualTo(updateDto.getPhase());
             assertThat(result.getHours()).isEqualByComparingTo(updateDto.getHours());
+            assertThat(result.getTaskId()).isEqualTo(updateDto.getTaskId());
+            assertThat(result.getTaskName()).isEqualTo(updateDto.getTaskName());
             assertThat(result.getDetails()).isEqualTo(updateDto.getDetails());
 
             verify(taskActivityRepository).findById(1L);

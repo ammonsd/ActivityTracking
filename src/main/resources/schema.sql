@@ -158,9 +158,11 @@ CREATE TABLE IF NOT EXISTS public.taskactivity (
     project VARCHAR(255) NOT NULL,
     phase VARCHAR(255) NOT NULL,
     taskhours NUMERIC(4, 2) NOT NULL,
+    taskid VARCHAR(10),
+    taskname VARCHAR(120),
     details VARCHAR(255),
     username VARCHAR(50) NOT NULL,
-    CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, details, username),
+    CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, taskid, taskname, username),
     CONSTRAINT fk_taskactivity_username 
         FOREIGN KEY (username) REFERENCES public.users(username)
         ON DELETE RESTRICT
@@ -194,6 +196,9 @@ CREATE INDEX IF NOT EXISTS idx_taskactivity_date_user ON public.taskactivity(tas
 -- Composite index for common grouping (client + project)
 -- Optimizes queries that group by client and project
 CREATE INDEX IF NOT EXISTS idx_taskactivity_client_project ON public.taskactivity(client, project);
+
+-- Index on taskid (for filtering/searching by external task tracker references)
+CREATE INDEX IF NOT EXISTS idx_taskactivity_taskid ON public.taskactivity(taskid);
 
 CREATE TABLE IF NOT EXISTS expenses (
     -- Core & Identification

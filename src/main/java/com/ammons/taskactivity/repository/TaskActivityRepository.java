@@ -100,11 +100,13 @@ public interface TaskActivityRepository extends JpaRepository<TaskActivity, Long
                     + "(CAST(:client AS text) IS NULL OR ta.client = :client) AND "
                     + "(CAST(:project AS text) IS NULL OR ta.project = :project) AND "
                     + "(CAST(:phase AS text) IS NULL OR ta.phase = :phase) AND "
+                    + "(CAST(:taskId AS text) IS NULL OR LOWER(ta.taskid) LIKE LOWER('%' || CAST(:taskId AS text) || '%')) AND "
                     + "(CAST(:startDate AS date) IS NULL OR ta.taskdate >= CAST(:startDate AS date)) AND "
                     + "(CAST(:endDate AS date) IS NULL OR ta.taskdate <= CAST(:endDate AS date))",
                     nativeQuery = true)
     public Page<TaskActivity> findByFilters(@Param("username") String username,
                     @Param("client") String client, @Param("project") String project,
-                    @Param("phase") String phase, @Param("startDate") LocalDate startDate,
+                    @Param("phase") String phase, @Param("taskId") String taskId,
+                    @Param("startDate") LocalDate startDate,
                     @Param("endDate") LocalDate endDate, Pageable pageable);
 }

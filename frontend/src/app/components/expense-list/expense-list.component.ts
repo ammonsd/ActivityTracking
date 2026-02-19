@@ -8,6 +8,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +29,7 @@ import { Expense } from '../../models/expense.model';
 import { ExpenseEditDialogComponent } from '../expense-edit-dialog/expense-edit-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { ReceiptUploadDialogComponent } from '../receipt-upload-dialog/receipt-upload-dialog.component';
+import { CsvExportDialogComponent } from '../csv-export-dialog/csv-export-dialog.component';
 
 @Component({
   selector: 'app-expense-list',
@@ -99,6 +101,7 @@ export class ExpenseListComponent implements OnInit {
     private readonly reportsService: ReportsService,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar,
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -295,6 +298,53 @@ export class ExpenseListComponent implements OnInit {
     this.startDate = null;
     this.endDate = null;
     this.applyFilters();
+  }
+
+  exportToCSV(): void {
+    if (this.currentRole === 'GUEST') {
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    if (this.selectedClient) params.append('client', this.selectedClient);
+    if (this.selectedProject) params.append('project', this.selectedProject);
+    if (this.selectedExpenseType)
+      params.append('expenseType', this.selectedExpenseType);
+    if (this.selectedStatus) params.append('status', this.selectedStatus);
+    if (this.selectedUsername) params.append('username', this.selectedUsername);
+    if (this.startDate) {
+      const year = this.startDate.getFullYear();
+      const month = String(this.startDate.getMonth() + 1).padStart(2, '0');
+      const day = String(this.startDate.getDate()).padStart(2, '0');
+      params.append('startDate', `${year}-${month}-${day}`);
+    }
+    if (this.endDate) {
+      const year = this.endDate.getFullYear();
+      const month = String(this.endDate.getMonth() + 1).padStart(2, '0');
+      const day = String(this.endDate.getDate()).padStart(2, '0');
+      params.append('endDate', `${year}-${month}-${day}`);
+    }
+
+    const exportUrl = `/expenses/list/export-csv?${params.toString()}`;
+    this.http.get(exportUrl, { responseType: 'text' }).subscribe({
+      next: (csvData) => {
+        this.dialog.open(CsvExportDialogComponent, {
+          data: {
+            title: 'Export Expense List to CSV',
+            csvData,
+            filename: 'expense-export.csv',
+          },
+          width: '700px',
+          maxWidth: '95vw',
+        });
+      },
+      error: () => {
+        this.snackBar.open('Failed to export CSV. Please try again.', 'Close', {
+          duration: 4000,
+        });
+      },
+    });
   }
 
   addExpense(): void {

@@ -2925,6 +2925,8 @@ CREATE TABLE "TaskActivity" (
     "project" VARCHAR(255) NOT NULL,
     "phase" VARCHAR(255) NOT NULL,
     "taskhours" DECIMAL(4,2) NOT NULL,
+    "taskid" VARCHAR(50),    -- Optional external reference (ticket/issue number)
+    "taskname" VARCHAR(255), -- Optional short label or title
     "details" VARCHAR(255),  -- Optional field
     "username" VARCHAR(50) NOT NULL,
     CONSTRAINT fk_taskactivity_username
@@ -2938,6 +2940,7 @@ CREATE TABLE "TaskActivity" (
 CREATE INDEX idx_taskactivity_date ON "TaskActivity"("taskdate");
 CREATE INDEX idx_taskactivity_client ON "TaskActivity"("client");
 CREATE INDEX idx_taskactivity_project ON "TaskActivity"("project");
+CREATE INDEX idx_taskactivity_taskid ON "TaskActivity"("taskid");
 CREATE INDEX idx_taskactivity_username ON "TaskActivity"("username");
 ```
 
@@ -2967,6 +2970,12 @@ public class TaskActivity {
     @Column(name = "taskhours", nullable = false)
     private BigDecimal hours;
 
+    @Column(name = "taskid", nullable = true, length = 50)  // Optional external reference
+    private String taskId;
+
+    @Column(name = "taskname", nullable = true)  // Optional short label
+    private String taskName;
+
     @Column(name = "details", nullable = true)  // Optional field
     private String details;
 
@@ -2982,6 +2991,7 @@ public class TaskActivity {
 - **Automatic Population**: The `username` field is automatically populated from the logged-in user's authentication context when creating a new task
 - **Read-Only**: The username field is not editable in the UI and is not included in update operations to maintain data integrity
 - **Foreign Key**: References the `Users` table with CASCADE updates and RESTRICT deletes to prevent orphaned records
+- **Optional Fields**: `taskId`, `taskName`, and `details` are nullable. `taskId` supports filtering by partial match (case-insensitive LIKE query) across both the Spring Boot and Angular UIs
 
 ### DropdownValue Table
 

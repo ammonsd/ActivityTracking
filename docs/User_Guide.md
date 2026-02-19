@@ -23,6 +23,8 @@ Tasks are displayed in a table with the following columns:
 - **Phase**: The work phase (Development, Testing, etc.)
 - **Hours**: Time spent on the task
   - **Visual Indicator**: Non-billable hours are displayed in **red bold text** to help you quickly identify overhead or internal time that won't be billed to clients
+- **Task ID**: Optional external reference identifier (e.g., ticket number such as `TA-001` or `MP1T-6394`)
+- **Task Name**: Optional short label or title for the task
 - **Details**: Description of work performed
 - **Actions**: Edit, Delete, and Clone buttons
 
@@ -33,9 +35,10 @@ Use the filter controls at the top of the task list to narrow down your view:
 1. **Client Filter**: Show only tasks for a specific client
 2. **Project Filter**: Filter by project name
 3. **Phase Filter**: Filter by work phase
-4. **Start Date**: Show tasks from this date onward
-5. **End Date**: Show tasks up to this date
-6. **Username** (Admin only): Filter tasks by user
+4. **Task ID Filter**: Filter by ticket or reference number (partial match, case-insensitive)
+5. **Start Date**: Show tasks from this date onward
+6. **End Date**: Show tasks up to this date
+7. **Username** (Admin only): Filter tasks by user
 
 **To Apply Filters:**
 
@@ -71,8 +74,9 @@ You can export your filtered task list to CSV format for reporting or import int
 **To Export Tasks:**
 
 1. **Apply Filters** (optional): Filter the task list to show only the tasks you want to export
-2. **Click Export Button**: 
-   - Option 1: Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
+2. **Click Export Button**:
+   - Option 1: Click the **"Export CSV"** button in the task list toolbar (above the table)
+   - Option 2: Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
    - The menu will automatically close after selecting Export CSV
 3. **Wait for Data**: The system will fetch ALL filtered tasks (not just the current page)
 4. **Choose Action**:
@@ -86,14 +90,15 @@ You can export your filtered task list to CSV format for reporting or import int
 - If there are 270 filtered tasks, all 270 will be included in the CSV
 - Filename includes active filters and timestamp
 - Example filename: `TaskActivity_Acme_Corp_Website_20251101.csv`
-- For admins: Includes username column in export
+- Columns exported: Date, Client, Project, Phase, Hours, Task ID, Task Name, Details
+- For admins: Includes an additional Username column in the export
 
 **CSV Format:**
 
 ```
-Date,Client,Project,Phase,Hours,Details
-10/28/2025,Acme Corp,Website Redesign,Development,8.00,Fixed login bug
-10/29/2025,Acme Corp,Website Redesign,Testing,6.50,QA testing
+Date,Client,Project,Phase,Hours,Task ID,Task Name,Details
+10/28/2025,Acme Corp,Website Redesign,Development,8.00,TA-001,Implement login,Fixed login bug
+10/29/2025,Acme Corp,Website Redesign,Testing,6.50,TA-002,QA regression,Performed regression testing
 ```
 
 **Note:** The export includes all tasks matching your current filters, regardless of pagination. If you see "Showing 1-20 of 270 entries", the CSV export will contain all 270 entries.
@@ -324,6 +329,8 @@ To protect your account from unauthorized access, the system automatically locks
      - This helps distinguish billable client work from internal overhead
    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
+   - **Task ID**: Enter the ticket or reference number from your project management tool (optional, e.g., `TA-001`, `MP1T-6394`)
+   - **Task Name**: Enter a short label or title for the task (optional)
    - **Details**: Describe what you worked on (optional - not needed for tasks like PTO)
 
 3. **Save Your Task**

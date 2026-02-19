@@ -97,6 +97,24 @@
       </mat-error>
     </mat-form-field>
 
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+      <mat-form-field appearance="outline">
+        <mat-label>Task ID</mat-label>
+        <input matInput formControlName="taskId" maxlength="10" placeholder="e.g. TA-001" />
+        <mat-error *ngIf="taskForm.get('taskId')?.hasError('maxlength')">
+          Maximum 10 characters
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Task Name</mat-label>
+        <input matInput formControlName="taskName" maxlength="120" placeholder="Brief task name (optional)" />
+        <mat-error *ngIf="taskForm.get('taskName')?.hasError('maxlength')">
+          Maximum 120 characters
+        </mat-error>
+      </mat-form-field>
+    </div>
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Details</mat-label>
       <textarea matInput formControlName="details" rows="2"></textarea>
