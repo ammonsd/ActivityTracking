@@ -164,6 +164,22 @@ public class DropdownRestController {
     }
 
     /**
+     * Toggle the allUsers flag on a dropdown value. Values flagged allUsers=true are visible to
+     * every user without requiring an explicit access row.
+     *
+     * @param id the dropdown value ID to toggle
+     * @return ResponseEntity containing the updated dropdown value
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PutMapping("/{id}/toggle-all-users")
+    public ResponseEntity<DropdownValue> toggleAllUsers(@PathVariable Long id) {
+        logger.debug("REST API: Toggling allUsers flag for dropdown value ID: {}", id);
+        return dropdownValueService.getDropdownValueById(id)
+                .map(existing -> ResponseEntity.ok(dropdownValueService.toggleAllUsers(id)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * Add new dropdown value (ADMIN only). Creates a new dropdown option for the specified category
      * and subcategory.
      * 

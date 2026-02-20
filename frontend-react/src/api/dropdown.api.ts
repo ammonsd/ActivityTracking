@@ -81,4 +81,16 @@ export const dropdownApi = {
     deleteValue: async (id: number): Promise<void> => {
         await apiClient.delete(`/dropdowns/${id}`);
     },
+
+    /**
+     * Toggle the allUsers flag on a dropdown value.
+     * @param id - Dropdown value ID to toggle
+     * @returns Promise with the updated dropdown value
+     */
+    toggleAllUsers: async (id: number): Promise<DropdownValue> => {
+        const response = await apiClient.put<DropdownValue>(
+            `/dropdowns/${id}/toggle-all-users`,
+        );
+        return response.data;
+    },
 };

@@ -116,3 +116,26 @@ export interface UserUpdateRequest {
     accountLocked: boolean;
     forcePasswordUpdate: boolean;
 }
+
+/**
+ * Response from GET /api/users/{username}/access.
+ * Contains all available dropdown items and the IDs explicitly assigned to this user.
+ */
+export interface UserAccessData {
+    allClients: import('./dropdown.types').DropdownValue[];
+    allProjects: import('./dropdown.types').DropdownValue[];
+    allExpenseClients: import('./dropdown.types').DropdownValue[];
+    allExpenseProjects: import('./dropdown.types').DropdownValue[];
+    assignedIds: number[];
+}
+
+/**
+ * Request body for PUT /api/users/{username}/access.
+ */
+export interface UserAccessUpdateRequest {
+    view: 'TASK' | 'EXPENSE';
+    clientIds: number[];
+    projectIds: number[];
+    expenseClientIds: number[];
+    expenseProjectIds: number[];
+}
