@@ -27,6 +27,14 @@ export class DropdownService {
     return this.http.get<DropdownValue[]>(`${this.apiUrl}/projects`);
   }
 
+  getExpenseClients(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/expense-clients`);
+  }
+
+  getExpenseProjects(): Observable<DropdownValue[]> {
+    return this.http.get<DropdownValue[]>(`${this.apiUrl}/expense-projects`);
+  }
+
   getPhases(): Observable<DropdownValue[]> {
     return this.http.get<DropdownValue[]>(`${this.apiUrl}/phases`);
   }
@@ -57,7 +65,7 @@ export class DropdownService {
 
   getValuesByCategory(category: string): Observable<DropdownValue[]> {
     return this.http.get<DropdownValue[]>(
-      `${this.apiUrl}/category/${category}`
+      `${this.apiUrl}/category/${category}`,
     );
   }
 
@@ -67,7 +75,7 @@ export class DropdownService {
 
   updateDropdownValue(
     id: number,
-    value: DropdownValue
+    value: DropdownValue,
   ): Observable<DropdownValue> {
     return this.http.put<DropdownValue>(`${this.apiUrl}/${id}`, value);
   }

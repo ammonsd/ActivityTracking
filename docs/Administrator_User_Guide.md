@@ -20,6 +20,7 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [User Self-Service Profile Management](#user-self-service-profile-management)
    - [Managing Task Activities](#managing-task-activities)
    - [Changing User Passwords](#changing-user-passwords)
+   - [Managing User Dropdown Access](#managing-user-dropdown-access)
 4. [Expense Management Administration](#expense-management-administration)
    - [Managing User Expenses](#managing-user-expenses)
    - [Expense Approval Process](#expense-approval-process)
@@ -144,6 +145,15 @@ The React Admin Dashboard has multiple completed phases with production-ready fe
   - Password validation with show/hide toggles
   - Real-time validation and error handling
   - Material-UI dialogs and responsive design
+  - **User Dropdown Access Management** (February 2026): Assign which Clients and Projects each user sees in their dropdowns
+    - **Manage Access** button (person-gear icon, green) in the Actions column for every non-ADMIN user
+    - Opens a dialog with **Task** and **Expense** tabs for independent per-tab assignment
+    - Each tab shows two columns: Clients (left) and Projects (right)
+    - Checkboxes to assign values; values with the "All Users" flag are pre-checked and disabled
+    - Inline **🌐 All** button makes a dropdown value visible to every user; **🔓 Restrict** reverses it
+    - Saving one tab leaves the other tab's assignments completely untouched
+    - Button is disabled for ADMIN users (they always see all values)
+    - Requires USER_MANAGEMENT:READ/UPDATE permissions
 - **Guest Activity Report** (Phase 6 - Implemented February 2026):
   - View guest login statistics and audit history
   - Real-time metrics: Total Logins, Unique Locations, Last Login, Success Rate
@@ -209,7 +219,7 @@ The React Admin Dashboard has multiple completed phases with production-ready fe
 
 Completed Phases:
 - ✅ **Phase 3**: Skeleton dashboard with navigation (December 2025)
-- ✅ **Phase 4**: User Management with full CRUD operations (February 2026)
+- ✅ **Phase 4**: User Management with full CRUD operations and user dropdown access management (February 2026)
 - ✅ **Phase 5**: Dropdown Management with category filtering and CRUD operations (February 2026)
 - ✅ **Phase 6**: Guest Activity Report with metrics and CSV export (February 2026)
 - ✅ **Phase 7**: Roles Management with permission assignment (February 2026)
@@ -319,6 +329,10 @@ Administrators can create, edit, and delete user accounts:
         - Users who have task entries in the system
     - Users with task entries cannot be deleted to maintain data integrity
     - To prevent a user from accessing the system, disable their account instead of deleting
+7. **Manage Dropdown Access**: Control which Clients and Projects a user can see in their dropdowns
+    - **Spring Boot UI**: Click the **🔐 Access** button next to any non-ADMIN user in the list
+    - **React Admin Dashboard**: Click the **Manage Access** icon button (person-gear, green) next to any non-ADMIN user; the button is disabled for ADMIN users with an explanatory tooltip
+    - See [Managing User Dropdown Access](#managing-user-dropdown-access) for full details
 
 ### Managing Roles and Permissions
 
@@ -951,6 +965,98 @@ See [Email Configuration Management](#email-configuration-management) section fo
 
 ---
 
+### Managing User Dropdown Access
+
+**Implemented**: February 2026
+
+Administrators can restrict which Clients and Projects appear in dropdown menus for each individual user. Task recording and expense recording are controlled **independently** via two separate tabs: the **📋 Task** tab governs which Clients and Projects appear when a user logs time; the **💰 Expense** tab governs which Clients and Projects appear when a user records an expense. Saving on one tab never affects the other tab's assignments.
+
+> **Why separate tabs?** The Clients and Projects available for task time-tracking (`TASK` category in Dropdown Management) and for expense recording (`EXPENSE` category) are maintained as distinct sets. A user may be authorized to bill expenses to a client they do not actively record time against, or vice versa.
+
+**Key Concepts:**
+
+- **Restricted by default**: Non-ADMIN users only see Clients/Projects that are either explicitly assigned to them *or* flagged as visible to all users
+- **All Users flag**: Any dropdown value marked "All Users" is automatically visible to everyone — no explicit assignment required
+- **ADMIN bypass**: Users with the ADMIN role always see all active Clients and Projects, regardless of assignments
+- **UI only**: Filtering is applied to the dropdown menus; the system does not block saving entries against unauthorized values
+- **Independent tabs**: TASK and EXPENSE assignments are stored separately — changing one tab does not affect the other
+
+Both the Spring Boot UI and the React Admin Dashboard provide access management. The underlying data is identical — use whichever interface is more convenient.
+
+#### Using the Spring Boot UI
+
+1. **Navigate to User Management**: Click **"☰"** → **"👥 Manage Users"**
+2. **Locate the User**: Find the user in the list (use filters if needed)
+3. **Click "🔐 Access"**: Opens the dropdown access assignment page for that user
+4. **Choose the Tab**:
+   - **📋 Task tab** — controls Clients and Projects visible when the user logs task time
+   - **💰 Expense tab** — controls Clients and Projects visible when the user records an expense
+5. **Review the Checkboxes**:
+   - **Clients section** (left column): Lists all active Client values for the selected category
+   - **Projects section** (right column): Lists all active Project values for the selected category
+   - Items marked **All Users** are shown with a grey badge and a pre-checked, disabled checkbox — they are already visible to this user and cannot be removed via this screen
+6. **Select Assignments**: Check the boxes next to the Clients and Projects this user should be able to see
+   - Use the **"Select All"** / **"Clear All"** links at the top of each section for convenience
+7. **Click "💾 Save Access"**: Assignments for the **active tab only** are saved; the other tab's assignments are untouched
+8. **Switch Tabs**: Repeat steps 4–7 for the other tab if needed
+9. **Confirmation**: You are redirected back to User Management with a success message
+
+#### Using the React Admin Dashboard
+
+1. **Navigate to User Management**: Click **"User Management"** from the React Admin Dashboard sidebar or card
+2. **Locate the User**: Use the filter fields (username, role, company) if needed
+3. **Click the Manage Access button**: Click the **person-gear (🔑) icon** in the Actions column — this button is green and appears between the Change Password and Delete buttons
+   - The button is **disabled** for ADMIN users (they always have full access) and shows a tooltip explaining why
+4. **The Access Dialog opens**:
+   - Header shows: "Manage Dropdown Access" with the username displayed below
+   - A loading spinner appears briefly while assignment data is fetched
+5. **Choose the Tab**: Click **Task** or **Expense** in the toggle control at the top of the dialog
+   - **Task** — governs Clients and Projects visible when the user logs task time
+   - **Expense** — governs Clients and Projects visible when the user records an expense
+   - A caption below the toggle reminds you that saving only updates the active tab
+6. **Review and Update Checkboxes**:
+   - **Left column** — Clients for the selected tab
+   - **Right column** — Projects for the selected tab
+   - Items with the "All Users" flag: checkbox is **checked and disabled** (already visible to everyone), "All Users" chip displayed in blue, and a **🔓 Restrict** button appears
+   - Items without the flag: checkbox is editable; a **🌐 All** button appears
+7. **Toggle the "All Users" flag** (optional): Click **🌐 All** to make a value visible to every user, or **🔓 Restrict** to remove that flag — the change is applied immediately without navigating away
+8. **Click "Save"**: Saves assignments for the **active tab only**; the other tab is not affected
+   - The dialog closes automatically on success
+9. **Switch Tabs**: Reopen the dialog and switch to the other tab to manage that set of assignments
+
+#### Marking a Dropdown Value as "All Users"
+
+To make a Client or Project visible to all users without individual assignment:
+
+1. Navigate to **Manage Dropdowns** ("☰" → "🔧 Manage Dropdowns")
+2. Find the Client or Project value (remember: TASK Clients and EXPENSE Clients are separate entries)
+3. Click the **Edit** button
+4. Check the **"All Users"** checkbox
+5. Save — the value is now visible to every user automatically
+
+Alternatively, the **🌐 All** button shown next to each value on the Access page sets this flag inline without leaving the page. The **🔓 Restrict** button removes it.
+
+This is useful for commonly-used overhead entries (e.g., "Internal", "Non-Billable") that every user should always see.
+
+#### Revoking Access
+
+- **Spring Boot UI**: Open the **🔐 Access** page for the user, choose the appropriate tab (Task or Expense), and **uncheck** any Clients or Projects they should no longer see; click **💾 Save Access**
+- **React Admin Dashboard**: Open the **Manage Access** dialog for the user, choose the appropriate tab, **uncheck** the values to revoke, and click **Save**
+- The user's dropdowns update immediately on their next page load
+- Existing task and expense entries are **not affected** — historical data is preserved
+
+#### Notes for Administrators
+
+| Scenario | Behavior |
+|----------|---------|
+| User has no assignments and no "All Users" values exist | User sees an empty Client/Project dropdown |
+| User is ADMIN role | Always sees all active values — assignments are ignored |
+| A dropdown value is deactivated | It no longer appears in any dropdown, regardless of access assignments |
+| User is deleted | All their dropdown access rows are automatically removed (CASCADE DELETE) |
+| Task and Expense tabs saved separately | Saving the Task tab does not clear Expense assignments, and vice versa |
+
+---
+
 ## Expense Management Administration
 
 ### Managing User Expenses
@@ -1132,6 +1238,15 @@ Dropdown management has been consolidated into a single, dynamic interface that 
         - **RECEIPT_STATUS**: Receipt availability (Attached, Pending, Not Available)
         - **EXPENSE_STATUS**: Workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
     - **Note**: New categories added to the database automatically appear in this list
+
+**All Users Flag:**
+
+Each Client and Project dropdown value can be marked as **"All Users"** to make it automatically visible to every user without requiring an explicit access assignment:
+
+- **When to use**: Common overhead entries that should always be available system-wide (e.g., "Internal", "Non-Billable", "Training")
+- **Display in admin UI**: "All Users" values appear with a grey **All Users** badge in the dropdown access assignment page and are shown as pre-checked, disabled checkboxes
+- **Setting the flag**: Check the **"All Users"** checkbox when adding or editing a Client or Project value
+- **Removing the flag**: Uncheck **"All Users"** — the value reverts to access-controlled and will only appear for users with an explicit assignment
 
 **Billability Configuration:**
 

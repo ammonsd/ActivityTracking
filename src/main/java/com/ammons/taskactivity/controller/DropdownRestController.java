@@ -2,10 +2,12 @@ package com.ammons.taskactivity.controller;
 
 import com.ammons.taskactivity.entity.DropdownValue;
 import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.UserDropdownAccessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,10 +25,18 @@ public class DropdownRestController {
 
     private static final Logger logger = LoggerFactory.getLogger(DropdownRestController.class);
 
+    /**
+     * Modified by: Dean Ammons - February 2026 Change: Added UserDropdownAccessService for
+     * user-filtered client/project endpoints Reason: Restrict which clients and projects the
+     * Angular/React frontend sees per user
+     */
     private final DropdownValueService dropdownValueService;
+    private final UserDropdownAccessService userDropdownAccessService;
 
-    public DropdownRestController(DropdownValueService dropdownValueService) {
+    public DropdownRestController(DropdownValueService dropdownValueService,
+            UserDropdownAccessService userDropdownAccessService) {
         this.dropdownValueService = dropdownValueService;
+        this.userDropdownAccessService = userDropdownAccessService;
     }
 
     /**
@@ -60,22 +70,46 @@ public class DropdownRestController {
     }
 
     /**
-     * Get clients (now from TASK/CLIENT)
+     * Get clients filtered by the authenticated user's access assignments.
      */
     @GetMapping("/clients")
-    public ResponseEntity<List<DropdownValue>> getClients() {
-        logger.debug("REST API: Getting clients");
-        List<DropdownValue> clients = dropdownValueService.getActiveClients();
+    public ResponseEntity<List<DropdownValue>> getClients(Authentication authentication) {
+        logger.debug("REST API: Getting clients for user {}", authentication.getName());
+        List<DropdownValue> clients =
+                userDropdownAccessService.getAccessibleClients(authentication);
         return ResponseEntity.ok(clients);
     }
 
     /**
-     * Get projects (now from TASK/PROJECT)
+     * Get projects filtered by the authenticated user's access assignments.
      */
     @GetMapping("/projects")
-    public ResponseEntity<List<DropdownValue>> getProjects() {
-        logger.debug("REST API: Getting projects");
-        List<DropdownValue> projects = dropdownValueService.getActiveProjects();
+    public ResponseEntity<List<DropdownValue>> getProjects(Authentication authentication) {
+        logger.debug("REST API: Getting projects for user {}", authentication.getName());
+        List<DropdownValue> projects =
+                userDropdownAccessService.getAccessibleProjects(authentication);
+        return ResponseEntity.ok(projects);
+    }
+
+    /**
+     * Get expense clients filtered by the authenticated user's EXPENSE/CLIENT access assignments.
+     */
+    @GetMapping("/expense-clients")
+    public ResponseEntity<List<DropdownValue>> getExpenseClients(Authentication authentication) {
+        logger.debug("REST API: Getting expense clients for user {}", authentication.getName());
+        List<DropdownValue> clients =
+                userDropdownAccessService.getAccessibleExpenseClients(authentication);
+        return ResponseEntity.ok(clients);
+    }
+
+    /**
+     * Get expense projects filtered by the authenticated user's EXPENSE/PROJECT access assignments.
+     */
+    @GetMapping("/expense-projects")
+    public ResponseEntity<List<DropdownValue>> getExpenseProjects(Authentication authentication) {
+        logger.debug("REST API: Getting expense projects for user {}", authentication.getName());
+        List<DropdownValue> projects =
+                userDropdownAccessService.getAccessibleExpenseProjects(authentication);
         return ResponseEntity.ok(projects);
     }
 
@@ -127,6 +161,22 @@ public class DropdownRestController {
         logger.debug("REST API: Getting vendors");
         List<DropdownValue> vendors = dropdownValueService.getActiveVendors();
         return ResponseEntity.ok(vendors);
+    }
+
+    /**
+     * Toggle the allUsers flag on a dropdown value. Values flagged allUsers=true are visible to
+     * every user without requiring an explicit access row.
+     *
+     * @param id the dropdown value ID to toggle
+     * @return ResponseEntity containing the updated dropdown value
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PutMapping("/{id}/toggle-all-users")
+    public ResponseEntity<DropdownValue> toggleAllUsers(@PathVariable Long id) {
+        logger.debug("REST API: Toggling allUsers flag for dropdown value ID: {}", id);
+        return dropdownValueService.getDropdownValueById(id)
+                .map(existing -> ResponseEntity.ok(dropdownValueService.toggleAllUsers(id)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

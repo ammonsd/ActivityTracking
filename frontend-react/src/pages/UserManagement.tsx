@@ -33,6 +33,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EditIcon from "@mui/icons-material/Edit";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { userManagementApi } from "../api/userManagement.api";
@@ -45,6 +46,7 @@ import type {
 import { UserFormDialog } from "../components/userManagement/UserFormDialog";
 import { DeleteConfirmDialog } from "../components/userManagement/DeleteConfirmDialog";
 import { ChangePasswordDialog } from "../components/userManagement/ChangePasswordDialog";
+import { UserAccessDialog } from "../components/userManagement/UserAccessDialog";
 
 export const UserManagement: React.FC = () => {
     // State management
@@ -69,7 +71,9 @@ export const UserManagement: React.FC = () => {
     const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+    const [accessDialogOpen, setAccessDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [accessUser, setAccessUser] = useState<User | null>(null);
 
     // Fetch current user, roles, and users on component mount
     useEffect(() => {
@@ -202,6 +206,11 @@ export const UserManagement: React.FC = () => {
     const handleDeleteUser = (user: User) => {
         setSelectedUser(user);
         setDeleteDialogOpen(true);
+    };
+
+    const handleOpenAccess = (user: User) => {
+        setAccessUser(user);
+        setAccessDialogOpen(true);
     };
 
     const handleFormSave = async (userData: any) => {
@@ -562,6 +571,27 @@ export const UserManagement: React.FC = () => {
                                                         </IconButton>
                                                         <IconButton
                                                             size="small"
+                                                            color="success"
+                                                            onClick={() =>
+                                                                handleOpenAccess(
+                                                                    user,
+                                                                )
+                                                            }
+                                                            title={
+                                                                user.role ===
+                                                                "ADMIN"
+                                                                    ? "ADMIN users have full access"
+                                                                    : "Manage Access"
+                                                            }
+                                                            disabled={
+                                                                user.role ===
+                                                                "ADMIN"
+                                                            }
+                                                        >
+                                                            <ManageAccountsIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
                                                             color="error"
                                                             onClick={() =>
                                                                 handleDeleteUser(
@@ -630,6 +660,16 @@ export const UserManagement: React.FC = () => {
                 }}
                 onSave={handlePasswordChange}
                 username={selectedUser?.username || ""}
+            />
+
+            {/* User Access Dialog */}
+            <UserAccessDialog
+                open={accessDialogOpen}
+                onClose={() => {
+                    setAccessDialogOpen(false);
+                    setAccessUser(null);
+                }}
+                user={accessUser}
             />
         </Box>
     );

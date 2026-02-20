@@ -348,7 +348,7 @@ Date: February 2026
                                 </td>
                                 <td class="actions-cell">
                                     <span class="action-buttons">
-                                        <a th:href="@{/admin/dropdowns/edit/{id}(id=${value.id})}" 
+                                        <a th:href="@{/admin/dropdowns/edit/{id}(id=${value.id},returnSubcategory=${value.subcategory})}" 
                                            class="btn btn-warning btn-sm">Edit</a>
                                         
                                         <button type="button" 

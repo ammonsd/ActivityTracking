@@ -88,7 +88,7 @@
     <div class="container">
         <div class="header">
             <h1>Edit Dropdown Value</h1>
-            <a th:href="@{/admin/dropdowns}" class="btn btn-secondary">Dropdown Management</a>
+            <a th:href="@{/admin/dropdowns(category=${dropdownValue.category},subcategory=${returnSubcategory})}" class="btn btn-secondary">Dropdown Management</a>
         </div>
 
         <div class="form-container">
@@ -97,6 +97,7 @@
             </div>
 
             <form th:action="@{'/admin/dropdowns/update/' + ${dropdownValue.id}}" method="post">
+                <input type="hidden" name="returnSubcategory" th:value="${returnSubcategory}" />
 
                 <div class="form-group">
                     <label for="value">Value *</label>

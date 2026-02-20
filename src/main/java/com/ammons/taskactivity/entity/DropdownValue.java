@@ -7,6 +7,10 @@ import jakarta.validation.constraints.Size;
 /**
  * DropdownValue Entity
  *
+ * Modified by: Dean Ammons - February 2026 Change: Added allUsers field to support client/project
+ * dropdown access control Reason: Values flagged allUsers=true are visible to all users without
+ * requiring a row in user_dropdown_access
+ *
  * @author Dean Ammons
  * @version 1.0
  * @since November 2025
@@ -43,6 +47,9 @@ public class DropdownValue {
 
     @Column(name = "non_billable", nullable = false)
     private Boolean nonBillable = false;
+
+    @Column(name = "all_users", nullable = false)
+    private Boolean allUsers = false;
 
     public DropdownValue() {}
 
@@ -123,12 +130,20 @@ public class DropdownValue {
         this.nonBillable = nonBillable;
     }
 
+    public Boolean getAllUsers() {
+        return allUsers;
+    }
+
+    public void setAllUsers(Boolean allUsers) {
+        this.allUsers = allUsers;
+    }
+
     @Override
     public String toString() {
         return "DropdownValue{" + "id=" + id + ", category='" + category + '\'' + ", subcategory='"
                 + subcategory + '\'' + ", itemValue='" + itemValue + '\'' + ", displayOrder="
                 + displayOrder + ", isActive=" + isActive + ", nonBillable=" + nonBillable
-                + '}';
+                + ", allUsers=" + allUsers + '}';
     }
 
     @Override

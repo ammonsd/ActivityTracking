@@ -13,6 +13,7 @@ export interface DropdownValue {
     displayOrder: number;
     isActive: boolean;
     nonBillable: boolean;
+    allUsers: boolean;
 }
 
 export interface DropdownFilters {

@@ -4,8 +4,11 @@ import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.CurrentUserDto;
 import com.ammons.taskactivity.dto.UserDto;
 import com.ammons.taskactivity.dto.UserEditDto;
+import com.ammons.taskactivity.entity.DropdownValue;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.entity.Roles;
+import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.repository.RoleRepository;
@@ -20,9 +23,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
- * REST API Controller for User Management Used by Angular frontend
+ * REST API Controller for User Management Used by Angular and React frontends
+ *
+ * Modified by: Dean Ammons - February 2026 Change: Added dropdown access management endpoints for
+ * React admin Reason: Allow React admin to GET and PUT user dropdown access assignments
  *
  * @author Dean Ammons
  * @version 1.0
@@ -37,12 +44,17 @@ public class UserRestController {
     private final UserService userService;
     private final TaskActivityService taskActivityService;
     private final RoleRepository roleRepository;
+    private final UserDropdownAccessService userDropdownAccessService;
+    private final DropdownValueService dropdownValueService;
 
     public UserRestController(UserService userService, TaskActivityService taskActivityService,
-            RoleRepository roleRepository) {
+            RoleRepository roleRepository, UserDropdownAccessService userDropdownAccessService,
+            DropdownValueService dropdownValueService) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
+        this.userDropdownAccessService = userDropdownAccessService;
+        this.dropdownValueService = dropdownValueService;
     }
 
     /**
@@ -329,6 +341,63 @@ public class UserRestController {
     }
 
     /**
+     * Get dropdown access assignments for a user. Returns all available clients, projects, and
+     * their expense equivalents, plus the set of IDs explicitly assigned to this user.
+     *
+     * @param username the username whose access assignments to retrieve
+     * @return ResponseEntity containing UserAccessDto with all items and assigned IDs
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
+    @GetMapping("/{username}/access")
+    public ResponseEntity<ApiResponse<UserAccessDto>> getUserAccess(@PathVariable String username) {
+        logger.debug("REST API: Getting dropdown access for user {}", username);
+        return userService.getUserByUsername(username).map(user -> {
+            UserAccessDto dto = new UserAccessDto(dropdownValueService.getActiveClients(),
+                    dropdownValueService.getActiveProjects(),
+                    dropdownValueService.getActiveExpenseClients(),
+                    dropdownValueService.getActiveExpenseProjects(),
+                    userDropdownAccessService.getAssignedDropdownValueIds(username));
+            return ResponseEntity
+                    .ok(ApiResponse.success("User access retrieved successfully", dto));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+    }
+
+    /**
+     * Save dropdown access assignments for a user. When view=TASK, replaces TASK client/project
+     * rows. When view=EXPENSE, replaces EXPENSE client/project rows. The other tab's assignments
+     * are never touched.
+     *
+     * @param username the username whose access to update
+     * @param request body containing view, clientIds, projectIds, expenseClientIds,
+     *        expenseProjectIds
+     * @return ResponseEntity with success or error message
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PutMapping("/{username}/access")
+    public ResponseEntity<ApiResponse<Void>> saveUserAccess(@PathVariable String username,
+            @RequestBody UserAccessUpdateRequest request) {
+        logger.debug("REST API: Saving dropdown access for user {} (view={})", username,
+                request.getView());
+        return userService.getUserByUsername(username).map(user -> {
+            if ("EXPENSE".equals(request.getView())) {
+                userDropdownAccessService.saveExpenseClientAssignments(username,
+                        request.getExpenseClientIds() != null ? request.getExpenseClientIds()
+                                : List.of());
+                userDropdownAccessService.saveExpenseProjectAssignments(username,
+                        request.getExpenseProjectIds() != null ? request.getExpenseProjectIds()
+                                : List.of());
+            } else {
+                userDropdownAccessService.saveClientAssignments(username,
+                        request.getClientIds() != null ? request.getClientIds() : List.of());
+                userDropdownAccessService.saveProjectAssignments(username,
+                        request.getProjectIds() != null ? request.getProjectIds() : List.of());
+            }
+            return ResponseEntity
+                    .ok(ApiResponse.<Void>success("Access updated successfully", null));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+    }
+
+    /**
      * Get all roles for user management filtering. Returns a list of all available roles in the
      * system.
      * 
@@ -463,6 +532,100 @@ public class UserRestController {
 
         public void setNewPassword(String newPassword) {
             this.newPassword = newPassword;
+        }
+    }
+
+    /**
+     * DTO returned by GET /api/users/{username}/access. Contains all available dropdown items for
+     * each category plus the set of dropdown value IDs explicitly assigned to this user.
+     */
+    public static class UserAccessDto {
+        private final List<DropdownValue> allClients;
+        private final List<DropdownValue> allProjects;
+        private final List<DropdownValue> allExpenseClients;
+        private final List<DropdownValue> allExpenseProjects;
+        private final Set<Long> assignedIds;
+
+        public UserAccessDto(List<DropdownValue> allClients, List<DropdownValue> allProjects,
+                List<DropdownValue> allExpenseClients, List<DropdownValue> allExpenseProjects,
+                Set<Long> assignedIds) {
+            this.allClients = allClients;
+            this.allProjects = allProjects;
+            this.allExpenseClients = allExpenseClients;
+            this.allExpenseProjects = allExpenseProjects;
+            this.assignedIds = assignedIds;
+        }
+
+        public List<DropdownValue> getAllClients() {
+            return allClients;
+        }
+
+        public List<DropdownValue> getAllProjects() {
+            return allProjects;
+        }
+
+        public List<DropdownValue> getAllExpenseClients() {
+            return allExpenseClients;
+        }
+
+        public List<DropdownValue> getAllExpenseProjects() {
+            return allExpenseProjects;
+        }
+
+        public Set<Long> getAssignedIds() {
+            return assignedIds;
+        }
+    }
+
+    /**
+     * Request body for PUT /api/users/{username}/access. Specifies which tab (TASK or EXPENSE) is
+     * being saved and the selected IDs for each category.
+     */
+    public static class UserAccessUpdateRequest {
+        private String view;
+        private List<Long> clientIds;
+        private List<Long> projectIds;
+        private List<Long> expenseClientIds;
+        private List<Long> expenseProjectIds;
+
+        public String getView() {
+            return view;
+        }
+
+        public void setView(String view) {
+            this.view = view;
+        }
+
+        public List<Long> getClientIds() {
+            return clientIds;
+        }
+
+        public void setClientIds(List<Long> clientIds) {
+            this.clientIds = clientIds;
+        }
+
+        public List<Long> getProjectIds() {
+            return projectIds;
+        }
+
+        public void setProjectIds(List<Long> projectIds) {
+            this.projectIds = projectIds;
+        }
+
+        public List<Long> getExpenseClientIds() {
+            return expenseClientIds;
+        }
+
+        public void setExpenseClientIds(List<Long> expenseClientIds) {
+            this.expenseClientIds = expenseClientIds;
+        }
+
+        public List<Long> getExpenseProjectIds() {
+            return expenseProjectIds;
+        }
+
+        public void setExpenseProjectIds(List<Long> expenseProjectIds) {
+            this.expenseProjectIds = expenseProjectIds;
         }
     }
 }

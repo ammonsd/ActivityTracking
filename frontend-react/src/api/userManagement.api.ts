@@ -15,6 +15,8 @@ import type {
     RoleResponse,
     UserCreateRequest,
     UserUpdateRequest,
+    UserAccessData,
+    UserAccessUpdateRequest,
 } from "../types/userManagement.types";
 
 export const userManagementApi = {
@@ -121,5 +123,34 @@ export const userManagementApi = {
             newPassword,
             forcePasswordUpdate,
         });
+    },
+    /**
+     * Fetch dropdown access assignments for a user.
+     * @param username - Username to retrieve access data for
+     * @returns Promise with UserAccessData containing all items and assigned IDs
+     */
+    fetchUserAccess: async (username: string): Promise<UserAccessData> => {
+        const response = await apiClient.get<{
+            success: boolean;
+            message: string;
+            data: UserAccessData;
+        }>(`/users/${encodeURIComponent(username)}/access`);
+        return response.data.data;
+    },
+
+    /**
+     * Save dropdown access assignments for a user.
+     * @param username - Username whose access to update
+     * @param payload - Access update request with view and selected IDs
+     * @returns Promise that resolves when saved
+     */
+    saveUserAccess: async (
+        username: string,
+        payload: UserAccessUpdateRequest,
+    ): Promise<void> => {
+        await apiClient.put(
+            `/users/${encodeURIComponent(username)}/access`,
+            payload,
+        );
     },
 };

@@ -6,6 +6,7 @@ import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
 import com.ammons.taskactivity.security.RequirePermission;
 import com.ammons.taskactivity.service.TaskActivityService;
+import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.WeeklyTimesheetService;
 import com.ammons.taskactivity.service.DropdownValueService;
 import com.ammons.taskactivity.service.UserService;
@@ -70,6 +71,7 @@ public class TaskActivityWebController {
     private final TaskActivityService taskActivityService;
     private final DropdownConfig dropdownConfig;
     private final DropdownValueService dropdownValueService;
+    private final UserDropdownAccessService userDropdownAccessService;
     private final WeeklyTimesheetService weeklyTimesheetService;
     private final UserService userService;
     private final TaskListSortConfig taskListSortConfig;
@@ -77,11 +79,13 @@ public class TaskActivityWebController {
 
     public TaskActivityWebController(TaskActivityService taskActivityService,
             DropdownConfig dropdownConfig, DropdownValueService dropdownValueService,
+            UserDropdownAccessService userDropdownAccessService,
             WeeklyTimesheetService weeklyTimesheetService, UserService userService,
             TaskListSortConfig taskListSortConfig, BillabilityService billabilityService) {
         this.taskActivityService = taskActivityService;
         this.dropdownConfig = dropdownConfig;
         this.dropdownValueService = dropdownValueService;
+        this.userDropdownAccessService = userDropdownAccessService;
         this.weeklyTimesheetService = weeklyTimesheetService;
         this.userService = userService;
         this.taskListSortConfig = taskListSortConfig;
@@ -100,7 +104,7 @@ public class TaskActivityWebController {
     public String showForm(Model model, Authentication authentication) {
         addUserInfo(model, authentication);
         model.addAttribute(TASK_ACTIVITY_DTO_ATTR, new TaskActivityDto());
-        addDropdownOptions(model);
+        addDropdownOptions(model, authentication);
         return TASK_ACTIVITY_FORM_VIEW;
     }
 
@@ -148,7 +152,7 @@ public class TaskActivityWebController {
 
                 addUserInfo(model, authentication);
                 model.addAttribute(TASK_ACTIVITY_DTO_ATTR, dto);
-                addDropdownOptions(model, dto);
+                addDropdownOptions(model, dto, authentication);
                 addFilterAttributes(model, client, project, phase, taskId, username, startDate,
                         endDate);
                 return TASK_ACTIVITY_FORM_VIEW;
@@ -188,7 +192,7 @@ public class TaskActivityWebController {
         logger.info("User {} submitting form", username);
 
         if (bindingResult.hasErrors()) {
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             return TASK_ACTIVITY_FORM_VIEW;
         }
 
@@ -201,7 +205,7 @@ public class TaskActivityWebController {
             // tasks
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             model.addAttribute(SUCCESS_MESSAGE_ATTR, "Task activity saved successfully!");
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             return TASK_ACTIVITY_FORM_VIEW;
 
         } catch (DataIntegrityViolationException e) {
@@ -210,7 +214,7 @@ public class TaskActivityWebController {
             model.addAttribute(ERROR_MESSAGE_ATTR,
                     "A task with the same date, client, project, phase, Task ID, Task Name, and details already exists.");
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             return TASK_ACTIVITY_FORM_VIEW;
 
         } catch (Exception e) {
@@ -218,7 +222,7 @@ public class TaskActivityWebController {
             model.addAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to save task activity: " + e.getMessage());
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             return TASK_ACTIVITY_FORM_VIEW;
         }
     }
@@ -258,7 +262,7 @@ public class TaskActivityWebController {
         // Add pagination and filtering attributes to model
         addPaginationAttributes(model, tasksPage, page, tasksPage.getContent());
         addFilterAttributes(model, client, project, phase, taskId, username, startDate, endDate);
-        addDropdownOptions(model);
+        addDropdownOptions(model, authentication);
 
         // Add users list for admin filter (only if user is admin)
         if (isUserAdmin) {
@@ -353,7 +357,7 @@ public class TaskActivityWebController {
                 boolean isReadOnly = !taskActivity.get().getUsername().equals(currentUsername);
                 model.addAttribute("isReadOnly", isReadOnly);
 
-                addDropdownOptions(model, dto);
+                addDropdownOptions(model, dto, authentication);
                 addFilterAttributes(model, client, project, phase, taskId, username, startDate,
                         endDate);
                 return TASK_DETAIL_VIEW;
@@ -397,7 +401,7 @@ public class TaskActivityWebController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute(TASK_ID_ATTR, id);
-            addDropdownOptions(model, taskActivityDto);
+            addDropdownOptions(model, taskActivityDto, authentication);
             return TASK_DETAIL_VIEW;
         }
 
@@ -426,7 +430,7 @@ public class TaskActivityWebController {
             model.addAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to update task activity: " + e.getMessage());
             model.addAttribute(TASK_ID_ATTR, id);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             return TASK_DETAIL_VIEW;
         }
     }
@@ -487,19 +491,29 @@ public class TaskActivityWebController {
         return dto;
     }
 
-    private void addDropdownOptions(Model model) {
-        addDropdownOptions(model, null);
+    /**
+     * Modified by: Dean Ammons - February 2026 Change: Added Authentication parameter to filter
+     * clients/projects by user access Reason: Restrict which clients and projects appear in
+     * dropdowns per user assignment
+     */
+    private void addDropdownOptions(Model model, Authentication authentication) {
+        addDropdownOptions(model, null, authentication);
     }
 
     /**
-     * Add dropdown options to model, including inactive values if they're currently selected
-     * 
+     * Add dropdown options to model filtered by user access. Includes inactive values if they're
+     * currently selected. ADMIN role receives all active values.
+     *
      * @param model the model to add attributes to
      * @param dto the current task activity (null for new tasks)
+     * @param authentication the current user's authentication
      */
-    private void addDropdownOptions(Model model, TaskActivityDto dto) {
-        List<String> clients = dropdownConfig.getClientsList();
-        List<String> projects = dropdownConfig.getProjectsList();
+    private void addDropdownOptions(Model model, TaskActivityDto dto,
+            Authentication authentication) {
+        List<String> clients = userDropdownAccessService.getAccessibleClients(authentication)
+                .stream().map(DropdownValue::getItemValue).toList();
+        List<String> projects = userDropdownAccessService.getAccessibleProjects(authentication)
+                .stream().map(DropdownValue::getItemValue).toList();
         List<String> phases = dropdownConfig.getPhasesList();
 
         // When editing existing task, include its values even if they're inactive
