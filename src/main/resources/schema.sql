@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS public.dropdownvalues (
     displayorder INTEGER NOT NULL DEFAULT 0,
     isactive BOOLEAN NOT NULL DEFAULT TRUE,
     non_billable BOOLEAN NOT NULL DEFAULT FALSE,
+    all_users BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT uk_dropdownvalues UNIQUE (category, subcategory, itemvalue)
 );
 
