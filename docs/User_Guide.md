@@ -327,6 +327,9 @@ To protect your account from unauthorized access, the system automatically locks
    - **Project**: Select the project you worked on (required)
      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
      - This helps distinguish billable client work from internal overhead
+
+   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator to update your **Task** tab access settings.
+
    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
    - **Task ID**: Enter the ticket or reference number from your project management tool (optional, e.g., `TA-001`, `MP1T-6394`)
@@ -644,6 +647,9 @@ Use the filter controls at the top of the expense list to find specific expenses
    - **Expense Date**: Date you incurred the expense (required)
    - **Client**: Client associated with this expense (required)
    - **Project**: Project related to the expense (optional)
+
+   > **Note:** The Client and Project dropdowns for expenses show only the values your administrator has assigned to your account under **Expense** access, plus any values flagged as visible to all users. Task and expense access are configured independently — your task clients/projects and your expense clients/projects may differ. If you do not see an expected client or project, contact your administrator to update your **Expense** tab access settings.
+
    - **Expense Type**: Category from dropdown (Travel - Airfare, Hotel, Home Office Equipment, etc.) (required)
    - **Description**: What the expense was for (required)
    - **Amount**: Cost of the expense (required)

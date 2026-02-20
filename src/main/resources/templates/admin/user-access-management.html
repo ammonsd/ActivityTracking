@@ -1,0 +1,804 @@
+<!--
+  Description: Dropdown access management page for a specific user. TASK tab assigns which
+  TASK/Clients and TASK/Projects the user may log time against. EXPENSE tab assigns which
+  EXPENSE/Clients and EXPENSE/Projects the user may record expenses against. These are
+  independent sets drawn from the same subcategory names but different categories in the
+  dropdown values table. Items flagged allUsers=true are visible to everyone.
+
+  Author: Dean Ammons
+  Date: January 2026
+-->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>User Access Management</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+
+        <style>
+            /* ── Tab bar ──────────────────────────────────────────────────────── */
+            .view-tabs {
+                display: flex;
+                gap: 0;
+                margin-bottom: 24px;
+                border-bottom: 2px solid #dee2e6;
+            }
+            .view-tab {
+                padding: 10px 24px;
+                font-size: 14px;
+                font-weight: 500;
+                border: 1px solid #dee2e6;
+                border-bottom: none;
+                background: #f8f9fa;
+                cursor: pointer;
+                border-radius: 6px 6px 0 0;
+                color: #495057;
+                margin-right: 4px;
+                transition: background 0.15s;
+            }
+            .view-tab:hover {
+                background: #e9ecef;
+            }
+            .view-tab.active {
+                background: #ffffff;
+                color: #007bff;
+                border-color: #dee2e6;
+                border-bottom: 2px solid #ffffff;
+                margin-bottom: -2px;
+            }
+
+            /* ── Section grid ─────────────────────────────────────────────────── */
+            .access-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-top: 4px;
+            }
+            @media (max-width: 768px) {
+                .access-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .access-section {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+            }
+            .access-section h3 {
+                color: #333;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 8px;
+                margin-top: 0;
+                margin-bottom: 16px;
+            }
+
+            /* ── Checkbox rows ────────────────────────────────────────────────── */
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 4px;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .checkbox-item:last-child {
+                border-bottom: none;
+            }
+
+            .checkbox-item input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+            .checkbox-item input[type="checkbox"]:disabled {
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+            .checkbox-item label {
+                cursor: pointer;
+                flex-grow: 1;
+                font-size: 14px;
+            }
+
+            /* ── Badges & toggle buttons ──────────────────────────────────────── */
+            .badge-all-users {
+                background-color: #6c757d;
+                color: white;
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 10px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .btn-toggle {
+                padding: 2px 7px;
+                font-size: 11px;
+                border: 1px solid #6c757d;
+                border-radius: 4px;
+                background: white;
+                color: #495057;
+                cursor: pointer;
+                white-space: nowrap;
+                flex-shrink: 0;
+                line-height: 1.4;
+            }
+            .btn-toggle:hover {
+                background: #e9ecef;
+            }
+            .btn-toggle.btn-toggle-restrict {
+                border-color: #dc3545;
+                color: #dc3545;
+            }
+            .btn-toggle.btn-toggle-restrict:hover {
+                background: #fff0f0;
+            }
+            .toggle-form {
+                margin: 0;
+                padding: 0;
+                display: inline;
+            }
+
+            /* ── Misc ─────────────────────────────────────────────────────────── */
+            .no-items {
+                color: #6c757d;
+                font-style: italic;
+                text-align: center;
+                padding: 20px;
+            }
+            .user-info-banner {
+                background-color: #e8f4fd;
+                border: 1px solid #bee5eb;
+                border-radius: 6px;
+                padding: 12px 16px;
+                margin-bottom: 24px;
+                color: #0c5460;
+                font-size: 15px;
+            }
+            .form-actions {
+                margin-top: 30px;
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+            .select-controls {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .select-controls button {
+                font-size: 12px;
+                color: #007bff;
+                cursor: pointer;
+                text-decoration: underline;
+                background: none;
+                border: none;
+                padding: 0;
+            }
+            .select-controls button:hover {
+                color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                }),
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>🔐 User Access Management</h1>
+                <a
+                    th:href="@{/task-activity/manage-users}"
+                    class="btn btn-secondary"
+                >
+                    ← Back to User Management
+                </a>
+            </div>
+
+            <div class="content">
+                <!-- Success / Error messages -->
+                <div
+                    th:if="${successMessage}"
+                    class="success-message"
+                    th:text="${successMessage}"
+                ></div>
+                <div
+                    th:if="${errorMessage}"
+                    class="error-message"
+                    th:text="${errorMessage}"
+                ></div>
+
+                <!-- Target user info banner -->
+                <div class="user-info-banner">
+                    Managing dropdown access for user:
+                    <strong th:text="${targetUsername}">username</strong>
+                    &nbsp;&mdash;&nbsp; Use the <strong>📋 Task</strong> tab to
+                    control which Clients and Projects this user may log time
+                    against. Use the <strong>💰 Expense</strong> tab to control
+                    which Clients and Projects they may record expenses against.
+                    Items marked
+                    <span class="badge-all-users">All Users</span> are visible
+                    to every user without an explicit assignment.
+                </div>
+
+                <!-- ── TASK / EXPENSE tab bar ─────────────────────────────────── -->
+                <div class="view-tabs">
+                    <button
+                        type="button"
+                        id="tab-task"
+                        class="view-tab"
+                        th:classappend="${currentView == 'TASK' ? ' active' : ''}"
+                        onclick="switchView('TASK')"
+                    >
+                        📋 Task
+                    </button>
+                    <button
+                        type="button"
+                        id="tab-expense"
+                        class="view-tab"
+                        th:classappend="${currentView == 'EXPENSE' ? ' active' : ''}"
+                        onclick="switchView('EXPENSE')"
+                    >
+                        💰 Expense
+                    </button>
+                </div>
+
+                <!--
+                  Main assignment form.
+                  Checkboxes in the grid below use form="accessForm" so they submit here
+                  even though the <form> tag does not wrap them — this avoids nested-form
+                  issues with the inline toggle mini-forms.
+                -->
+                <form
+                    id="accessForm"
+                    th:action="@{/task-activity/manage-users/access/{un}(un=${targetUsername})}"
+                    method="post"
+                >
+                    <input
+                        type="hidden"
+                        id="viewInput"
+                        name="view"
+                        th:value="${currentView}"
+                    />
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            💾 Save Access
+                        </button>
+                        <a
+                            th:href="@{/task-activity/manage-users}"
+                            class="btn btn-secondary"
+                            >Cancel</a
+                        >
+                    </div>
+                </form>
+
+                <!-- ── TASK view ──────────────────────────────────────────────── -->
+                <div
+                    id="section-task"
+                    th:style="${currentView != 'TASK' ? 'display:none' : ''}"
+                >
+                    <div class="access-grid">
+                        <!-- Clients -->
+                        <div class="access-section">
+                            <h3>🏢 Clients</h3>
+                            <div
+                                th:if="${#lists.isEmpty(allClients)}"
+                                class="no-items"
+                            >
+                                No active clients found.
+                            </div>
+                            <div th:if="${!#lists.isEmpty(allClients)}">
+                                <div class="select-controls">
+                                    <button
+                                        type="button"
+                                        onclick="selectAll('client')"
+                                    >
+                                        Select All
+                                    </button>
+                                    <span>|</span>
+                                    <button
+                                        type="button"
+                                        onclick="clearAll('client')"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div
+                                    th:each="item : ${allClients}"
+                                    class="checkbox-item"
+                                >
+                                    <th:block th:if="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            disabled
+                                            checked
+                                            th:id="'client-' + ${item.id}"
+                                        />
+                                        <label
+                                            th:for="'client-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Client</label
+                                        >
+                                        <span class="badge-all-users"
+                                            >All Users</span
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="TASK"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle btn-toggle-restrict"
+                                                title="Remove All Users flag — item will require explicit assignment"
+                                            >
+                                                🔓 Restrict
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                    <th:block th:unless="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            name="clientIds"
+                                            th:value="${item.id}"
+                                            th:id="'client-' + ${item.id}"
+                                            th:checked="${assignedIds.contains(item.id)}"
+                                            class="client-cb"
+                                            form="accessForm"
+                                        />
+                                        <label
+                                            th:for="'client-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Client</label
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="TASK"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle"
+                                                title="Set All Users flag — item becomes visible to everyone"
+                                            >
+                                                🌐 All
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Projects -->
+                        <div class="access-section">
+                            <h3>📁 Projects</h3>
+                            <div
+                                th:if="${#lists.isEmpty(allProjects)}"
+                                class="no-items"
+                            >
+                                No active projects found.
+                            </div>
+                            <div th:if="${!#lists.isEmpty(allProjects)}">
+                                <div class="select-controls">
+                                    <button
+                                        type="button"
+                                        onclick="selectAll('project')"
+                                    >
+                                        Select All
+                                    </button>
+                                    <span>|</span>
+                                    <button
+                                        type="button"
+                                        onclick="clearAll('project')"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div
+                                    th:each="item : ${allProjects}"
+                                    class="checkbox-item"
+                                >
+                                    <th:block th:if="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            disabled
+                                            checked
+                                            th:id="'project-' + ${item.id}"
+                                        />
+                                        <label
+                                            th:for="'project-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Project</label
+                                        >
+                                        <span class="badge-all-users"
+                                            >All Users</span
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="TASK"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle btn-toggle-restrict"
+                                                title="Remove All Users flag"
+                                            >
+                                                🔓 Restrict
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                    <th:block th:unless="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            name="projectIds"
+                                            th:value="${item.id}"
+                                            th:id="'project-' + ${item.id}"
+                                            th:checked="${assignedIds.contains(item.id)}"
+                                            class="project-cb"
+                                            form="accessForm"
+                                        />
+                                        <label
+                                            th:for="'project-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Project</label
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="TASK"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle"
+                                                title="Set All Users flag"
+                                            >
+                                                🌐 All
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end TASK access-grid -->
+                </div>
+                <!-- end section-task -->
+
+                <!-- ── EXPENSE view ───────────────────────────────────────────── -->
+                <div
+                    id="section-expense"
+                    th:style="${currentView != 'EXPENSE' ? 'display:none' : ''}"
+                >
+                    <div class="access-grid">
+                        <!-- Expense Clients -->
+                        <div class="access-section">
+                            <h3>🏢 Clients (Expense)</h3>
+                            <div
+                                th:if="${#lists.isEmpty(allExpenseClients)}"
+                                class="no-items"
+                            >
+                                No active expense clients found.
+                            </div>
+                            <div th:if="${!#lists.isEmpty(allExpenseClients)}">
+                                <div class="select-controls">
+                                    <button
+                                        type="button"
+                                        onclick="selectAll('expense-client')"
+                                    >
+                                        Select All
+                                    </button>
+                                    <span>|</span>
+                                    <button
+                                        type="button"
+                                        onclick="clearAll('expense-client')"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div
+                                    th:each="item : ${allExpenseClients}"
+                                    class="checkbox-item"
+                                >
+                                    <th:block th:if="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            disabled
+                                            checked
+                                            th:id="'expense-client-' + ${item.id}"
+                                        />
+                                        <label
+                                            th:for="'expense-client-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Client</label
+                                        >
+                                        <span class="badge-all-users"
+                                            >All Users</span
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="EXPENSE"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle btn-toggle-restrict"
+                                                title="Remove All Users flag — item will require explicit assignment"
+                                            >
+                                                🔓 Restrict
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                    <th:block th:unless="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            name="expenseClientIds"
+                                            th:value="${item.id}"
+                                            th:id="'expense-client-' + ${item.id}"
+                                            th:checked="${assignedIds.contains(item.id)}"
+                                            class="expense-client-cb"
+                                            form="accessForm"
+                                        />
+                                        <label
+                                            th:for="'expense-client-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Client</label
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="EXPENSE"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle"
+                                                title="Set All Users flag — item becomes visible to everyone"
+                                            >
+                                                🌐 All
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expense Projects -->
+                        <div class="access-section">
+                            <h3>📁 Projects (Expense)</h3>
+                            <div
+                                th:if="${#lists.isEmpty(allExpenseProjects)}"
+                                class="no-items"
+                            >
+                                No active expense projects found.
+                            </div>
+                            <div th:if="${!#lists.isEmpty(allExpenseProjects)}">
+                                <div class="select-controls">
+                                    <button
+                                        type="button"
+                                        onclick="selectAll('expense-project')"
+                                    >
+                                        Select All
+                                    </button>
+                                    <span>|</span>
+                                    <button
+                                        type="button"
+                                        onclick="clearAll('expense-project')"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div
+                                    th:each="item : ${allExpenseProjects}"
+                                    class="checkbox-item"
+                                >
+                                    <th:block th:if="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            disabled
+                                            checked
+                                            th:id="'expense-project-' + ${item.id}"
+                                        />
+                                        <label
+                                            th:for="'expense-project-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Project</label
+                                        >
+                                        <span class="badge-all-users"
+                                            >All Users</span
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="EXPENSE"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle btn-toggle-restrict"
+                                                title="Remove All Users flag"
+                                            >
+                                                🔓 Restrict
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                    <th:block th:unless="${item.allUsers}">
+                                        <input
+                                            type="checkbox"
+                                            name="expenseProjectIds"
+                                            th:value="${item.id}"
+                                            th:id="'expense-project-' + ${item.id}"
+                                            th:checked="${assignedIds.contains(item.id)}"
+                                            class="expense-project-cb"
+                                            form="accessForm"
+                                        />
+                                        <label
+                                            th:for="'expense-project-' + ${item.id}"
+                                            th:text="${item.itemValue}"
+                                            >Project</label
+                                        >
+                                        <form
+                                            class="toggle-form"
+                                            method="post"
+                                            th:action="@{/task-activity/manage-users/access/{un}/toggle-all-users/{id}(un=${targetUsername},id=${item.id})}"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="view"
+                                                value="EXPENSE"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="btn-toggle"
+                                                title="Set All Users flag"
+                                            >
+                                                🌐 All
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end EXPENSE access-grid -->
+                </div>
+                <!-- end section-expense -->
+            </div>
+            <!-- end content -->
+        </div>
+        <!-- end container -->
+
+        <script>
+            /**
+             * Switch between TASK and EXPENSE views. Updates the hidden form input,
+             * toggles section visibility, and highlights the active tab.
+             */
+            function switchView(view) {
+                document.getElementById("viewInput").value = view;
+
+                document.getElementById("section-task").style.display =
+                    view === "TASK" ? "" : "none";
+                document.getElementById("section-expense").style.display =
+                    view === "EXPENSE" ? "" : "none";
+
+                document
+                    .getElementById("tab-task")
+                    .classList.toggle("active", view === "TASK");
+                document
+                    .getElementById("tab-expense")
+                    .classList.toggle("active", view === "EXPENSE");
+            }
+
+            /**
+             * Check all assignable checkboxes in a named section.
+             * Disabled (allUsers) checkboxes are intentionally skipped.
+             *
+             * @param {string} type - CSS class prefix, e.g. "client", "project",
+             *                        "expense-type", "payment-method"
+             */
+            function selectAll(type) {
+                document
+                    .querySelectorAll("." + type + "-cb")
+                    .forEach((cb) => (cb.checked = true));
+            }
+
+            /**
+             * Uncheck all assignable checkboxes in a named section.
+             */
+            function clearAll(type) {
+                document
+                    .querySelectorAll("." + type + "-cb")
+                    .forEach((cb) => (cb.checked = false));
+            }
+        </script>
+    </body>
+</html>

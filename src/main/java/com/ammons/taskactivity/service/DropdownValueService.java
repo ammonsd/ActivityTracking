@@ -201,6 +201,24 @@ public class DropdownValueService {
         }
     }
 
+    /**
+     * Toggle the allUsers flag on a dropdown value. When true the value is visible to every user
+     * without requiring an explicit access assignment.
+     *
+     * @param id the dropdown value ID
+     * @return the updated dropdown value
+     */
+    public DropdownValue toggleAllUsers(Long id) {
+        Optional<DropdownValue> existing = dropdownValueRepository.findById(id);
+        if (existing.isPresent()) {
+            DropdownValue dv = existing.get();
+            dv.setAllUsers(!Boolean.TRUE.equals(dv.getAllUsers()));
+            return dropdownValueRepository.save(dv);
+        } else {
+            throw new RuntimeException("Dropdown value not found with ID: " + id);
+        }
+    }
+
     @Transactional(readOnly = true)
     public Optional<DropdownValue> getDropdownValueById(Long id) {
         return dropdownValueRepository.findById(id);
@@ -272,7 +290,23 @@ public class DropdownValueService {
     }
 
     /**
-     * Convenience methods for EXPENSE subcategories
+     * Convenience methods for EXPENSE subcategories — CLIENT and PROJECT (controls which
+     * clients/projects a user may assign expenses to)
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveExpenseClients() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_CLIENT);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getActiveExpenseProjects() {
+        return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                CATEGORY_EXPENSE, SUBCATEGORY_PROJECT);
+    }
+
+    /**
+     * Convenience methods for EXPENSE subcategories — types, methods, statuses, etc.
      */
     @Transactional(readOnly = true)
     public List<DropdownValue> getActiveExpenseTypes() {

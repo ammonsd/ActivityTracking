@@ -6,6 +6,8 @@ import com.ammons.taskactivity.dto.UserEditDto;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.RoleRepository;
+import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.PasswordExpirationNotificationService;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * UserManagementController
@@ -48,19 +51,26 @@ public class UserManagementController {
     private static final String ADMIN_USER_EDIT = "admin/user-edit";
     private static final String TARGET_USER = "targetUser";
     private static final String ADMIN_USER_CHANGE_PASSWORD = "admin/user-change-password";
+    private static final String ADMIN_USER_ACCESS = "admin/user-access-management";
 
     private final UserService userService;
     private final TaskActivityService taskActivityService;
     private final RoleRepository roleRepository;
     private final PasswordExpirationNotificationService passwordExpirationNotificationService;
+    private final UserDropdownAccessService userDropdownAccessService;
+    private final DropdownValueService dropdownValueService;
 
     public UserManagementController(UserService userService,
             TaskActivityService taskActivityService, RoleRepository roleRepository,
-            PasswordExpirationNotificationService passwordExpirationNotificationService) {
+            PasswordExpirationNotificationService passwordExpirationNotificationService,
+            UserDropdownAccessService userDropdownAccessService,
+            DropdownValueService dropdownValueService) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
         this.passwordExpirationNotificationService = passwordExpirationNotificationService;
+        this.userDropdownAccessService = userDropdownAccessService;
+        this.dropdownValueService = dropdownValueService;
     }
 
     /**
@@ -301,6 +311,123 @@ public class UserManagementController {
         }
 
         return REDIRECT_MANAGE_USERS;
+    }
+
+    /**
+     * Show the access assignment page for a given user. TASK tab loads TASK/CLIENT and TASK/PROJECT
+     * values; EXPENSE tab loads EXPENSE/CLIENT and EXPENSE/PROJECT values. Both sets share the same
+     * assignedIds set since the underlying user_dropdown_access table distinguishes rows by the ID
+     * of the dropdown value, which carries its own category.
+     *
+     * @param username the username whose access is being managed
+     * @param view which tab to show: "TASK" (default) or "EXPENSE"
+     */
+    @GetMapping("/access/{username}")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    public String showAccessForm(@PathVariable String username,
+            @RequestParam(value = "view", defaultValue = "TASK") String view, Model model,
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+        logger.info("Admin {} accessing dropdown access form for user: {} (view={})",
+                authentication.getName(), username, view);
+
+        if (userService.getUserByUsername(username).isEmpty()) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, USER_NOT_FOUND);
+            return REDIRECT_MANAGE_USERS;
+        }
+
+        Set<Long> assignedIds = userDropdownAccessService.getAssignedDropdownValueIds(username);
+
+        model.addAttribute("targetUsername", username);
+        model.addAttribute("allClients", dropdownValueService.getActiveClients());
+        model.addAttribute("allProjects", dropdownValueService.getActiveProjects());
+        model.addAttribute("allExpenseClients", dropdownValueService.getActiveExpenseClients());
+        model.addAttribute("allExpenseProjects", dropdownValueService.getActiveExpenseProjects());
+        model.addAttribute("assignedIds", assignedIds);
+        model.addAttribute("currentView", view);
+        addUserDisplayInfo(model, authentication);
+
+        return ADMIN_USER_ACCESS;
+    }
+
+    /**
+     * Save the access assignments for a given user. When view=TASK, replaces TASK/CLIENT and
+     * TASK/PROJECT rows. When view=EXPENSE, replaces EXPENSE/CLIENT and EXPENSE/PROJECT rows.
+     * Saving one tab never touches the other tab's assignments.
+     *
+     * @param username the username whose access is being updated
+     * @param view which tab was active: "TASK" or "EXPENSE"
+     * @param clientIds selected TASK client IDs (TASK view)
+     * @param projectIds selected TASK project IDs (TASK view)
+     * @param expenseClientIds selected EXPENSE client IDs (EXPENSE view)
+     * @param expenseProjectIds selected EXPENSE project IDs (EXPENSE view)
+     */
+    @PostMapping("/access/{username}")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    public String saveAccessAssignments(@PathVariable String username,
+            @RequestParam(value = "view", defaultValue = "TASK") String view,
+            @RequestParam(value = "clientIds", required = false) List<Long> clientIds,
+            @RequestParam(value = "projectIds", required = false) List<Long> projectIds,
+            @RequestParam(value = "expenseClientIds", required = false) List<Long> expenseClientIds,
+            @RequestParam(value = "expenseProjectIds",
+                    required = false) List<Long> expenseProjectIds,
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+        logger.info("Admin {} saving dropdown access for user: {} (view={})",
+                authentication.getName(), username, view);
+
+        if (userService.getUserByUsername(username).isEmpty()) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, USER_NOT_FOUND);
+            return REDIRECT_MANAGE_USERS;
+        }
+
+        if ("EXPENSE".equals(view)) {
+            userDropdownAccessService.saveExpenseClientAssignments(username,
+                    expenseClientIds != null ? expenseClientIds : List.of());
+            userDropdownAccessService.saveExpenseProjectAssignments(username,
+                    expenseProjectIds != null ? expenseProjectIds : List.of());
+            logger.info("Admin {} updated EXPENSE access for user: {} (clients={}, projects={})",
+                    authentication.getName(), username,
+                    expenseClientIds != null ? expenseClientIds.size() : 0,
+                    expenseProjectIds != null ? expenseProjectIds.size() : 0);
+        } else {
+            userDropdownAccessService.saveClientAssignments(username,
+                    clientIds != null ? clientIds : List.of());
+            userDropdownAccessService.saveProjectAssignments(username,
+                    projectIds != null ? projectIds : List.of());
+            logger.info("Admin {} updated TASK access for user: {} (clients={}, projects={})",
+                    authentication.getName(), username, clientIds != null ? clientIds.size() : 0,
+                    projectIds != null ? projectIds.size() : 0);
+        }
+
+        redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
+                USER_PREFIX + username + "' access assignments updated successfully");
+        return REDIRECT_MANAGE_USERS;
+    }
+
+    /**
+     * Toggle the allUsers flag on a dropdown value. Values with allUsers=true are visible to every
+     * user without requiring an explicit access assignment. Redirects back to the same tab.
+     *
+     * @param username the username context (used for redirect back to the access page)
+     * @param valueId the dropdown value ID to toggle
+     * @param view the active tab (TASK or EXPENSE) to restore after redirect
+     */
+    @PostMapping("/access/{username}/toggle-all-users/{valueId}")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    public String toggleAllUsersFlag(@PathVariable String username, @PathVariable Long valueId,
+            @RequestParam(value = "view", defaultValue = "TASK") String view,
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+        logger.info("Admin {} toggling allUsers flag for dropdown value ID: {}",
+                authentication.getName(), valueId);
+
+        try {
+            dropdownValueService.toggleAllUsers(valueId);
+        } catch (RuntimeException e) {
+            logger.warn("Failed to toggle allUsers for value {}: {}", valueId, e.getMessage());
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE,
+                    "Could not update value: " + e.getMessage());
+        }
+
+        return "redirect:/task-activity/manage-users/access/" + username + "?view=" + view;
     }
 
     /**

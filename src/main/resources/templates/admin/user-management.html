@@ -366,6 +366,19 @@
                                         class="btn btn-info btn-sm"
                                         >🔑 Password</a
                                     >
+                                    <!-- Access button disabled for ADMIN (role has full access) -->
+                                    <span
+                                        th:if="${user.role != null && user.role.name == 'ADMIN'}"
+                                        class="btn btn-disabled btn-sm"
+                                        title="ADMIN role already has full access to all dropdowns"
+                                        >🔐 Access</span
+                                    >
+                                    <a
+                                        th:unless="${user.role != null && user.role.name == 'ADMIN'}"
+                                        th:href="@{/task-activity/manage-users/access/{un}(un=${user.username})}"
+                                        class="btn btn-secondary btn-sm"
+                                        >🔐 Access</a
+                                    >
                                     <!-- Delete button - disabled if user is current user OR has task activities -->
                                     <form
                                         th:if="${user.username != username && !userHasTasks[user.username]}"

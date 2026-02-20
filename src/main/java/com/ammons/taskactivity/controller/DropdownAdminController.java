@@ -28,6 +28,7 @@ public class DropdownAdminController {
     private static final String REDIRECT_ADMIN_DROPDOWNS = "redirect:/admin/dropdowns";
     private static final String REDIRECT_ADMIN_DROPDOWNS_CATEGORY =
             "redirect:/admin/dropdowns?category=";
+    private static final String SUBCATEGORY_PARAM = "&subcategory=";
 
     private final DropdownValueService dropdownValueService;
     private final UserService userService;
@@ -158,15 +159,19 @@ public class DropdownAdminController {
     }
 
     /**
-     * Show edit form for a dropdown value
+     * Show edit form for a dropdown value. Accepts optional filter params so the subcategory filter
+     * can be restored when the user returns to the list.
      */
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model,
+    public String showEditForm(@PathVariable Long id,
+            @RequestParam(required = false) String returnSubcategory, Model model,
             RedirectAttributes redirectAttributes, Authentication authentication) {
         Optional<DropdownValue> dropdownValue = dropdownValueService.getDropdownValueById(id);
 
         if (dropdownValue.isPresent()) {
             model.addAttribute("dropdownValue", dropdownValue.get());
+            model.addAttribute("returnSubcategory",
+                    returnSubcategory != null ? returnSubcategory : "");
             addUserDisplayInfo(model, authentication);
             return "admin/dropdown-edit";
         } else {
@@ -177,13 +182,15 @@ public class DropdownAdminController {
     }
 
     /**
-     * Update a dropdown value
+     * Update a dropdown value. Redirects back to the category+subcategory filter that was active
+     * when the user opened the edit form.
      */
     @PostMapping("/update/{id}")
     public String updateDropdownValue(@PathVariable Long id, @RequestParam String value,
             @RequestParam Integer displayOrder,
             @RequestParam(defaultValue = "false") Boolean isActive,
             @RequestParam(required = false, defaultValue = "false") Boolean nonBillable,
+            @RequestParam(required = false) String returnSubcategory,
             RedirectAttributes redirectAttributes) {
         try {
             DropdownValue updated =
@@ -192,8 +199,11 @@ public class DropdownAdminController {
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Successfully updated dropdown value.");
 
-            // Redirect back to the category page
-            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
+            String redirect = REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
+            if (returnSubcategory != null && !returnSubcategory.isBlank()) {
+                redirect += SUBCATEGORY_PARAM + returnSubcategory;
+            }
+            return redirect;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to update dropdown value: " + e.getMessage());
@@ -203,7 +213,7 @@ public class DropdownAdminController {
     }
 
     /**
-     * Toggle active status
+     * Toggle active status. Redirects back preserving the item's own subcategory filter.
      */
     @PostMapping("/toggle/{id}")
     public String toggleActiveStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
@@ -214,8 +224,11 @@ public class DropdownAdminController {
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Successfully " + status + " dropdown value: " + updated.getItemValue());
 
-            // Redirect back to the category page
-            return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
+            String redirect = REDIRECT_ADMIN_DROPDOWNS_CATEGORY + updated.getCategory();
+            if (updated.getSubcategory() != null && !updated.getSubcategory().isBlank()) {
+                redirect += SUBCATEGORY_PARAM + updated.getSubcategory();
+            }
+            return redirect;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to toggle dropdown value: " + e.getMessage());
@@ -225,7 +238,7 @@ public class DropdownAdminController {
     }
 
     /**
-     * Delete a dropdown value
+     * Delete a dropdown value. Redirects back preserving the item's own subcategory filter.
      */
     @PostMapping("/delete/{id}")
     public String deleteDropdownValue(@PathVariable Long id,
@@ -235,12 +248,16 @@ public class DropdownAdminController {
             if (dropdownValue.isPresent()) {
                 String deletedValue = dropdownValue.get().getItemValue();
                 String category = dropdownValue.get().getCategory();
+                String subcategory = dropdownValue.get().getSubcategory();
                 dropdownValueService.deleteDropdownValue(id);
                 redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                         "Successfully deleted dropdown value: " + deletedValue);
 
-                // Redirect back to the category page
-                return REDIRECT_ADMIN_DROPDOWNS_CATEGORY + category;
+                String redirect = REDIRECT_ADMIN_DROPDOWNS_CATEGORY + category;
+                if (subcategory != null && !subcategory.isBlank()) {
+                    redirect += SUBCATEGORY_PARAM + subcategory;
+                }
+                return redirect;
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,

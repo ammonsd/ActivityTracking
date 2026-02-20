@@ -4,6 +4,7 @@ import com.ammons.taskactivity.dto.ExpenseDto;
 import com.ammons.taskactivity.entity.Expense;
 import com.ammons.taskactivity.service.ExpenseService;
 import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.ReceiptStorageService;
 import com.ammons.taskactivity.service.BillabilityService;
@@ -78,6 +79,7 @@ public class ExpenseViewController {
 
     private final ExpenseService expenseService;
     private final DropdownValueService dropdownValueService;
+    private final UserDropdownAccessService userDropdownAccessService;
     private final UserService userService;
     private final ReceiptStorageService storageService;
     private final BillabilityService billabilityService;
@@ -86,10 +88,12 @@ public class ExpenseViewController {
     private long maxFileSize;
 
     public ExpenseViewController(ExpenseService expenseService,
-            DropdownValueService dropdownValueService, UserService userService,
+            DropdownValueService dropdownValueService,
+            UserDropdownAccessService userDropdownAccessService, UserService userService,
             ReceiptStorageService storageService, BillabilityService billabilityService) {
         this.expenseService = expenseService;
         this.dropdownValueService = dropdownValueService;
+        this.userDropdownAccessService = userDropdownAccessService;
         this.userService = userService;
         this.storageService = storageService;
         this.billabilityService = billabilityService;
@@ -175,7 +179,7 @@ public class ExpenseViewController {
         model.addAttribute("totalPages", expensesPage.getTotalPages());
         model.addAttribute("totalItems", expensesPage.getTotalElements());
 
-        addDropdownOptions(model);
+        addDropdownOptions(model, authentication);
         addFilterAttributes(model, client, project, expenseType, status, username, startDate,
                 endDate);
 
@@ -309,7 +313,7 @@ public class ExpenseViewController {
         expenseDto.setExpenseDate(LocalDate.now());
         model.addAttribute(EXPENSE_DTO_ATTR, expenseDto);
         model.addAttribute(IS_EDIT_ATTR, false);
-        addDropdownOptions(model);
+        addDropdownOptions(model, authentication);
         addFileUploadConfig(model);
         return EXPENSE_FORM_VIEW;
     }
@@ -344,7 +348,7 @@ public class ExpenseViewController {
         model.addAttribute(EXPENSE_DTO_ATTR, convertToDto(expense));
         model.addAttribute(EXPENSE_ID_ATTR, id);
         model.addAttribute(IS_EDIT_ATTR, true);
-        addDropdownOptions(model);
+        addDropdownOptions(model, authentication);
         addFileUploadConfig(model);
         return EXPENSE_FORM_VIEW;
     }
@@ -422,7 +426,7 @@ public class ExpenseViewController {
                 addUserInfo(model, authentication);
                 model.addAttribute(EXPENSE_DTO_ATTR, dto);
                 model.addAttribute(IS_EDIT_ATTR, false);
-                addDropdownOptions(model);
+                addDropdownOptions(model, authentication);
                 addFileUploadConfig(model);
                 return EXPENSE_FORM_VIEW;
             } else {
@@ -460,7 +464,7 @@ public class ExpenseViewController {
         if (bindingResult.hasErrors()) {
             addUserInfo(model, authentication);
             model.addAttribute(IS_EDIT_ATTR, false);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
@@ -477,7 +481,7 @@ public class ExpenseViewController {
                     model.addAttribute(ERROR_MESSAGE_ATTR,
                             "Expense created but receipt upload failed: " + e.getMessage());
                     addUserInfo(model, authentication);
-                    addDropdownOptions(model);
+                    addDropdownOptions(model, authentication);
                     addFileUploadConfig(model);
                     return EXPENSE_FORM_VIEW;
                 }
@@ -492,7 +496,7 @@ public class ExpenseViewController {
             logger.error("Error creating expense: {}", e.getMessage(), e);
             model.addAttribute(ERROR_MESSAGE_ATTR, "Failed to create expense: " + e.getMessage());
             addUserInfo(model, authentication);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
@@ -533,7 +537,7 @@ public class ExpenseViewController {
         model.addAttribute("expense", expense);
         model.addAttribute(EXPENSE_DTO_ATTR, dto);
         model.addAttribute(EXPENSE_ID_ATTR, id);
-        addDropdownOptions(model, dto);
+        addDropdownOptions(model, dto, authentication);
         addFileUploadConfig(model);
 
         // Pass filter parameters to the detail view so they can be used when going back
@@ -561,7 +565,7 @@ public class ExpenseViewController {
             addUserInfo(model, authentication);
             model.addAttribute(EXPENSE_ID_ATTR, id);
             model.addAttribute(IS_EDIT_ATTR, true);
-            addDropdownOptions(model, expenseDto);
+            addDropdownOptions(model, expenseDto, authentication);
             addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
@@ -620,7 +624,7 @@ public class ExpenseViewController {
             addUserInfo(model, authentication);
             model.addAttribute(EXPENSE_ID_ATTR, id);
             model.addAttribute(IS_EDIT_ATTR, true);
-            addDropdownOptions(model);
+            addDropdownOptions(model, authentication);
             addFileUploadConfig(model);
             return EXPENSE_FORM_VIEW;
         }
@@ -1202,23 +1206,28 @@ public class ExpenseViewController {
         return isOwnExpense && isEditableStatus;
     }
 
-    private void addDropdownOptions(Model model) {
-        addDropdownOptions(model, null);
+    /**
+     * Modified by: Dean Ammons - February 2026 Change: Added Authentication parameter to filter
+     * clients/projects by user access Reason: Restrict which clients and projects appear in
+     * dropdowns per user assignment
+     */
+    private void addDropdownOptions(Model model, Authentication authentication) {
+        addDropdownOptions(model, null, authentication);
     }
 
     /**
-     * Add dropdown options to model, including inactive values if they're currently selected
-     * 
+     * Add dropdown options to model filtered by user access. Includes inactive values if currently
+     * selected. ADMIN role receives all active values.
+     *
      * @param model the model to add attributes to
      * @param dto the current expense (null for new expenses)
+     * @param authentication the current user's authentication
      */
-    private void addDropdownOptions(Model model, ExpenseDto dto) {
-        List<String> clients =
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "CLIENT")
-                        .stream().map(dv -> dv.getItemValue()).toList();
-        List<String> projects =
-                dropdownValueService.getActiveValuesByCategoryAndSubcategory("TASK", "PROJECT")
-                        .stream().map(dv -> dv.getItemValue()).toList();
+    private void addDropdownOptions(Model model, ExpenseDto dto, Authentication authentication) {
+        List<String> clients = userDropdownAccessService.getAccessibleClients(authentication)
+                .stream().map(dv -> dv.getItemValue()).toList();
+        List<String> projects = userDropdownAccessService.getAccessibleProjects(authentication)
+                .stream().map(dv -> dv.getItemValue()).toList();
         List<String> expenseTypes = dropdownValueService.getActiveExpenseTypes().stream()
                 .map(dv -> dv.getItemValue()).toList();
         List<String> paymentMethods = dropdownValueService.getActivePaymentMethods().stream()

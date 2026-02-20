@@ -20,6 +20,7 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [User Self-Service Profile Management](#user-self-service-profile-management)
    - [Managing Task Activities](#managing-task-activities)
    - [Changing User Passwords](#changing-user-passwords)
+   - [Managing User Dropdown Access](#managing-user-dropdown-access)
 4. [Expense Management Administration](#expense-management-administration)
    - [Managing User Expenses](#managing-user-expenses)
    - [Expense Approval Process](#expense-approval-process)
@@ -319,6 +320,9 @@ Administrators can create, edit, and delete user accounts:
         - Users who have task entries in the system
     - Users with task entries cannot be deleted to maintain data integrity
     - To prevent a user from accessing the system, disable their account instead of deleting
+7. **Manage Dropdown Access**: Control which Clients and Projects a user can see in their dropdowns
+    - Click the **🔐 Access** button next to any user in the list
+    - See [Managing User Dropdown Access](#managing-user-dropdown-access) for full details
 
 ### Managing Roles and Permissions
 
@@ -951,6 +955,72 @@ See [Email Configuration Management](#email-configuration-management) section fo
 
 ---
 
+### Managing User Dropdown Access
+
+**Implemented**: February 2026
+
+Administrators can restrict which Clients and Projects appear in dropdown menus for each individual user. Task recording and expense recording are controlled **independently** via two separate tabs: the **📋 Task** tab governs which Clients and Projects appear when a user logs time; the **💰 Expense** tab governs which Clients and Projects appear when a user records an expense. Saving on one tab never affects the other tab's assignments.
+
+> **Why separate tabs?** The Clients and Projects available for task time-tracking (`TASK` category in Dropdown Management) and for expense recording (`EXPENSE` category) are maintained as distinct sets. A user may be authorized to bill expenses to a client they do not actively record time against, or vice versa.
+
+**Key Concepts:**
+
+- **Restricted by default**: Non-ADMIN users only see Clients/Projects that are either explicitly assigned to them *or* flagged as visible to all users
+- **All Users flag**: Any dropdown value marked "All Users" is automatically visible to everyone — no explicit assignment required
+- **ADMIN bypass**: Users with the ADMIN role always see all active Clients and Projects, regardless of assignments
+- **UI only**: Filtering is applied to the dropdown menus; the system does not block saving entries against unauthorized values
+- **Independent tabs**: TASK and EXPENSE assignments are stored separately — changing one tab does not affect the other
+
+#### How to Assign Client and Project Access
+
+1. **Navigate to User Management**: Click **"☰"** → **"👥 Manage Users"**
+2. **Locate the User**: Find the user in the list (use filters if needed)
+3. **Click "🔐 Access"**: Opens the dropdown access assignment page for that user
+4. **Choose the Tab**:
+   - **📋 Task tab** — controls Clients and Projects visible when the user logs task time
+   - **💰 Expense tab** — controls Clients and Projects visible when the user records an expense
+5. **Review the Checkboxes**:
+   - **Clients section** (left column): Lists all active Client values for the selected category
+   - **Projects section** (right column): Lists all active Project values for the selected category
+   - Items marked **All Users** are shown with a grey badge and a pre-checked, disabled checkbox — they are already visible to this user and cannot be removed via this screen
+6. **Select Assignments**: Check the boxes next to the Clients and Projects this user should be able to see
+   - Use the **"Select All"** / **"Clear All"** links at the top of each section for convenience
+7. **Click "💾 Save Access"**: Assignments for the **active tab only** are saved; the other tab's assignments are untouched
+8. **Switch Tabs**: Repeat steps 4–7 for the other tab if needed
+9. **Confirmation**: You are redirected back to User Management with a success message
+
+#### Marking a Dropdown Value as "All Users"
+
+To make a Client or Project visible to all users without individual assignment:
+
+1. Navigate to **Manage Dropdowns** ("☰" → "🔧 Manage Dropdowns")
+2. Find the Client or Project value (remember: TASK Clients and EXPENSE Clients are separate entries)
+3. Click the **Edit** button
+4. Check the **"All Users"** checkbox
+5. Save — the value is now visible to every user automatically
+
+Alternatively, the **🌐 All** button shown next to each value on the Access page sets this flag inline without leaving the page. The **🔓 Restrict** button removes it.
+
+This is useful for commonly-used overhead entries (e.g., "Internal", "Non-Billable") that every user should always see.
+
+#### Revoking Access
+
+- Open the **🔐 Access** page for the user, choose the appropriate tab (Task or Expense), and **uncheck** any Clients or Projects they should no longer see
+- Save the change — the user's dropdowns update immediately on their next page load
+- Existing task and expense entries are **not affected** — historical data is preserved
+
+#### Notes for Administrators
+
+| Scenario | Behavior |
+|----------|---------|
+| User has no assignments and no "All Users" values exist | User sees an empty Client/Project dropdown |
+| User is ADMIN role | Always sees all active values — assignments are ignored |
+| A dropdown value is deactivated | It no longer appears in any dropdown, regardless of access assignments |
+| User is deleted | All their dropdown access rows are automatically removed (CASCADE DELETE) |
+| Task and Expense tabs saved separately | Saving the Task tab does not clear Expense assignments, and vice versa |
+
+---
+
 ## Expense Management Administration
 
 ### Managing User Expenses
@@ -1132,6 +1202,15 @@ Dropdown management has been consolidated into a single, dynamic interface that 
         - **RECEIPT_STATUS**: Receipt availability (Attached, Pending, Not Available)
         - **EXPENSE_STATUS**: Workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
     - **Note**: New categories added to the database automatically appear in this list
+
+**All Users Flag:**
+
+Each Client and Project dropdown value can be marked as **"All Users"** to make it automatically visible to every user without requiring an explicit access assignment:
+
+- **When to use**: Common overhead entries that should always be available system-wide (e.g., "Internal", "Non-Billable", "Training")
+- **Display in admin UI**: "All Users" values appear with a grey **All Users** badge in the dropdown access assignment page and are shown as pre-checked, disabled checkboxes
+- **Setting the flag**: Check the **"All Users"** checkbox when adding or editing a Client or Project value
+- **Removing the flag**: Uncheck **"All Users"** — the value reverts to access-controlled and will only appear for users with an explicit assignment
 
 **Billability Configuration:**
 
