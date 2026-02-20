@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<!--
+Description: Edit form for an individual dropdown value, allowing admins to update the value,
+             display order, active status, and billability setting.
+
+Author: Dean Ammons
+Date: February 2026
+-->
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -85,6 +92,24 @@
         </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>Task Activity Tracker</h1>
+            <div class="user-info">
+                <span class="welcome-text">
+                    <span th:text="${userDisplayName}">Username</span>
+                </span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+                </form>
+                <span class="current-date" style="margin-left: 15px; font-size: 14px;">
+                    <script>
+                        document.write(new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }));
+                    </script>
+                </span>
+            </div>
+        </div>
+    </nav>
     <div class="container">
         <div class="header">
             <h1>Edit Dropdown Value</h1>
