@@ -127,14 +127,14 @@ export class ExpenseEditDialogComponent implements OnInit {
   }
 
   loadDropdowns(): void {
-    this.dropdownService.getClients().subscribe({
+    this.dropdownService.getExpenseClients().subscribe({
       next: (data) => (this.clients = data),
-      error: (err) => console.error('Error loading clients:', err),
+      error: (err) => console.error('Error loading expense clients:', err),
     });
 
-    this.dropdownService.getProjects().subscribe({
+    this.dropdownService.getExpenseProjects().subscribe({
       next: (data) => (this.projects = data),
-      error: (err) => console.error('Error loading projects:', err),
+      error: (err) => console.error('Error loading expense projects:', err),
     });
 
     this.dropdownService.getExpenseTypes().subscribe({

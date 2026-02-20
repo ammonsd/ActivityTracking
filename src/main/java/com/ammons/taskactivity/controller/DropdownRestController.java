@@ -92,6 +92,28 @@ public class DropdownRestController {
     }
 
     /**
+     * Get expense clients filtered by the authenticated user's EXPENSE/CLIENT access assignments.
+     */
+    @GetMapping("/expense-clients")
+    public ResponseEntity<List<DropdownValue>> getExpenseClients(Authentication authentication) {
+        logger.debug("REST API: Getting expense clients for user {}", authentication.getName());
+        List<DropdownValue> clients =
+                userDropdownAccessService.getAccessibleExpenseClients(authentication);
+        return ResponseEntity.ok(clients);
+    }
+
+    /**
+     * Get expense projects filtered by the authenticated user's EXPENSE/PROJECT access assignments.
+     */
+    @GetMapping("/expense-projects")
+    public ResponseEntity<List<DropdownValue>> getExpenseProjects(Authentication authentication) {
+        logger.debug("REST API: Getting expense projects for user {}", authentication.getName());
+        List<DropdownValue> projects =
+                userDropdownAccessService.getAccessibleExpenseProjects(authentication);
+        return ResponseEntity.ok(projects);
+    }
+
+    /**
      * Get phases (now from TASK/PHASE)
      */
     @GetMapping("/phases")

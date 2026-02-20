@@ -75,6 +75,45 @@ public class UserDropdownAccessService {
     }
 
     /**
+     * Returns the list of Expense Client dropdown values accessible to the authenticated user.
+     * ADMIN role receives all active EXPENSE/CLIENT entries. Other users receive only entries where
+     * allUsers=true or they have an explicit access row.
+     *
+     * @param authentication the current user's authentication
+     * @return accessible EXPENSE/CLIENT DropdownValue entries ordered by displayOrder, itemValue
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAccessibleExpenseClients(Authentication authentication) {
+        if (isAdmin(authentication)) {
+            return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                    DropdownValueService.CATEGORY_EXPENSE, DropdownValueService.SUBCATEGORY_CLIENT);
+        }
+        return userDropdownAccessRepository.findAccessibleByUsernameAndCategoryAndSubcategory(
+                authentication.getName(), DropdownValueService.CATEGORY_EXPENSE,
+                DropdownValueService.SUBCATEGORY_CLIENT);
+    }
+
+    /**
+     * Returns the list of Expense Project dropdown values accessible to the authenticated user.
+     * ADMIN role receives all active EXPENSE/PROJECT entries. Other users receive only entries
+     * where allUsers=true or they have an explicit access row.
+     *
+     * @param authentication the current user's authentication
+     * @return accessible EXPENSE/PROJECT DropdownValue entries ordered by displayOrder, itemValue
+     */
+    @Transactional(readOnly = true)
+    public List<DropdownValue> getAccessibleExpenseProjects(Authentication authentication) {
+        if (isAdmin(authentication)) {
+            return dropdownValueRepository.findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                    DropdownValueService.CATEGORY_EXPENSE,
+                    DropdownValueService.SUBCATEGORY_PROJECT);
+        }
+        return userDropdownAccessRepository.findAccessibleByUsernameAndCategoryAndSubcategory(
+                authentication.getName(), DropdownValueService.CATEGORY_EXPENSE,
+                DropdownValueService.SUBCATEGORY_PROJECT);
+    }
+
+    /**
      * Returns the set of dropdown value IDs explicitly assigned to a username. Used by the admin
      * assignment UI to pre-populate checkboxes.
      *
