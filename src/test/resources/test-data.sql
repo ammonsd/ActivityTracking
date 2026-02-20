@@ -80,9 +80,9 @@ INSERT INTO users (username, userpassword, firstname, lastname, email, role_id, 
 ('otheruser', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Other', 'User', 'otheruser@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP);
 
 -- Insert dropdown values for testing
-INSERT INTO dropdownvalues (category, subcategory, itemvalue, displayorder, isactive, non_billable) VALUES
-('TASK', 'CLIENT', 'Test Client', 1, true, false),
-('TASK', 'PROJECT', 'Test Project', 1, true, false),
-('TASK', 'PHASE', 'Test Phase', 1, true, false),
-('TASK', 'CLIENT', 'Client A', 2, true, false),
-('TASK', 'PROJECT', 'Project X', 2, true, false);
+INSERT INTO dropdownvalues (category, subcategory, itemvalue, displayorder, isactive, non_billable, all_users) VALUES
+('TASK', 'CLIENT', 'Test Client', 1, true, false, false),
+('TASK', 'PROJECT', 'Test Project', 1, true, false, false),
+('TASK', 'PHASE', 'Test Phase', 1, true, false, false),
+('TASK', 'CLIENT', 'Client A', 2, true, false, false),
+('TASK', 'PROJECT', 'Project X', 2, true, false, false);
