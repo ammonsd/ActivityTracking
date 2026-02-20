@@ -79,6 +79,7 @@ The application provides two user interface options:
   - CSV export with Copy/Download/Close options
   - Real-time statistics and data filtering
   - Responsive Material Design cards and tables
+  - User Dropdown Access Management with TASK/EXPENSE tab-scoped per-user assignments (February 2026)
 
 All UIs connect to the same Spring Boot backend REST API and share authentication.
 
@@ -4169,6 +4170,36 @@ GET /api/dropdowns/phases
 
 **Note:** These are shortcuts to the generic category endpoint and are used by the task creation/editing forms.
 
+#### Get User-Filtered Expense Dropdown Shortcuts
+
+```http
+GET /api/dropdowns/expense-clients
+GET /api/dropdowns/expense-projects
+```
+
+**Description:** Returns active expense-subcategory Client and Project dropdown values filtered by the authenticated user's dropdown access assignments. Equivalent to `/clients` and `/projects` but scoped to the `EXPENSE` subcategory.
+
+**Access Control:** Requires authentication (USER, ADMIN, or GUEST role). ADMIN users receive all active values. Non-ADMIN users receive only values explicitly assigned to them via `user_dropdown_access` plus any values with `allUsers = true`.
+
+**Use Case:** Populates the Client and Project dropdowns in the Angular expense Add/Edit dialog.
+
+#### Toggle All-Users Flag
+
+```http
+PUT /api/dropdowns/{id}/toggle-all-users
+```
+
+**Parameters:**
+- `id` (path, required): The ID of the dropdown value to update
+
+**Description:** Toggles the `allUsers` boolean field on a dropdown value. When `allUsers = true`, the value is visible to every user without requiring an explicit access assignment.
+
+**Access Control:** Requires `USER_MANAGEMENT:UPDATE` permission
+
+**Response:** The updated `DropdownValue` object (200 OK), or 404 if the ID is not found.
+
+**Use Case:** Called by the React Admin `UserAccessDialog` 🌐 All / 🔓 Restrict inline buttons to toggle global visibility for a value without navigating away from the user access dialog.
+
 #### Create Dropdown Value
 
 ```http
@@ -4385,6 +4416,89 @@ The admin interface includes a "Guest Activity" dashboard (`/admin/guest-activit
 - Maximum 1,000 entries retained
 - Cleared on application restart or redeployment
 - Export to CSV recommended for long-term record keeping
+
+### User Dropdown Access API
+
+The User Dropdown Access API provides endpoints for managing which dropdown values (Clients and Projects) each user can see in their task and expense forms. This is used by the React Admin Dashboard `UserAccessDialog` component and by the Spring Boot admin UI.
+
+**Implementation Architecture:**
+- **Controller**: `UserRestController` at `/api/users`
+- **Services**: `UserDropdownAccessService`, `DropdownValueService`
+- **Authorization**: `@RequirePermission` annotations using the `USER_MANAGEMENT` resource
+- **Storage**: `user_dropdown_access` table with CASCADE DELETE on user removal
+
+#### Get User Access Data
+
+```http
+GET /api/users/{username}/access
+```
+
+**Parameters:**
+- `username` (path, required): The username to retrieve access data for
+
+**Description:** Returns all active TASK and EXPENSE dropdown values, plus the set of IDs currently assigned to the specified user. Used to populate the React Admin `UserAccessDialog` with current state.
+
+**Access Control:** Requires `USER_MANAGEMENT:READ` permission
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "User access data retrieved successfully",
+    "data": {
+        "allClients": [
+            { "id": 1, "itemValue": "Acme Corp", "allUsers": false },
+            { "id": 2, "itemValue": "Internal", "allUsers": true }
+        ],
+        "allProjects": [ "..." ],
+        "allExpenseClients": [ "..." ],
+        "allExpenseProjects": [ "..." ],
+        "assignedIds": [1, 5, 7]
+    }
+}
+```
+
+**Response Fields:**
+- `allClients` / `allProjects`: All active TASK-subcategory Client / Project dropdown values
+- `allExpenseClients` / `allExpenseProjects`: All active EXPENSE-subcategory Client / Project dropdown values
+- `assignedIds`: Set of dropdown value IDs currently explicitly assigned to this user (across all categories/subcategories)
+- `allUsers` on each value: When `true`, the value is globally visible regardless of assignments
+
+#### Save User Access Assignments
+
+```http
+PUT /api/users/{username}/access
+Content-Type: application/json
+
+{
+    "view": "TASK",
+    "clientIds": [1, 3],
+    "projectIds": [5],
+    "expenseClientIds": [],
+    "expenseProjectIds": []
+}
+```
+
+**Parameters:**
+- `username` (path, required): The username to update access for
+
+**Description:** Saves dropdown access assignments for the specified user. Only the tab indicated by `view` is updated — the other tab’s assignments are left unchanged.
+
+**Access Control:** Requires `USER_MANAGEMENT:UPDATE` permission
+
+**Request Body Fields:**
+- `view` (String, required): `"TASK"` or `"EXPENSE"` — determines which set of assignments to replace
+- `clientIds` / `projectIds`: Used when `view = "TASK"`; full replacement of the user’s TASK client/project assignments
+- `expenseClientIds` / `expenseProjectIds`: Used when `view = "EXPENSE"`; full replacement of the user’s EXPENSE client/project assignments
+
+**Response:** 200 OK with `ApiResponse<Void>` on success, 404 if the user is not found.
+
+**Behavior:**
+- **Tab isolation**: Saving with `view = "TASK"` only replaces TASK assignments; EXPENSE assignments are untouched, and vice versa
+- **Full replacement**: The supplied ID list completely replaces existing assignments for that tab — IDs not in the list are removed
+- **`allUsers` bypass**: Values with `allUsers = true` are visible to all users automatically; they do not need to appear in `assignedIds`
+
+---
 
 ### Role Management API
 

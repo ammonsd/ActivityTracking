@@ -145,6 +145,15 @@ The React Admin Dashboard has multiple completed phases with production-ready fe
   - Password validation with show/hide toggles
   - Real-time validation and error handling
   - Material-UI dialogs and responsive design
+  - **User Dropdown Access Management** (February 2026): Assign which Clients and Projects each user sees in their dropdowns
+    - **Manage Access** button (person-gear icon, green) in the Actions column for every non-ADMIN user
+    - Opens a dialog with **Task** and **Expense** tabs for independent per-tab assignment
+    - Each tab shows two columns: Clients (left) and Projects (right)
+    - Checkboxes to assign values; values with the "All Users" flag are pre-checked and disabled
+    - Inline **🌐 All** button makes a dropdown value visible to every user; **🔓 Restrict** reverses it
+    - Saving one tab leaves the other tab's assignments completely untouched
+    - Button is disabled for ADMIN users (they always see all values)
+    - Requires USER_MANAGEMENT:READ/UPDATE permissions
 - **Guest Activity Report** (Phase 6 - Implemented February 2026):
   - View guest login statistics and audit history
   - Real-time metrics: Total Logins, Unique Locations, Last Login, Success Rate
@@ -210,7 +219,7 @@ The React Admin Dashboard has multiple completed phases with production-ready fe
 
 Completed Phases:
 - ✅ **Phase 3**: Skeleton dashboard with navigation (December 2025)
-- ✅ **Phase 4**: User Management with full CRUD operations (February 2026)
+- ✅ **Phase 4**: User Management with full CRUD operations and user dropdown access management (February 2026)
 - ✅ **Phase 5**: Dropdown Management with category filtering and CRUD operations (February 2026)
 - ✅ **Phase 6**: Guest Activity Report with metrics and CSV export (February 2026)
 - ✅ **Phase 7**: Roles Management with permission assignment (February 2026)
@@ -321,7 +330,8 @@ Administrators can create, edit, and delete user accounts:
     - Users with task entries cannot be deleted to maintain data integrity
     - To prevent a user from accessing the system, disable their account instead of deleting
 7. **Manage Dropdown Access**: Control which Clients and Projects a user can see in their dropdowns
-    - Click the **🔐 Access** button next to any user in the list
+    - **Spring Boot UI**: Click the **🔐 Access** button next to any non-ADMIN user in the list
+    - **React Admin Dashboard**: Click the **Manage Access** icon button (person-gear, green) next to any non-ADMIN user; the button is disabled for ADMIN users with an explanatory tooltip
     - See [Managing User Dropdown Access](#managing-user-dropdown-access) for full details
 
 ### Managing Roles and Permissions
@@ -971,7 +981,9 @@ Administrators can restrict which Clients and Projects appear in dropdown menus 
 - **UI only**: Filtering is applied to the dropdown menus; the system does not block saving entries against unauthorized values
 - **Independent tabs**: TASK and EXPENSE assignments are stored separately — changing one tab does not affect the other
 
-#### How to Assign Client and Project Access
+Both the Spring Boot UI and the React Admin Dashboard provide access management. The underlying data is identical — use whichever interface is more convenient.
+
+#### Using the Spring Boot UI
 
 1. **Navigate to User Management**: Click **"☰"** → **"👥 Manage Users"**
 2. **Locate the User**: Find the user in the list (use filters if needed)
@@ -989,6 +1001,29 @@ Administrators can restrict which Clients and Projects appear in dropdown menus 
 8. **Switch Tabs**: Repeat steps 4–7 for the other tab if needed
 9. **Confirmation**: You are redirected back to User Management with a success message
 
+#### Using the React Admin Dashboard
+
+1. **Navigate to User Management**: Click **"User Management"** from the React Admin Dashboard sidebar or card
+2. **Locate the User**: Use the filter fields (username, role, company) if needed
+3. **Click the Manage Access button**: Click the **person-gear (🔑) icon** in the Actions column — this button is green and appears between the Change Password and Delete buttons
+   - The button is **disabled** for ADMIN users (they always have full access) and shows a tooltip explaining why
+4. **The Access Dialog opens**:
+   - Header shows: "Manage Dropdown Access" with the username displayed below
+   - A loading spinner appears briefly while assignment data is fetched
+5. **Choose the Tab**: Click **Task** or **Expense** in the toggle control at the top of the dialog
+   - **Task** — governs Clients and Projects visible when the user logs task time
+   - **Expense** — governs Clients and Projects visible when the user records an expense
+   - A caption below the toggle reminds you that saving only updates the active tab
+6. **Review and Update Checkboxes**:
+   - **Left column** — Clients for the selected tab
+   - **Right column** — Projects for the selected tab
+   - Items with the "All Users" flag: checkbox is **checked and disabled** (already visible to everyone), "All Users" chip displayed in blue, and a **🔓 Restrict** button appears
+   - Items without the flag: checkbox is editable; a **🌐 All** button appears
+7. **Toggle the "All Users" flag** (optional): Click **🌐 All** to make a value visible to every user, or **🔓 Restrict** to remove that flag — the change is applied immediately without navigating away
+8. **Click "Save"**: Saves assignments for the **active tab only**; the other tab is not affected
+   - The dialog closes automatically on success
+9. **Switch Tabs**: Reopen the dialog and switch to the other tab to manage that set of assignments
+
 #### Marking a Dropdown Value as "All Users"
 
 To make a Client or Project visible to all users without individual assignment:
@@ -1005,8 +1040,9 @@ This is useful for commonly-used overhead entries (e.g., "Internal", "Non-Billab
 
 #### Revoking Access
 
-- Open the **🔐 Access** page for the user, choose the appropriate tab (Task or Expense), and **uncheck** any Clients or Projects they should no longer see
-- Save the change — the user's dropdowns update immediately on their next page load
+- **Spring Boot UI**: Open the **🔐 Access** page for the user, choose the appropriate tab (Task or Expense), and **uncheck** any Clients or Projects they should no longer see; click **💾 Save Access**
+- **React Admin Dashboard**: Open the **Manage Access** dialog for the user, choose the appropriate tab, **uncheck** the values to revoke, and click **Save**
+- The user's dropdowns update immediately on their next page load
 - Existing task and expense entries are **not affected** — historical data is preserved
 
 #### Notes for Administrators
