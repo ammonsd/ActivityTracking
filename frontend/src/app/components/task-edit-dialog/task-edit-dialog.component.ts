@@ -11,6 +11,9 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormControl,
+  FormGroupDirective,
+  NgForm,
   Validators,
 } from '@angular/forms';
 import {
@@ -23,10 +26,20 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { ErrorStateMatcher, MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { TaskActivity, DropdownValue } from '../../models/task-activity.model';
 import { DropdownService } from '../../services/dropdown.service';
+
+/** Shows mat-error whenever the control is invalid, regardless of dirty/touched state. */
+export class InvalidStateMatcher implements ErrorStateMatcher {
+  isErrorState(
+    control: FormControl | null,
+    _form: FormGroupDirective | NgForm | null,
+  ): boolean {
+    return !!control?.invalid;
+  }
+}
 
 @Component({
   selector: 'app-task-edit-dialog',
@@ -51,13 +64,14 @@ export class TaskEditDialogComponent implements OnInit {
   projects: DropdownValue[] = [];
   phases: DropdownValue[] = [];
   isAddMode: boolean = false;
+  taskIdMatcher = new InvalidStateMatcher();
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly dialogRef: MatDialogRef<TaskEditDialogComponent>,
     private readonly dropdownService: DropdownService,
     @Inject(MAT_DIALOG_DATA)
-    public data: { task: TaskActivity; isAddMode?: boolean }
+    public data: { task: TaskActivity; isAddMode?: boolean },
   ) {
     this.isAddMode = data.isAddMode || false;
 
@@ -69,7 +83,7 @@ export class TaskEditDialogComponent implements OnInit {
       taskDate = new Date(
         Number.parseInt(parts[0]),
         Number.parseInt(parts[1]) - 1,
-        Number.parseInt(parts[2])
+        Number.parseInt(parts[2]),
       );
     }
 
@@ -82,7 +96,10 @@ export class TaskEditDialogComponent implements OnInit {
         data.task.hours,
         [Validators.required, Validators.min(0.25), Validators.max(24)],
       ],
-      taskId: [data.task.taskId || '', [Validators.maxLength(10)]],
+      taskId: [
+        data.task.taskId || '',
+        [Validators.maxLength(10), Validators.pattern(/^\S*$/)],
+      ],
       taskName: [data.task.taskName || '', [Validators.maxLength(120)]],
       details: [data.task.details || ''], // Optional field, no validators
     });

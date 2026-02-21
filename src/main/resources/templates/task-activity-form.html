@@ -235,6 +235,9 @@
                                id="taskId"
                                th:field="*{taskId}"
                                maxlength="10"
+                               pattern="[^\s]*"
+                               title="Task ID cannot contain spaces"
+                               oninput="this.value=this.value.replace(/\s/g,'')"
                                placeholder="e.g. TA-001 (optional)" />
                         <div class="error" th:if="${#fields.hasErrors('taskId')}" th:errors="*{taskId}"></div>
                     </div>
