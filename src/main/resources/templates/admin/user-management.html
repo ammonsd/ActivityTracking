@@ -214,17 +214,17 @@
 
         <div class="container">
             <div class="header">
-                <h1>👥 User Management</h1>
+                <h1>User Management</h1>
                 <div>
                     <a
                         th:href="@{/task-activity/manage-users/add}"
                         class="btn btn-primary"
-                        >➕ Add New User</a
+                        >Add New User</a
                     >
                     <a
                         th:href="@{/task-activity/list}"
                         class="btn btn-secondary"
-                        >📋 Task Activity List</a
+                        >Task Activity List</a
                     >
                 </div>
             </div>
@@ -269,12 +269,12 @@
                             </div>
                             <div class="filter-buttons">
                                 <button type="submit" class="btn btn-primary">
-                                    🔍 Search
+                                    Search
                                 </button>
                                 <a
                                     th:href="@{/task-activity/manage-users}"
                                     class="btn btn-secondary"
-                                    >🔄 Reset</a
+                                    >Reset</a
                                 >
                             </div>
                         </div>
@@ -359,25 +359,25 @@
                                     <a
                                         th:href="@{/task-activity/manage-users/edit/{id}(id=${user.id})}"
                                         class="btn btn-warning btn-sm"
-                                        >✏️ Edit</a
+                                        >Edit</a
                                     >
                                     <a
                                         th:href="@{/task-activity/manage-users/change-password/{id}(id=${user.id})}"
                                         class="btn btn-info btn-sm"
-                                        >🔑 Password</a
+                                        >Password</a
                                     >
                                     <!-- Access button disabled for ADMIN (role has full access) -->
                                     <span
                                         th:if="${user.role != null && user.role.name == 'ADMIN'}"
                                         class="btn btn-disabled btn-sm"
                                         title="ADMIN role already has full access to all dropdowns"
-                                        >🔐 Access</span
+                                        >Access</span
                                     >
                                     <a
                                         th:unless="${user.role != null && user.role.name == 'ADMIN'}"
                                         th:href="@{/task-activity/manage-users/access/{un}(un=${user.username})}"
                                         class="btn btn-secondary btn-sm"
-                                        >🔐 Access</a
+                                        >Access</a
                                     >
                                     <!-- Delete button - disabled if user is current user OR has task activities -->
                                     <form
@@ -392,7 +392,7 @@
                                             th:data-user-id="${user.id}"
                                             th:data-username="${user.username}"
                                         >
-                                            🗑️ Delete
+                                            Delete
                                         </button>
                                     </form>
                                     <!-- Show disabled button with tooltip if user is current user -->
@@ -400,14 +400,14 @@
                                         th:if="${user.username == username}"
                                         class="btn btn-disabled btn-sm"
                                         title="Cannot delete your own account"
-                                        >🗑️ Delete</span
+                                        >Delete</span
                                     >
                                     <!-- Show disabled button with tooltip if user has task activities -->
                                     <span
                                         th:if="${user.username != username && userHasTasks[user.username]}"
                                         class="btn btn-disabled btn-sm"
                                         title="Cannot delete user with existing task entries"
-                                        >🗑️ Delete</span
+                                        >Delete</span
                                     >
                                 </div>
                             </td>

@@ -265,7 +265,7 @@
                     <a
                         th:href="@{/task-activity/list}"
                         class="btn btn-secondary"
-                        >📋 Task Activity List</a
+                        >Task Activity List</a
                     >
                     <button
                         type="button"
@@ -273,11 +273,11 @@
                         id="exportCsvBtn"
                         title="Export to CSV"
                         th:disabled="${#authorization.expression('hasRole(''GUEST'')')}"
-                        >📋 Export CSV</button
+                        >Export CSV</button
                     >
                     <a th:href="@{/task-activity/add}" 
                        class="btn btn-primary"
-                        >➕ Add Task</a
+                        >Add Task</a
                     >
                 </div>
             </div>
@@ -413,8 +413,8 @@
                 <p>Copy the CSV data below:</p>
                 <textarea id="csvOutput" class="csv-textarea" readonly></textarea>
                 <div class="csv-actions">
-                    <button class="btn btn-primary" id="copyCsvBtn">📋 Copy to Clipboard</button>
-                    <button class="btn btn-secondary" id="downloadCsvBtn">💾 Download CSV</button>
+                    <button class="btn btn-primary" id="copyCsvBtn">Copy to Clipboard</button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">Download CSV</button>
                     <button class="btn btn-secondary" id="closeCsvBtn">Close</button>
                 </div>
             </div>

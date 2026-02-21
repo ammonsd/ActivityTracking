@@ -436,10 +436,11 @@
                 right: -280px;
                 top: 70px;
                 width: 280px;
-                height: calc(100vh - 70px);
-                background-color: #f8f9fa;
+                max-height: calc(100vh - 70px);
+                background-color: #e8f4fd;
                 box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
                 overflow-y: auto;
+                overflow-x: hidden;
                 transition: right 0.3s ease;
                 z-index: 100;
                 pointer-events: none;
@@ -455,7 +456,7 @@
             }
             
             .sidebar-header {
-                padding: 15px;
+                padding: 6px 10px;
                 background-color: #007bff;
                 border-bottom: 1px solid #0056b3;
                 display: flex;
@@ -491,7 +492,7 @@
             }
             
             .sidebar-menu-list li {
-                border-bottom: 1px solid #dee2e6;
+                border-bottom: 1px solid #c5dbf0;
             }
             
             .sidebar-menu-list a,
@@ -512,7 +513,7 @@
             
             .sidebar-menu-list a:hover:not(.disabled),
             .sidebar-menu-list button:hover:not(.disabled) {
-                background-color: #e9ecef;
+                background-color: #d0e8f8;
             }
             
             .sidebar-menu-list a.disabled,
@@ -616,7 +617,7 @@
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
                         th:href="@{/task-activity/weekly-timesheet}"
                         class="btn btn-info"
-                        >📊 Weekly Timesheet</a
+                        >Weekly Timesheet</a
                     >
                     <!-- Expenses - USER, ADMIN, and EXPENSE_ADMIN with email, read-only for GUEST -->
                     <a
@@ -627,11 +628,11 @@
                         th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                         th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
                         th:styleappend="${#authorization.expression('hasRole(''GUEST'')')} ? ' pointer-events: none; opacity: 0.5; cursor: not-allowed;' : ''"
-                        >💰 Expenses</a
+                        >Expenses</a
                     >
                     <!-- Add New Task - All authenticated users -->
                     <a th:href="@{/task-activity/add}" class="btn btn-primary"
-                        >➕ Add New Task</a
+                        >Add New Task</a
                     >
                     <!-- Right Sidebar Toggle Button -->
                     <button class="sidebar-toggle" onclick="return toggleSidebar(event);" id="sidebarToggle" title="Menu" type="button">
@@ -657,7 +658,6 @@
                                 th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                                 th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
                             >
-                                <span class="menu-icon">👤</span>
                                 <span>Update Profile</span>
                             </a>
                         </li>
@@ -669,21 +669,18 @@
                                 th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                                 th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
                             >
-                                <span class="menu-icon">👥</span>
                                 <span>Manage Users</span>
                             </a>
                         </li>
                         <!-- Manage Roles - ADMIN only -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
                             <a th:href="@{/task-activity/manage-roles}" title="Manage Roles and Permissions">
-                                <span class="menu-icon">🔐</span>
                                 <span>Manage Roles</span>
                             </a>
                         </li>
                         <!-- Guest Activity - ADMIN only -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
                             <a th:href="@{/task-activity/manage-users/guest-activity}" title="Guest Activity Report">
-                                <span class="menu-icon">📊</span>
                                 <span>Guest Activity</span>
                             </a>
                         </li>
@@ -695,7 +692,6 @@
                                 th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                                 th:onclick="${#authorization.expression('hasRole(''GUEST'')')} ? 'event.preventDefault(); return false;' : ''"
                             >
-                                <span class="menu-icon">🔧</span>
                                 <span>Manage Dropdowns</span>
                             </a>
                         </li>
@@ -708,7 +704,6 @@
                                 th:classappend="${#authorization.expression('hasRole(''GUEST'')')} ? 'disabled' : ''"
                                 th:disabled="${#authorization.expression('hasRole(''GUEST'')')}"
                             >
-                                <span class="menu-icon">📋</span>
                                 <span>Export CSV</span>
                             </button>
                         </li>
@@ -718,7 +713,6 @@
                                 th:href="@{/app}"
                                 title="Angular Admin Dashboard"
                             >
-                                <span class="menu-icon">📊</span>
                                 <span>Dashboard</span>
                             </a>
                         </li>
@@ -728,7 +722,6 @@
                                 th:href="@{/dashboard}"
                                 title="React Admin Dashboard"
                             >
-                                <span class="menu-icon">🎯</span>
                                 <span>Admin Dashboard</span>
                             </a>
                         </li>
@@ -1056,10 +1049,10 @@
                 ></textarea>
                 <div class="csv-actions">
                     <button class="btn btn-primary" id="copyCsvBtn">
-                        📋 Copy to Clipboard
+                        Copy to Clipboard
                     </button>
                     <button class="btn btn-secondary" id="downloadCsvBtn">
-                        💾 Download CSV
+                        Download CSV
                     </button>
                     <button class="btn btn-secondary" id="closeCsvBtn">
                         Close

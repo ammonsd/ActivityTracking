@@ -107,19 +107,19 @@
 
         <div class="container">
             <div class="header">
-                <h1 th:text="${isOwnProfile} ? '👤 My Profile' : '✏️ Edit User'">Edit User</h1>
+                <h1 th:text="${isOwnProfile} ? 'My Profile' : 'Edit User'">Edit User</h1>
                 <div>
                     <a
                         th:if="${!isOwnProfile}"
                         th:href="@{/task-activity/manage-users}"
                         class="btn btn-secondary"
-                        >👥 User Management</a
+                        >User Management</a
                     >
                     <a
                         th:if="${isOwnProfile}"
                         th:href="@{/task-activity/list}"
                         class="btn btn-secondary"
-                        >📋 Task Activity List</a
+                        >Task Activity List</a
                     >
                 </div>
             </div>
@@ -399,7 +399,7 @@
                             th:href="@{/change-password}"
                             class="btn btn-info"
                             style="padding: 12px 30px; text-decoration: none;"
-                            >🔒 Update Password</a
+                            >Update Password</a
                         >
                     </div>
                 </form>
