@@ -186,7 +186,7 @@ public class PasswordChangeController {
 
             // Add success message
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Password changed successfully!");
+                    "Password changed successfully");
 
             // Redirect to profile if accessed from My Profile, otherwise to task list
             return "redirect:/profile/edit";

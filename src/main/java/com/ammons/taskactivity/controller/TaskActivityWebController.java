@@ -422,7 +422,7 @@ public class TaskActivityWebController {
 
             taskActivityService.updateTaskActivity(id, taskActivityDto);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
-                    "Task activity updated successfully!");
+                    "Task activity updated successfully");
             return buildFilteredRedirect(filterClient, filterProject, filterPhase, filterTaskId,
                     username, startDate, endDate);
 
