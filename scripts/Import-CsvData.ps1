@@ -51,6 +51,11 @@
 .NOTES
     Author: Dean Ammons
     Date: January 2026
+
+    Modified by: Dean Ammons - February 2026
+    Change: Added taskid and taskname optional column support for TaskActivity CSV imports;
+            added all_users optional column support for DropdownValue CSV imports
+    Reason: New fields added to taskactivity (taskid, taskname) and dropdownvalues (all_users) tables
     
     Prerequisites:
         - PowerShell 5.1 or higher (works with both Windows PowerShell 5.1 and PowerShell 6+)
@@ -61,6 +66,16 @@
         - UTF-8 encoding
         - Header row with column names
         - Valid data in all required fields
+
+    TaskActivity CSV Columns:
+        Required: taskdate, client, project, phase, taskhours, username
+        Optional: taskid     (max 10 chars)  - External ticket/task reference (e.g., TA-001)
+                  taskname   (max 120 chars) - Short label or title for the task
+                  details    (max 255 chars) - Additional notes or description
+
+    DropdownValue CSV Columns:
+        Required: category, subcategory, itemvalue
+        Optional: all_users  (true/false)   - When true, value is visible to all users (default: false)
         
     Date Format Options (for date fields in TaskActivity and Expense):
         - YYYY-MM-DD (recommended, ISO 8601): 2026-01-15
@@ -110,6 +125,51 @@ begin {
         
         if (-not $Path.EndsWith('.csv', [System.StringComparison]::OrdinalIgnoreCase)) {
             Write-Warning "File does not have .csv extension: $Path"
+        }
+    }
+
+    # Validate that the CSV file contains the required column headers for the given import type.
+    # Warns about missing optional TaskActivity columns (taskid, taskname, details) so the user
+    # is aware that records will be imported without those fields.
+    function Test-CsvHeaders {
+        param(
+            [string]$FilePath,
+            [string]$ImportType
+        )
+
+        $requiredHeaders = switch ($ImportType) {
+            'TaskActivity'  { @('taskdate', 'client', 'project', 'phase', 'taskhours', 'username') }
+            'Expense'       { @('username', 'client', 'project', 'expense_date', 'expense_type', 'amount') }
+            'DropdownValue' { @('category', 'subcategory', 'itemvalue') }
+            default         { return }
+        }
+
+        try {
+            $firstLine = (Get-Content -Path $FilePath -TotalCount 1 -Encoding UTF8).ToLower().Trim()
+            $presentHeaders = $firstLine -split ',' | ForEach-Object { $_.Trim().Trim('"') }
+
+            $missingRequired = $requiredHeaders | Where-Object { $_ -notin $presentHeaders }
+            if ($missingRequired) {
+                throw "CSV file is missing required column(s): $($missingRequired -join ', ')"
+            }
+
+            # Warn if optional columns are absent so the user knows those fields will use
+            # their database defaults on imported records.
+            $optionalHeaders = switch ($ImportType) {
+                'TaskActivity'  { @('taskid', 'taskname', 'details') }
+                'DropdownValue' { @('all_users') }
+                default         { @() }
+            }
+
+            if ($optionalHeaders.Count -gt 0) {
+                $missingOptional = $optionalHeaders | Where-Object { $_ -notin $presentHeaders }
+                if ($missingOptional) {
+                    Write-Warning "CSV is missing optional column(s): $($missingOptional -join ', '). Those fields will use their database defaults on imported records."
+                }
+            }
+        }
+        catch [System.IO.IOException] {
+            throw "Unable to read CSV headers from '$FilePath': $($_.Exception.Message)"
         }
     }
     
@@ -346,6 +406,9 @@ process {
                 }
             }
             
+            # Validate CSV headers client-side before uploading to catch column issues early
+            Test-CsvHeaders -FilePath $file.FullName -ImportType $importType
+
             # Import file
             $result = Import-CsvFile -FilePath $file.FullName -ImportType $importType `
                 -BaseUrl $BaseUrl -Token $Token

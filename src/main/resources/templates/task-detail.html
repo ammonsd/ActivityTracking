@@ -178,11 +178,11 @@
                 )}" class="btn btn-secondary">
                     <span
                         th:if="${#authorization.expression('hasRole(''GUEST'')')}"
-                        >📋 Back to List</span
+                        >Back to List</span
                     >
                     <span
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'')')}"
-                        >📋 Task Activity List</span
+                        >Task Activity List</span
                     >
                 </a>
             </div>
@@ -331,6 +331,9 @@
                                 id="taskId"
                                 th:field="*{taskId}"
                                 maxlength="10"
+                                pattern="[^\s]*"
+                                title="Task ID cannot contain spaces"
+                                oninput="this.value=this.value.replace(/\s/g,'')"
                                 th:placeholder="${isReadOnly ? '' : 'e.g. TA-001 (optional)'}"
                                 th:readonly="${isReadOnly}"
                                 th:disabled="${isReadOnly}"

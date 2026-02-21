@@ -299,10 +299,11 @@
                 right: -280px;
                 top: 70px;
                 width: 280px;
-                height: calc(100vh - 70px);
-                background-color: #f8f9fa;
+                max-height: calc(100vh - 70px);
+                background-color: #e8f4fd;
                 box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
                 overflow-y: auto;
+                overflow-x: hidden;
                 transition: right 0.3s ease;
                 z-index: 100;
                 pointer-events: none;
@@ -318,7 +319,7 @@
             }
             
             .sidebar-header {
-                padding: 15px;
+                padding: 6px 10px;
                 background-color: #007bff;
                 border-bottom: 1px solid #0056b3;
                 display: flex;
@@ -354,7 +355,7 @@
             }
             
             .sidebar-menu-list li {
-                border-bottom: 1px solid #dee2e6;
+                border-bottom: 1px solid #c5dbf0;
             }
             
             .sidebar-menu-list a,
@@ -375,7 +376,7 @@
             
             .sidebar-menu-list a:hover:not(.disabled),
             .sidebar-menu-list button:hover:not(.disabled) {
-                background-color: #e9ecef;
+                background-color: #d0e8f8;
             }
             
             .sidebar-menu-list a.disabled,
@@ -609,18 +610,18 @@
                         th:href="@{/task-activity/list}"
                         class="btn btn-success"
                         title="Task Activity List"
-                        >📋 Task Activity List</a
+                        >Task Activity List</a
                     >
                     <!-- Weekly Expense Sheet - Hide for GUEST users and users without email -->
                     <a
                         th:if="${!isGuest and userHasEmail}"
                         th:href="@{/expenses/weekly-sheet}"
                         class="btn btn-info"
-                        >📊 Weekly Expense Sheet</a
+                        >Weekly Expense Sheet</a
                     >
                     <!-- Add New Expense - Hide for GUEST users and users without email -->
                     <a th:if="${!isGuest and userHasEmail}" th:href="@{/expenses/add}" class="btn btn-primary"
-                        >➕ Add New Expense</a
+                        >Add New Expense</a
                     >
                     <!-- Right Sidebar Toggle Button -->
                     <button class="sidebar-toggle" onclick="return toggleSidebar(event);" id="sidebarToggle" title="Menu" type="button">
@@ -647,7 +648,6 @@
                                 th:classappend="${isGuest} ? 'disabled' : ''"
                                 th:disabled="${isGuest}"
                             >
-                                <span class="menu-icon">📋</span>
                                 <span>Export CSV</span>
                             </button>
                         </li>
@@ -657,7 +657,6 @@
                                 th:href="@{/app}"
                                 title="Angular Admin Dashboard"
                             >
-                                <span class="menu-icon">📊</span>
                                 <span>Dashboard</span>
                             </a>
                         </li>
@@ -667,7 +666,6 @@
                                 th:href="@{/dashboard}"
                                 title="React Admin Dashboard"
                             >
-                                <span class="menu-icon">🎯</span>
                                 <span>Admin Dashboard</span>
                             </a>
                         </li>
@@ -994,10 +992,10 @@
                 ></textarea>
                 <div class="csv-actions">
                     <button class="btn btn-primary" id="copyCsvBtn">
-                        📋 Copy to Clipboard
+                        Copy to Clipboard
                     </button>
                     <button class="btn btn-secondary" id="downloadCsvBtn">
-                        💾 Download CSV
+                        Download CSV
                     </button>
                     <button class="btn btn-secondary" id="closeCsvBtn">
                         Close

@@ -313,6 +313,15 @@ public class CsvImportService {
             dropdownValue.setIsActive(true);
         }
 
+        // AllUsers is optional, defaults to false
+        // Note: createFieldMap strips underscores, so "all_users" key becomes "allusers"
+        String allUsersStr = fieldMap.get("allusers");
+        if (allUsersStr != null && !allUsersStr.trim().isEmpty()) {
+            dropdownValue.setAllUsers(Boolean.parseBoolean(allUsersStr));
+        } else {
+            dropdownValue.setAllUsers(false);
+        }
+
         return dropdownValue;
     }
 
@@ -353,6 +362,8 @@ public class CsvImportService {
         activity.setProject(fieldMap.get("project"));
         activity.setPhase(fieldMap.get("phase"));
         activity.setHours(parseBigDecimal(fieldMap.get("hours"), fieldMap.get("taskhours")));
+        activity.setTaskId(fieldMap.get("taskid"));
+        activity.setTaskName(fieldMap.get("taskname"));
         activity.setDetails(fieldMap.get("details"));
         activity.setUsername(fieldMap.get("username"));
 

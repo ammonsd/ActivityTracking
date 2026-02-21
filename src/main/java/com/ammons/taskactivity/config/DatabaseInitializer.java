@@ -45,7 +45,7 @@ public class DatabaseInitializer {
                 populator.setContinueOnError(false);
                 populator.execute(dataSource);
 
-                System.out.println("[DATABASE] Database initialization completed successfully!");
+                System.out.println("[DATABASE] Database initialization completed successfully");
 
             } catch (Exception e) {
                 System.err.println("[DATABASE] Error initializing database: " + e.getMessage());
