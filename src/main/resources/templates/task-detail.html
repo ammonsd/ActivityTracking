@@ -178,11 +178,11 @@
                 )}" class="btn btn-secondary">
                     <span
                         th:if="${#authorization.expression('hasRole(''GUEST'')')}"
-                        >📋 Back to List</span
+                        >Back to List</span
                     >
                     <span
                         th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'')')}"
-                        >📋 Task Activity List</span
+                        >Task Activity List</span
                     >
                 </a>
             </div>

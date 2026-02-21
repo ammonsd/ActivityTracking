@@ -269,9 +269,9 @@
                 <div class="user-info-banner">
                     Managing dropdown access for user:
                     <strong th:text="${targetUsername}">username</strong>
-                    &nbsp;&mdash;&nbsp; Use the <strong>📋 Task</strong> tab to
+                    &nbsp;&mdash;&nbsp; Use the <strong>Task</strong> tab to
                     control which Clients and Projects this user may log time
-                    against. Use the <strong>💰 Expense</strong> tab to control
+                    against. Use the <strong>Expense</strong> tab to control
                     which Clients and Projects they may record expenses against.
                     Items marked
                     <span class="badge-all-users">All Users</span> are visible
@@ -287,7 +287,7 @@
                         th:classappend="${currentView == 'TASK' ? ' active' : ''}"
                         onclick="switchView('TASK')"
                     >
-                        📋 Task
+                        Task
                     </button>
                     <button
                         type="button"
@@ -296,7 +296,7 @@
                         th:classappend="${currentView == 'EXPENSE' ? ' active' : ''}"
                         onclick="switchView('EXPENSE')"
                     >
-                        💰 Expense
+                        Expense
                     </button>
                 </div>
 
