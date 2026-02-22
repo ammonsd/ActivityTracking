@@ -1836,9 +1836,21 @@ The application sends two categories of email notifications:
 - **Expense Status Changes**: Sent to users when expenses are approved/rejected/reimbursed
 - **Password Expiration Warnings**: Sent to users before password expires
 - **Account Lockout Alerts**: Sent to administrators when accounts are locked
+- **Contact System Admin Requests**: Sent to the administrator when a user submits a message via the sidebar menu
 - Recipients configured via: `ADMIN_EMAIL` and `EXPENSE_APPROVERS`
 
 **Note:** User notification emails (expense confirmations, password expiration) are sent to the email address configured in each user's profile. Only the administrator and approver notification addresses are configured at the system level.
+
+### Email-Dependent Features
+
+Several user-facing features are **automatically hidden** when `MAIL_ENABLED=false` to prevent misleading confirmations:
+
+| Feature | Where | Behavior when `MAIL_ENABLED=false` |
+|---------|-------|-------------------------------------|
+| **Contact System Admin** | Task List and Expense List sidebar menus | Menu option is hidden entirely |
+| **Password Reset** | Login screen | Request form is visible but no email is sent; GUEST users are always blocked regardless of mail setting |
+
+> **Administrator Note:** If users report that the **Contact System Admin** option is missing from the sidebar, verify that `MAIL_ENABLED=true` is set in the environment configuration. The option will not appear until email is enabled.
 
 ### Email Configuration Variables
 
