@@ -139,7 +139,7 @@ All users (except Guest users) must have a valid email address configured in the
 
 **Note:** The Weekly Timesheet view shows only your own tasks, regardless of role.
 
-**Note:** Contact your administrator if you need different access permissions.
+**Note:** Contact your administrator at [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com) if you need different access permissions.
 
 ### Accessing the Application
 
@@ -186,8 +186,8 @@ If you've forgotten your password, you can reset it yourself using the **Reset P
 1. **Check spam/junk folders**: Reset emails might be filtered
 2. **Wait a few minutes**: Email delivery can take 1-2 minutes
 3. **Verify email address**: Make sure you entered the correct email
-4. **Guest users**: If your account has guest-only access, password reset is not available. Contact your administrator to have your password reset.
-5. **Contact administrator**: If you still can't reset, contact your system administrator
+4. **Guest users**: If your account has guest-only access, password reset is not available. Contact your administrator at [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com) to have your password reset.
+5. **Contact administrator**: If you still can't reset, email [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com)
 
 ### If You're Required to Change Your Password
 
@@ -236,7 +236,7 @@ To protect your account from unauthorized access, the system automatically locks
 1. **Use the Password Reset Feature**: Click the **"Reset Password"** link on the login page
 2. Enter your email address and follow the password reset process (see "If You've Forgotten Your Password" section above)
 3. After successfully resetting your password, your account will be automatically unlocked
-4. Alternatively, **Contact your administrator** if you prefer manual assistance
+4. Alternatively, contact your administrator at [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com) if you prefer manual assistance
 5. The administrator can manually unlock your account
 
 ### Password Expiration Warnings
@@ -291,7 +291,7 @@ To protect your account from unauthorized access, the system automatically locks
      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
      - This helps distinguish billable client work from internal overhead
 
-   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator to have the appropriate clients or projects added to your account.
+   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator at [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com) to have the appropriate clients or projects added to your account.
 
    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
@@ -534,7 +534,7 @@ Your new password must:
 
 ### Account Lockout Protection
 
-For security, your account will be locked after **5 consecutive failed login attempts**. Use the **Reset Password** link on the login page to unlock your account. If you do not have a registered email address, contact your administrator for assistance.
+For security, your account will be locked after **5 consecutive failed login attempts**. Use the **Reset Password** link on the login page to unlock your account. If you do not have a registered email address, contact your administrator at [admin@taskactivitytracker.com](mailto:admin@taskactivitytracker.com) for assistance.
 
 ---
 
