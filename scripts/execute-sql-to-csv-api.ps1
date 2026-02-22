@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-    Execute SQL and Export to CSV via API.
+    Execute SQL and Export Results via API.
 
 .DESCRIPTION
     Executes SQL from a file by calling the Task Activity API endpoint
-    and saves the CSV results to a file.
+    and saves the results to a file. Supports CSV (default) and aligned
+    text table output formats.
     
     Prerequisites:
     • Task Activity application running (locally or on AWS)
@@ -14,7 +15,13 @@
     Path to SQL file to execute (required).
 
 .PARAMETER OutputCsv
-    Path to output CSV file (required).
+    Path to output file (required). Use any extension; content will
+    match the selected Format. Alias: -OutputFile
+
+.PARAMETER Format
+    Output format for the results. Accepted values: csv (default), text.
+    'text' renders an aligned table identical to psql \x off output,
+    with a separator line and row-count footer.
 
 .PARAMETER EnvFile
     Path to .env file (defaults to .env in workspace root).
@@ -47,12 +54,24 @@
     Execute SQL against custom API endpoint.
 
 .EXAMPLE
-    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -EncryptionKey "N1ghrd+1968" -OverrideExisting:$true
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.csv" -EncryptionKey "????????????" -OverrideExisting:$true
     Execute SQL with encryption key and override existing environment variables.
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputCsv "results.txt" -Format text
+    Execute SQL and save results as an aligned text table (psql-style).
+
+.EXAMPLE
+    .\execute-sql-to-csv-api.ps1 -SqlFile "query.sql" -OutputFile "results.txt" -Format text
+    Same as above using the -OutputFile alias.
 
 .NOTES
     Author: Dean Ammons
     Date: December 2025
+
+    Modified by: Dean Ammons - February 2026
+    Change: Added -Format parameter supporting 'csv' (default) and 'text' output
+    Reason: Allow results to be viewed as an aligned text table in addition to CSV
 #>
 ###############################################################################
 
@@ -61,7 +80,12 @@ param(
     [string]$SqlFile,
     
     [Parameter(Mandatory=$true)]
+    [Alias("OutputFile")]
     [string]$OutputCsv,
+    
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("csv", "text", IgnoreCase=$true)]
+    [string]$Format = "csv",
     
     [Parameter(Mandatory=$false)]
     [string]$EnvFile = "",
@@ -141,6 +165,53 @@ if ([string]::IsNullOrWhiteSpace($Password)) {
 # Helper Functions
 # ========================================
 
+function ConvertTo-TextTable {
+    <#
+    .SYNOPSIS
+        Converts CSV text into a psql-style aligned text table.
+    #>
+    param([string]$CsvContent)
+
+    $trimmed = $CsvContent.Trim()
+    if ([string]::IsNullOrWhiteSpace($trimmed)) { return "" }
+
+    # Parse CSV into objects
+    $data = @($trimmed | ConvertFrom-Csv)
+    if ($data.Count -eq 0) { return $trimmed }
+
+    # Extract ordered header names from the first CSV line
+    $firstLine = ($trimmed -split "`n")[0].Trim()
+    $headers   = $firstLine -split "," | ForEach-Object { $_.Trim().Trim('"') }
+
+    # Calculate column widths: max of header length and widest data value
+    $widths = @{}
+    foreach ($h in $headers) { $widths[$h] = $h.Length }
+    foreach ($row in $data) {
+        foreach ($h in $headers) {
+            $val = if ($null -ne $row.$h) { "$($row.$h)" } else { "" }
+            if ($val.Length -gt $widths[$h]) { $widths[$h] = $val.Length }
+        }
+    }
+
+    # Header row:  " colName   | colName2 | ..."
+    $headerParts = $headers | ForEach-Object { " $($_.PadRight($widths[$_])) " }
+    $headerLine  = $headerParts -join "|"
+
+    # Separator:   "-----------+----------+..."
+    $sepParts = $headers | ForEach-Object { "-" * ($widths[$_] + 2) }
+    $sepLine  = $sepParts -join "+"
+
+    # Data rows
+    $dataRows = $data | ForEach-Object {
+        $row   = $_
+        $parts = $headers | ForEach-Object { " $("$($row.$_)".PadRight($widths[$_])) " }
+        $parts -join "|"
+    }
+
+    $lines = @($headerLine, $sepLine) + $dataRows + @("($($data.Count) rows)")
+    return $lines -join "`n"
+}
+
 function Write-Info {
     param([string]$Message)
     Write-Host "[INFO] $Message" -ForegroundColor Blue
@@ -163,7 +234,8 @@ function Write-Error {
 Write-Host ""
 Write-Host "=============  Execute SQL via API  =============" -ForegroundColor Cyan
 Write-Host "SQL File:    $SqlFile" -ForegroundColor Cyan
-Write-Host "Output CSV:  $OutputCsv" -ForegroundColor Cyan
+Write-Host "Output File: $OutputCsv" -ForegroundColor Cyan
+Write-Host "Format:      $Format" -ForegroundColor Cyan
 Write-Host "API URL:     $ApiUrl" -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 Write-Host ""
@@ -261,8 +333,16 @@ try {
     exit 1
 }
 
-# Step 3: Save results to file
-Write-Info "Saving results to CSV file..."
+# Step 3: Format and save results
+$formatLabel = if ($Format -ieq "text") { "text table" } else { "CSV" }
+Write-Info "Formatting results as $formatLabel and saving to file..."
+
+# Convert to text table when requested
+$outputContent = if ($Format -ieq "text") {
+    ConvertTo-TextTable -CsvContent $response
+} else {
+    $response
+}
 
 try {
     # Create output directory if needed
@@ -271,9 +351,9 @@ try {
         New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     }
     
-    # Save CSV content (UTF8 without BOM)
+    # Save content (UTF8 without BOM)
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText($OutputCsv, $response, $utf8NoBom)
+    [System.IO.File]::WriteAllText($OutputCsv, $outputContent, $utf8NoBom)
     
     if (-not (Test-Path $OutputCsv)) {
         Write-Error "Failed to create output file"
@@ -281,11 +361,20 @@ try {
     }
     
     $fileInfo = Get-Item $OutputCsv
-    $rowCount = (Get-Content $OutputCsv | Measure-Object -Line).Lines
     
-    Write-Success "Results saved to: $OutputCsv"
-    Write-Info "File size: $($fileInfo.Length) bytes"
-    Write-Info "Row count: $rowCount (including header)"
+    if ($Format -ieq "text") {
+        # Count data rows: total lines minus header, separator, and footer
+        $totalLines = ($outputContent -split "`n").Count
+        $dataRows   = [Math]::Max(0, $totalLines - 3)   # header + separator + footer
+        Write-Success "Results saved to: $OutputCsv"
+        Write-Info "File size: $($fileInfo.Length) bytes"
+        Write-Info "Row count: $dataRows data rows"
+    } else {
+        $rowCount = (Get-Content $OutputCsv | Measure-Object -Line).Lines
+        Write-Success "Results saved to: $OutputCsv"
+        Write-Info "File size: $($fileInfo.Length) bytes"
+        Write-Info "Row count: $rowCount (including header)"
+    }
     
 } catch {
     Write-Error "Failed to save results: $($_.Exception.Message)"

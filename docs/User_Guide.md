@@ -38,7 +38,6 @@ Use the filter controls at the top of the task list to narrow down your view:
 4. **Task ID Filter**: Filter by ticket or reference number (partial match, case-insensitive)
 5. **Start Date**: Show tasks from this date onward
 6. **End Date**: Show tasks up to this date
-7. **Username** (Admin only): Filter tasks by user
 
 **To Apply Filters:**
 
@@ -48,7 +47,7 @@ Use the filter controls at the top of the task list to narrow down your view:
 
 ### Using the Sidebar Menu
 
-The Task Activity List page includes a **floating sidebar menu** for quick access to administrative functions and export features.
+The Task Activity List page includes a **floating sidebar menu** for quick access to features and export options.
 
 **To Access the Menu:**
 
@@ -58,14 +57,10 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 **Menu Items:**
 
-- **👤 Update Profile**: Access your profile to update your information and password
-- **👥 Manage Users** (Admin only): Manage user accounts
-- **🔐 Manage Roles** (Admin only): Manage user roles and permissions
-- **📊 Guest Activity** (Admin only): View guest user activity reports
-- **🔧 Manage Dropdowns** (Admin only): Configure dropdown options for clients, projects, and phases
-- **📋 Export CSV**: Export filtered task list to CSV format
+- **Update Profile**: Access your profile to update your information and password
+- **Export CSV**: Export filtered task list to CSV format
 
-**Note:** Guest users can see the menu but administrative options (including Update Profile) will be disabled.
+**Note:** Guest users can see the menu but all options (including Update Profile) will be disabled. Administrator users have additional management options in the sidebar — refer to the [Administrator User Guide](Administrator_User_Guide.md).
 
 ### Exporting Task List to CSV
 
@@ -76,22 +71,21 @@ You can export your filtered task list to CSV format for reporting or import int
 1. **Apply Filters** (optional): Filter the task list to show only the tasks you want to export
 2. **Click Export Button**:
    - Option 1: Click the **"Export CSV"** button in the task list toolbar (above the table)
-   - Option 2: Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
+   - Option 2: Click **"☰"** to open the sidebar menu, then click **"Export CSV"**
    - The menu will automatically close after selecting Export CSV
 3. **Wait for Data**: The system will fetch ALL filtered tasks (not just the current page)
 4. **Choose Action**:
-   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
-   - **💾 Download CSV**: Downloads a CSV file with an intelligent filename
+   - **Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **Download CSV**: Downloads a CSV file
    - **Close**: Close the export window
 
 **CSV Export Features:**
 
 - **Exports ALL filtered tasks** - not limited to the 20 visible on the current page
 - If there are 270 filtered tasks, all 270 will be included in the CSV
-- Filename includes active filters and timestamp
-- Example filename: `TaskActivity_Acme_Corp_Website_20251101.csv`
+- Filename includes a date stamp
+- Example filename: `TaskActivity_20251101.csv`
 - Columns exported: Date, Client, Project, Phase, Hours, Task ID, Task Name, Details
-- For admins: Includes an additional Username column in the export
 
 **CSV Format:**
 
@@ -101,13 +95,11 @@ Date,Client,Project,Phase,Hours,Task ID,Task Name,Details
 10/29/2025,Acme Corp,Website Redesign,Testing,6.50,TA-002,QA regression,Performed regression testing
 ```
 
-**Note:** The export includes all tasks matching your current filters, regardless of pagination. If you see "Showing 1-20 of 270 entries", the CSV export will contain all 270 entries.
-
 ## Getting Started
 
 ### User Roles and Permissions
 
-The system uses a **database-driven role-based access control system**. While four default roles are provided, administrators can create custom roles and assign permissions as needed through the Role & Permission Management interface.
+The system uses a **database-driven role-based access control system** with the following default roles:
 
 **Default Roles:**
 
@@ -119,7 +111,6 @@ The system uses a **database-driven role-based access control system**. While fo
 - ✅ Access weekly timesheet
 - ❌ Cannot access expenses (no expense-related permissions)
 - ❌ Cannot change password
-- ❌ No access to user, dropdown or role management
 
 **USER (Standard Access)**
 
@@ -129,18 +120,13 @@ The system uses a **database-driven role-based access control system**. While fo
 - ✅ Manage your own expenses
 - ✅ Change your own password
 - ✅ Export your tasks to CSV
-- ❌ Cannot view other users' tasks
-- ❌ No access to user, dropdown or role management
 
 **EXPENSE_ADMIN (Expense Approver)**
 
 - ✅ All USER permissions for tasks
 - ✅ View and manage all users' expenses
-- ✅ Filter expenses by any username
 - ✅ Approve or reject expense submissions from expense detail page
 - ✅ Process reimbursements
-- ❌ No access to task management for other users
-- ❌ No access to user, dropdown or role management
 
 **Email Requirement for Expense Access**
 
@@ -151,22 +137,9 @@ All users (except GUEST) must have a valid email address configured in their pro
 - ❌ Cannot submit expenses for approval
 - ✅ Can still access all task activity features
 
-**To enable expense access**: Contact your administrator to add an email address to your user profile.
+**Note:** The Weekly Timesheet view shows only your own tasks, regardless of role.
 
-**ADMIN (Full Access)**
-
-- ✅ All USER permissions
-- ✅ View and manage all users' tasks (in Task List view)
-- ✅ Filter tasks by any username (in Task List view)
-- ✅ Create, edit, and delete user accounts
-- ✅ Manage roles and permissions - create custom roles and assign permissions via web UI
-- ✅ Manage dropdown values (clients, projects, phases)
-- ✅ Change other users' passwords
-- ✅ All EXPENSE_ADMIN permissions for expenses
-
-**Note:** The Weekly Timesheet view shows only your own tasks, regardless of role. Use the Task List with username filter to view other users' activities.
-
-**Note:** Contact your administrator if you need different access permissions. Administrators can create custom roles tailored to your organization's needs.
+**Note:** Contact your administrator if you need different access permissions.
 
 ### Accessing the Application
 
@@ -290,14 +263,14 @@ To protect your account from unauthorized access, the system automatically locks
 
 **What to Do:**
 
-1. Click **"👤 Update Profile"** in the sidebar menu
-2. Click the **"🔒 Update Password"** button at the bottom of the profile page
+1. Click **"Update Profile"** in the sidebar menu
+2. Click the **"Update Password"** button at the bottom of the profile page
 3. Follow the password change process (see "Changing Your Password" section below)
 4. Your new password will be valid for another 90 days
 
 **Expired Password:**
 
-**For USER and ADMIN roles:**
+**For roles other than GUEST:**
 
 1. You'll be redirected to the password change screen immediately after login
 2. You must change your password before accessing the system
@@ -382,9 +355,7 @@ The weekly timesheet gives you a comprehensive view of your time across an entir
 
 ### Accessing Weekly Timesheet
 
-**From Backend Interface**: Navigate to the Weekly Timesheet from the main navigation menu in the Thymeleaf backend interface (http://localhost:8080)
-
-**Note**: The Weekly Timesheet button was removed from the Angular dashboard (http://localhost:4200) to provide a more streamlined user experience. Users should access the Weekly Timesheet directly from the backend interface.
+Navigate to the Weekly Timesheet from the main navigation menu.
 
 ### Understanding the Timesheet
 
@@ -392,7 +363,7 @@ The timesheet displays:
 
 - **Week Range**: Start and end dates of the displayed week
 - **Daily Columns**: Monday through Sunday
-- **Your Tasks**: All tasks for that week, grouped by day
+- **Your Tasks**: All tasks for that week, grouped by day, with columns for Client, Project, Phase, Hours, Task ID, Task Name, and Task Details
 - **Daily Totals**: Hours worked each day
 - **Weekly Total**: Total hours for the entire week
 
@@ -442,10 +413,10 @@ You can export your weekly timesheet data to CSV format for easy sharing or impo
 **To Export Your Timesheet:**
 
 1. **Navigate to Week**: Display the week you want to export
-2. **Click Export Button**: Click **"📋 Export CSV"** in the header
+2. **Click Export Button**: Click **"Export CSV"** in the header
 3. **Choose Action**:
-   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
-   - **💾 Download CSV**: Downloads a file named `Timesheet_Week_of_MM-DD-YYYY_to_MM-DD-YYYY.csv`
+   - **Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **Download CSV**: Downloads a file named `Timesheet_Week_of_MM-DD-YYYY_to_MM-DD-YYYY.csv`
    - **Close**: Close the export window
 
 **CSV Format:**
@@ -457,15 +428,16 @@ The exported data includes:
 - Project name
 - Phase
 - Hours worked
+- Task ID
+- Task Name
 - Task details
-- Username
 
 **Example CSV Output:**
 
 ```
-Date,Client,Project,Phase,Hours,Task Details,Username
-10/28/2025,Acme Corp,Website Redesign,Development,8.00,Fixed login bug,jsmith
-10/29/2025,Acme Corp,Website Redesign,Testing,6.50,QA testing,jsmith
+Date,Client,Project,Phase,Hours,Task ID,Task Name,Task Details
+10/28/2025,Acme Corp,Website Redesign,Development,8.00,TASK-101,Fix login bug,Fixed login bug
+10/29/2025,Acme Corp,Website Redesign,Testing,6.50,TASK-102,QA testing,QA testing
 ```
 
 ## Managing Your Profile
@@ -478,7 +450,7 @@ There are multiple ways to access your profile:
 
 **From the Dashboard:**
 
-1. Click the **"My Profile"** card on the dashboard (non-Admin users only)
+1. Click the **"My Profile"** card on the dashboard
 2. Or select **"My Profile"** from the side menu
 
 **From the Backend:**
@@ -520,7 +492,7 @@ The profile editor allows you to update:
 - Expense submissions require email for approval notifications
 - Receipt uploads are linked to your email identity
 
-If you need to track expenses but don't have an email configured, contact your administrator to update your profile.
+To enable expense access, add an email address to your profile. See the [Managing Your Profile](#managing-your-profile) section for instructions.
 
 ## Changing Your Password
 
@@ -544,7 +516,7 @@ Your new password must:
 **From Angular Profile:**
 
 1. Access your profile (see "Accessing My Profile" above)
-2. Click the **"Update Password"** button
+2. **Click the "Update Password"** button
 3. A dialog opens with password change form:
    - Enter your **Current Password**
    - Enter your **New Password** (real-time validation feedback)
@@ -596,13 +568,12 @@ The expense list shows all your recorded expenses with the following information
 - **Status**: Current workflow status (Draft, Submitted, Approved, Rejected, Reimbursed)
 - **Actions**: Edit, Clone, and Delete buttons for managing your expenses
 
-**Angular Dashboard Features:**
-The Angular dashboard (http://localhost:4200) provides full expense management capabilities:
+The expense management system provides:
 - **Add Expense** - Create new expenses with receipt upload
 - **Edit Expense** - Modify draft expenses and upload/replace receipts
 - **Clone Expense** - Duplicate existing expenses for similar entries
 - **Delete Expense** - Remove draft expenses
-- **Receipt Upload** - Attach receipts directly in Add/Edit dialogs (no separate receipt column needed)
+- **Receipt Upload** - Attach receipts directly in Add/Edit dialogs
 
 ### Using the Sidebar Menu
 
@@ -616,9 +587,9 @@ The Expense List page includes a **floating sidebar menu** for quick access to e
 
 **Menu Items:**
 
-- **📋 Export CSV**: Export filtered expense list to CSV format (read-only for Guest users)
+- **Export CSV**: Export filtered expense list to CSV format
 
-**Note:** Guest users can see the menu but Export CSV option will be disabled.
+**Note:** Guest users can see the menu but the Export CSV option will be disabled.
 
 ### Filtering Expenses
 
@@ -630,7 +601,6 @@ Use the filter controls at the top of the expense list to find specific expenses
 4. **Status**: Filter by workflow status
 5. **Payment Method**: Filter by how you paid
 6. **Start Date / End Date**: Filter by expense date range
-7. **Username** (Admin only): Filter expenses by user
 
 **To Apply Filters:**
 
@@ -640,7 +610,7 @@ Use the filter controls at the top of the expense list to find specific expenses
 
 ### Creating a New Expense
 
-1. **Access Expense Form**: Click **"💰 Add Expense"** from the navigation
+1. **Access Expense Form**: Click **"Add Expense"** from the navigation
 
 2. **Fill in Required Fields**:
    
@@ -797,7 +767,7 @@ Each email includes:
 
 Similar to the weekly timesheet, the expense sheet shows your expenses for the current week:
 
-1. **Access Expense Sheet**: Click **"📊 Weekly Expenses"** from navigation
+1. **Access Expense Sheet**: Click **"Weekly Expenses"** from navigation
 2. **View Current Week**: See all expenses from Monday through Sunday
 3. **See Totals**: View total expenses by day and for the week
 4. **Filter by Client/Project**: Filter to see expenses for specific work
@@ -830,21 +800,19 @@ Export your filtered expense list for reporting or record-keeping:
 
 1. **Apply Filters** (optional): Filter expenses as needed
 2. **Click Export Button**: 
-   - Click **"☰"** to open the sidebar menu, then click **"📋 Export CSV"**
+   - Click **"☰"** to open the sidebar menu, then click **"Export CSV"**
    - The menu will automatically close after selecting Export CSV
 3. **Wait for Data**: The system will fetch ALL filtered expenses (not just the current page)
 4. **Choose Action**:
-   - **📋 Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
-   - **💾 Download CSV**: Downloads a CSV file with an intelligent filename
+   - **Copy to Clipboard**: Copies CSV data for pasting into Excel, email, etc.
+   - **Download CSV**: Downloads a CSV file
    - **Close**: Close the export window
 
 **CSV Export Features:**
 
 - **Exports ALL filtered expenses** - not limited to the visible entries on the current page
-- Filename includes active filters and timestamp
-- Example filename: `Expenses_Acme_Corp_Travel_20260113.csv`
-
-**Note:** The export includes all expenses matching your current filters, regardless of pagination. Guest users cannot export CSV data.
+- Filename includes a date stamp
+- Example filename: `Expenses_20260113.csv`
 
 ---
 
@@ -863,12 +831,12 @@ Your new password must meet these requirements:
 ### How to Change Your Password (Regular Users)
 
 1. **Open Task List**: Navigate to your task activity list
-2. **Click Password Button**: Click **"🔒 Update Password"** in the header
+2. **Click Password Button**: Click **"Update Password"** in the header
 3. **Enter Current Password**: Type your existing password
 4. **Enter New Password**: Type your new password (must meet requirements)
 5. **Confirm New Password**: Retype your new password exactly
 6. **Show Passwords (Optional)**:
-   - Click the eye icon (👁️) next to each field to view what you're typing
+   - Click the eye icon next to each field to view what you're typing
    - Or check "Show passwords" to reveal all password fields
 7. **Submit**: Click **"Change Password"**
 8. **Success**: You'll be redirected with a confirmation message
@@ -956,19 +924,6 @@ Dashboard summary with key metrics for the selected date range:
 - **Weekly summary** with trends - Week-by-week comparison within period
 - **Monthly comparison** (grouped bar chart) - Compare hours across months in selected range
 
-**For ADMIN Users Only:**
-
-#### 5. User Analysis Tab
-
-ADMIN users see an additional tab with team performance analytics:
-
-- **User Performance Summary** table with rankings
-  
-  - Trophy icons for top 3 performers:
-    - 🏆 Gold trophy for #1 performer
-    - 🥈 Silver medal for #2 performer
-    - 🥉 Bronze medal for #3 performer
-
 ---
 
 ## Troubleshooting
@@ -1008,31 +963,12 @@ ADMIN users see an additional tab with team performance analytics:
 **Why This Exists:** Password history validation is a security feature that prevents you from cycling through the same few passwords. This ensures better account security over time.
 
 ---
-  - Metrics displayed:
-    - Total hours worked
-    - **Billable hours** (green) - Hours on client projects
-    - **Non-Billable hours** (orange) - Overhead activities logged to "Non-Billable" project
-    - Task count
-    - **Average billable hours per day** - Calculated from days with billable work
-    - Top client (excludes Non-Billable project)
-    - Top project (excludes Non-Billable project)
-    - Last activity date
-  - **Billable Tracking**: The system distinguishes billable vs. non-billable hours using project name - tasks logged to "Non-Billable" project are tracked separately from client work
-
-- **Hours by User** comparison (bar chart)
-  
-  - Visual comparison of hours across all team members
-  - Shows percentage of total team hours per user
-  - Color-coded bars for easy visualization
-  - Interactive tooltips with detailed information
 
 ### Report Features
 
 - **Interactive Charts**: Hover over chart elements for detailed information and exact values
 - **Real-Time Data**: All reports reflect your current task data from the database
-- **Role-Based Filtering**: 
-  - Regular users (USER, GUEST) see only their own data
-  - ADMIN users see data for all users in the system
+- **Your Data Only**: Reports show only your own task activities
 - **Color-Coded Visualizations**: Easy-to-read charts with consistent, professional color schemes
 - **Responsive Design**: Charts adapt to different screen sizes
 

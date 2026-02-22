@@ -497,6 +497,8 @@ As an administrator, you have the ability to view and manage tasks for all users
     - Select the empty option in the dropdown, or
     - Clear the filter to return to viewing all tasks
 
+**CSV Export:** When an administrator exports the task list to CSV, an additional **Username** column is included in the export, identifying which user each task belongs to. Regular users' exports do not include this column.
+
 **Note:** Regular users only see their own tasks and do not have access to this filtering feature.
 
 ### User Self-Service Profile Management

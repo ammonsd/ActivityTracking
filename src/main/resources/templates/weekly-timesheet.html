@@ -324,7 +324,9 @@
                             <th style="width: 250px">Project</th>
                             <th style="width: 130px">Phase</th>
                             <th style="width: 80px">Hours</th>
-                            <th>Task</th>
+                            <th style="width: 120px">Task ID</th>
+                            <th style="width: 180px">Task Name</th>
+                            <th>Task Details</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -334,7 +336,7 @@
                             <th:block th:if="${dailyData.hasTasks()}">
                                 <!-- Day Header -->
                                 <tr class="day-header">
-                                    <td colspan="5">
+                                    <td colspan="7">
                                         <span
                                             th:text="${dailyData.dayName}"
                                         ></span>
@@ -364,6 +366,12 @@
                                         th:style="${@billabilityService.isTaskBillable(task.client, task.project, task.phase) ? '' : 'color: red; font-weight: bold;'}"
                                     ></td>
                                     <td
+                                        th:text="${task.taskId}"
+                                    ></td>
+                                    <td
+                                        th:text="${task.taskName}"
+                                    ></td>
+                                    <td
                                         class="task-details"
                                         th:text="${task.details}"
                                     ></td>
@@ -375,7 +383,7 @@
                                     <td
                                         th:text="${#numbers.formatDecimal(dailyData.dayTotal, 1, 2)}"
                                     ></td>
-                                    <td></td>
+                                    <td colspan="3"></td>
                                 </tr>
                             </th:block>
                         </th:block>
@@ -388,7 +396,7 @@
                                     th:text="${#numbers.formatDecimal(weeklyData.weekTotal, 1, 2)}"
                                 ></strong>
                             </td>
-                            <td></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -501,7 +509,7 @@
                 const csvRows = [];
                 
                 // Add header row
-                csvRows.push('Date,Client,Project,Phase,Hours,Task Details,Username');
+                csvRows.push('Date,Client,Project,Phase,Hours,Task ID,Task Name,Task Details');
                 
                 // Get all task rows from the table
                 const table = document.querySelector('.timesheet-table');
@@ -529,16 +537,14 @@
                     // Process task rows
                     else {
                         const cells = row.querySelectorAll('td');
-                        if (cells.length >= 5) {
+                        if (cells.length >= 7) {
                             const client = cells[0].textContent.trim();
                             const project = cells[1].textContent.trim();
                             const phase = cells[2].textContent.trim();
                             const hours = cells[3].textContent.trim();
-                            const details = cells[4].textContent.trim().replace(/\s+/g, ' ');
-                            
-                            // Get username from the page (from welcome text)
-                            const usernameElement = document.querySelector('.welcome-text span');
-                            const username = usernameElement ? usernameElement.textContent.trim() : '';
+                            const taskId = cells[4].textContent.trim();
+                            const taskName = cells[5].textContent.trim();
+                            const details = cells[6].textContent.trim().replace(/\s+/g, ' ');
                             
                             // Escape fields that might contain commas or quotes
                             const escapeCsvField = (field) => {
@@ -554,8 +560,9 @@
                                 escapeCsvField(project),
                                 escapeCsvField(phase),
                                 hours,
-                                escapeCsvField(details),
-                                escapeCsvField(username)
+                                escapeCsvField(taskId),
+                                escapeCsvField(taskName),
+                                escapeCsvField(details)
                             ].join(','));
                         }
                     }
