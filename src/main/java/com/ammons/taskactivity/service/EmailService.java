@@ -136,7 +136,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Account Locked: %s", appName, username);
+        String subject = "Account Locked: " + username;
         String body = buildLockoutEmailBody(username, fullName, failedAttempts, ipAddress);
 
         // Parse comma-separated admin emails
@@ -330,7 +330,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] GUEST User Login", appName);
+        String subject = "GUEST User Login";
         String body = buildGuestLoginEmailBody(username, fullName, ipAddress, location);
 
         // Parse comma-separated admin emails
@@ -462,7 +462,7 @@ public class EmailService {
         }
 
         String method = useAwsSdk ? "AWS SES SDK" : "SMTP";
-        String subject = String.format("[%s] Test Email", appName);
+        String subject = "Test Email";
 
         // Parse comma-separated admin emails
         String[] adminEmails = adminEmail.split(",");
@@ -522,7 +522,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] New Expense Submitted - %s", appName, expenseId);
+        String subject = "New Expense Submitted - " + expenseId;
         String body = buildExpenseSubmittedEmailBody(username, fullName, expenseId,
                 expenseDescription, amount, currency, expenseDate);
 
@@ -591,7 +591,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Expense %s - %s", appName, newStatus, expenseId);
+        String subject = String.format("Expense %s - %s", newStatus, expenseId);
         String body = buildExpenseStatusEmailBody(username, fullName, expenseId, expenseDescription,
                 amount, currency, newStatus, notes, processedBy);
 
@@ -693,7 +693,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Password Expiration Warning", appName);
+        String subject = "Password Expiration Warning";
         String body =
                 buildPasswordExpirationWarningEmailBody(username, fullName, daysUntilExpiration);
 
@@ -793,7 +793,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Password Has Expired - Action Required", appName);
+        String subject = "Password Has Expired - Action Required";
         String body = buildPasswordExpiredEmailBody(username, fullName);
 
         try {
@@ -879,7 +879,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Password Reset Request", appName);
+        String subject = "Password Reset Request";
         String body = buildPasswordResetEmailBody(username, fullName, resetLink, expiryMinutes);
 
         try {
@@ -949,7 +949,7 @@ public class EmailService {
             return;
         }
 
-        String subject = String.format("[%s] Password Changed Successfully", appName);
+        String subject = "Password Changed Successfully";
         String body = buildPasswordChangedConfirmationBody(username, fullName);
 
         try {
@@ -1275,7 +1275,7 @@ public class EmailService {
             return;
         }
 
-        String emailSubject = String.format("[%s] User Request: %s", appName, subject);
+        String emailSubject = "User Request: " + subject;
         String emailBody =
                 buildAdminContactEmailBody(senderUsername, senderEmail, subject, messageBody);
 
