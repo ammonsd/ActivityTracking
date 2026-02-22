@@ -1246,5 +1246,92 @@ public class EmailService {
 
         return body.toString();
     }
+
+    /**
+     * Sends a user-initiated contact request email to the administrator(s).
+     *
+     * <p>
+     * The email is sent to all configured admin email addresses and includes the user's subject,
+     * message body, username, and a timestamp so the administrator has full context without needing
+     * to reply for basic information.
+     *
+     * @param senderUsername the authenticated username submitting the request
+     * @param senderEmail the email address of the sender (may be null/empty)
+     * @param subject free-form subject entered by the user
+     * @param messageBody free-form message body entered by the user
+     */
+    public void sendAdminContactRequest(String senderUsername, String senderEmail, String subject,
+            String messageBody) {
+        if (!mailEnabled) {
+            logger.info(
+                    "Email notifications are disabled. Would have forwarded contact request from user: {}",
+                    senderUsername);
+            return;
+        }
+
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn("No admin email configured — skipping contact request from user: {}",
+                    senderUsername);
+            return;
+        }
+
+        String emailSubject = String.format("[%s] User Request: %s", appName, subject);
+        String emailBody =
+                buildAdminContactEmailBody(senderUsername, senderEmail, subject, messageBody);
+
+        String[] adminEmails = adminEmail.split(",");
+        for (String email : adminEmails) {
+            String trimmedEmail = email.trim();
+            if (trimmedEmail.isEmpty()) {
+                continue;
+            }
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedEmail, emailSubject, emailBody);
+                } else {
+                    sendEmailViaSmtp(emailSubject, emailBody, trimmedEmail);
+                }
+                logger.info("Admin contact request email sent to {} from user: {}", trimmedEmail,
+                        senderUsername);
+            } catch (Exception e) {
+                logger.error("Failed to send admin contact request to {}: {}", trimmedEmail,
+                        e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Builds the plain-text email body for an admin contact request.
+     *
+     * @param senderUsername the authenticated username
+     * @param senderEmail the sender's email address (may be null/empty)
+     * @param subject the user-supplied subject line
+     * @param messageBody the user-supplied message body
+     * @return formatted email body text
+     */
+    private String buildAdminContactEmailBody(String senderUsername, String senderEmail,
+            String subject, String messageBody) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("📬 USER REQUEST — %s%n%n", appName));
+
+        body.append("Request Details:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("From:               %s%n", senderUsername));
+        body.append(String.format("Reply-To Email:     %s%n",
+                (senderEmail != null && !senderEmail.isBlank()) ? senderEmail : "(none on file)"));
+        body.append(String.format("Subject:            %s%n", subject));
+        body.append(String.format("Submitted:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+
+        body.append(messageBody);
+        body.append("\n\n---\n");
+        body.append(String.format(
+                "This message was submitted via the Contact System Administrator form in %s.%n",
+                appName));
+
+        return body.toString();
+    }
 }
 

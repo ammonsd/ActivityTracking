@@ -253,6 +253,47 @@
                 justify-content: flex-end;
             }
 
+            /* Contact Admin Modal Styles */
+            .contact-form-group {
+                margin-bottom: 15px;
+            }
+            .contact-form-group label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+                color: #333;
+            }
+            .contact-form-group input[type="text"],
+            .contact-form-group textarea {
+                width: 100%;
+                padding: 8px 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+                box-sizing: border-box;
+            }
+            .contact-form-group textarea {
+                min-height: 120px;
+                resize: vertical;
+            }
+            .contact-status {
+                margin-top: 10px;
+                padding: 8px 12px;
+                border-radius: 4px;
+                display: none;
+                font-size: 14px;
+            }
+            .contact-status.success {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .contact-status.error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+
             /* Common table styles for all screen sizes - must come BEFORE media queries */
             /* Left-align all table headers */
             table th {
@@ -724,6 +765,16 @@
                             >
                                 <span>Admin Dashboard</span>
                             </a>
+                        </li>
+                        <!-- Contact System Administrator - visible only when mail is enabled -->
+                        <li th:if="${mailEnabled}">
+                            <button
+                                type="button"
+                                title="Send a request to the system administrator"
+                                onclick="openContactAdminModal(); return false;"
+                            >
+                                <span>Contact System Admin</span>
+                            </button>
                         </li>
                     </ul>
                 </div>
@@ -1273,6 +1324,111 @@
                     });
                 }
             });
+        </script>
+
+        <!-- Contact Admin Modal -->
+        <div id="contactAdminModal" class="csv-modal" style="display:none;">
+            <div class="csv-modal-content" style="max-width:550px;">
+                <div class="csv-modal-header">
+                    <h2>Contact System Administrator</h2>
+                    <button class="csv-close" onclick="closeContactAdminModal()" title="Close">&times;</button>
+                </div>
+                <div class="contact-form-group">
+                    <label for="contactSubject">Subject</label>
+                    <input type="text" id="contactSubject" maxlength="200" placeholder="e.g. Please add a new Client" />
+                </div>
+                <div class="contact-form-group">
+                    <label for="contactMessage">Message</label>
+                    <textarea id="contactMessage" maxlength="2000" placeholder="Describe your request..."></textarea>
+                </div>
+                <div id="contactStatus" class="contact-status"></div>
+                <div class="csv-actions">
+                    <button class="btn btn-secondary" onclick="closeContactAdminModal()">Cancel</button>
+                    <button class="btn btn-primary" id="contactSendBtn" onclick="submitContactAdmin()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Contact System Administrator modal
+            function openContactAdminModal() {
+                // Close sidebar first
+                const sidebar = document.getElementById("sidebarContent");
+                const toggle = document.getElementById("sidebarToggle");
+                if (sidebar && sidebar.classList.contains("open")) {
+                    sidebar.classList.remove("open");
+                    toggle.innerHTML = "☰";
+                }
+                // Reset form fields and status
+                document.getElementById("contactSubject").value = "";
+                document.getElementById("contactMessage").value = "";
+                const status = document.getElementById("contactStatus");
+                status.style.display = "none";
+                status.className = "contact-status";
+                const sendBtn = document.getElementById("contactSendBtn");
+                sendBtn.disabled = false;
+                sendBtn.textContent = "Send";
+                sendBtn.style.display = "";
+                document.getElementById("contactAdminModal").style.display = "block";
+            }
+
+            function closeContactAdminModal() {
+                document.getElementById("contactAdminModal").style.display = "none";
+            }
+
+            function getCsrfTokenFromCookie() {
+                const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+                return match ? decodeURIComponent(match[1]) : "";
+            }
+
+            function submitContactAdmin() {
+                const subject = document.getElementById("contactSubject").value.trim();
+                const message = document.getElementById("contactMessage").value.trim();
+                const status = document.getElementById("contactStatus");
+                const sendBtn = document.getElementById("contactSendBtn");
+
+                if (!subject || !message) {
+                    status.textContent = "Please fill in both subject and message.";
+                    status.className = "contact-status error";
+                    status.style.display = "block";
+                    return;
+                }
+
+                sendBtn.disabled = true;
+                sendBtn.textContent = "Sending...";
+                status.style.display = "none";
+
+                fetch("/contact/admin", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-XSRF-TOKEN": getCsrfTokenFromCookie()
+                    },
+                    body: JSON.stringify({ subject: subject, message: message })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        status.textContent = "Your message has been sent to the administrator.";
+                        status.className = "contact-status success";
+                        status.style.display = "block";
+                        sendBtn.style.display = "none";
+                    } else {
+                        status.textContent = data.error || "Failed to send message. Please try again.";
+                        status.className = "contact-status error";
+                        status.style.display = "block";
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = "Send";
+                    }
+                })
+                .catch(() => {
+                    status.textContent = "Network error. Please try again.";
+                    status.className = "contact-status error";
+                    status.style.display = "block";
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = "Send";
+                });
+            }
         </script>
     </body>
 </html>

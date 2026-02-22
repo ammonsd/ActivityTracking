@@ -59,8 +59,9 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 
 - **Update Profile**: Access your profile to update your information and password
 - **Export CSV**: Export filtered task list to CSV format
+- **Contact System Admin**: Send a message directly to the administrator (available to all users, including Guest)
 
-**Note:** Guest users can see the menu but all options (including Update Profile) will be disabled. Administrator users have additional management options in the sidebar — refer to the [Administrator User Guide](Administrator_User_Guide.md).
+**Note:** Guest users will be able to see the admin menu options for demo purposes, but the options will be disabled.
 
 ### Exporting Task List to CSV
 
@@ -139,7 +140,7 @@ All users (except Guest users) must have a valid email address configured in the
 
 **Note:** The Weekly Timesheet view shows only your own tasks, regardless of role.
 
-**Note:** Contact your administrator if you need different access permissions.
+**Note:** Use the **Contact System Admin** option in the sidebar menu if you need different access permissions.
 
 ### Accessing the Application
 
@@ -186,8 +187,8 @@ If you've forgotten your password, you can reset it yourself using the **Reset P
 1. **Check spam/junk folders**: Reset emails might be filtered
 2. **Wait a few minutes**: Email delivery can take 1-2 minutes
 3. **Verify email address**: Make sure you entered the correct email
-4. **Guest users**: If your account has guest-only access, password reset is not available. Contact your administrator to have your password reset.
-5. **Contact administrator**: If you still can't reset, contact your system administrator
+4. **Guest users**: If your account has guest-only access, password reset is not available. Use the **Contact System Admin** option in the sidebar menu to request a password reset.
+5. **Contact administrator**: If you still can't reset, use the **Contact System Admin** option in the sidebar menu
 
 ### If You're Required to Change Your Password
 
@@ -236,7 +237,7 @@ To protect your account from unauthorized access, the system automatically locks
 1. **Use the Password Reset Feature**: Click the **"Reset Password"** link on the login page
 2. Enter your email address and follow the password reset process (see "If You've Forgotten Your Password" section above)
 3. After successfully resetting your password, your account will be automatically unlocked
-4. Alternatively, **Contact your administrator** if you prefer manual assistance
+4. Alternatively, use the **Contact System Admin** option in the sidebar menu if you prefer manual assistance
 5. The administrator can manually unlock your account
 
 ### Password Expiration Warnings
@@ -291,7 +292,7 @@ To protect your account from unauthorized access, the system automatically locks
      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
      - This helps distinguish billable client work from internal overhead
 
-   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator to have the appropriate clients or projects added to your account.
+   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, use the **Contact System Admin** option in the sidebar menu to request that the appropriate clients or projects be added to your account.
 
    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
@@ -534,7 +535,7 @@ Your new password must:
 
 ### Account Lockout Protection
 
-For security, your account will be locked after **5 consecutive failed login attempts**. Use the **Reset Password** link on the login page to unlock your account. If you do not have a registered email address, contact your administrator for assistance.
+For security, your account will be locked after **5 consecutive failed login attempts**. Use the **Reset Password** link on the login page to unlock your account. If you do not have a registered email address, use the **Contact System Admin** option in the sidebar menu to request assistance.
 
 ---
 
@@ -573,8 +574,33 @@ The Expense List page includes a **floating sidebar menu** for quick access to e
 **Menu Items:**
 
 - **Export CSV**: Export filtered expense list to CSV format
+- **Contact System Admin**: Send a message directly to the administrator (available to all users, including Guest)
 
-**Note:** Guest users can see the menu but the Export CSV option will be disabled.
+**Note:** Export CSV is disabled for Guest users. Contact System Admin is available to all authenticated users.
+
+### Contacting the System Administrator
+
+The **Contact System Admin** option in the sidebar menu lets you send a message directly to the administrator without leaving the application. Use this to request system changes — such as adding a new Client or Project — or for any other question or request.
+
+**To send a message:**
+
+1. Click **☰** to open the sidebar menu
+2. Click **Contact System Admin** — the sidebar closes and a dialog opens
+3. Enter a **Subject** (free-form text, e.g. *Please add client Acme Corp*)
+4. Enter your **Message** describing the request in detail
+5. Click **Send**
+
+**After sending:**
+
+- A green confirmation message appears: *"Your message has been sent to the administrator."*
+- The administrator receives an email with your username, subject, message, and the date/time submitted
+- If you have an email address on file in your profile, it is included so the administrator can reply directly to you
+
+**Tips:**
+
+- Be specific about what you need (e.g., client name, project name, or expense type to add)
+- This feature is available to **all roles including Guest** — useful during demos or evaluations
+- There is no limit on how often you can use this form
 
 ### Filtering Expenses
 

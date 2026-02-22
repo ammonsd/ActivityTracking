@@ -87,6 +87,9 @@ public class ExpenseViewController {
     @Value("${app.upload.max-file-size}")
     private long maxFileSize;
 
+    @Value("${spring.mail.enabled:false}")
+    private boolean mailEnabled;
+
     public ExpenseViewController(ExpenseService expenseService,
             DropdownValueService dropdownValueService,
             UserDropdownAccessService userDropdownAccessService, UserService userService,
@@ -1152,6 +1155,7 @@ public class ExpenseViewController {
             model.addAttribute("isAdmin", isAdmin(authentication));
             model.addAttribute("canApproveExpenses", canApproveExpenses(authentication));
             model.addAttribute("isGuest", isGuest(authentication));
+            model.addAttribute("mailEnabled", mailEnabled);
 
             // Check if user has email for expense access
             boolean hasEmail = userService.userHasEmail(username);

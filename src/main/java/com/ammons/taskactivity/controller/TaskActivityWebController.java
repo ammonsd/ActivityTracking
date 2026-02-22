@@ -23,6 +23,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
@@ -76,6 +77,9 @@ public class TaskActivityWebController {
     private final UserService userService;
     private final TaskListSortConfig taskListSortConfig;
     private final BillabilityService billabilityService;
+
+    @Value("${spring.mail.enabled:false}")
+    private boolean mailEnabled;
 
     public TaskActivityWebController(TaskActivityService taskActivityService,
             DropdownConfig dropdownConfig, DropdownValueService dropdownValueService,
@@ -548,6 +552,7 @@ public class TaskActivityWebController {
             String username = authentication.getName();
             model.addAttribute(USERNAME_ATTR, username);
             model.addAttribute(AUTHORITIES_ATTR, authentication.getAuthorities());
+            model.addAttribute("mailEnabled", mailEnabled);
 
             // Check if user has email for expense access
             boolean hasEmail = userService.userHasEmail(username);
