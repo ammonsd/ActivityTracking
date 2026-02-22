@@ -35,7 +35,7 @@ Use the filter controls at the top of the task list to narrow down your view:
 1. **Client Filter**: Show only tasks for a specific client
 2. **Project Filter**: Filter by project name
 3. **Phase Filter**: Filter by work phase
-4. **Task ID Filter**: Filter by ticket or reference number (partial match, case-insensitive)
+4. **Task ID Filter**: Filter by ticket or reference number
 5. **Start Date**: Show tasks from this date onward
 6. **End Date**: Show tasks up to this date
 
@@ -99,20 +99,20 @@ Date,Client,Project,Phase,Hours,Task ID,Task Name,Details
 
 ### User Roles and Permissions
 
-The system uses a **database-driven role-based access control system** with the following default roles:
+The system has the following roles:
 
 **Default Roles:**
 
-**GUEST (Read-Only Access)**
+**Guest (Read-Only Access)**
 
 - ✅ View task list
 - ✅ View task details
-- ✅ Create, edit, and delete tasks (full CRUD access for task activities)
+- ✅ Create, edit, and delete tasks
 - ✅ Access weekly timesheet
 - ❌ Cannot access expenses (no expense-related permissions)
 - ❌ Cannot change password
 
-**USER (Standard Access)**
+**User (Standard Access)**
 
 - ✅ View, create, edit, and delete your own tasks
 - ✅ Access weekly timesheet
@@ -121,16 +121,16 @@ The system uses a **database-driven role-based access control system** with the 
 - ✅ Change your own password
 - ✅ Export your tasks to CSV
 
-**EXPENSE_ADMIN (Expense Approver)**
+**Expense Administrator (Expense Approver)**
 
-- ✅ All USER permissions for tasks
+- ✅ All user permissions for tasks
 - ✅ View and manage all users' expenses
 - ✅ Approve or reject expense submissions from expense detail page
 - ✅ Process reimbursements
 
 **Email Requirement for Expense Access**
 
-All users (except GUEST) must have a valid email address configured in their profile to access expense features. Without an email:
+All users (except Guest users) must have a valid email address configured in their profile to access expense features. Without an email:
 
 - ❌ Expense tracking buttons and links are hidden
 - ❌ Cannot create, view, or manage expenses
@@ -180,14 +180,13 @@ If you've forgotten your password, you can reset it yourself using the **Reset P
 - Each reset link can only be used **once**
 - If the link expires, simply request a new reset link
 - You'll receive a confirmation email after successfully changing your password
-- For security, the system won't reveal if an email address is registered
 
 **If You Don't Receive the Email:**
 
 1. **Check spam/junk folders**: Reset emails might be filtered
 2. **Wait a few minutes**: Email delivery can take 1-2 minutes
 3. **Verify email address**: Make sure you entered the correct email
-4. **GUEST users**: If you have a GUEST role, password reset is disabled for security reasons. Contact your system administrator to have your password changed.
+4. **Guest users**: If your account has guest-only access, password reset is not available. Contact your administrator to have your password reset.
 5. **Contact administrator**: If you still can't reset, contact your system administrator
 
 ### If You're Required to Change Your Password
@@ -214,16 +213,7 @@ For security, your session will expire after **30 minutes** of inactivity.
 To end your session securely:
 
 1. **Click Logout**: Click the **"Logout"** link in the header
-2. **Token Revocation**: Your session token is immediately invalidated and added to a server-side blacklist
-3. **Redirect**: You'll be redirected to the login page
-4. **Security**: The revoked token cannot be reused, even if intercepted
-
-**What Token Revocation Means:**
-
-- Your access token is permanently blacklisted on the server
-- Even if someone has a copy of your old token, they cannot use it
-- This provides stronger security than client-side-only logout
-- All your tokens are automatically revoked when you change your password
+2. **Redirect**: You'll be redirected to the login page
 
 **Best Practices:**
 
@@ -247,7 +237,7 @@ To protect your account from unauthorized access, the system automatically locks
 2. Enter your email address and follow the password reset process (see "If You've Forgotten Your Password" section above)
 3. After successfully resetting your password, your account will be automatically unlocked
 4. Alternatively, **Contact your administrator** if you prefer manual assistance
-5. The administrator can manually unlock your account from the User Management page
+5. The administrator can manually unlock your account
 
 ### Password Expiration Warnings
 
@@ -259,7 +249,7 @@ To protect your account from unauthorized access, the system automatically locks
 ⚠️ Your password will expire in X day(s). Please change it soon.
 ```
 
-**Note**: GUEST users will not see password expiration warnings since they cannot change their own passwords.
+**Note**: Guest users will not see password expiration warnings since they cannot change their own passwords.
 
 **What to Do:**
 
@@ -270,19 +260,19 @@ To protect your account from unauthorized access, the system automatically locks
 
 **Expired Password:**
 
-**For roles other than GUEST:**
+**For standard users:**
 
 1. You'll be redirected to the password change screen immediately after login
 2. You must change your password before accessing the system
 3. The message will say: "Your password has expired. Please change it to continue."
 4. After changing, you'll gain full access again
 
-**For GUEST role:**
+**For Guest users:**
 
-1. GUEST users cannot change their own passwords
-2. If a GUEST password expires, they will be blocked from logging in
+1. Guest users cannot change their own passwords
+2. If a Guest user's password expires, they will be blocked from logging in
 3. The login page will display: "Password has expired. Contact system administrator."
-4. An administrator must reset the GUEST user's password
+4. An administrator must reset the Guest user's password
 
 ## Managing Your Tasks
 
@@ -301,11 +291,11 @@ To protect your account from unauthorized access, the system automatically locks
      - **Non-Billable Project**: Use "Non-Billable" for overhead activities like meetings, training, or administrative work
      - This helps distinguish billable client work from internal overhead
 
-   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator to update your **Task** tab access settings.
+   > **Note:** The Client and Project dropdowns show only the values your administrator has assigned to your account under **Task** access, plus any values flagged as visible to all users. If you do not see an expected client or project, contact your administrator to have the appropriate clients or projects added to your account.
 
    - **Phase**: Pick the work phase (Development, Testing, etc.) (required)
    - **Hours**: Enter time spent (use decimals like 2.5 for 2½ hours) (required)
-   - **Task ID**: Enter the ticket or reference number from your project management tool (optional, e.g., `TA-001`, `MP1T-6394`)
+   - **Task ID**: Enter the ticket or reference number from your project management tool — spaces are not allowed (optional, e.g., `TA-001`, `MP1T-6394`)
    - **Task Name**: Enter a short label or title for the task (optional)
    - **Details**: Describe what you worked on (optional - not needed for tasks like PTO)
 
@@ -386,10 +376,9 @@ You can filter the timesheet to show only billable or non-billable tasks:
 - **Billable**: Shows only tasks where the client, project, AND phase are all marked as billable
 - **Non-Billable**: Shows tasks where any component (client, project, or phase) is marked as non-billable
 
-**How Billability is Determined:**
-- Each dropdown value (client, project, phase, expense type) can be marked as "Non-Billable" by administrators
-- A task is considered billable only if ALL its components (client, project, phase) are billable
-- If ANY component is marked as non-billable, the entire task is classified as non-billable
+**How Billability Works:**
+- A task is billable only when the client, project, and phase are all marked as billable
+- If any one of them is non-billable, the task will show as non-billable
 
 **To Filter Tasks:**
 1. Locate the **Billability** dropdown below the week navigation
@@ -453,9 +442,9 @@ There are multiple ways to access your profile:
 1. Click the **"My Profile"** card on the dashboard
 2. Or select **"My Profile"** from the side menu
 
-**From the Backend:**
+**From the Navigation Menu:**
 
-- Navigate to the user menu and select "My Profile"
+- Select **"My Profile"** from the application's navigation menu
 
 ### Editing Your Profile
 
@@ -468,7 +457,7 @@ The profile editor allows you to update:
 
 **Note**: Your username, role, and account status cannot be changed through the profile editor. These fields are managed by administrators.
 
-**To Update Your Profile (Dashboard UI):**
+**To Update Your Profile:**
 
 1. Access My Profile from the dashboard or side menu
 2. Modify the fields you want to update
@@ -476,7 +465,7 @@ The profile editor allows you to update:
 4. A success message confirms your changes
 5. Click **"Cancel"** to return to the dashboard without saving
 
-**To Update Your Profile (Backend UI):**
+**Alternative Method:**
 
 1. Access My Profile from the user menu
 2. Modify the fields you want to update
@@ -490,7 +479,7 @@ The profile editor allows you to update:
 
 - The "Add New Expense" button is hidden if no email is configured
 - Expense submissions require email for approval notifications
-- Receipt uploads are linked to your email identity
+- Receipt uploads are associated with your account
 
 To enable expense access, add an email address to your profile. See the [Managing Your Profile](#managing-your-profile) section for instructions.
 
@@ -507,27 +496,27 @@ Your new password must:
 - Contain at least one number
 - Contain at least one special character (+&%$#@!~*)
 - Not contain more than 2 consecutive identical characters
-- Not contain the username (case-insensitive)
+- Not contain the username (regardless of capitalization)
 - Not match your current password
 - Cannot match any of your previous 5 passwords
 
 ### How to Change Your Password
 
-**From Angular Profile:**
+**From Your Profile:**
 
 1. Access your profile (see "Accessing My Profile" above)
 2. **Click the "Update Password"** button
 3. A dialog opens with password change form:
    - Enter your **Current Password**
-   - Enter your **New Password** (real-time validation feedback)
+   - Enter your **New Password** (requirements are checked as you type)
    - Enter your **Confirm Password** (must match new password)
-   - View password requirements with live status indicators
+   - View password requirements — each is checked off as you meet it
    - Use "Show passwords" checkbox if needed
 4. Click **"Update"** to save or **"Cancel"** to close without changes
 5. Dialog closes on success with confirmation message
 6. Specific error messages display for validation failures (e.g., "Password must contain at least 1 special character (+&%$#@!~*)")
 
-**From the Backend Menu:**
+**Alternative Method:**
 
 1. Navigate to the user menu
 2. Select "Change Password"
@@ -545,11 +534,7 @@ Your new password must:
 
 ### Account Lockout Protection
 
-For security, your account will be locked after **5 consecutive failed login attempts**:
-
-- Locked accounts must be unlocked by an administrator
-- The lockout counter resets after a successful login
-- Contact your administrator if you've been locked out
+For security, your account will be locked after **5 consecutive failed login attempts**. Use the **Reset Password** link on the login page to unlock your account. If you do not have a registered email address, contact your administrator for assistance.
 
 ---
 
@@ -618,7 +603,7 @@ Use the filter controls at the top of the expense list to find specific expenses
    - **Client**: Client associated with this expense (required)
    - **Project**: Project related to the expense (optional)
 
-   > **Note:** The Client and Project dropdowns for expenses show only the values your administrator has assigned to your account under **Expense** access, plus any values flagged as visible to all users. Task and expense access are configured independently — your task clients/projects and your expense clients/projects may differ. If you do not see an expected client or project, contact your administrator to update your **Expense** tab access settings.
+   > **Note:** The Client and Project dropdowns for expenses show only the values your administrator has assigned to your account under **Expense** access, plus any values flagged as visible to all users. Task and expense access are configured independently — your task clients/projects and your expense clients/projects may differ. If you do not see an expected client or project, contact your administrator to have the appropriate clients or projects added to your expense access.
 
    - **Expense Type**: Category from dropdown (Travel - Airfare, Hotel, Home Office Equipment, etc.) (required)
    - **Description**: What the expense was for (required)
@@ -636,17 +621,12 @@ Use the filter controls at the top of the expense list to find specific expenses
    
    - Click **"Choose File"** next to Receipt
    - Select an image file (JPEG, PNG, or PDF only)
-   - The system displays the maximum allowed file size for your environment
    - Receipt is uploaded and attached to the expense
-   - **File Size Limits**: 
-     - Local development: 2MB maximum
-     - Production/AWS: 10MB maximum
-     - Docker: 5MB maximum
-   - **File Validation**: The system validates the actual file content (magic numbers), not just the file extension
+   - **File Size Limits**: Maximum file size is 10MB
    - **Accepted File Types**: JPEG images, PNG images, PDF documents
    - **Rejected Files**: 
      - Files exceeding the size limit
-     - Executables, scripts, and files with mismatched content
+     - Files that are not genuine JPEG, PNG, or PDF documents
    - If you see "File size exceeds maximum" error, reduce the file size or resolution before uploading
    - If you see "Invalid file type" error, ensure your file is a genuine JPEG, PNG, or PDF
 
@@ -692,20 +672,20 @@ When cloning an expense that contains inactive dropdown values, these values wil
 1. **Complete Draft Expense**: Ensure all information is correct and receipt is attached
 2. **Submit**: Click **"Submit for Approval"** button
 3. **Status Change**: Expense status changes to "Submitted"
-4. **Approver Notification**: All configured approvers receive an email notification with expense details
-5. **Wait for Review**: EXPENSE_ADMIN will review and approve or reject
+4. **Approver Notification**: Your expense approver(s) will receive an email notification with the expense details
+5. **Wait for Review**: An expense administrator will review and approve or reject
 6. **Email Notification**: You'll receive an email when your expense is approved, rejected, or reimbursed
 
 **Important:** Once submitted, you cannot edit or delete the expense.
 
 **Email Notifications**
 
-When you submit an expense, configured approvers receive an immediate email notification with:
+When you submit an expense, your approver(s) receive an immediate email notification with:
 
 - Your full name and username
 - Expense ID and description
 - Amount and date
-- Instructions to review in the Approval Queue
+- Instructions to review the expense
 
 After submitting an expense, you'll receive automatic email notifications at each status change:
 
@@ -789,10 +769,9 @@ Just like the weekly timesheet, you can filter expenses by billability status:
 4. Expense totals recalculate based on filtered expenses
 5. The filter persists when navigating between weeks
 
-**Expense Billability Determination:**
-- An expense is billable only if its client, project, AND expense type are all marked as billable
-- If ANY component (client, project, or type) is non-billable, the entire expense is classified as non-billable
-- Administrators configure billability flags for dropdown values (clients, projects, types)
+**How Expense Billability Works:**
+- An expense is billable only when the client, project, and expense type are all marked as billable
+- If any one of them is non-billable, the expense will show as non-billable
 
 ### Exporting Expenses to CSV
 
@@ -825,7 +804,7 @@ Your new password must meet these requirements:
 3. ✅ **At least 1 number** (0-9)
 4. ✅ **At least 1 special character** from: `+ & % $ # @ ! ~`
 5. ✅ **Not contain more than 2 consecutive identical characters** (e.g., "aaa" is not allowed)
-6. ✅ **Not contain the username** (case-insensitive)
+6. ✅ **Not contain the username** (regardless of capitalization)
 7. ✅ **Not be the same as your current password**
 
 ### How to Change Your Password (Regular Users)
@@ -843,13 +822,7 @@ Your new password must meet these requirements:
 
 **Security Impact of Password Changes:**
 
-When you change your password:
-- **All your existing session tokens are immediately revoked**
-- You'll be logged out automatically and must log in with your new password
-- Any other active sessions (e.g., on different devices) are also terminated
-- This prevents unauthorized access if someone had access to your old credentials or tokens
-
-This enhanced security ensures that changing your password fully protects your account, even if someone previously obtained your authentication token.
+When you change your password, you will be logged out automatically and must log in with your new password. Any other active sessions (e.g., on different devices) are also terminated.
 
 ### Forced Password Changes
 
@@ -861,7 +834,7 @@ If your administrator has enabled "Force Password Update" for your account:
 4. Follow the same steps as above (no current password needed)
 5. After changing, you'll gain full access to the system
 
-**Note**: This is different from password expiration. Force Password Update is manually set by administrators (typically for new accounts), while password expiration happens automatically after 90 days.
+**Note**: This is separate from the automatic 90-day password expiration. An administrator-required password change is typically used for new accounts.
 
 ---
 
@@ -933,19 +906,17 @@ Dashboard summary with key metrics for the selected date range:
 **Problem:** "Invalid file type" error when uploading receipts
 
 **Causes:**
-- The file extension doesn't match the actual file content
 - The file is not a genuine JPEG, PNG, or PDF
-- The file might be an executable or script with a fake image extension
-- The file is corrupted or too small
+- The file may be corrupted or empty
 
 **Solutions:**
 1. **Verify File Type**: Open the file on your computer to ensure it's a valid image or PDF
 2. **Re-save the File**: Open the image in an image editor and save it as JPEG or PNG
 3. **Convert PDF**: If using a PDF, ensure it was created by a legitimate PDF tool
-4. **Check File Size**: Ensure the file is at least 8 bytes (very small files are rejected)
+4. **Check File Size**: Make sure the file is not empty
 5. **Avoid Screenshots from Unknown Sources**: Screenshots should be saved properly as JPEG or PNG
 
-**Technical Note:** The system validates the actual file content (magic numbers/signatures) rather than trusting the file extension. This prevents malicious files from being uploaded, even if they're renamed to look like images.
+**Note:** The system validates the actual file content, not just the file extension. Ensure your file is a genuine JPEG, PNG, or PDF.
 
 ### Password Change Issues
 
@@ -967,7 +938,7 @@ Dashboard summary with key metrics for the selected date range:
 ### Report Features
 
 - **Interactive Charts**: Hover over chart elements for detailed information and exact values
-- **Real-Time Data**: All reports reflect your current task data from the database
+- **Real-Time Data**: All reports always reflect your most current task data
 - **Your Data Only**: Reports show only your own task activities
 - **Color-Coded Visualizations**: Easy-to-read charts with consistent, professional color schemes
 - **Responsive Design**: Charts adapt to different screen sizes
@@ -978,4 +949,4 @@ Dashboard summary with key metrics for the selected date range:
 - Date ranges default to the current month but can be filtered
 - Hours are displayed with two decimal places (e.g., 8.50 hours)
 - Percentages are calculated based on total hours in the selected period
-- "Unknown" may appear for tasks without a username (legacy data)
+- "Unknown" may appear for older tasks that were entered without a username

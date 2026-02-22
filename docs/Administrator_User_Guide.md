@@ -11,7 +11,6 @@ This guide is for administrators of the Task Activity Management System. As an a
 3. [React Admin Dashboard](#react-admin-dashboard)
    - [Accessing the Dashboard](#accessing-the-react-dashboard)
    - [Dashboard Features](#dashboard-features)
-   - [Development vs Production](#development-vs-production)
 4. [Administrator Features](#administrator-features)
    - [User Roles Overview](#user-roles-overview)
    - [Managing Users](#managing-users)
@@ -21,56 +20,49 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [Managing Task Activities](#managing-task-activities)
    - [Changing User Passwords](#changing-user-passwords)
    - [Managing User Dropdown Access](#managing-user-dropdown-access)
-4. [Expense Management Administration](#expense-management-administration)
+5. [Expense Management Administration](#expense-management-administration)
    - [Managing User Expenses](#managing-user-expenses)
    - [Expense Approval Process](#expense-approval-process)
    - [Email Notifications](#email-notifications-for-expense-submissions)
    - [Reimbursement Tracking](#reimbursement-tracking)
    - [Receipt Management](#receipt-management)
    - [Managing Dropdowns](#managing-dropdowns)
-5. [Guest Activity Dashboard](#guest-activity-dashboard)
-6. [User Analytics & Performance Monitoring](#user-analytics--performance-monitoring)
-7. [Security Features](#security-features)
+6. [Guest Activity Dashboard](#guest-activity-dashboard)
+7. [User Analytics & Performance Monitoring](#user-analytics--performance-monitoring)
+8. [Common User Support Scenarios](#common-user-support-scenarios)
+9. [Security Features](#security-features)
    - [Account Lockout Policy](#account-lockout-policy)
-   - [JWT Token Revocation Management](#jwt-token-revocation-management)
-8. [Administrative Processes and One-Off Tasks](#administrative-processes-and-one-off-tasks)
-9. [Database Query Tool (SQL to CSV Export)](#database-query-tool-sql-to-csv-export)
-10. [Email Configuration Management](#email-configuration-management)
+   - [Session Security](#session-security)
+10. [Database Query Tool (SQL to CSV Export)](#database-query-tool-sql-to-csv-export)
+11. [Email Configuration Management](#email-configuration-management)
     - [Email Notification Types](#email-notification-types)
     - [Email Configuration Variables](#email-configuration-variables)
     - [Method 1: PowerShell Script](#method-1-update-via-powershell-script-recommended)
     - [Method 2: AWS Console](#method-2-update-via-aws-console)
-    - [Method 3: AWS CLI](#method-3-update-via-aws-cli)
     - [Testing Email Configuration](#testing-email-configuration)
     - [Troubleshooting Email Issues](#troubleshooting-email-issues)
-11. [System Monitoring and Health Checks](#system-monitoring-and-health-checks)
+12. [System Monitoring and Health Checks](#system-monitoring-and-health-checks)
     - [Health Check Endpoints](#health-check-endpoints)
-    - [Health Monitoring Script](#health-monitoring-script)
     - [AWS CloudWatch Monitoring](#aws-cloudwatch-monitoring)
-    - [Application Performance Monitoring](#application-performance-monitoring)
     - [Common Monitoring Tasks](#common-monitoring-tasks)
     - [Troubleshooting Common Issues](#troubleshooting-common-issues)
     - [Deployment and Rollback Procedures](#deployment-and-rollback-procedures)
     - [Backup and Disaster Recovery](#backup-and-disaster-recovery)
-    - [Performance Optimization Tips](#performance-optimization-tips)
-12. [12-Factor App Compliance](#12-factor-app-compliance)
 
 ## Accessing the Application
 
-The Task Activity Management System provides two user interface options:
+Open your web browser and navigate to:
 
-### Thymeleaf UI (Traditional Web Interface)
-- **URL**: http://localhost:8080
-- **Description**: Server-rendered HTML interface with full functionality
-- **Login**: Use your username and password
+```
+https://taskactivitytracker.com
+```
 
-### Angular UI (Modern Single Page Application)
-- **URL**: http://localhost:4200
-- **Description**: Modern Angular-based interface with Material Design
-- **Login**: Use the same username and password as the Thymeleaf UI
-- **Features**: Responsive design, Material UI components, enhanced user experience
+Log in with your administrator username and password.
 
-Both interfaces connect to the same backend and share the same data and authentication.
+The application provides two interfaces that share the same data and authentication:
+
+- **Main Application** — Task list, timesheet, expenses, and all user-facing features
+- **Admin Dashboard** — Advanced administrative functions including User Management, Role Management, and Dropdown Management. Access it via the **🎯 Admin Dashboard** link in the sidebar menu.
 
 ## Navigation
 
@@ -108,126 +100,21 @@ The **React Admin Dashboard** is a modern, single-page application built with Re
 - Must be logged in with **ADMIN** role
 - Non-ADMIN users cannot access the dashboard
 
-**Development Access (Phase 3):**
-- URL: [http://localhost:4201](http://localhost:4201)
-- Opens in a new browser tab
-- Available from Thymeleaf UI sidebar menu: Click **🎯 Admin Dashboard**
-- Runs on separate Vite dev server for hot-reload during development
-
-**Production Access:**
-- URL: [http://localhost:8080/dashboard](http://localhost:8080/dashboard) or `https://yourdomain.com/dashboard`
-- Served by Spring Boot from static resources
-- Opens in same browser window (uses th:href link)
-- Session-based authentication maintained across Angular and React dashboards
+**Access:**
+- Click **🎯 Admin Dashboard** from the sidebar menu in the main application
+- Or navigate directly to: `https://taskactivitytracker.com/dashboard`
+- Your login session carries over — no separate login is required
 
 ### Dashboard Features
 
-**Current Status: Phase 7 Complete (Active Development)**
+The Admin Dashboard provides the following management modules:
 
-The React Admin Dashboard has multiple completed phases with production-ready features:
-
-**Available Now:**
-- **Modern Material-UI Design**: Clean, responsive interface with Material Design components
-- **Role-Based Access**: ADMIN role enforcement via Spring Security
-- **Session Integration**: Shares authentication session with Spring Boot and Angular
-- **Navigation Structure**: Left sidebar with feature cards for management modules
-- **Task Activity Tracker**: Functional link navigates back to Spring Boot Task List UI
-
-**Available Features:**
-- **User Management** (Phase 4 - Implemented February 2026):
-  - Full CRUD operations (Create, Read, Update, Delete)
-  - Filter users by username, role, or company
-  - Pagination with configurable rows per page (5/10/25/50)
-  - Add new users with role assignment and password requirements
-  - Edit existing users (all fields except username)
-  - Admin password change with force update option
-  - Delete protection: Cannot delete yourself or users with task activities
-  - Password validation with show/hide toggles
-  - Real-time validation and error handling
-  - Material-UI dialogs and responsive design
-  - **User Dropdown Access Management** (February 2026): Assign which Clients and Projects each user sees in their dropdowns
-    - **Manage Access** button (person-gear icon, green) in the Actions column for every non-ADMIN user
-    - Opens a dialog with **Task** and **Expense** tabs for independent per-tab assignment
-    - Each tab shows two columns: Clients (left) and Projects (right)
-    - Checkboxes to assign values; values with the "All Users" flag are pre-checked and disabled
-    - Inline **🌐 All** button makes a dropdown value visible to every user; **🔓 Restrict** reverses it
-    - Saving one tab leaves the other tab's assignments completely untouched
-    - Button is disabled for ADMIN users (they always see all values)
-    - Requires USER_MANAGEMENT:READ/UPDATE permissions
-- **Guest Activity Report** (Phase 6 - Implemented February 2026):
-  - View guest login statistics and audit history
-  - Real-time metrics: Total Logins, Unique Locations, Last Login, Success Rate
-  - Login audit table with Date/Time, IP Address, Location, Status columns
-  - CSV export with dialog options (Copy to Clipboard, Download CSV, Close)
-  - Compact date format for card displays (e.g., "Feb 9, 11:59 AM")
-  - Responsive Material-UI cards and tables
-  - Data resets with each deployment (in-memory storage)
-- **Roles Management** (Phase 7 - Implemented February 2026):
-  - Comprehensive role and permission management system
-  - View all system roles with assigned permissions
-  - Create new roles with custom permission sets
-  - Edit existing roles to add/remove permissions
-  - Delete roles with constraint validation (cannot delete roles assigned to users)
-  - Hierarchical permission selection grouped by resource
-  - Master checkboxes for resource-level permission control
-  - Indeterminate state shows partial permission selection
-  - Permission grouping: USER_MANAGEMENT, TASK_MANAGEMENT, ROLE_MANAGEMENT, SYSTEM_CONFIGURATION
-  - Real-time validation and error handling
-  - Material-UI dialogs with responsive design
-  - **Access Control**: Requires USER_MANAGEMENT:READ permission to view, USER_MANAGEMENT:CREATE/UPDATE/DELETE for modifications
-- **Dropdown Management** (Phase 5 - Implemented February 2026):
-  - Manage dropdown values for tasks and expenses
-  - Category and subcategory filtering with dynamic updates
-  - "Add New Category" modal for creating new category/subcategory combinations
-  - Inline form for adding values to existing categories (disabled until category selected)
-  - Full CRUD operations (Create, Read, Update, Delete)
-  - Data table with columns: Category, Subcategory, Value, Display Order, Status, Actions
-  - Edit dialog for modifying value, display order, and active status
-  - Delete confirmation dialog with context information
-  - Summary statistics showing total values and active count
-  - Success/Error messages via Snackbar notifications
-  - Responsive Material-UI design following established patterns
-  - **Access Control**: Requires USER_MANAGEMENT:CREATE/UPDATE/DELETE permissions for modifications
-
-**Feature Placeholders (Phase 8 Coming Soon):**
-- **System Settings**: Shows "Coming Soon" dialog (Phase 8)
-
-### Development vs Production
-
-**Phase 3 Development Mode:**
-- React runs on Vite dev server (port 4201)
-- Accessed via hardcoded URL: `http://localhost:4201`
-- Opens in new tab from Thymeleaf UI
-- Provides fast hot-reload for development
-- Template links in `task-list.html` and `expense-list.html` use `target="_blank"`
-
-**Production Deployment:**
-- React built as static files in `target/classes/static/dashboard/`
-- Served by Spring Boot on port 8080 at `/dashboard`
-- Maven automatically builds both Angular and React during package phase
-- Template links will use `th:href="@{/dashboard}"` instead of hardcoded URL
-- Seamless integration with existing Spring Boot authentication
-
-**AWS Deployment Notes:**
-- Maven build process handles both Angular and React
-- Spring Boot `ServerConfig.java` configures `/dashboard/**` route
-- `SecurityConfig.java` enforces ADMIN role requirement
-- `CustomAuthenticationSuccessHandler.java` preserves `/dashboard` URLs during login
-- Session cookies work across `/app`, `/dashboard`, and root paths
-
-### Implementation Progress
-
-Completed Phases:
-- ✅ **Phase 3**: Skeleton dashboard with navigation (December 2025)
-- ✅ **Phase 4**: User Management with full CRUD operations and user dropdown access management (February 2026)
-- ✅ **Phase 5**: Dropdown Management with category filtering and CRUD operations (February 2026)
-- ✅ **Phase 6**: Guest Activity Report with metrics and CSV export (February 2026)
-- ✅ **Phase 7**: Roles Management with permission assignment (February 2026)
-
-Upcoming Phases:
-- **Phase 8**: System Settings functionality
-
-For technical details on React Dashboard implementation, see [React_Dashboard_Blueprint.md](React_Dashboard_Blueprint.md).
+- **User Management**: Create, view, edit, and delete user accounts. Filter users by username, role, or company. Reset passwords and manage account status.
+  - **User Dropdown Access Management**: Assign which Clients and Projects each user sees in their task and expense dropdowns (independently controlled per tab)
+- **Roles Management**: View, create, edit, and delete roles. Assign permissions to roles using an organized permission tree.
+- **Dropdown Management**: Manage all dropdown values (clients, projects, phases, expense types, payment methods) from a single screen. Add, edit, deactivate, or delete values.
+- **Guest Activity Report**: View login history and metrics for guest accounts.
+- **System Settings**: Coming soon.
 
 ---
 
@@ -235,7 +122,7 @@ For technical details on React Dashboard implementation, see [React_Dashboard_Bl
 
 ### User Roles Overview
 
-The system uses a **database-driven role-based access control (RBAC) system** with customizable permissions. Administrators can create custom roles and assign permissions through the web interface without requiring code changes.
+The system uses a role-based access control system with customizable permissions. Administrators can create custom roles and assign permissions through the web interface without requiring any code changes.
 
 **Four Default Roles:**
 
@@ -243,7 +130,7 @@ The system provides four pre-configured roles with different permission levels:
 
 **GUEST (Read-Only Access)**
 - Can view task list and task details
-- Full CRUD access for task activities (can create, edit, delete own tasks)
+- Can create, edit, and delete tasks
 - No access to weekly timesheet, expenses, user management, or dropdown settings
 - **Cannot change password** (password changes must be done by an administrator)
 - **Password expiration warnings are suppressed** (GUEST users won't see expiration warnings)
@@ -345,30 +232,24 @@ The system features a **database-driven authorization system** that allows admin
    - Option 2: From within the Role Management page, use the **"Task Activity List"** button in the header to navigate
 2. **View All Roles**: See a list of all roles with their descriptions and assigned permissions
 
-#### Understanding the Permission Model
+#### Understanding Permissions
 
-Permissions follow a **resource:action** pattern:
+Each role is made up of a set of permissions that control access to specific features. Permissions follow a **resource:action** pattern — for example, a permission might allow a user to view expenses but not approve them.
 
-**Resources:**
-- `TASK_ACTIVITY` - Task management features
-- `EXPENSE` - Expense management features
-- `USER` - User account management
-- `DROPDOWN` - Dropdown value management
-- `ROLE` - Role and permission management
+**Permission Resources:**
+- `TASK_ACTIVITY` — Task management features
+- `EXPENSE` — Expense management features
+- `USER` — User account management
+- `DROPDOWN` — Dropdown value management
+- `ROLE` — Role and permission management
 
-**Actions:**
-- `CREATE` - Create new records
-- `READ` - View/list records
-- `UPDATE` - Edit existing records
-- `DELETE` - Remove records
-- `MANAGE` - Full management access (often implies all CRUD operations)
-- `APPROVE` - Approve submitted items (expenses)
-
-**Examples:**
-- `TASK_ACTIVITY:CREATE` - Permission to create new tasks
-- `EXPENSE:APPROVE` - Permission to approve expenses
-- `USER:MANAGE` - Permission to manage user accounts
-- `ROLE:MANAGE` - Permission to manage roles and permissions
+**Permission Actions:**
+- `CREATE` — Create new records
+- `READ` — View records
+- `UPDATE` — Edit existing records
+- `DELETE` — Remove records
+- `MANAGE` — Full management access
+- `APPROVE` — Approve submitted items (expenses)
 
 #### Default Roles
 
@@ -445,22 +326,7 @@ Roles are assigned through the User Management interface:
 3. **Select Role**: Choose from the dropdown list of available roles
 4. **Save**: User immediately receives permissions from the new role
 
-#### Permission Checking in the System
-
-The system uses the `@RequirePermission` annotation to enforce permissions:
-
-```java
-@RequirePermission(resource = "TASK_ACTIVITY", action = "CREATE")
-public void createTask() { ... }
-```
-
-When you create new features:
-1. Define new permissions in the database
-2. Assign permissions to appropriate roles
-3. Use `@RequirePermission` annotation on controller methods
-4. No code deployment required to assign permissions to roles
-
-For detailed information on adding permissions when developing new features, see **`docs/localdocs/Adding_Roles_and_Permissions_Guide.md`**.
+For detailed information on adding new roles to the system, see **`docs/Adding_Roles_and_Permissions_Guide.md`**.
 
 #### Troubleshooting Permission Issues
 
@@ -471,22 +337,14 @@ For detailed information on adding permissions when developing new features, see
 4. Add missing permission if necessary
 5. Ask user to log out and log back in
 
-**New feature isn't secured:**
-1. Verify `@RequirePermission` annotation is present on controller method
-2. Check permission exists in `permissions` table
-3. Ensure appropriate roles have the permission assigned
-4. Review application logs for permission check failures
-
 **Role changes not taking effect:**
 - Users must log out and log back in after role or permission changes
-- Check browser console for authentication errors
-- Verify PermissionAspect is configured correctly
 
 ### Viewing All User Tasks
 
 As an administrator, you have the ability to view and manage tasks for all users in the system:
 
-1. **Access Task List**: Click **"View Tasks"** from the main page
+1. **Access Task List**: Click **"View Tasks"** from the main navigation
 2. **View All Tasks**: By default, you'll see tasks from all users
 3. **Filter by Specific User**:
     - Use the **"Filter by User"** dropdown at the top of the task list
@@ -522,23 +380,13 @@ All users (except Guest users) can manage their own profile information without 
 
 **Access Methods:**
 
-Users can access their profile through:
-
-1. **Angular UI**: "My Profile" card on dashboard or side menu (modern Material Design interface with integrated password change dialog)
-2. **Backend UI**: "My Profile" option in user menu (Thymeleaf-based with success/error notifications and dedicated password change page)
+Users can access their profile through the navigation menu or the side menu — both provide the same profile editing and password change capabilities.
 
 **Password Management:**
 
 - Users can change their own password via the **"🔒 Update Password"** button in their profile page
-- **Angular UI**: Click "Update Password" to open dialog with:
-  - Current password verification field
-  - New password field with real-time validation
-  - Confirm password field
-  - Show/hide password toggles
-  - Password requirements checklist with live feedback
-  - Specific error messages for validation failures (e.g., "Password must contain at least 1 numeric digit")
-- **Backend UI**: Dedicated Change Password page accessed from profile with success/error notifications
-- Password changes in Angular close the dialog on success with confirmation message
+- The password change form includes current password verification, new password validation with real-time feedback, and a confirm password field
+- Password changes log the user out of all active sessions immediately; they must log back in with the new password
 - Passwords must meet security requirements:
   - Minimum 10 characters
   - At least 1 uppercase letter
@@ -564,13 +412,13 @@ You should edit a user's profile as administrator only when:
 - Enabling/disabling accounts
 - Initial user setup before first login
 
-### Managing Roles in React Dashboard (Phase 7)
+### Managing Roles in the Admin Dashboard
 
 The React Dashboard provides a modern, intuitive interface for managing roles and permissions, complementing the Spring Boot backend role management system.
 
 #### Accessing Roles Management
 
-1. **Navigate to React Dashboard**: Access via http://localhost:4201 (development) or http://localhost:8080/dashboard (production)
+1. **Navigate to React Dashboard**: Access at https://taskactivitytracker.com/dashboard
 2. **Click "Roles Management"**: From the dashboard home screen or sidebar menu
 3. **Required Permission**: USER_MANAGEMENT:READ or higher
 
@@ -729,26 +577,12 @@ Both the Thymeleaf and Angular UIs provide comprehensive task management capabil
 
 #### Adding New Tasks
 
-**Angular Dashboard:**
+**Adding New Tasks:**
 
-1. **Access Dashboard**: Navigate to the Angular UI at http://localhost:4200/app/dashboard
-2. **Click "Add Task" Button**: Located in the toolbar at the top of the task list
-3. **Fill Out Task Form**:
-    - **Task Date**: Select the date using the date picker (defaults to today)
-    - **Client**: Choose from dropdown (required)
-    - **Project**: Choose from dropdown (required)
-    - **Phase**: Choose from dropdown (required)
-    - **Hours**: Enter hours worked (0-24)
-    - **Details**: Enter task description (optional)
-4. **Save Task**: Click "Save" button
-5. **Confirmation**: Success message appears and task list refreshes
-
-**Thymeleaf UI:**
-
-1. **Access Task List**: Navigate to the task list page
-2. **Click "Add Task Activity"**: Opens task creation form
-3. **Fill Out Form**: Enter task date, client, project, phase, hours, optional Task ID, optional Task Name, and details
-4. **Submit**: Click "Save" to create the task
+1. Click **"Add Task Activity"** from the task list
+2. Fill in the task date, client, project, phase, and hours (all required)
+3. Optionally add Task ID, Task Name, and a description
+4. Click **"Save"** to create the task
 
 #### Cloning Existing Tasks
 
@@ -876,16 +710,10 @@ The system prevents users from reusing recent passwords to enhance security:
    - The initial password is automatically saved to their password history
    - This prevents them from immediately "changing" back to the same password
 
-**Configuration** (System Administrators Only):
+**Configuration** (contact your system administrator to change these defaults):
 
-The feature can be configured in `application.properties`:
-```properties
-# Enable/disable password history validation (default: true)
-security.password.history.enabled=true
-
-# Number of previous passwords to check (default: 5)
-security.password.history.size=5
-```
+- Password history is enabled by default and checks the last 5 previous passwords
+- These settings require a system configuration change and application restart to update
 
 **Benefits:**
 - Reduces risk of compromised credentials remaining in use
@@ -921,15 +749,11 @@ A: Password history is automatically deleted along with the user account (CASCAD
 6. **Password Changed**: User sets new password without needing current password
 7. **Confirmation**: User receives confirmation email and can log in with new password
 
-**Security Features:**
+**Security Notes:**
 
-- **Time-Limited Tokens**: Reset tokens expire after 15 minutes
-- **Single-Use**: Each token can only be used once
-- **In-Memory Storage**: Tokens stored in-memory and cleared on application restart
-- **Auto-Cleanup**: Expired tokens automatically removed every 5 minutes
-- **No Email Enumeration**: System doesn't reveal if email address exists
-- **Secure Links**: Reset links include randomly generated UUID tokens
-- **Email Verification**: Only users with registered email addresses can reset
+- Reset tokens expire after 15 minutes and can only be used once
+- Only users with a registered email address on their profile can use self-service reset
+- The system does not confirm whether an email address exists (prevents user enumeration)
 
 **Administrator Considerations:**
 
@@ -1065,11 +889,9 @@ This is useful for commonly-used overhead entries (e.g., "Internal", "Non-Billab
 
 Administrators with ADMIN or EXPENSE_ADMIN roles can view and manage all user expenses:
 
-1. **Access Expense List**: 
-   - **Backend**: Click **"💰 Expense List"** from the navigation header (http://localhost:8080)
-   - **Angular Dashboard**: Navigate to Expenses section (http://localhost:4200) for full CRUD operations
+1. **Access Expense List**: Click **"💰 Expense List"** from the navigation header, or navigate to the Expenses section in the Admin Dashboard for full management capabilities
    
-2. **Angular Dashboard Capabilities**: The Angular UI provides streamlined expense management:
+2. **Expense Management Capabilities**:
    - **Create Expenses**: Add new expenses with integrated receipt upload in the Add dialog
    - **Edit Expenses**: Modify draft expenses and upload/replace receipts directly in the Edit dialog
    - **Clone Expenses**: Duplicate expenses for similar entries (date and receipt must be updated)
@@ -1359,10 +1181,8 @@ Each dropdown value can be marked as "Non-Billable" to classify work that should
 Administrators have access to a dedicated dashboard for monitoring GUEST user login activity. This feature is available in both the Spring Boot backend UI and the React Admin Dashboard, providing security visibility and access tracking.
 
 **Available Interfaces:**
-- **Spring Boot UI**: Traditional server-rendered interface at `/admin/guest-activity`
-- **React Admin Dashboard**: Modern SPA interface with Material Design
-  - Development: http://localhost:4201 (Guest Activity card)
-  - Production: http://localhost:8080/dashboard (Guest Activity card)
+- **Main Application**: Traditional server-rendered interface at `/admin/guest-activity`
+- **React Admin Dashboard**: Modern interface — access the Guest Activity card at https://taskactivitytracker.com/dashboard
 
 **Accessing the Dashboard:**
 1. **Navigate (Spring Boot UI)**: 
@@ -1520,6 +1340,54 @@ A bar chart visualization comparing total hours across all team members:
 - Regular users can only see their own data in other report tabs
 - Data updates in real-time as users submit new tasks
 
+---
+
+## Common User Support Scenarios
+
+Quick reference for the most frequent support requests administrators receive.
+
+### "I can't log in" — Account Locked
+
+**Symptom**: User receives "Account locked due to too many failed login attempts"
+
+**Solution**: Navigate to **Manage Users** → find the user (look for the 🔒 icon) → **Edit** → uncheck **Account Locked** → **Save**. Consider resetting the password if you suspect unauthorized access.
+
+### "I forgot my password" — Self-Service Reset
+
+**Solution**: Direct the user to the **"Reset Password"** link on the login page. They need a valid email address on their profile. If they have no email, or are a Guest user, you must reset it manually: **Manage Users** → **Change Password**.
+
+### "I can't see my clients or projects in the dropdown"
+
+**Solution**: Navigate to **Manage Users** → click the 🔐 **Access** button for that user → assign the appropriate Clients and Projects on the Task or Expense tab → **Save**.
+
+### "I can't add expenses" / Expense buttons are missing
+
+**Cause**: User has no email address on their profile, or has the Guest role.
+
+**Solution**: Edit the user's profile and add their email address. If they have the Guest role, upgrading their role to User will also enable expense features.
+
+### "My password expired and I can't reset it myself"
+
+**Note**: Guest users cannot reset their own passwords.
+
+**Solution**: Go to **Manage Users** → find the user → **Change Password** → set a new password and provide it to the user directly.
+
+### "I can't see a client or project that I expect to see"
+
+**Solution**: Either (1) the value has been marked inactive in **Manage Dropdowns** (look for the inactive badge), or (2) the value has not been assigned to that user. Check both **Manage Dropdowns** and **Manage Users → Access** for that user.
+
+### "I submitted an expense but my approver didn't get a notification email"
+
+**Solution**: Verify the expense approver email address is correctly configured under **Email Configuration Management**. Also verify the submitting user has a valid email on their profile.
+
+### "A user needs to be removed from the system"
+
+**Important**: Users who have existing task or expense entries cannot be deleted — disabling their account is the correct approach.
+
+**Solution**: **Edit** the user → uncheck **Enabled** → **Save**. Only delete accounts that have no task or expense history.
+
+---
+
 ## Security Features
 
 > **📘 Comprehensive Security Documentation**  
@@ -1576,88 +1444,15 @@ The system includes automatic account lockout protection to prevent unauthorized
 **Email Configuration:**
 Email notifications require proper SMTP configuration. See the Developer Guide for details on configuring email settings for local development and AWS deployments.
 
-### JWT Token Revocation Management
+### Session Security
 
-The system includes a server-side token revocation mechanism to invalidate JWT tokens before their natural expiration. This provides enhanced security control over user sessions.
-
-**How Token Revocation Works:**
-- When users log out, their tokens are added to a blacklist database (`revoked_tokens` table)
-- When users change their password, all their existing tokens are automatically revoked
-- Authentication requests check the blacklist before granting access
-- Expired tokens are automatically cleaned up via scheduled job (daily at 2 AM)
-
-**Auditing Revoked Tokens:**
-
-As an administrator, you can audit revoked tokens directly in the database to:
-- Monitor logout activity
-- Track password change events
-- Identify security incidents where tokens were manually revoked
-- Review token expiration patterns
-
-**SQL Queries for Monitoring:**
-
-```sql
--- Count total revoked tokens
-SELECT COUNT(*) FROM revoked_tokens;
-
--- View recent revocations
-SELECT jti, username, token_type, reason, revoked_at 
-FROM revoked_tokens 
-ORDER BY revoked_at DESC 
-LIMIT 20;
-
--- Count revocations by reason
-SELECT reason, COUNT(*) as count 
-FROM revoked_tokens 
-GROUP BY reason 
-ORDER BY count DESC;
-
--- Count revocations by user
-SELECT username, COUNT(*) as token_count 
-FROM revoked_tokens 
-GROUP BY username 
-ORDER BY token_count DESC;
-
--- Find expired tokens (can be cleaned up)
-SELECT COUNT(*) FROM revoked_tokens 
-WHERE expiration_time < NOW();
-
--- View all revocations for a specific user
-SELECT jti, token_type, reason, revoked_at, expiration_time 
-FROM revoked_tokens 
-WHERE username = 'john.doe' 
-ORDER BY revoked_at DESC;
-```
-
-**Revoked Tokens Table Schema:**
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | SERIAL | Primary key |
-| `jti` | VARCHAR(255) | Unique JWT ID (UUID) |
-| `username` | VARCHAR(255) | Owner of the token |
-| `token_type` | VARCHAR(20) | "access" or "refresh" |
-| `expiration_time` | TIMESTAMP | When token naturally expires |
-| `revoked_at` | TIMESTAMP | When token was revoked |
-| `reason` | VARCHAR(100) | Revocation reason (logout, password_change, security_incident, manual) |
-
-**Performance Considerations:**
-- Blacklist checks are highly optimized (O(1) lookup via indexed JTI)
-- Typical overhead: <50ms per authentication request
-- Automatic cleanup prevents table bloat
-- Indexes on `jti`, `expiration_time`, and `username` ensure fast queries
-
-**Best Practices:**
-- Monitor revocation patterns for unusual activity (e.g., mass logouts may indicate compromise)
-- Review `security_incident` reasons regularly
-- Consider manual token revocation if you suspect account compromise
-- Run cleanup query manually if automatic cleanup fails: `DELETE FROM revoked_tokens WHERE expiration_time < NOW()`
+When a user logs out or changes their password, their session is immediately invalidated. This means that if an account is suspected to be compromised, you can force the user to change their password (via Manage Users) to immediately cut off any unauthorized access. Expired sessions are automatically cleaned up by the system each night.
 
 ---
 
 ## Administrative Processes and One-Off Tasks
 
-As an administrator, you have access to various maintenance and administrative tasks that can be run independently of the main application. These follow the 12-Factor App principle of running admin/management tasks as one-off processes in an identical environment.
+As an administrator, you have access to various maintenance and administrative tasks that can be run independently of the main application.
 
 ### Database Schema Initialization
 
@@ -1798,136 +1593,9 @@ aws rds restore-db-instance-from-db-snapshot \
 # - Response times
 ```
 
-#### 7. Running Custom Admin Commands
+#### 7. Infrastructure and Deployment Tasks
 
-**Using Maven:**
-```bash
-# Run with specific Spring profile for admin tasks
-mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=admin,aws"
-
-# Run with custom properties
-mvnw spring-boot:run \
-  -Dspring-boot.run.arguments="--app.admin.task=reset-passwords --app.admin.dry-run=true"
-```
-
-**Using Docker:**
-```bash
-# Run one-off admin task in container
-docker run --rm \
-  -e SPRING_PROFILES_ACTIVE=admin \
-  -e DB_USERNAME=postgres \
-  -e DB_PASSWORD=<password> \
-  -e DATABASE_URL=jdbc:postgresql://<host>:5432/AmmoP1DB \
-  taskactivity:latest \
-  java -jar app.jar --admin.task=backup-database
-
-# Or using docker-compose
-docker-compose run --rm app \
-  java -jar app.jar --spring.profiles.active=admin
-```
-
-**Using Kubernetes:**
-```bash
-# Run one-off job in Kubernetes
-kubectl run taskactivity-admin \
-  --image=taskactivity:latest \
-  --restart=Never \
-  --namespace=taskactivity \
-  --env="SPRING_PROFILES_ACTIVE=admin" \
-  -- java -jar app.jar --admin.task=migrate-data
-
-# Or create a Job manifest
-kubectl create job taskactivity-migration \
-  --from=cronjob/taskactivity-backup \
-  --namespace=taskactivity
-```
-
-**Using AWS ECS:**
-```bash
-# Run one-off task in ECS
-aws ecs run-task \
-  --cluster taskactivity-cluster \
-  --task-definition taskactivity \
-  --launch-type FARGATE \
-  --network-configuration "awsvpcConfiguration={subnets=[subnet-xxx],securityGroups=[sg-xxx],assignPublicIp=ENABLED}" \
-  --overrides '{
-    "containerOverrides": [{
-      "name": "taskactivity",
-      "command": ["java", "-jar", "app.jar", "--spring.profiles.active=admin", "--admin.task=cleanup-old-tasks"]
-    }]
-  }'
-```
-
-### Admin Task Best Practices
-
-1. **Always Use Identical Environment**: Run admin tasks with the same Docker image/JAR as production
-2. **Test in Staging First**: Never run untested admin commands directly in production
-3. **Backup Before Changes**: Always create a database backup before running destructive operations
-4. **Use Dry-Run Mode**: Test admin commands with `--dry-run` flag when available
-5. **Log Everything**: Ensure all admin tasks output comprehensive logs
-6. **Automate Common Tasks**: Create shell scripts for frequently-run admin operations
-7. **Version Control Scripts**: Keep all admin scripts in version control
-8. **Document Custom Tasks**: Add documentation for any new admin procedures
-
-### Scheduled Maintenance Tasks
-
-Some administrative tasks should be run on a regular schedule:
-
-**Daily:**
-- Health check monitoring (`monitor-health.sh`)
-- Log aggregation and archival
-- Backup verification
-
-**Weekly:**
-- Database backup (`pg_dump` or RDS snapshot)
-- User activity review
-- Performance metrics analysis
-
-**Monthly:**
-- Secret rotation (`rotate-secrets.sh`)
-- Database vacuum and analyze (PostgreSQL)
-- Security audit (review locked accounts, failed logins)
-- Disk space cleanup
-
-**Quarterly:**
-- Full disaster recovery test
-- Security vulnerability scanning
-- Dependency updates
-
-### Troubleshooting Admin Tasks
-
-**Issue: Admin task fails with database connection error**
-```bash
-# Verify database connectivity
-psql -h <host> -U <username> -d AmmoP1DB -c "SELECT version();"
-
-# Check connection pool settings
-# May need to increase max_connections in PostgreSQL
-```
-
-**Issue: Docker secrets not accessible**
-```bash
-# List Docker secrets
-docker secret ls
-
-# Verify service has access to secrets
-docker service inspect taskactivity --format='{{json .Spec.TaskTemplate.ContainerSpec.Secrets}}'
-
-# Test secret retrieval
-./scripts/test-docker-secrets.sh
-```
-
-**Issue: Admin task runs but changes not visible**
-```bash
-# Verify correct profile is active
-java -jar app.jar --spring.profiles.active=admin --debug
-
-# Check database connection URL
-echo $DATABASE_URL
-
-# Verify you're connected to the correct database
-psql -h <host> -U <username> -d AmmoP1DB -c "SELECT current_database();"
-```
+Infrastructure-level tasks such as Docker deployments, Kubernetes jobs, and AWS ECS operations are managed by your platform/DevOps team. If you need assistance with a deployment-level issue, contact your system administrator or refer to the AWS deployment documentation in the `aws/` folder.
 
 ---
 
@@ -1965,7 +1633,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-admin-password
 ```
 
-**`.env.local` (Local Testing)**
+**`.env.local` (Local Development Only — not for production use)**
 ```ini
 # API endpoint for local testing
 API_URL=http://localhost:8080
@@ -2825,396 +2493,3 @@ aws s3api get-bucket-lifecycle-configuration --bucket taskactivity-receipts
 - Use Application Auto Scaling for variable load
 - Optimize RDS instance class based on usage
 - Enable Multi-AZ for production availability
-
----
-
-## 12-Factor App Compliance
-
-The Task Activity Management System is designed following the **[12-Factor App methodology](https://12factor.net/)**, a set of best practices for building modern, scalable, cloud-native applications. This section demonstrates how the application adheres to each principle.
-
-### I. Codebase ✅
-
-**Principle:** One codebase tracked in revision control, many deploys
-
-**Implementation:**
-- Single Git repository hosted on GitHub: `ammonsd/ActivityTracking`
-- All code, configuration templates, and deployment scripts in version control
-- Multiple deployment profiles for different environments:
-  - `local` - Local development
-  - `docker` - Containerized development
-  - `aws` - Production AWS deployment
-- Same codebase deployed to dev, staging, and production with environment-specific configuration
-
-**Evidence:**
-```bash
-# Single repository, multiple deployments
-git clone https://github.com/ammonsd/ActivityTracking.git
-
-# Deploy to different environments
-SPRING_PROFILES_ACTIVE=local mvnw spring-boot:run      # Local
-docker-compose --profile host-db up                     # Docker
-aws ecs update-service --service taskactivity-service   # AWS
-```
-
-### II. Dependencies ✅
-
-**Principle:** Explicitly declare and isolate dependencies
-
-**Implementation:**
-- Maven (`pom.xml`) explicitly declares all Java dependencies
-- Maven Wrapper (`mvnw.cmd`) ensures consistent Maven version
-- NPM (`package.json`) declares all frontend dependencies
-- Docker containers isolate runtime dependencies
-- No system-wide dependencies required
-
-**Evidence:**
-```xml
-<!-- All dependencies explicitly declared in pom.xml -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-    <version>3.5.7</version>
-</dependency>
-```
-
-```bash
-# Self-contained builds
-./mvnw clean package    # Downloads all dependencies
-npm install             # Frontend dependencies
-docker build .          # Containerized with all dependencies
-```
-
-### III. Config ✅
-
-**Principle:** Store config in the environment
-
-**Implementation:**
-- All environment-specific configuration via environment variables
-- No hardcoded credentials or URLs in code
-- Profile-specific properties files (`application-{profile}.properties`)
-- AWS Secrets Manager integration for sensitive data
-- Docker secrets support
-
-**Evidence:**
-```properties
-# Externalized configuration
-spring.datasource.url=${DATABASE_URL:jdbc:postgresql://localhost:5432/AmmoP1DB}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-app.admin.initial-password=${APP_ADMIN_INITIAL_PASSWORD:Admin123!}
-```
-
-```bash
-# Environment-specific deployment
-export DB_USERNAME=postgres
-export DB_PASSWORD=secure_password
-export DATABASE_URL=jdbc:postgresql://prod-db:5432/AmmoP1DB
-java -jar taskactivity.jar
-```
-
-### IV. Backing Services ✅
-
-**Principle:** Treat backing services as attached resources
-
-**Implementation:**
-- PostgreSQL database attached via JDBC URL (swappable)
-- Connection configured entirely through environment variables
-- Can switch between local DB, containerized DB, or AWS RDS without code changes
-- Email service (SMTP) attached via configuration
-
-**Evidence:**
-```properties
-# Easily swap backing services via config
-# Local PostgreSQL
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/AmmoP1DB
-
-# Docker PostgreSQL
-SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/AmmoP1DB
-
-# AWS RDS
-SPRING_DATASOURCE_URL=jdbc:postgresql://taskactivity-db.xxx.rds.amazonaws.com:5432/AmmoP1DB
-```
-
-### V. Build, Release, Run ✅
-
-**Principle:** Strictly separate build and run stages
-
-**Implementation:**
-- **Build**: Maven compiles code, runs tests, creates JAR (`mvnw package`)
-- **Release**: Docker packages JAR with runtime, tags with version
-- **Run**: ECS/Kubernetes deploys specific tagged image
-- Jenkins CI/CD pipeline enforces separation
-- Immutable Docker images tagged with version/commit SHA
-
-**Evidence:**
-```bash
-# Build stage
-mvnw clean package -DskipTests
-# Output: target/taskactivity-0.0.1-SNAPSHOT.jar
-
-# Release stage
-docker build -t taskactivity:v1.2.3 .
-docker tag taskactivity:v1.2.3 378010131175.dkr.ecr.us-east-1.amazonaws.com/taskactivity:v1.2.3
-docker push 378010131175.dkr.ecr.us-east-1.amazonaws.com/taskactivity:v1.2.3
-
-# Run stage
-aws ecs update-service --cluster taskactivity-cluster \
-  --service taskactivity-service \
-  --force-new-deployment
-```
-
-### VI. Processes ✅
-
-**Principle:** Execute the app as one or more stateless processes
-
-**Implementation:**
-- Spring Boot application is stateless
-- No local file system state (logs to stdout)
-- All persistent data in PostgreSQL database
-- Session data can be externalized to Redis (configured for sticky sessions currently)
-- Each process instance is independent and disposable
-
-**Evidence:**
-```java
-// Stateless service example
-@Service
-public class TaskActivityService {
-    @Autowired
-    private TaskActivityRepository repository;  // Shared database, no local state
-    
-    public TaskActivity createTask(TaskActivity task) {
-        return repository.save(task);  // Persists to database, not local memory
-    }
-}
-```
-
-### VII. Port Binding ✅
-
-**Principle:** Export services via port binding
-
-**Implementation:**
-- Embedded Tomcat server (no external web server required)
-- Self-contained HTTP service on port 8080
-- Port configurable via `${PORT}` environment variable
-- No dependency on injecting webserver at runtime
-
-**Evidence:**
-```properties
-# Application exports HTTP service
-server.port=${PORT:8080}
-server.address=0.0.0.0
-```
-
-```dockerfile
-# Dockerfile exposes port
-EXPOSE 8080
-CMD ["java", "-jar", "/opt/app.jar"]
-```
-
-### VIII. Concurrency ✅
-
-**Principle:** Scale out via the process model
-
-**Implementation:**
-- Application designed for horizontal scaling
-- Stateless processes can be scaled to N instances
-- AWS ECS: Configure `DesiredCount` (production: 2 instances)
-- Kubernetes: Configure `replicas` (default: 2 replicas)
-- Load balancer distributes traffic across instances
-- Database connection pooling per instance (HikariCP)
-
-**Evidence:**
-```yaml
-# Kubernetes scaling
-spec:
-  replicas: 2  # Run 2 instances
-
-# ECS scaling
-DesiredCount: 2
-
-# Scale command
-kubectl scale deployment taskactivity-app --replicas=5
-aws ecs update-service --service taskactivity-service --desired-count=3
-```
-
-**See Also:** [Concurrency and Scaling Guide](Concurrency_and_Scaling_Guide.md)
-
-### IX. Disposability ✅
-
-**Principle:** Maximize robustness with fast startup and graceful shutdown
-
-**Implementation:**
-- Spring Boot fast startup (~30-60 seconds)
-- Graceful shutdown configured (30-second timeout)
-- Health check endpoints for readiness/liveness
-- Robust against sudden termination
-- Docker containers can be stopped/started rapidly
-
-**Evidence:**
-```properties
-# Graceful shutdown configuration
-server.shutdown=graceful
-spring.lifecycle.timeout-per-shutdown-phase=30s
-
-# Health checks for orchestration
-management.endpoint.health.probes.enabled=true
-management.health.livenessstate.enabled=true
-management.health.readinessstate.enabled=true
-```
-
-```json
-// ECS health check (taskactivity-task-definition.json)
-{
-    "healthCheck": {
-        "command": ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"],
-        "interval": 30,
-        "timeout": 5,
-        "retries": 3,
-        "startPeriod": 60
-    }
-}
-```
-
-### X. Dev/Prod Parity ✅
-
-**Principle:** Keep development, staging, and production as similar as possible
-
-**Implementation:**
-- Same Docker image used across all environments
-- Same PostgreSQL database version (15) in all environments
-- Docker Compose for local development matches production architecture
-- Profile-based configuration maintains consistency
-- CI/CD pipeline deploys same artifact to all environments
-
-**Evidence:**
-```bash
-# Local development
-docker-compose --profile host-db up
-
-# AWS production
-# Same Dockerfile, same image, different environment variables
-aws ecs update-service --service taskactivity-service
-
-# Kubernetes
-# Same container image, different ConfigMap
-kubectl apply -f k8s/taskactivity-deployment.yaml
-```
-
-### XI. Logs ✅
-
-**Principle:** Treat logs as event streams
-
-**Implementation:**
-- Application logs to stdout/stderr (not files)
-- No file-based logging in production
-- AWS CloudWatch captures stdout via `awslogs` driver
-- Docker logging drivers capture container logs
-- Kubernetes aggregates pod logs
-- Local development: Optional file logging for debugging only
-
-**Evidence:**
-```properties
-# application-aws.properties - Console logging only
-logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-
-# File logging explicitly disabled for AWS
-ENABLE_FILE_LOGGING=false
-```
-
-```json
-// ECS task definition - CloudWatch Logs
-{
-    "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-            "awslogs-group": "/ecs/taskactivity",
-            "awslogs-region": "us-east-1",
-            "awslogs-stream-prefix": "ecs"
-        }
-    }
-}
-```
-
-### XII. Admin Processes ✅
-
-**Principle:** Run admin/management tasks as one-off processes
-
-**Implementation:**
-- Database migrations via `CommandLineRunner` (DatabaseInitializer)
-- Admin user creation via `@PostConstruct` (DataInitializer)
-- Shell scripts for backup, restore, and maintenance
-- One-off tasks runnable in same environment as app
-- Docker/Kubernetes jobs for scheduled admin tasks
-
-**Evidence:**
-```java
-// DatabaseInitializer - One-off schema initialization
-@Configuration
-@Profile("aws")
-public class DatabaseInitializer {
-    @Bean
-    public CommandLineRunner initDatabase(DataSource dataSource) {
-        return args -> {
-            // One-off database initialization
-            populator.addScript(new ClassPathResource("schema.sql"));
-            populator.execute(dataSource);
-        };
-    }
-}
-```
-
-```bash
-# Run one-off admin task
-docker run --rm taskactivity:latest \
-  java -jar app.jar --spring.profiles.active=admin --admin.task=backup
-
-# Kubernetes Job
-kubectl create job taskactivity-migration --from=deployment/taskactivity-app
-
-# ECS one-off task
-aws ecs run-task --cluster taskactivity-cluster \
-  --task-definition taskactivity \
-  --overrides '{"containerOverrides":[{"name":"taskactivity","command":["java","-jar","app.jar","--admin.task=migrate"]}]}'
-```
-
-**See Also:** [Administrative Processes section](#administrative-processes-and-one-off-tasks) above
-
-### Summary: 12-Factor Compliance Score
-
-| Factor | Status | Implementation |
-|--------|--------|----------------|
-| I. Codebase | ✅ Complete | Git repository, multiple deploys |
-| II. Dependencies | ✅ Complete | Maven, npm, Docker isolation |
-| III. Config | ✅ Complete | Environment variables, Secrets Manager |
-| IV. Backing Services | ✅ Complete | Attached PostgreSQL via config |
-| V. Build, Release, Run | ✅ Complete | Maven, Docker, CI/CD pipeline |
-| VI. Processes | ✅ Complete | Stateless design, shared database |
-| VII. Port Binding | ✅ Complete | Embedded Tomcat, self-contained |
-| VIII. Concurrency | ✅ Complete | Horizontal scaling, load balancing |
-| IX. Disposability | ✅ Complete | Fast startup, graceful shutdown |
-| X. Dev/Prod Parity | ✅ Complete | Docker across all environments |
-| XI. Logs | ✅ Complete | Stdout/CloudWatch, no file logging |
-| XII. Admin Processes | ✅ Complete | One-off tasks, identical environment |
-
-**Overall Compliance: 12/12 (100%)** ✅
-
-The Task Activity Management System fully adheres to all 12-Factor App principles, making it a modern, cloud-native, scalable application suitable for enterprise deployment.
-
-### Benefits of 12-Factor Compliance
-
-1. **Portability**: Runs on any cloud provider or container platform
-2. **Scalability**: Easy horizontal scaling without code changes
-3. **Maintainability**: Clean separation of concerns, easy to debug
-4. **Continuous Deployment**: Safe automated deployments
-5. **Resilience**: Graceful handling of failures and restarts
-6. **Cloud-Native**: Optimized for containerized/orchestrated environments
-
-### For Job Applications
-
-When discussing this application in job interviews or applications, you can confidently state:
-
-> "This application fully implements the 12-Factor App methodology, demonstrating expertise in cloud-native architecture, containerization, and modern DevOps practices. It's production-ready with proper configuration management, horizontal scalability, and comprehensive operational tooling."
-
----
-
-
