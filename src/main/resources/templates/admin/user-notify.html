@@ -1,0 +1,391 @@
+<!doctype html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Notify Users</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/base.css}" />
+        <link rel="stylesheet" th:href="@{/css/components.css}" />
+
+        <style>
+            .container {
+                max-width: 1200px;
+            }
+            .filter-section {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border: 1px solid #dee2e6;
+            }
+            .filter-section h3 {
+                margin-top: 0;
+                margin-bottom: 15px;
+                color: #495057;
+                font-size: 1.1rem;
+            }
+            .filter-row {
+                display: flex;
+                gap: 15px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+            }
+            .filter-group {
+                flex: 1;
+                min-width: 200px;
+            }
+            .filter-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 500;
+                color: #495057;
+            }
+            .filter-group input {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            .notify-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            .notify-table th,
+            .notify-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+            .notify-table th {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                color: #495057;
+            }
+            .notify-table tr:hover {
+                background-color: #f5f5f5;
+            }
+            .notify-table th input[type="checkbox"],
+            .notify-table td input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }
+            .mail-disabled-notice {
+                background-color: #fff3cd;
+                border: 1px solid #ffc107;
+                border-radius: 4px;
+                padding: 12px 16px;
+                margin-bottom: 20px;
+                color: #856404;
+            }
+            .no-users-notice {
+                color: #6c757d;
+                font-style: italic;
+                padding: 20px 0;
+            }
+            .action-row {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-top: 20px;
+            }
+            /* Confirmation modal styles */
+            .modal-content h3 {
+                color: #0056b3;
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+            .modal-content p {
+                margin-bottom: 25px;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>Task Activity Tracker</h1>
+                <div class="user-info">
+                    <span class="welcome-text">
+                        <span th:text="${userDisplayName}">Username</span>
+                    </span>
+                    <form
+                        th:action="@{/logout}"
+                        method="post"
+                        style="display: inline"
+                    >
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
+                    </form>
+                    <span
+                        class="current-date"
+                        style="margin-left: 15px; font-size: 14px"
+                    >
+                        <script>
+                            document.write(
+                                new Date().toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                }),
+                            );
+                        </script>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="header">
+                <h1>Notify Users</h1>
+                <div>
+                    <a
+                        th:href="@{/task-activity/manage-users}"
+                        class="btn btn-secondary"
+                    >
+                        Back to User Management
+                    </a>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Mail disabled warning -->
+                <div th:if="${!mailEnabled}" class="mail-disabled-notice">
+                    <strong>Note:</strong> Email notifications are currently
+                    disabled (<code>spring.mail.enabled=false</code>). Sending
+                    will log a message but no emails will be delivered.
+                </div>
+
+                <!-- Flash messages -->
+                <div
+                    th:if="${successMessage}"
+                    class="success-message"
+                    th:text="${successMessage}"
+                ></div>
+                <div
+                    th:if="${errorMessage}"
+                    class="error-message"
+                    th:text="${errorMessage}"
+                ></div>
+
+                <!-- Last-name filter form (GET) -->
+                <div class="filter-section">
+                    <h3>Filter Users by Last Name</h3>
+                    <form
+                        th:action="@{/task-activity/manage-users/notify}"
+                        method="get"
+                    >
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="lastNameFilter"
+                                    >Last Name starts with</label
+                                >
+                                <input
+                                    type="text"
+                                    id="lastNameFilter"
+                                    name="lastNameFilter"
+                                    th:value="${lastNameFilter}"
+                                    placeholder="e.g. Sm"
+                                    autocomplete="off"
+                                />
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    Filter
+                                </button>
+                                <a
+                                    th:href="@{/task-activity/manage-users/notify}"
+                                    class="btn btn-secondary"
+                                >
+                                    Clear
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notification send form (POST) -->
+                <form
+                    th:action="@{/task-activity/manage-users/notify}"
+                    method="post"
+                    id="notifyForm"
+                >
+                    <input
+                        type="hidden"
+                        name="lastNameFilter"
+                        th:value="${lastNameFilter}"
+                    />
+
+                    <th:block th:if="${#lists.isEmpty(users)}">
+                        <p class="no-users-notice">
+                            No active users with an email address were found.
+                        </p>
+                    </th:block>
+
+                    <th:block th:unless="${#lists.isEmpty(users)}">
+                        <table class="notify-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input
+                                            type="checkbox"
+                                            id="selectAll"
+                                            title="Select / deselect all"
+                                            onclick="toggleAll(this)"
+                                        />
+                                    </th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Force Pwd Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            name="selectedUsernames"
+                                            th:value="${user.username}"
+                                            class="row-checkbox"
+                                            th:title="${'Select ' + user.username}"
+                                        />
+                                    </td>
+                                    <td
+                                        th:text="${user.firstname != null ? user.firstname : ''}"
+                                    ></td>
+                                    <td
+                                        th:text="${user.lastname != null ? user.lastname : ''}"
+                                    ></td>
+                                    <td th:text="${user.username}"></td>
+                                    <td th:text="${user.email}"></td>
+                                    <td
+                                        th:text="${user.forcePasswordUpdate} ? 'Yes' : 'No'"
+                                    ></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="action-row">
+                            <button
+                                type="button"
+                                id="sendBtn"
+                                class="btn btn-primary"
+                            >
+                                Send Profile Emails
+                            </button>
+                            <a
+                                th:href="@{/task-activity/manage-users}"
+                                class="btn btn-secondary"
+                            >
+                                Cancel
+                            </a>
+                        </div>
+                        <p
+                            id="noSelectionMsg"
+                            class="error-message"
+                            style="display: none; margin-top: 10px"
+                        >
+                            Please select at least one user before sending.
+                        </p>
+                    </th:block>
+                </form>
+            </div>
+        </div>
+
+        <!-- Send Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h3>Confirm Send</h3>
+                <p id="deleteMessage">
+                    Send profile notification emails to the selected users?
+                </p>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="confirmDelete()">
+                        Send
+                    </button>
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closeDeleteModal()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/modal-utils.js"></script>
+        <script>
+            /**
+             * Toggles all row checkboxes to match the header "Select All" checkbox state.
+             *
+             * @param {HTMLInputElement} source - The header checkbox element.
+             */
+            function toggleAll(source) {
+                var checkboxes = document.querySelectorAll(".row-checkbox");
+                checkboxes.forEach(function (cb) {
+                    cb.checked = source.checked;
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                var sendBtn = document.getElementById("sendBtn");
+                if (sendBtn) {
+                    sendBtn.addEventListener("click", function () {
+                        var selected = document.querySelectorAll(
+                            ".row-checkbox:checked",
+                        );
+                        var noSelectionMsg =
+                            document.getElementById("noSelectionMsg");
+                        if (selected.length === 0) {
+                            if (noSelectionMsg) {
+                                noSelectionMsg.style.display = "block";
+                            }
+                            return;
+                        }
+                        if (noSelectionMsg) {
+                            noSelectionMsg.style.display = "none";
+                        }
+                        openDeleteModal(
+                            "notifyForm",
+                            "Send profile notification emails to the " +
+                                selected.length +
+                                " selected user(s)?",
+                        );
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

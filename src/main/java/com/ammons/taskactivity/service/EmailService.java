@@ -1,5 +1,6 @@
 package com.ammons.taskactivity.service;
 
+import com.ammons.taskactivity.entity.User;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import software.amazon.awssdk.services.ses.model.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Service for sending email notifications.
@@ -391,6 +393,136 @@ public class EmailService {
                 Do not reply to this email. This email is sent from an unattended mailbox.
                 """, details.toString(), timestamp, ipAddress != null ? ipAddress : "Unknown",
                 location != null ? location : "Unknown", appName);
+    }
+
+    /**
+     * Sends a profile notification email directly to the specified user. The email includes the
+     * user's login username, full name, company, assigned task clients/projects, assigned expense
+     * clients/projects, and — when the user's forcePasswordUpdate flag is set — the temporary
+     * password they must change on first login.
+     *
+     * @param user the target user entity
+     * @param taskClients list of explicitly assigned TASK/CLIENT values for the user
+     * @param taskProjects list of explicitly assigned TASK/PROJECT values for the user
+     * @param expenseClients list of explicitly assigned EXPENSE/CLIENT values for the user
+     * @param expenseProjects list of explicitly assigned EXPENSE/PROJECT values for the user
+     */
+    public void sendUserProfileNotification(User user, List<String> taskClients,
+            List<String> taskProjects, List<String> expenseClients, List<String> expenseProjects) {
+
+        String userEmail = user.getEmail();
+        String username = user.getUsername();
+
+        if (!mailEnabled) {
+            logger.info(
+                    "Email notifications are disabled. Would have sent profile notification for user: {}",
+                    username);
+            return;
+        }
+
+        if (userEmail == null || userEmail.isBlank()) {
+            logger.warn("User {} has no email address - skipping profile notification", username);
+            return;
+        }
+
+        String subject = "Your " + appName + " Profile Details";
+        String body = buildProfileNotificationBody(user, taskClients, taskProjects, expenseClients,
+                expenseProjects);
+
+        try {
+            if (useAwsSdk && sesClient != null) {
+                sendEmailViaAwsSdk(userEmail, subject, body);
+            } else {
+                sendEmailViaSmtp(subject, body, userEmail);
+            }
+            logger.info("Profile notification sent to {} for user: {}", userEmail, username);
+        } catch (Exception e) {
+            logger.error("Failed to send profile notification to {} for user {}: {}", userEmail,
+                    username, e.getMessage(), e);
+        }
+    }
+
+    private static final String SEPARATOR_LINE = "\n----------------------------------------\n";
+
+    /**
+     * Builds the plain-text email body for a user profile notification. Includes the temporary
+     * password section only when forcePasswordUpdate is true.
+     */
+    private String buildProfileNotificationBody(User user, List<String> taskClients,
+            List<String> taskProjects, List<String> expenseClients, List<String> expenseProjects) {
+
+        StringBuilder body = new StringBuilder();
+        body.append("Hello ")
+                .append(user.getFirstname() != null ? user.getFirstname() : user.getUsername())
+                .append(",\n\n");
+        body.append("Below is a summary of your ").append(appName)
+                .append(" profile and access assignments.\n\n");
+
+        body.append(SEPARATOR_LINE);
+        body.append("ACCOUNT INFORMATION\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("Username:     %s%n", user.getUsername()));
+        if (user.getFirstname() != null || user.getLastname() != null) {
+            String firstName = user.getFirstname() != null ? user.getFirstname() : "";
+            String lastName = user.getLastname() != null ? user.getLastname() : "";
+            body.append(String.format("Name:         %s %s%n", firstName, lastName));
+        }
+        if (user.getCompany() != null && !user.getCompany().isBlank()) {
+            body.append(String.format("Company:      %s%n", user.getCompany()));
+        }
+        if (user.getRole() != null) {
+            String roleDesc = user.getRole().getDescription();
+            String roleDisplay;
+            if (roleDesc != null && !roleDesc.isBlank()) {
+                int dashIndex = roleDesc.indexOf(" - ");
+                roleDisplay = (dashIndex >= 0) ? roleDesc.substring(0, dashIndex) : roleDesc;
+            } else {
+                roleDisplay = user.getRole().getName();
+            }
+            body.append(String.format("Role:         %s%n", roleDisplay));
+        }
+
+        if (user.isForcePasswordUpdate()) {
+            body.append(SEPARATOR_LINE);
+            body.append("TEMPORARY PASSWORD\n");
+            body.append("----------------------------------------\n");
+            body.append("You are required to change your password on your next login.\n");
+            body.append(String.format("Temporary Password:  %s%n", "P@ssword!123"));
+        }
+
+        if (!taskClients.isEmpty()) {
+            body.append(SEPARATOR_LINE);
+            body.append("TASK - ASSIGNED CLIENTS\n");
+            body.append("----------------------------------------\n");
+            taskClients.forEach(c -> body.append("  - ").append(c).append("\n"));
+        }
+
+        if (!taskProjects.isEmpty()) {
+            body.append(SEPARATOR_LINE);
+            body.append("TASK - ASSIGNED PROJECTS\n");
+            body.append("----------------------------------------\n");
+            taskProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
+        }
+
+        if (!expenseClients.isEmpty()) {
+            body.append(SEPARATOR_LINE);
+            body.append("EXPENSE - ASSIGNED CLIENTS\n");
+            body.append("----------------------------------------\n");
+            expenseClients.forEach(c -> body.append("  - ").append(c).append("\n"));
+        }
+
+        if (!expenseProjects.isEmpty()) {
+            body.append(SEPARATOR_LINE);
+            body.append("EXPENSE - ASSIGNED PROJECTS\n");
+            body.append("----------------------------------------\n");
+            expenseProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
+        }
+
+        body.append(SEPARATOR_LINE).append("\n");
+        body.append("This is an automated notification from ").append(appName).append(".\n");
+        body.append("Do not reply to this email. This email is sent from an unattended mailbox.\n");
+
+        return body.toString();
     }
 
     /**

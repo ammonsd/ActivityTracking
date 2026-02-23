@@ -720,6 +720,12 @@
                                 <span>Contact System Admin</span>
                             </button>
                         </li>
+                        <!-- Notify Users - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a th:href="@{/task-activity/manage-users/notify}" title="Send Profile Notification Emails">
+                                <span>Notify Users</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

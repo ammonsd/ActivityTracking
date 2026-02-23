@@ -114,6 +114,69 @@ public class UserDropdownAccessService {
     }
 
     /**
+     * Returns the item values of TASK/CLIENT dropdown entries explicitly assigned to a user,
+     * excluding allUsers=true values. Used when building profile notification email body.
+     *
+     * @param username the username to query
+     * @return list of client names assigned to this user
+     */
+    @Transactional(readOnly = true)
+    public List<String> getExplicitTaskClientNames(String username) {
+        return userDropdownAccessRepository
+                .findExplicitAssignmentsByUsernameAndCategoryAndSubcategory(username,
+                        DropdownValueService.CATEGORY_TASK, DropdownValueService.SUBCATEGORY_CLIENT)
+                .stream().map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
+     * Returns the item values of TASK/PROJECT dropdown entries explicitly assigned to a user,
+     * excluding allUsers=true values. Used when building profile notification email body.
+     *
+     * @param username the username to query
+     * @return list of project names assigned to this user
+     */
+    @Transactional(readOnly = true)
+    public List<String> getExplicitTaskProjectNames(String username) {
+        return userDropdownAccessRepository
+                .findExplicitAssignmentsByUsernameAndCategoryAndSubcategory(username,
+                        DropdownValueService.CATEGORY_TASK,
+                        DropdownValueService.SUBCATEGORY_PROJECT)
+                .stream().map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
+     * Returns the item values of EXPENSE/CLIENT dropdown entries explicitly assigned to a user,
+     * excluding allUsers=true values. Used when building profile notification email body.
+     *
+     * @param username the username to query
+     * @return list of expense client names assigned to this user
+     */
+    @Transactional(readOnly = true)
+    public List<String> getExplicitExpenseClientNames(String username) {
+        return userDropdownAccessRepository
+                .findExplicitAssignmentsByUsernameAndCategoryAndSubcategory(username,
+                        DropdownValueService.CATEGORY_EXPENSE,
+                        DropdownValueService.SUBCATEGORY_CLIENT)
+                .stream().map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
+     * Returns the item values of EXPENSE/PROJECT dropdown entries explicitly assigned to a user,
+     * excluding allUsers=true values. Used when building profile notification email body.
+     *
+     * @param username the username to query
+     * @return list of expense project names assigned to this user
+     */
+    @Transactional(readOnly = true)
+    public List<String> getExplicitExpenseProjectNames(String username) {
+        return userDropdownAccessRepository
+                .findExplicitAssignmentsByUsernameAndCategoryAndSubcategory(username,
+                        DropdownValueService.CATEGORY_EXPENSE,
+                        DropdownValueService.SUBCATEGORY_PROJECT)
+                .stream().map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
      * Returns the set of dropdown value IDs explicitly assigned to a username. Used by the admin
      * assignment UI to pre-populate checkboxes.
      *

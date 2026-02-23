@@ -11,6 +11,7 @@ import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.PasswordExpirationNotificationService;
+import com.ammons.taskactivity.validation.ValidationConstants;
 import jakarta.validation.Valid;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
@@ -126,7 +127,10 @@ public class UserManagementController {
     public String showAddUserForm(Model model, Authentication authentication) {
         logger.info("Admin {} accessing add user form", authentication.getName());
 
-        model.addAttribute("userCreateDto", new UserCreateDto());
+        UserCreateDto userCreateDto = new UserCreateDto();
+        userCreateDto.setPassword(ValidationConstants.TEMP_PASSWORD);
+        userCreateDto.setConfirmPassword(ValidationConstants.TEMP_PASSWORD);
+        model.addAttribute("userCreateDto", userCreateDto);
         model.addAttribute(ROLES, roleRepository.findAll());
         addUserDisplayInfo(model, authentication);
 
@@ -448,6 +452,14 @@ public class UserManagementController {
         User user = userOptional.get();
         PasswordChangeDto passwordChangeDto = new PasswordChangeDto();
         passwordChangeDto.setUsername(user.getUsername());
+
+        // Pre-fill the temporary password and check Force Password when changing another user's
+        // password
+        if (!user.getUsername().equals(authentication.getName())) {
+            passwordChangeDto.setNewPassword(ValidationConstants.TEMP_PASSWORD);
+            passwordChangeDto.setConfirmNewPassword(ValidationConstants.TEMP_PASSWORD);
+            passwordChangeDto.setForcePasswordUpdate(true);
+        }
 
         model.addAttribute("passwordChangeDto", passwordChangeDto);
         model.addAttribute(TARGET_USER, user);
