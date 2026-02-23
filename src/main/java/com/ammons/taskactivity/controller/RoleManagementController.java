@@ -37,6 +37,7 @@ public class RoleManagementController {
     private static final String REDIRECT_MANAGE_ROLES = "redirect:/task-activity/manage-roles";
     private static final String SUCCESS_MESSAGE = "successMessage";
     private static final String ERROR_MESSAGE = "errorMessage";
+    private static final String ROLE_NOT_FOUND = "Role not found";
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
@@ -76,7 +77,7 @@ public class RoleManagementController {
 
         Optional<Roles> roleOptional = roleRepository.findById(id);
         if (roleOptional.isEmpty()) {
-            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, "Role not found");
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, ROLE_NOT_FOUND);
             return REDIRECT_MANAGE_ROLES;
         }
 
@@ -108,7 +109,7 @@ public class RoleManagementController {
 
         Optional<Roles> roleOptional = roleRepository.findById(id);
         if (roleOptional.isEmpty()) {
-            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, "Role not found");
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, ROLE_NOT_FOUND);
             return REDIRECT_MANAGE_ROLES;
         }
 
@@ -129,6 +130,42 @@ public class RoleManagementController {
         redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
                 "Role '" + role.getName() + "' updated successfully");
         return REDIRECT_MANAGE_ROLES;
+    }
+
+    /**
+     * Clone an existing role by pre-populating the Add New Role form with the source role's
+     * description and permissions. The Role Name is intentionally left blank so the admin must
+     * supply a unique name for the new role.
+     */
+    @GetMapping("/clone/{id}")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "CREATE")
+    public String cloneRole(@PathVariable Long id, Model model, Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        logger.info("Admin {} cloning role ID: {}", authentication.getName(), id);
+
+        Optional<Roles> roleOptional = roleRepository.findById(id);
+        if (roleOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, ROLE_NOT_FOUND);
+            return REDIRECT_MANAGE_ROLES;
+        }
+
+        Roles sourceRole = roleOptional.get();
+
+        // Pre-populate with source role's description; name is left blank
+        RoleDto roleDto = new RoleDto();
+        roleDto.setDescription(sourceRole.getDescription());
+
+        // Collect the permission IDs from the source role to pre-check them on the form
+        Set<Long> assignedPermissionIds = sourceRole.getPermissions().stream()
+                .map(Permission::getId).collect(Collectors.toSet());
+
+        List<Permission> allPermissions = permissionRepository.findAll();
+        model.addAttribute("allPermissions", allPermissions);
+        model.addAttribute("roleDto", roleDto);
+        model.addAttribute("assignedPermissionIds", assignedPermissionIds);
+        addUserDisplayInfo(model, authentication);
+
+        return "admin/role-add";
     }
 
     /**

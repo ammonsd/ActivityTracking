@@ -28,8 +28,9 @@ interface RoleFormDialogProps {
     open: boolean;
     onClose: () => void;
     onSave: (roleData: any) => Promise<void>;
-    role: RoleDetail | null; // null for "Add", populated for "Edit"
+    role: RoleDetail | null; // null for "Add", populated for "Edit" or "Clone"
     allPermissions: Permission[];
+    isClone?: boolean; // true when cloning an existing role
 }
 
 export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
@@ -38,8 +39,10 @@ export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
     onSave,
     role,
     allPermissions,
+    isClone = false,
 }) => {
-    const isEditMode = role !== null;
+    // Edit mode: role is populated and we are NOT cloning
+    const isEditMode = role !== null && !isClone;
 
     const [formData, setFormData] = useState({
         name: "",
@@ -62,11 +65,12 @@ export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
         {} as Record<string, Permission[]>,
     );
 
-    // Populate form when editing
+    // Populate form when editing or cloning
     useEffect(() => {
         if (role) {
             setFormData({
-                name: role.name || "",
+                // Clone: leave name blank so user must supply a unique name
+                name: isClone ? "" : role.name || "",
                 description: role.description || "",
                 permissionIds: role.permissions.map((p) => p.id),
             });
@@ -79,7 +83,7 @@ export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
             });
         }
         setError(null);
-    }, [role, open]);
+    }, [role, open, isClone]);
 
     const handleChange = (field: string, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -161,11 +165,23 @@ export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
         }
     };
 
+    let dialogTitle = "Add New Role";
+    if (isEditMode) {
+        dialogTitle = `Edit Role: ${role?.name}`;
+    } else if (isClone && role) {
+        dialogTitle = `Clone Role: ${role.name}`;
+    }
+
+    let nameHelperText = "Enter a unique role name (e.g., MANAGER, AUDITOR)";
+    if (isEditMode) {
+        nameHelperText = "Role name cannot be changed";
+    } else if (isClone) {
+        nameHelperText = "Enter a unique name for the new role";
+    }
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>
-                {isEditMode ? `Edit Role: ${role.name}` : "Add New Role"}
-            </DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
             <DialogContent>
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
@@ -184,12 +200,8 @@ export const RoleFormDialog: React.FC<RoleFormDialogProps> = ({
                                     handleChange("name", e.target.value)
                                 }
                                 required
-                                disabled={isEditMode} // Role name can't be changed
-                                helperText={
-                                    isEditMode
-                                        ? "Role name cannot be changed"
-                                        : "Enter a unique role name (e.g., MANAGER, AUDITOR)"
-                                }
+                                disabled={isEditMode} // Role name can't be changed in edit mode
+                                helperText={nameHelperText}
                             />
                         </Grid>
 

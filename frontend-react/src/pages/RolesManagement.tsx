@@ -26,12 +26,10 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SecurityIcon from "@mui/icons-material/Security";
 import { rolesManagementApi } from "../api/rolesManagement.api";
-import type {
-    RoleDetail,
-    Permission,
-} from "../types/rolesManagement.types";
+import type { RoleDetail, Permission } from "../types/rolesManagement.types";
 import { RoleFormDialog } from "../components/rolesManagement/RoleFormDialog";
 import { DeleteConfirmDialog } from "../components/rolesManagement/DeleteConfirmDialog";
 
@@ -46,6 +44,7 @@ export const RolesManagement: React.FC = () => {
     const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<RoleDetail | null>(null);
+    const [isCloneMode, setIsCloneMode] = useState(false);
 
     // Fetch roles and permissions on component mount
     useEffect(() => {
@@ -77,11 +76,19 @@ export const RolesManagement: React.FC = () => {
     // Action handlers
     const handleAddRole = () => {
         setSelectedRole(null);
+        setIsCloneMode(false);
         setFormDialogOpen(true);
     };
 
     const handleEditRole = (role: RoleDetail) => {
         setSelectedRole(role);
+        setIsCloneMode(false);
+        setFormDialogOpen(true);
+    };
+
+    const handleCloneRole = (role: RoleDetail) => {
+        setSelectedRole(role);
+        setIsCloneMode(true);
         setFormDialogOpen(true);
     };
 
@@ -91,8 +98,8 @@ export const RolesManagement: React.FC = () => {
     };
 
     const handleFormSave = async (roleData: any) => {
-        if (selectedRole === null) {
-            // Add mode - creating new role
+        if (selectedRole === null || isCloneMode) {
+            // Add or Clone mode - creating new role
             await rolesManagementApi.createRole(roleData);
         } else {
             // Edit mode - updating existing role
@@ -100,6 +107,7 @@ export const RolesManagement: React.FC = () => {
         }
         setFormDialogOpen(false);
         setSelectedRole(null);
+        setIsCloneMode(false);
         handleRefresh();
     };
 
@@ -322,6 +330,18 @@ export const RolesManagement: React.FC = () => {
                                                         </IconButton>
                                                         <IconButton
                                                             size="small"
+                                                            color="info"
+                                                            onClick={() =>
+                                                                handleCloneRole(
+                                                                    role,
+                                                                )
+                                                            }
+                                                            title="Clone Role"
+                                                        >
+                                                            <ContentCopyIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
                                                             color="error"
                                                             onClick={() =>
                                                                 handleDeleteRole(
@@ -344,16 +364,18 @@ export const RolesManagement: React.FC = () => {
                 </>
             )}
 
-            {/* Role Form Dialog (Add/Edit) */}
+            {/* Role Form Dialog (Add/Edit/Clone) */}
             <RoleFormDialog
                 open={formDialogOpen}
                 onClose={() => {
                     setFormDialogOpen(false);
                     setSelectedRole(null);
+                    setIsCloneMode(false);
                 }}
                 onSave={handleFormSave}
                 role={selectedRole}
                 allPermissions={permissions}
+                isClone={isCloneMode}
             />
 
             {/* Delete Confirmation Dialog */}
