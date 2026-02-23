@@ -73,4 +73,8 @@ public final class ValidationConstants {
                                     + " passwords";
     public static final String LASTNAME_NULL_OR_EMPTY_MSG = "Last name cannot be null or empty";
     public static final String ROLE_NULL_MSG = "Role cannot be null";
+
+    // Default temporary password assigned by admins when creating or resetting accounts.
+    // Excluded from password history to allow repeated reuse without blocking the admin workflow.
+    public static final String TEMP_PASSWORD = "P@ssword!123";
 }

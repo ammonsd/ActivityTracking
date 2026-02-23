@@ -46,6 +46,25 @@ public interface UserDropdownAccessRepository extends JpaRepository<UserDropdown
             @Param("subcategory") String subcategory);
 
     /**
+     * Returns only explicitly assigned (non-allUsers) DropdownValue entries for a user. Used when
+     * building profile notification emails — allUsers values are excluded because they represent
+     * universal access and should not appear in the per-user assignment list. Ordered by
+     * displayOrder then itemValue.
+     */
+    @Query("""
+                    SELECT dv FROM DropdownValue dv
+                    JOIN UserDropdownAccess a ON a.dropdownValue = dv
+                    WHERE a.username = :username
+                      AND dv.category = :category
+                      AND dv.subcategory = :subcategory
+                      AND dv.isActive = true
+                    ORDER BY dv.displayOrder, dv.itemValue
+                    """)
+    List<DropdownValue> findExplicitAssignmentsByUsernameAndCategoryAndSubcategory(
+                    @Param("username") String username, @Param("category") String category,
+                    @Param("subcategory") String subcategory);
+
+    /**
      * Returns all access rows for a given username. Used by the admin UI to display current
      * assignments.
      */

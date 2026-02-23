@@ -65,6 +65,22 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    /**
+     * Returns enabled users who have a non-blank email address, optionally filtered by last name
+     * prefix. Intended for the admin profile notification feature.
+     *
+     * @param lastNameFilter optional last name prefix; null or blank means return all eligible
+     *        users
+     * @return list of active users with email addresses, sorted by last name then first name
+     */
+    @Transactional(readOnly = true)
+    public List<User> getActiveUsersWithEmail(String lastNameFilter) {
+        logger.debug("Retrieving active users with email, lastNameFilter: {}", lastNameFilter);
+        return userRepository.findActiveUsersWithEmail(
+                (lastNameFilter != null && !lastNameFilter.isBlank()) ? lastNameFilter.trim()
+                        : null);
+    }
+
     public List<User> filterUsers(String username, String roleName, String company) {
         logger.debug("Filtering users - username: {}, role: {}, company: {}", username, roleName,
                 company);
@@ -274,8 +290,8 @@ public class UserService {
         // Password strength validation (including username check)
         passwordValidationService.validatePasswordStrength(newPassword, username);
 
-        // Password history validation - check against previous N passwords
-        if (historyEnabled) {
+        // Password history validation — skip for temp password so admins can reuse it freely
+        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
             passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
         }
 
@@ -291,8 +307,8 @@ public class UserService {
         userRepository.save(user);
         logger.info("Password successfully updated for user: {}", username);
 
-        // Save password to history if enabled
-        if (historyEnabled) {
+        // Save password to history if enabled; temp password is excluded so it can be reused
+        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
             PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
             passwordHistoryRepository.save(history);
             logger.debug("Saved password to history for user: {}", username);
@@ -340,8 +356,8 @@ public class UserService {
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_SESSION_MSG);
         }
 
-        // Password history validation - check against previous N passwords
-        if (historyEnabled) {
+        // Password history validation — skip for temp password so admins can reuse it freely
+        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
             passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
         }
 
@@ -371,8 +387,8 @@ public class UserService {
         logger.info("Password successfully changed for user: {} (id={}), forceUpdate now: {}",
                 username, savedUser.getId(), savedUser.isForcePasswordUpdate());
 
-        // Save password to history if enabled
-        if (historyEnabled) {
+        // Save password to history if enabled; temp password is excluded so it can be reused
+        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
             PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
             passwordHistoryRepository.save(history);
             logger.debug("Saved password to history for user: {}", username);

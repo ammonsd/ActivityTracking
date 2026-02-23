@@ -20,6 +20,7 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [Managing Task Activities](#managing-task-activities)
    - [Changing User Passwords](#changing-user-passwords)
    - [Managing User Dropdown Access](#managing-user-dropdown-access)
+   - [Sending Profile Notification Emails](#sending-profile-notification-emails)
 5. [Expense Management Administration](#expense-management-administration)
    - [Managing User Expenses](#managing-user-expenses)
    - [Expense Approval Process](#expense-approval-process)
@@ -78,7 +79,8 @@ The Task Activity List page includes a **floating sidebar menu** for quick acces
 **Menu Items (Admin View):**
 - **🏠 Update Profile**: Access your profile to update your information and password
 - **👥 Manage Users**: Create, edit, and manage user accounts
-- **📊 Guest Activity**: View login activity reports for GUEST users
+- **� Notify Users**: Send profile detail emails to active users with email addresses
+- **�📊 Guest Activity**: View login activity reports for GUEST users
 - **🔧 Manage Dropdowns**: Configure clients, projects, phases, and expense types
 - **📋 Export CSV**: Export filtered task list to CSV format (auto-closes menu after selection)
 - **🎯 Admin Dashboard**: Open the React Admin Dashboard in a new tab (ADMIN only)
@@ -198,7 +200,7 @@ Administrators can create, edit, and delete user accounts:
     - Enter first name (optional)
     - Enter last name (required)
     - Enter company (optional, maximum 100 characters)
-    - Set initial password
+    - Set initial password — the password fields are **pre-filled with the default temporary password** (`P@ssword!123`) as a convenience; overwrite it if you want a different initial password
     - Assign role (GUEST, USER, or ADMIN)
     - Enable/disable account
     - Optionally force password change on first login
@@ -675,7 +677,8 @@ All action buttons use Angular Material icon buttons with tooltips for better us
 1. **Access User Management**: Navigate to **"Manage Users"**
 2. **Find User**: Locate the user in the list
 3. **Click "Change Password"**: Opens password change form
-4. **Enter New Password**: Type the new password (twice for confirmation)
+4. **Enter New Password**: The password fields are **pre-filled with the default temporary password** (`P@ssword!123`) when changing another user's account; overwrite to set a custom password
+   - When changing your own password, fields are blank (no pre-fill for self-service)
 5. **Show Passwords (Optional)**: Use eye icons or checkbox to view passwords
 6. **Optional**: Check "Force password update on next login"
 7. **Save**: Click **"Change Password"**
@@ -880,6 +883,53 @@ This is useful for commonly-used overhead entries (e.g., "Internal", "Non-Billab
 | A dropdown value is deactivated | It no longer appears in any dropdown, regardless of access assignments |
 | User is deleted | All their dropdown access rows are automatically removed (CASCADE DELETE) |
 | Task and Expense tabs saved separately | Saving the Task tab does not clear Expense assignments, and vice versa |
+
+---
+
+### Sending Profile Notification Emails
+
+**Implemented**: February 2026
+
+Administrators can send a personalized profile detail email to one or more active users at once. This is useful when onboarding new users, distributing updated credentials, or confirming a user's current access assignments without requiring them to log in.
+
+**What the email contains:**
+- Account information (username, full name)
+- A temporary password section — displayed only when the user's account has **"Force Password Update on Next Login"** enabled (indicating they have a temporary password that needs to be changed)
+- Task access assignments (explicit Clients and Projects in the Task category)
+- Expense access assignments (explicit Clients and Projects in the Expense category)
+
+**Prerequisites:**
+- Email (`MAIL_ENABLED`) must be configured and enabled in the system environment variables
+- Only users with a valid email address in their profile are eligible; users without an email address do not appear in the list
+- Disabled user accounts are excluded
+
+#### Accessing Notify Users
+
+1. **Click "☰"** to open the sidebar menu from the Task Activity List **or** the Expense List
+2. **Click "📧 Notify Users"** — available to ADMIN users only
+
+#### Sending Profile Emails
+
+1. **The Notify Users page loads** with a table of all active users who have email addresses configured
+2. **Filter by Last Name** (optional): Type in the **Last Name Filter** field and click **Search** to narrow the list; click **Reset** to clear
+3. **Select recipients**: Check the checkbox next to each user you want to notify
+   - Use the **Select All** checkbox in the table header to select or deselect all visible users at once
+4. **Click "Send Profile Emails"**: A confirmation dialog appears showing the count of selected users
+5. **Confirm**: Click **Confirm** in the dialog to send; click **Cancel** to abort
+6. **Result**: A success message displays the number of emails sent and how many were skipped (if any had delivery issues)
+
+#### Tips and Notes
+
+| Scenario | Behavior |
+|----------|----------|
+| User has no email address | Excluded from the list entirely — not shown |
+| User account is disabled | Excluded from the list entirely |
+| "Force Password Update" is **checked** on the user | Password section appears in the email body |
+| "Force Password Update" is **not checked** | Password section is omitted from the email body |
+| Email delivery fails for one user | That user is counted as "skipped"; remaining sends continue |
+| `MAIL_ENABLED=false` | No emails are sent; a warning is logged |
+
+**Tip**: To send a welcome email with a temporary password to a newly created user, ensure "Force Password Update on Next Login" is checked on their account before using Notify Users. The email will then include their temporary credentials.
 
 ---
 

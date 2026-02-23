@@ -243,12 +243,12 @@
 
         <div class="container">
             <div class="header">
-                <h1>🔐 User Access Management</h1>
+                <h1>User Access Management</h1>
                 <a
                     th:href="@{/task-activity/manage-users}"
                     class="btn btn-secondary"
                 >
-                    ← Back to User Management
+                    Back to User Management
                 </a>
             </div>
 
@@ -319,7 +319,7 @@
                     />
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success">
-                            💾 Save Access
+                            Save Access
                         </button>
                         <a
                             th:href="@{/task-activity/manage-users}"
@@ -337,7 +337,7 @@
                     <div class="access-grid">
                         <!-- Clients -->
                         <div class="access-section">
-                            <h3>🏢 Clients</h3>
+                            <h3>Clients</h3>
                             <div
                                 th:if="${#lists.isEmpty(allClients)}"
                                 class="no-items"
@@ -438,7 +438,7 @@
 
                         <!-- Projects -->
                         <div class="access-section">
-                            <h3>📁 Projects</h3>
+                            <h3>Projects</h3>
                             <div
                                 th:if="${#lists.isEmpty(allProjects)}"
                                 class="no-items"
@@ -549,7 +549,7 @@
                     <div class="access-grid">
                         <!-- Expense Clients -->
                         <div class="access-section">
-                            <h3>🏢 Clients (Expense)</h3>
+                            <h3>Clients (Expense)</h3>
                             <div
                                 th:if="${#lists.isEmpty(allExpenseClients)}"
                                 class="no-items"
@@ -650,7 +650,7 @@
 
                         <!-- Expense Projects -->
                         <div class="access-section">
-                            <h3>📁 Projects (Expense)</h3>
+                            <h3>Projects (Expense)</h3>
                             <div
                                 th:if="${#lists.isEmpty(allExpenseProjects)}"
                                 class="no-items"

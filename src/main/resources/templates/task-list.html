@@ -725,6 +725,12 @@
                                 <span>Guest Activity</span>
                             </a>
                         </li>
+                        <!-- Notify Users - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a th:href="@{/task-activity/manage-users/notify}" title="Send Profile Notification Emails">
+                                <span>Notify Users</span>
+                            </a>
+                        </li>
                         <!-- Manage Dropdowns - ADMIN active, GUEST read-only, others hidden -->
                         <li th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''GUEST'')')}">
                             <a 

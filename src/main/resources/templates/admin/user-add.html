@@ -389,5 +389,16 @@
                 }
             });
         </script>
+        <script th:inline="javascript">
+            // Pre-fill password fields with the default value set by the controller.
+            // Browsers suppress the HTML value attribute on type=password inputs, so we must set via JS.
+            document.addEventListener('DOMContentLoaded', function() {
+                var prefill = /*[[${userCreateDto.password}]]*/ null;
+                if (prefill) {
+                    document.getElementById('password').value = prefill;
+                    document.getElementById('confirmPassword').value = prefill;
+                }
+            });
+        </script>
     </body>
 </html>
