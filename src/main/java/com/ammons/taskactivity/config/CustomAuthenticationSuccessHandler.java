@@ -2,6 +2,7 @@ package com.ammons.taskactivity.config;
 
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.UserRepository;
+import com.ammons.taskactivity.service.PermissionService;
 import com.ammons.taskactivity.service.UserDetailsServiceImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,16 +20,21 @@ import java.util.Optional;
 /**
  * Custom authentication success handler that manages post-login behavior including forced password
  * updates for new or admin-created users.
- * 
+ *
  * <p>
- * This handler:
- * <ul>
- * <li>Checks if the authenticated user requires a forced password update</li>
- * <li>Redirects to password change page if update is required</li>
- * <li>Redirects to default application page for normal login flow</li>
- * <li>Provides comprehensive logging for authentication events</li>
- * </ul>
- * 
+ * Post-login redirect is determined by the user's permissions:
+ * <ol>
+ * <li>If user has {@code TASK_ACTIVITY:READ} → redirect to {@code /task-activity/list}</li>
+ * <li>Else if user has {@code EXPENSE:READ} → redirect to {@code /expenses}</li>
+ * <li>Otherwise → redirect to the React dashboard</li>
+ * </ol>
+ * This avoids hardcoding role names and ensures any custom role gets the right landing page
+ * automatically.
+ *
+ * Modified by: Dean Ammons - February 2026 Change: Replaced saved-request / role-based redirect
+ * with permission-based redirect Reason: Saved-request caused Access Denied when a user previously
+ * visited an admin page; hardcoded role checks broke for custom roles.
+ *
  * @author Dean Ammons
  * @version 1.0
  * @since January 2026
@@ -51,6 +55,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final com.ammons.taskactivity.service.GeoIpService geoIpService;
     private final com.ammons.taskactivity.service.EmailService emailService;
     private final com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService;
+    private final PermissionService permissionService;
 
     public CustomAuthenticationSuccessHandler(
             @org.springframework.beans.factory.annotation.Value("${app.dashboard.react-url:/dashboard}") String reactDashboardUrl,
@@ -60,7 +65,8 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             com.ammons.taskactivity.service.LoginAuditService loginAuditService,
             com.ammons.taskactivity.service.GeoIpService geoIpService,
             com.ammons.taskactivity.service.EmailService emailService,
-            com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService) {
+            com.ammons.taskactivity.service.PasswordHistoryService passwordHistoryService,
+            PermissionService permissionService) {
         this.reactDashboardUrl = reactDashboardUrl;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
@@ -69,6 +75,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         this.geoIpService = geoIpService;
         this.emailService = emailService;
         this.passwordHistoryService = passwordHistoryService;
+        this.permissionService = permissionService;
         // Set default target URL for the parent SimpleUrlAuthenticationSuccessHandler
         setDefaultTargetUrl(reactDashboardUrl);
         setAlwaysUseDefaultTargetUrl(false);
@@ -170,34 +177,21 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 }
             }
 
-            // Normal login flow - check for saved request
-            log.debug("User '{}' proceeding with normal login flow", username);
-
-            // Get saved request (original URL before login redirect)
-            HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-            SavedRequest savedRequest = requestCache.getRequest(request, response);
-
+            // Redirect based on the user's permissions, not their role name.
+            // This works for any custom role without requiring code changes.
             String targetUrl;
-            if (savedRequest != null) {
-                String savedUrl = savedRequest.getRedirectUrl();
-                log.info("Found saved request URL: {}", savedUrl);
-
-                // Map root path to Thymeleaf task list (unless it's /app or /dashboard)
-                if (savedUrl.endsWith("/") && !savedUrl.contains("/app")
-                        && !savedUrl.contains("/dashboard")) {
-                    targetUrl = "/task-activity/list";
-                    log.info("Root path requested, redirecting to Thymeleaf UI: {}", targetUrl);
-                } else {
-                    targetUrl = savedUrl;
-                    log.info("Redirecting to saved URL: {}", targetUrl);
-                }
-
-                // Clear the saved request
-                requestCache.removeRequest(request, response);
+            if (permissionService.userHasPermission(username, "TASK_ACTIVITY:READ")) {
+                targetUrl = "/task-activity/list";
+                log.info("User '{}' has TASK_ACTIVITY:READ, redirecting to: {}", username,
+                        targetUrl);
+            } else if (permissionService.userHasPermission(username, "EXPENSE:READ")) {
+                targetUrl = "/expenses";
+                log.info("User '{}' has EXPENSE:READ, redirecting to: {}", username, targetUrl);
             } else {
-                // No saved request, default to React dashboard
                 targetUrl = reactDashboardUrl;
-                log.debug("No saved request found, using React dashboard URL: {}", targetUrl);
+                log.info(
+                        "User '{}' has no task/expense READ permission, redirecting to dashboard: {}",
+                        username, targetUrl);
             }
 
             getRedirectStrategy().sendRedirect(request, response, targetUrl);

@@ -12,7 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ExpenseService } from '../../services/expense.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,7 +40,11 @@ import { ExpenseService } from '../../services/expense.service';
       <h2>Task Activity Tracker - User Dashboard</h2>
 
       <div class="dashboard-grid">
-        <mat-card class="dashboard-card" routerLink="/tasks">
+        <mat-card
+          class="dashboard-card"
+          *ngIf="hasTaskAccess"
+          routerLink="/tasks"
+        >
           <mat-card-header>
             <mat-icon>assignment</mat-icon>
             <mat-card-title>Task Activities</mat-card-title>
@@ -49,9 +52,8 @@ import { ExpenseService } from '../../services/expense.service';
         </mat-card>
 
         <mat-card
-          *ngIf="canAccessExpenses || currentRole === 'GUEST'"
+          *ngIf="hasExpenseAccess"
           class="dashboard-card"
-          [class.disabled]="currentRole === 'GUEST'"
           routerLink="/expenses"
         >
           <mat-card-header>
@@ -205,38 +207,43 @@ import { ExpenseService } from '../../services/expense.service';
 })
 export class DashboardComponent implements OnInit {
   currentRole = '';
-  canAccessExpenses = false;
+  hasTaskAccess = false;
+  hasExpenseAccess = false;
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly expenseService: ExpenseService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   ngOnInit(): void {
     console.log('Dashboard component initialized');
     this.currentRole = this.authService.getCurrentRole();
-    console.log('Dashboard - Current role:', this.currentRole);
-    console.log('Dashboard - Current role type:', typeof this.currentRole);
-    console.log('Dashboard - Role === GUEST?', this.currentRole === 'GUEST');
-    console.log('Dashboard - Role === USER?', this.currentRole === 'USER');
 
-    // Check if user can access expenses
-    this.expenseService.canAccessExpenses().subscribe({
-      next: (response) => {
-        this.canAccessExpenses = response.data || false;
-        console.log('Dashboard - Can access expenses:', this.canAccessExpenses);
-      },
-      error: (err) => {
-        console.error('Dashboard - Error checking expense access:', err);
-        this.canAccessExpenses = false;
+    // Set permission-based card visibility from cached session data
+    this.hasTaskAccess = this.authService.hasPermission('TASK_ACTIVITY:READ');
+    this.hasExpenseAccess = this.authService.hasPermission('EXPENSE:READ');
+    console.log(
+      'Dashboard - hasTaskAccess:',
+      this.hasTaskAccess,
+      '| hasExpenseAccess:',
+      this.hasExpenseAccess,
+    );
+
+    // Subscribe to role changes for GUEST banner updates
+    this.authService.userRole$.subscribe({
+      next: (role: string) => {
+        this.currentRole = role;
       },
     });
 
-    // Subscribe to role changes
-    this.authService.userRole$.subscribe({
-      next: (role: string) => {
-        console.log('Dashboard - Role updated:', role);
-        this.currentRole = role;
+    // Subscribe to permission changes in case API response arrives after init
+    this.authService.userPermissions$.subscribe({
+      next: (permissions: string[]) => {
+        this.hasTaskAccess = permissions.includes('TASK_ACTIVITY:READ');
+        this.hasExpenseAccess = permissions.includes('EXPENSE:READ');
+        console.log(
+          'Dashboard - Permissions updated — hasTaskAccess:',
+          this.hasTaskAccess,
+          '| hasExpenseAccess:',
+          this.hasExpenseAccess,
+        );
       },
     });
   }

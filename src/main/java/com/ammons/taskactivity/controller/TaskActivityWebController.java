@@ -5,6 +5,7 @@ import com.ammons.taskactivity.config.TaskListSortConfig;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
 import com.ammons.taskactivity.security.RequirePermission;
+import com.ammons.taskactivity.service.PermissionService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.WeeklyTimesheetService;
@@ -77,6 +78,7 @@ public class TaskActivityWebController {
     private final UserService userService;
     private final TaskListSortConfig taskListSortConfig;
     private final BillabilityService billabilityService;
+    private final PermissionService permissionService;
 
     @Value("${spring.mail.enabled:false}")
     private boolean mailEnabled;
@@ -85,7 +87,8 @@ public class TaskActivityWebController {
             DropdownConfig dropdownConfig, DropdownValueService dropdownValueService,
             UserDropdownAccessService userDropdownAccessService,
             WeeklyTimesheetService weeklyTimesheetService, UserService userService,
-            TaskListSortConfig taskListSortConfig, BillabilityService billabilityService) {
+            TaskListSortConfig taskListSortConfig, BillabilityService billabilityService,
+            PermissionService permissionService) {
         this.taskActivityService = taskActivityService;
         this.dropdownConfig = dropdownConfig;
         this.dropdownValueService = dropdownValueService;
@@ -94,6 +97,7 @@ public class TaskActivityWebController {
         this.userService = userService;
         this.taskListSortConfig = taskListSortConfig;
         this.billabilityService = billabilityService;
+        this.permissionService = permissionService;
     }
 
     @GetMapping
@@ -557,6 +561,10 @@ public class TaskActivityWebController {
             // Check if user has email for expense access
             boolean hasEmail = userService.userHasEmail(username);
             model.addAttribute("userHasEmail", hasEmail);
+
+            // Expose expense permission as a model attribute so the template is role-agnostic
+            boolean hasExpenseAccess = permissionService.userHasPermission(username, "EXPENSE:READ");
+            model.addAttribute("userHasExpenseAccess", hasExpenseAccess);
 
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {

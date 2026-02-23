@@ -181,7 +181,7 @@
                         >Back to List</span
                     >
                     <span
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'')')}"
+                        th:if="${#authorization.expression('!hasRole(''GUEST'')')}"
                         >Task Activity List</span
                     >
                 </a>

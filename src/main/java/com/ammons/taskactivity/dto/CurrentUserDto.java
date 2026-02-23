@@ -2,8 +2,16 @@ package com.ammons.taskactivity.dto;
 
 import com.ammons.taskactivity.entity.Roles;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * DTO for current user information including password expiration warning
+ *
+ * Modified by: Dean Ammons - February 2026 Change: Added permissions set (e.g.,
+ * ["TASK_ACTIVITY:READ", "EXPENSE:READ"]) Reason: Allow Angular/React clients to make
+ * permission-based UI decisions without hardcoding role names. Clients check permissions instead of
+ * role strings.
  *
  * @author Dean Ammons
  * @version 1.0
@@ -20,6 +28,7 @@ public class CurrentUserDto {
     private boolean enabled;
     private String passwordExpiringWarning;
     private Long daysUntilExpiration;
+    private Set<String> permissions; // e.g. ["TASK_ACTIVITY:READ", "EXPENSE:READ"]
 
     public CurrentUserDto() {}
 
@@ -31,8 +40,13 @@ public class CurrentUserDto {
         this.lastname = lastname;
         this.company = company;
         this.email = email;
-        this.role = role != null ? role.getName() : null; // Extract name from Roles entity
+        this.role = role != null ? role.getName() : null;
         this.enabled = enabled;
+        // Populate permission keys from the role's permission set
+        if (role != null && role.getPermissions() != null) {
+            this.permissions = role.getPermissions().stream()
+                    .map(p -> p.getResource() + ":" + p.getAction()).collect(Collectors.toSet());
+        }
     }
 
     // Getters and Setters
@@ -114,5 +128,13 @@ public class CurrentUserDto {
 
     public void setDaysUntilExpiration(Long daysUntilExpiration) {
         this.daysUntilExpiration = daysUntilExpiration;
+    }
+
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<String> permissions) {
+        this.permissions = permissions;
     }
 }

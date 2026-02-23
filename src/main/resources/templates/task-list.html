@@ -653,16 +653,16 @@
             <div class="header">
                 <h1>Task Activity List</h1>
                 <div>
-                    <!-- Weekly Timesheet - USER, GUEST, ADMIN, and EXPENSE_ADMIN -->
+                    <!-- Weekly Timesheet - all authenticated users with task access -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''GUEST'', ''ADMIN'', ''EXPENSE_ADMIN'')')}"
+                        th:if="${#authorization.expression('isAuthenticated()')}"
                         th:href="@{/task-activity/weekly-timesheet}"
                         class="btn btn-info"
                         >Weekly Timesheet</a
                     >
-                    <!-- Expenses - USER, ADMIN, and EXPENSE_ADMIN with email, read-only for GUEST -->
+                    <!-- Expenses - users with EXPENSE:READ permission; read-only for GUEST -->
                     <a
-                        th:if="${#authorization.expression('hasAnyRole(''USER'', ''ADMIN'', ''EXPENSE_ADMIN'', ''GUEST'')') and (userHasEmail or #authorization.expression('hasRole(''GUEST'')'))}"
+                        th:if="${userHasExpenseAccess and (userHasEmail or #authorization.expression('hasRole(''GUEST'')'))}"
                         th:href="${#authorization.expression('hasRole(''GUEST'')')} ? '#' : @{/expenses/list}"
                         class="btn btn-info"
                         th:title="${#authorization.expression('hasRole(''GUEST'')')} ? 'Expense Tracking (read-only)' : 'Expense Tracking'"

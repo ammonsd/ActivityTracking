@@ -45,7 +45,7 @@ public class CsvImportController {
      * @return Import result with statistics and any errors
      */
     @PostMapping(value = "/taskactivities", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> importTaskActivities(
             @RequestParam("file") MultipartFile file) {
 
@@ -106,7 +106,7 @@ public class CsvImportController {
      * @return Import result with statistics and any errors
      */
     @PostMapping(value = "/expenses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> importExpenses(
             @RequestParam("file") MultipartFile file) {
 
@@ -164,7 +164,7 @@ public class CsvImportController {
      * @return Import result with statistics and any errors
      */
     @PostMapping(value = "/dropdownvalues", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> importDropdownValues(
             @RequestParam("file") MultipartFile file) {
 
@@ -214,7 +214,7 @@ public class CsvImportController {
      * @return Template information and example
      */
     @GetMapping("/taskactivities/template")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> getTaskActivityTemplate() {
         Map<String, Object> response = new HashMap<>();
         response.put("headers", new String[] {"taskdate", "client", "project", "phase", "taskhours",
@@ -237,7 +237,7 @@ public class CsvImportController {
      * @return Template information and example
      */
     @GetMapping("/expenses/template")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> getExpenseTemplate() {
         Map<String, Object> response = new HashMap<>();
         response.put("headers",
@@ -268,7 +268,7 @@ public class CsvImportController {
      * @return Template information and example
      */
     @GetMapping("/dropdownvalues/template")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getDropdownValueTemplate() {
         Map<String, Object> response = new HashMap<>();
         response.put("headers",

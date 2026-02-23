@@ -30,8 +30,11 @@ export class AuthService {
   private readonly userRoleSubject = new BehaviorSubject<string>('');
   public readonly userRole$ = this.userRoleSubject.asObservable();
 
+  private readonly userPermissionsSubject = new BehaviorSubject<string[]>([]);
+  public readonly userPermissions$ = this.userPermissionsSubject.asObservable();
+
   private readonly passwordExpiringWarningSubject = new BehaviorSubject<string>(
-    ''
+    '',
   );
   public readonly passwordExpiringWarning$ =
     this.passwordExpiringWarningSubject.asObservable();
@@ -40,6 +43,7 @@ export class AuthService {
   private credentials: string | null = null;
   private username: string | null = null;
   private userRole: string | null = null;
+  private userPermissions: string[] = [];
 
   constructor(private readonly http: HttpClient) {
     // Check if user is accessing /app routes - if so, they passed Spring Security
@@ -61,10 +65,21 @@ export class AuthService {
         console.log(
           'AuthService - Restored from session:',
           storedUsername,
-          storedRole
+          storedRole,
         );
       } else {
         console.log('AuthService - No cached data, will fetch from API');
+      }
+
+      // Restore permissions from sessionStorage
+      const storedPermissions = sessionStorage.getItem('userPermissions');
+      if (storedPermissions) {
+        try {
+          this.userPermissions = JSON.parse(storedPermissions);
+          this.userPermissionsSubject.next(this.userPermissions);
+        } catch {
+          this.userPermissions = [];
+        }
       }
 
       // Try to get username and role from API (always call to ensure fresh data)
@@ -77,18 +92,27 @@ export class AuthService {
             sessionStorage.setItem('username', response.data.username);
             sessionStorage.setItem('userRole', response.data.role);
 
+            // Store permissions for card visibility and feature access checks
+            const permissions: string[] = response.data.permissions || [];
+            this.userPermissions = permissions;
+            sessionStorage.setItem(
+              'userPermissions',
+              JSON.stringify(permissions),
+            );
+            this.userPermissionsSubject.next(permissions);
+
             console.log(
               'AuthService - User loaded from API:',
-              response.data.username
+              response.data.username,
             );
             console.log(
               'AuthService - Role loaded from API:',
-              response.data.role
+              response.data.role,
             );
             console.log('AuthService - Role type:', typeof response.data.role);
             console.log(
               'AuthService - Role stringified:',
-              JSON.stringify(response.data.role)
+              JSON.stringify(response.data.role),
             );
 
             // Always emit to observables (even if value unchanged, to ensure UI updates)
@@ -102,7 +126,7 @@ export class AuthService {
               // Don't show warning for GUEST users (they can't change passwords)
               if (response.data.role !== 'GUEST') {
                 this.passwordExpiringWarningSubject.next(
-                  response.data.passwordExpiringWarning
+                  response.data.passwordExpiringWarning,
                 );
               }
             }
@@ -112,12 +136,12 @@ export class AuthService {
           // API call failed but we trust Spring Security session
           console.warn(
             'Failed to fetch user details from API, but Spring Security session is valid',
-            err
+            err,
           );
           // If we don't have cached data, set a default to prevent blank screen
           if (!this.username) {
             console.warn(
-              'No cached user data - app may have limited functionality'
+              'No cached user data - app may have limited functionality',
             );
             // Still authenticated via Spring Security session, just missing user details
             // The app will continue to work, subsequent API calls will succeed
@@ -152,6 +176,16 @@ export class AuthService {
                 this.userRole = response.data.role;
                 sessionStorage.setItem('userRole', response.data.role);
                 this.userRoleSubject.next(response.data.role);
+
+                // Store permissions
+                const permissions: string[] = response.data.permissions || [];
+                this.userPermissions = permissions;
+                sessionStorage.setItem(
+                  'userPermissions',
+                  JSON.stringify(permissions),
+                );
+                this.userPermissionsSubject.next(permissions);
+
                 this.currentUserSubject.next(response.data.username);
                 this.userFirstnameSubject.next(response.data.firstname || '');
                 this.userLastnameSubject.next(response.data.lastname || '');
@@ -161,14 +195,14 @@ export class AuthService {
                   // Don't show warning for GUEST users (they can't change passwords)
                   if (response.data.role !== 'GUEST') {
                     this.passwordExpiringWarningSubject.next(
-                      response.data.passwordExpiringWarning
+                      response.data.passwordExpiringWarning,
                     );
                   }
                 }
               }
             },
           });
-        })
+        }),
       );
   }
 
@@ -179,11 +213,14 @@ export class AuthService {
     sessionStorage.removeItem('auth');
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userPermissions');
     this.isAuthenticatedSubject.next(false);
     this.currentUserSubject.next('');
     this.userFirstnameSubject.next('');
     this.userLastnameSubject.next('');
     this.userRoleSubject.next('');
+    this.userPermissions = [];
+    this.userPermissionsSubject.next([]);
     this.passwordExpiringWarningSubject.next('');
   }
 
@@ -202,6 +239,31 @@ export class AuthService {
 
   getCurrentRole(): string {
     return this.userRole || sessionStorage.getItem('userRole') || '';
+  }
+
+  /**
+   * Returns the full list of permission keys for the logged-in user.
+   * Permission keys are in the format "RESOURCE:ACTION" (e.g. "TASK_ACTIVITY:READ").
+   */
+  getPermissions(): string[] {
+    const stored = sessionStorage.getItem('userPermissions');
+    if (stored) {
+      try {
+        return JSON.parse(stored) as string[];
+      } catch {
+        return [];
+      }
+    }
+    return this.userPermissions;
+  }
+
+  /**
+   * Returns true if the current user has the specified permission key.
+   *
+   * @param key Permission key in "RESOURCE:ACTION" format (e.g. "TASK_ACTIVITY:READ")
+   */
+  hasPermission(key: string): boolean {
+    return this.getPermissions().includes(key);
   }
 
   isAuthenticated(): boolean {
