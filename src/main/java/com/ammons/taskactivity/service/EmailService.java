@@ -445,8 +445,15 @@ public class EmailService {
     private static final String SEPARATOR_LINE = "\n----------------------------------------\n";
 
     /**
-     * Builds the plain-text email body for a user profile notification. Includes the temporary
-     * password section only when forcePasswordUpdate is true.
+     * Builds the plain-text email body for a user profile notification.
+     *
+     * When forcePasswordUpdate is true, the temporary password is shown inline in the Account
+     * Information section. All assignment lists are grouped under a single "Client and Project
+     * Assignments" section; subsections are omitted when empty.
+     *
+     * Modified by: Dean Ammons - February 2026 Change: Redesigned layout to match updated email
+     * format — sentence-case headers, inline password, consolidated assignments section, updated
+     * footer text.
      */
     private String buildProfileNotificationBody(User user, List<String> taskClients,
             List<String> taskProjects, List<String> expenseClients, List<String> expenseProjects) {
@@ -455,20 +462,16 @@ public class EmailService {
         body.append("Hello ")
                 .append(user.getFirstname() != null ? user.getFirstname() : user.getUsername())
                 .append(",\n\n");
-        body.append("Below is a summary of your ").append(appName)
-                .append(" profile and access assignments.\n\n");
+        body.append("Below is a summary of your ").append(appName).append(" profile.\n\n");
 
         body.append(SEPARATOR_LINE);
-        body.append("ACCOUNT INFORMATION\n");
+        body.append("Account Information\n");
         body.append("----------------------------------------\n");
         body.append(String.format("Username:     %s%n", user.getUsername()));
         if (user.getFirstname() != null || user.getLastname() != null) {
             String firstName = user.getFirstname() != null ? user.getFirstname() : "";
             String lastName = user.getLastname() != null ? user.getLastname() : "";
             body.append(String.format("Name:         %s %s%n", firstName, lastName));
-        }
-        if (user.getCompany() != null && !user.getCompany().isBlank()) {
-            body.append(String.format("Company:      %s%n", user.getCompany()));
         }
         if (user.getRole() != null) {
             String roleDesc = user.getRole().getDescription();
@@ -481,45 +484,37 @@ public class EmailService {
             }
             body.append(String.format("Role:         %s%n", roleDisplay));
         }
-
         if (user.isForcePasswordUpdate()) {
-            body.append(SEPARATOR_LINE);
-            body.append("TEMPORARY PASSWORD\n");
-            body.append("----------------------------------------\n");
-            body.append("You are required to change your password on your next login.\n");
-            body.append(String.format("Temporary Password:  %s%n", "P@ssword!123"));
+            body.append(String.format("Password:     %s (Change required on next login)%n",
+                    "P@ssword!123"));
         }
 
-        if (!taskClients.isEmpty()) {
+        boolean hasAssignments = !taskClients.isEmpty() || !taskProjects.isEmpty()
+                || !expenseClients.isEmpty() || !expenseProjects.isEmpty();
+        if (hasAssignments) {
             body.append(SEPARATOR_LINE);
-            body.append("TASK - ASSIGNED CLIENTS\n");
+            body.append("Client and Project Assignments\n");
             body.append("----------------------------------------\n");
-            taskClients.forEach(c -> body.append("  - ").append(c).append("\n"));
-        }
-
-        if (!taskProjects.isEmpty()) {
-            body.append(SEPARATOR_LINE);
-            body.append("TASK - ASSIGNED PROJECTS\n");
-            body.append("----------------------------------------\n");
-            taskProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
-        }
-
-        if (!expenseClients.isEmpty()) {
-            body.append(SEPARATOR_LINE);
-            body.append("EXPENSE - ASSIGNED CLIENTS\n");
-            body.append("----------------------------------------\n");
-            expenseClients.forEach(c -> body.append("  - ").append(c).append("\n"));
-        }
-
-        if (!expenseProjects.isEmpty()) {
-            body.append(SEPARATOR_LINE);
-            body.append("EXPENSE - ASSIGNED PROJECTS\n");
-            body.append("----------------------------------------\n");
-            expenseProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
+            if (!taskClients.isEmpty()) {
+                body.append("\nTask Clients\n");
+                taskClients.forEach(c -> body.append("  - ").append(c).append("\n"));
+            }
+            if (!taskProjects.isEmpty()) {
+                body.append("\nTask Projects\n");
+                taskProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
+            }
+            if (!expenseClients.isEmpty()) {
+                body.append("\nExpense Clients\n");
+                expenseClients.forEach(c -> body.append("  - ").append(c).append("\n"));
+            }
+            if (!expenseProjects.isEmpty()) {
+                body.append("\nExpense Projects\n");
+                expenseProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
+            }
         }
 
         body.append(SEPARATOR_LINE).append("\n");
-        body.append("This is an automated notification from ").append(appName).append(".\n");
+        body.append("Contact the system administrator if any of these details are incorrect.\n");
         body.append("Do not reply to this email. This email is sent from an unattended mailbox.\n");
 
         return body.toString();
