@@ -496,11 +496,11 @@ public class EmailService {
             body.append("Client and Project Assignments\n");
             body.append("----------------------------------------\n");
             if (!taskClients.isEmpty()) {
-                body.append("\nTask Clients\n");
+                body.append("\nClients\n");
                 taskClients.forEach(c -> body.append("  - ").append(c).append("\n"));
             }
             if (!taskProjects.isEmpty()) {
-                body.append("\nTask Projects\n");
+                body.append("\nProjects\n");
                 taskProjects.forEach(p -> body.append("  - ").append(p).append("\n"));
             }
             if (!expenseClients.isEmpty()) {
