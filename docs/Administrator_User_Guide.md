@@ -287,7 +287,7 @@ Four default roles are provided:
 2. **Click "Add Role"**: Opens the role creation form
 3. **Enter Role Details**:
    - **Role Name**: Unique identifier (e.g., "PROJECT_MANAGER", "FINANCE_VIEWER")
-   - **Description**: Brief explanation of the role's purpose
+   - **Description**: Explanation of the role's purpose. Follow the recommended format below for best results in notification emails.
 4. **Assign Permissions**: Check the boxes for permissions this role should have
    - Permissions are organized by resource (TASK_ACTIVITY, EXPENSE, etc.)
    - Each resource shows available actions (CREATE, READ, UPDATE, DELETE, etc.)
@@ -296,9 +296,26 @@ Four default roles are provided:
 
 **Best Practices for Custom Roles:**
 - Use clear, descriptive names (e.g., "READ_ONLY_TASKS" instead of "RO_TASKS")
-- Document the purpose in the description field
+- Document the purpose in the description field using the recommended format (see below)
 - Start with minimal permissions and add more as needed
 - Test new roles with a test user account before production use
+
+#### Role Description Format
+
+The description field supports a two-part format that controls how the role is displayed in **Profile Notification emails** sent to users.
+
+**Format:** `Short Name - Full detail`
+
+When the system sends a profile notification email, it uses the text **before** the ` - ` separator as a concise role label. If no ` - ` is present, the full description is used. If the description is blank, the raw role name (e.g., `EXPENSE_ADMIN`) is used as a fallback.
+
+| Description field value | Displayed in notification email |
+|---|---|
+| `System Administrator - Full permissions for all functions` | `System Administrator` |
+| `Standard User - Task and expense access for team members` | `Standard User` |
+| `Read-Only Guest` | `Read-Only Guest` |
+| *(blank)* | `GUEST` (raw role name) |
+
+**Recommendation:** Always include a short, human-readable label before the ` - ` so that users receiving notification emails see a clear, friendly role description rather than a technical role name.
 
 #### Editing Role Permissions
 
@@ -309,7 +326,7 @@ Four default roles are provided:
    - **Check boxes** to add permissions
    - **Uncheck boxes** to remove permissions
    - Role name is read-only (cannot be changed)
-   - Description can be updated
+   - Description can be updated — follow the `Short Name - Full detail` format (see [Role Description Format](#role-description-format)) so notification emails display a clean, readable role label
 5. **Save Changes**: Click "Save Changes" button
 6. **Immediate Effect**: Permission changes take effect immediately for all users with that role
 
