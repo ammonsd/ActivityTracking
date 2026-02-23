@@ -710,12 +710,6 @@
                                 <span>Admin Dashboard</span>
                             </a>
                         </li>
-                        <!-- Notify Users - ADMIN only -->
-                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
-                            <a th:href="@{/task-activity/manage-users/notify}" title="Send Profile Notification Emails">
-                                <span>Notify Users</span>
-                            </a>
-                        </li>
                         <!-- Contact System Administrator - visible only when mail is enabled -->
                         <li th:if="${mailEnabled}">
                             <button
@@ -725,6 +719,12 @@
                             >
                                 <span>Contact System Admin</span>
                             </button>
+                        </li>
+                        <!-- Notify Users - ADMIN only -->
+                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                            <a th:href="@{/task-activity/manage-users/notify}" title="Send Profile Notification Emails">
+                                <span>Notify Users</span>
+                            </a>
                         </li>
                     </ul>
                 </div>

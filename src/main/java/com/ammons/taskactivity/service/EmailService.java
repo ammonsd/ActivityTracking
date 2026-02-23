@@ -471,7 +471,15 @@ public class EmailService {
             body.append(String.format("Company:      %s%n", user.getCompany()));
         }
         if (user.getRole() != null) {
-            body.append(String.format("Role:         %s%n", user.getRole().getName()));
+            String roleDesc = user.getRole().getDescription();
+            String roleDisplay;
+            if (roleDesc != null && !roleDesc.isBlank()) {
+                int dashIndex = roleDesc.indexOf(" - ");
+                roleDisplay = (dashIndex >= 0) ? roleDesc.substring(0, dashIndex) : roleDesc;
+            } else {
+                roleDisplay = user.getRole().getName();
+            }
+            body.append(String.format("Role:         %s%n", roleDisplay));
         }
 
         if (user.isForcePasswordUpdate()) {
