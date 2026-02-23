@@ -3141,12 +3141,20 @@ frontend-react/
 │   │   └── rolesManagement/      # Role Management feature components
 │   │       ├── RoleFormDialog.tsx       # Create/edit role dialog
 │   │       └── DeleteConfirmDialog.tsx  # Delete confirmation dialog
+│   ├── api/                      # API client modules
+│   │   ├── axios.client.ts       # Configured Axios instance
+│   │   ├── guestActivity.api.ts  # Guest activity API wrapper
+│   │   ├── rolesManagement.api.ts # Role management API wrapper
+│   │   └── userManagement.api.ts # User management & notify API wrapper
 │   ├── pages/                    # Page-level components (routes)
 │   │   ├── GuestActivity.tsx     # Guest activity report page
+│   │   ├── NotifyUsers.tsx       # Admin page for sending profile notifications
 │   │   └── RolesManagement.tsx   # Roles management page
 │   ├── types/                    # TypeScript type definitions
 │   │   ├── guestActivity.types.ts
-│   │   └── rolesManagement.types.ts
+│   │   ├── features.types.ts     # Feature flag type definitions
+│   │   ├── rolesManagement.types.ts
+│   │   └── userManagement.types.ts # User management & notify types
 │   ├── config/
 │   │   └── features.ts           # Feature flag configuration
 │   ├── App.tsx                   # Root application component
@@ -3266,6 +3274,13 @@ export const features: Record<string, FeatureConfig> = {
     comingSoon: false,
     title: 'Guest Activity Report',
     description: 'View guest login statistics and audit history'
+  },
+  notifyUsers: {
+    enabled: true,
+    comingSoon: false,
+    requiresAdmin: true,
+    title: 'Notify Users',
+    description: 'Send profile notification emails to active users'
   },
   expenseManagement: {
     enabled: false,
@@ -4860,6 +4875,89 @@ Master checkboxes control all permissions for a resource with indeterminate stat
 - Role creation/modification logged to CloudWatch
 - Permission changes tracked for compliance
 - User role assignments logged via UserService
+
+### User Notification API
+
+The user notification API lets administrators send profile notification emails to active users directly from the React Admin Dashboard.
+
+**Implementation Architecture:**
+- **Controller**: `UserRestController` at `/api/users`
+- **DTOs**: `NotifyEligibleUserDto`, `NotifyRequest`, `NotifyResultDto` (inner static classes in `UserRestController`)
+- **Authorization**: `@RequirePermission` with `USER_MANAGEMENT` resource
+- **Email**: Delegates to `EmailService.sendUserProfileNotification()`
+- **Flag**: Respects `spring.mail.enabled` — reports skips when email is disabled
+
+#### Get Notify-Eligible Users
+
+```http
+GET /api/users/notify-eligible?lastNameFilter=Smi
+```
+
+**Description:** Returns all active users who have an email address on file. Used to populate the selection table on the Notify Users page. Optional `lastNameFilter` performs a case-insensitive prefix match on last name.
+
+**Access Control:** Requires `USER_MANAGEMENT:READ` permission
+
+**Query Parameters:**
+- `lastNameFilter` (String, optional): Last-name prefix for filtering the result set
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Notify-eligible users retrieved successfully",
+    "data": [
+        {
+            "username": "jsmith",
+            "firstname": "Jane",
+            "lastname": "Smith",
+            "email": "jsmith@example.com",
+            "company": "Acme Corp"
+        }
+    ]
+}
+```
+
+#### Send Profile Notifications
+
+```http
+POST /api/users/notify
+Content-Type: application/json
+
+{
+    "usernames": ["jsmith", "bjones"]
+}
+```
+
+**Description:** Sends a profile notification email to each specified user. Users with no email address or not found are counted as skipped. The request succeeds (200) even when `spring.mail.enabled=false`; the `mailEnabled` flag in the response signals the UI to show an informational warning.
+
+**Access Control:** Requires `USER_MANAGEMENT:UPDATE` permission
+
+**Request Body:**
+- `usernames` (List\<String\>, required): Usernames of users to notify
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "Notifications processed",
+    "data": {
+        "sent": 2,
+        "skipped": 0,
+        "mailEnabled": true
+    }
+}
+```
+
+**Frontend Integration:**
+- **Page**: `NotifyUsers.tsx` — checkbox table, last-name filter, send button with spinner
+- **API client**: `fetchNotifyEligibleUsers()`, `sendUserNotifications()` in `userManagement.api.ts`
+- **Types**: `NotifyEligibleUser`, `NotifyRequest`, `NotifyResult` in `userManagement.types.ts`
+- **Route**: `/notify-users` protected by `<ProtectedRoute requiredRole="ADMIN">`
+- **Feature flag**: `features.notifyUsers` (`enabled: true`, `requiresAdmin: true`)
+
+---
 
 ### Web Controller Endpoints
 

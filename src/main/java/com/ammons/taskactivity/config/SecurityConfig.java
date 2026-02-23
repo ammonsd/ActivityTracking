@@ -56,11 +56,14 @@ public class SecurityConfig {
         private static final String LOGOUT_URL = "/logout";
 
         // Role Constants
-        private static final String ROLE_EXPENSE_ADMIN = "EXPENSE_ADMIN";
+        // Only hard structural roles are listed here. General-purpose roles (USER, GUEST,
+        // EXPENSE_ADMIN, USER_TASKS, etc.) are NOT enumerated here — URL access uses
+        // .authenticated() and fine-grained checks are handled by @RequirePermission annotations.
+        // This means adding a new role never requires a code change or redeployment.
+        private static final String ROLE_EXPENSE_ADMIN = "EXPENSE_ADMIN"; // kept for /admin/**
+                                                                          // guard
         private static final String ADMIN_PATTERN = "/admin/**";
         private static final String ADMIN_ROLE = "ADMIN";
-        private static final String USER_ROLE = "USER";
-        private static final String GUEST_ROLE = "GUEST";
         private static final String CONTENT_TYPE_JSON = "application/json";
 
         /**
@@ -236,8 +239,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/users/me",
                                                                 "/api/users/profile",
                                                                 "/api/users/profile/password")
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
 
                                                 // Login audit endpoint - accessible to all
                                                 // authenticated users for dashboard demo
@@ -290,39 +292,34 @@ public class SecurityConfig {
                                                         return new org.springframework.security.authorization.AuthorizationDecision(
                                                                         isAuthenticated);
                                                 })
-                                                // API endpoints - require authentication
+                                                // API endpoints - any authenticated user may reach
+                                                // the endpoint; method-level @RequirePermission
+                                                // annotations enforce the actual permission check
                                                 .requestMatchers(HttpMethod.GET, API_PATTERN)
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
                                                 .requestMatchers(HttpMethod.POST, API_PATTERN)
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
                                                 .requestMatchers(HttpMethod.PUT, API_PATTERN)
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
                                                 .requestMatchers(HttpMethod.DELETE, API_PATTERN)
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
 
                                                 // User Management - Admin only
                                                 .requestMatchers("/task-activity/manage-users/**")
                                                 .hasRole(ADMIN_ROLE)
 
-                                                // Profile Management - accessible to USER, ADMIN,
-                                                // and
-                                                // EXPENSE_ADMIN
+                                                // Profile Management - any authenticated user
                                                 .requestMatchers("/profile/**")
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
 
                                                 // Admin pages - accessible to ADMIN and
                                                 // EXPENSE_ADMIN
                                                 .requestMatchers(ADMIN_PATTERN)
                                                 .hasAnyRole(ADMIN_ROLE, ROLE_EXPENSE_ADMIN)
 
-                                                // Task Activity screens - accessible to USER,
-                                                // ADMIN, and
-                                                // GUEST
+                                                // Task Activity and Expense screens - any
+                                                // authenticated user may reach the page;
+                                                // method-level permissions control actual access
                                                 .requestMatchers("/task-activity",
                                                                 "/task-activity/",
                                                                 "/task-activity/list",
@@ -332,15 +329,10 @@ public class SecurityConfig {
                                                                 "/task-activity/submit",
                                                                 "/task-activity/update/**",
                                                                 "/task-activity/delete/**")
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
 
-                                                // Expense endpoints - accessible to USER, ADMIN,
-                                                // GUEST,
-                                                // and EXPENSE_ADMIN
                                                 .requestMatchers("/expenses/**")
-                                                .hasAnyRole(USER_ROLE, ADMIN_ROLE, GUEST_ROLE,
-                                                                ROLE_EXPENSE_ADMIN)
+                                                .authenticated()
 
                                                 // Angular dashboard - requires authentication
                                                 .requestMatchers("/app", "/app/**").authenticated()

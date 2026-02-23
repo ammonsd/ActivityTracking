@@ -246,6 +246,8 @@ This document provides a comprehensive summary of all technical features, framew
   - `DELETE /api/users/{id}` - Delete user
   - `PUT /api/users/{id}/password` - Admin password change (requires USER_MANAGEMENT:UPDATE permission)
   - `GET /api/users/roles` - List available roles
+  - `GET /api/users/notify-eligible` - List active users with email, optional `lastNameFilter` param (requires USER_MANAGEMENT:READ)
+  - `POST /api/users/notify` - Send profile notification emails to selected users (requires USER_MANAGEMENT:UPDATE)
 - **Permission-based access**:
   - @RequirePermission annotations on all endpoints
   - CREATE, READ, UPDATE, DELETE permissions for USER_MANAGEMENT resource
@@ -451,6 +453,21 @@ This document provides a comprehensive summary of all technical features, framew
   - Error handling for constraint violations (role assigned to users)
   - Empty states with informative messages
   - Responsive dialog forms with Material-UI components
+- **Notify Users** (February 2026)
+  - Admin-only page for sending profile notification emails to active users
+  - Displays all active users who have an email address on file
+  - Optional last-name prefix filter for narrowing the user list
+  - Checkbox table with individual row selection and Select All / Deselect All
+  - Selected user count chip displayed inline with action bar
+  - Send Profile Notifications button with loading spinner during submission
+  - Success alert showing sent count and skipped count (users with no email or not found)
+  - Warning banner displayed when email sending is disabled on the server (`spring.mail.enabled=false`)
+  - Accessible only to ADMIN role (route protected by `requiredRole="ADMIN"` in React Router and `@RequirePermission` on API)
+  - New sidebar entry with Email icon, positioned between Guest Activity and User Dashboard
+  - New dashboard card added to DashboardHome for ADMIN users
+  - REST API: `GET /api/users/notify-eligible`, `POST /api/users/notify` (both in `UserRestController`)
+  - TypeScript types: `NotifyEligibleUser`, `NotifyRequest`, `NotifyResult`
+  - API client functions: `fetchNotifyEligibleUsers()`, `sendUserNotifications()` in `userManagement.api.ts`
 - **Guest Activity Report** (Phase 6 - February 2026)
   - Real-time login audit tracking for GUEST users
   - Statistics dashboard with 4 metric cards:

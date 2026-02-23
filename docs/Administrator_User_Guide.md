@@ -192,7 +192,7 @@ Administrators can create, edit, and delete user accounts:
 2. **View All Users**: See a list of all system users with their full names, company, role, and last login time
 3. **Filter Users**: Use the filter section to find specific users:
     - **Username**: Filter by username (partial match)
-    - **Role**: Filter by user role (ADMIN, USER, GUEST)
+    - **Role**: Filter by user role (shows all roles defined in the system)
     - **Company**: Filter by company name (partial match)
     - Click **"Search"** to apply filters or **"Reset filters"** to clear
 4. **Add New User**: Click **"Add User"** button
@@ -201,7 +201,7 @@ Administrators can create, edit, and delete user accounts:
     - Enter last name (required)
     - Enter company (optional, maximum 100 characters)
     - Set initial password — the password fields are **pre-filled with the default temporary password** (`P@ssword!123`) as a convenience; overwrite it if you want a different initial password
-    - Assign role (GUEST, USER, or ADMIN)
+    - Assign role — the dropdown lists all roles currently defined in the system, including any custom roles created via Role Management
     - Enable/disable account
     - Optionally force password change on first login
 5. **Edit Users**: Modify first name, last name, company, role, or account status
@@ -333,7 +333,7 @@ When the system sends a profile notification email, it uses the text **before** 
 **Important Notes:**
 - Removing permissions from a role immediately affects all users with that role
 - Users must log out and log back in to see permission changes reflected in the UI
-- Built-in roles (ADMIN, USER, GUEST, EXPENSE_ADMIN) can be edited but use caution
+- Built-in roles (ADMIN, USER, GUEST, EXPENSE_ADMIN) and any custom roles can be edited — use caution, as permission changes take effect immediately for all users assigned that role
 - Always test permission changes in a non-production environment first
 
 #### Assigning Roles to Users
