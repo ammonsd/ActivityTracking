@@ -2,6 +2,11 @@
  * Dashboard home page with feature cards and quick access.
  * Shows phase status and provides navigation to all features.
  *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Removed Task Activity Tracker and added Notify Users feature cards
+ * Reason: Task Activity Tracker is a sidebar link to the Spring Boot UI, not a dashboard feature.
+ *         Notify Users was added as a new admin feature card.
+ *
  * Author: Dean Ammons
  * Date: January 2026
  */
@@ -19,7 +24,7 @@ import {
     List as ListIcon,
     Security as SecurityIcon,
     Timeline as TimelineIcon,
-    Assignment as AssignmentIcon,
+    Email as EmailIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
@@ -87,24 +92,18 @@ export const DashboardHome: React.FC = () => {
             color: "#9c27b0",
         },
         {
-            title: "Task Activity Tracker",
-            description: FEATURES.taskTracker.description,
-            icon: <AssignmentIcon sx={{ fontSize: 48 }} />,
-            route: FEATURES.taskTracker.route,
-            requiresAdmin: FEATURES.taskTracker.requiresAdmin,
-            comingSoon: FEATURES.taskTracker.comingSoon,
-            enabled: FEATURES.taskTracker.enabled,
-            color: "#f44336",
+            title: "Notify Users",
+            description: FEATURES.notifyUsers.description,
+            icon: <EmailIcon sx={{ fontSize: 48 }} />,
+            route: FEATURES.notifyUsers.route,
+            requiresAdmin: FEATURES.notifyUsers.requiresAdmin,
+            comingSoon: FEATURES.notifyUsers.comingSoon,
+            enabled: FEATURES.notifyUsers.enabled,
+            color: "#00897b",
         },
     ];
 
     const handleCardClick = (card: FeatureCardData) => {
-        // Task Tracker opens Spring Boot UI
-        if (card.title === "Task Activity Tracker") {
-            globalThis.location.href = "/task-activity/list";
-            return;
-        }
-
         // Check if user lacks admin access
         if (card.requiresAdmin && !isAdmin) {
             return; // Card is disabled, do nothing
@@ -122,9 +121,6 @@ export const DashboardHome: React.FC = () => {
     };
 
     const isCardDisabled = (card: FeatureCardData): boolean => {
-        // Task Tracker is always enabled
-        if (card.title === "Task Activity Tracker") return false;
-
         // Admin gets access to all features
         if (isAdmin) return false;
 

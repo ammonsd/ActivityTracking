@@ -2,6 +2,10 @@
  * Feature flags configuration for the React admin dashboard.
  * Controls which features are enabled vs. mocked with "Coming Soon" dialogs.
  *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added notifyUsers feature entry
+ * Reason: Add Notify Users to React Admin Dashboard navigation
+ *
  * Author: Dean Ammons
  * Date: January 2026
  */
@@ -48,5 +52,13 @@ export const FEATURES: FeaturesConfiguration = {
         description: "Track daily tasks and activities",
         icon: "Assignment",
         route: "/tasks", // This will open Spring Boot UI
+    },
+    notifyUsers: {
+        enabled: true,
+        comingSoon: false,
+        requiresAdmin: true,
+        description: "Send profile notification emails to users",
+        icon: "Email",
+        route: "/notify-users",
     },
 };

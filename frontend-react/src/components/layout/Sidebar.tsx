@@ -2,6 +2,10 @@
  * Navigation sidebar component with feature buttons.
  * Shows all features with appropriate enabled/disabled states based on user role.
  *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added "Notify Users" menu item
+ * Reason: Expose Notify Users admin feature in React Admin Dashboard navigation
+ *
  * Author: Dean Ammons
  * Date: January 2026
  */
@@ -27,6 +31,7 @@ import {
     Assignment as AssignmentIcon,
     Home as HomeIcon,
     Dashboard as DashboardIcon,
+    Email as EmailIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
@@ -93,6 +98,14 @@ export const Sidebar: React.FC = () => {
             requiresAdmin: FEATURES.guestActivity.requiresAdmin,
             comingSoon: FEATURES.guestActivity.comingSoon,
             enabled: FEATURES.guestActivity.enabled,
+        },
+        {
+            name: "Notify Users",
+            icon: <EmailIcon />,
+            route: FEATURES.notifyUsers.route,
+            requiresAdmin: FEATURES.notifyUsers.requiresAdmin,
+            comingSoon: FEATURES.notifyUsers.comingSoon,
+            enabled: FEATURES.notifyUsers.enabled,
         },
         {
             name: "User Dashboard",

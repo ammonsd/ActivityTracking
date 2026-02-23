@@ -8,6 +8,7 @@ import com.ammons.taskactivity.entity.DropdownValue;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.EmailService;
 import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,9 @@ import java.util.Set;
  *
  * Modified by: Dean Ammons - February 2026 Change: Added dropdown access management endpoints for
  * React admin Reason: Allow React admin to GET and PUT user dropdown access assignments
+ *
+ * Modified by: Dean Ammons - February 2026 Change: Added notify-eligible and notify endpoints
+ * Reason: Expose Notify Users admin function to React Admin Dashboard
  *
  * @author Dean Ammons
  * @version 1.0
@@ -46,15 +51,20 @@ public class UserRestController {
     private final RoleRepository roleRepository;
     private final UserDropdownAccessService userDropdownAccessService;
     private final DropdownValueService dropdownValueService;
+    private final EmailService emailService;
+
+    @Value("${spring.mail.enabled:false}")
+    private boolean mailEnabled;
 
     public UserRestController(UserService userService, TaskActivityService taskActivityService,
             RoleRepository roleRepository, UserDropdownAccessService userDropdownAccessService,
-            DropdownValueService dropdownValueService) {
+            DropdownValueService dropdownValueService, EmailService emailService) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
         this.userDropdownAccessService = userDropdownAccessService;
         this.dropdownValueService = dropdownValueService;
+        this.emailService = emailService;
     }
 
     /**
@@ -482,6 +492,84 @@ public class UserRestController {
     }
 
     /**
+     * Returns all active users who have an email address, suitable for admin notification. Supports
+     * optional last-name prefix filtering.
+     *
+     * @param lastNameFilter optional last-name prefix; blank means return all eligible users
+     * @return ResponseEntity containing list of eligible users
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "READ")
+    @GetMapping("/notify-eligible")
+    public ResponseEntity<ApiResponse<List<NotifyEligibleUserDto>>> getNotifyEligibleUsers(
+            @RequestParam(required = false, defaultValue = "") String lastNameFilter) {
+        logger.debug("REST API: Getting notify-eligible users, filter='{}'", lastNameFilter);
+        List<User> users = userService.getActiveUsersWithEmail(lastNameFilter);
+        List<NotifyEligibleUserDto> dtos =
+                users.stream().map(u -> new NotifyEligibleUserDto(u.getUsername(), u.getFirstname(),
+                        u.getLastname(), u.getEmail(), u.getCompany())).toList();
+        return ResponseEntity
+                .ok(ApiResponse.success("Notify-eligible users retrieved successfully", dtos));
+    }
+
+    /**
+     * Sends a profile notification email to each selected user. Skips users with no email address
+     * or who cannot be found. Returns a summary of sent and skipped counts.
+     *
+     * @param request body containing the list of selected usernames
+     * @param authentication the current admin session
+     * @return ResponseEntity containing the notification result summary
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PostMapping("/notify")
+    public ResponseEntity<ApiResponse<NotifyResultDto>> sendNotifications(
+            @RequestBody NotifyRequest request, Authentication authentication) {
+        logger.info("REST API: Admin {} sending profile notifications", authentication.getName());
+
+        if (request.getUsernames() == null || request.getUsernames().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("No users were selected."));
+        }
+
+        int sent = 0;
+        int skipped = 0;
+
+        for (String username : request.getUsernames()) {
+            java.util.Optional<User> userOpt = userService.getUserByUsername(username);
+            boolean hasEmail = userOpt.isPresent() && userOpt.get().getEmail() != null
+                    && !userOpt.get().getEmail().isBlank();
+
+            if (!hasEmail) {
+                if (userOpt.isEmpty()) {
+                    logger.warn("Skipping notification for unknown username: {}", username);
+                } else {
+                    logger.warn("Skipping notification for user {} — no email address", username);
+                }
+                skipped++;
+            } else {
+                User user = userOpt.get();
+                List<String> taskClients =
+                        userDropdownAccessService.getExplicitTaskClientNames(username);
+                List<String> taskProjects =
+                        userDropdownAccessService.getExplicitTaskProjectNames(username);
+                List<String> expenseClients =
+                        userDropdownAccessService.getExplicitExpenseClientNames(username);
+                List<String> expenseProjects =
+                        userDropdownAccessService.getExplicitExpenseProjectNames(username);
+
+                emailService.sendUserProfileNotification(user, taskClients, taskProjects,
+                        expenseClients, expenseProjects);
+                sent++;
+            }
+        }
+
+        NotifyResultDto result = new NotifyResultDto(sent, skipped, mailEnabled);
+        String message = String.format("Profile notification sent to %d user(s).", sent);
+        if (skipped > 0) {
+            message += String.format(" %d user(s) skipped (no email or not found).", skipped);
+        }
+        return ResponseEntity.ok(ApiResponse.success(message, result));
+    }
+
+    /**
      * DTO for password change request
      */
     public static class PasswordChangeRequest {
@@ -626,6 +714,89 @@ public class UserRestController {
 
         public void setExpenseProjectIds(List<Long> expenseProjectIds) {
             this.expenseProjectIds = expenseProjectIds;
+        }
+    }
+
+    /**
+     * DTO representing a user eligible to receive a profile notification. Used by GET
+     * /api/users/notify-eligible.
+     */
+    public static class NotifyEligibleUserDto {
+        private final String username;
+        private final String firstname;
+        private final String lastname;
+        private final String email;
+        private final String company;
+
+        public NotifyEligibleUserDto(String username, String firstname, String lastname,
+                String email, String company) {
+            this.username = username;
+            this.firstname = firstname;
+            this.lastname = lastname;
+            this.email = email;
+            this.company = company;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getFirstname() {
+            return firstname;
+        }
+
+        public String getLastname() {
+            return lastname;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getCompany() {
+            return company;
+        }
+    }
+
+    /**
+     * Request body for POST /api/users/notify. Contains the list of usernames to notify.
+     */
+    public static class NotifyRequest {
+        private List<String> usernames;
+
+        public List<String> getUsernames() {
+            return usernames;
+        }
+
+        public void setUsernames(List<String> usernames) {
+            this.usernames = usernames;
+        }
+    }
+
+    /**
+     * Result DTO returned by POST /api/users/notify. Contains sent/skipped counts and mail status.
+     */
+    public static class NotifyResultDto {
+        private final int sent;
+        private final int skipped;
+        private final boolean mailEnabled;
+
+        public NotifyResultDto(int sent, int skipped, boolean mailEnabled) {
+            this.sent = sent;
+            this.skipped = skipped;
+            this.mailEnabled = mailEnabled;
+        }
+
+        public int getSent() {
+            return sent;
+        }
+
+        public int getSkipped() {
+            return skipped;
+        }
+
+        public boolean isMailEnabled() {
+            return mailEnabled;
         }
     }
 }

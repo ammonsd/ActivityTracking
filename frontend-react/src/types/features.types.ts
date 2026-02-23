@@ -20,4 +20,5 @@ export interface FeaturesConfiguration {
     rolesManagement: FeatureConfig;
     guestActivity: FeatureConfig;
     taskTracker: FeatureConfig;
+    notifyUsers: FeatureConfig;
 }

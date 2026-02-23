@@ -139,3 +139,31 @@ export interface UserAccessUpdateRequest {
     expenseClientIds: number[];
     expenseProjectIds: number[];
 }
+
+/**
+ * A user eligible to receive a profile notification email.
+ * Matches NotifyEligibleUserDto from the backend.
+ */
+export interface NotifyEligibleUser {
+    username: string;
+    firstname: string | null;
+    lastname: string | null;
+    email: string | null;
+    company: string | null;
+}
+
+/**
+ * Request body for POST /api/users/notify.
+ */
+export interface NotifyRequest {
+    usernames: string[];
+}
+
+/**
+ * Result returned by POST /api/users/notify.
+ */
+export interface NotifyResult {
+    sent: number;
+    skipped: number;
+    mailEnabled: boolean;
+}

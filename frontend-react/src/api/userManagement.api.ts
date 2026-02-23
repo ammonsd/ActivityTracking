@@ -1,6 +1,10 @@
 /**
  * Description: API functions for User Management feature
  *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added fetchNotifyEligibleUsers and sendUserNotifications functions
+ * Reason: Support the Notify Users page in the React Admin Dashboard
+ *
  * Author: Dean Ammons
  * Date: February 2026
  */
@@ -17,6 +21,9 @@ import type {
     UserUpdateRequest,
     UserAccessData,
     UserAccessUpdateRequest,
+    NotifyEligibleUser,
+    NotifyRequest,
+    NotifyResult,
 } from "../types/userManagement.types";
 
 export const userManagementApi = {
@@ -152,5 +159,41 @@ export const userManagementApi = {
             `/users/${encodeURIComponent(username)}/access`,
             payload,
         );
+    },
+
+    /**
+     * Fetch active users who have an email address, eligible for profile notification.
+     * @param lastNameFilter - Optional last-name prefix to filter results
+     * @returns Promise with list of eligible users
+     */
+    fetchNotifyEligibleUsers: async (
+        lastNameFilter?: string,
+    ): Promise<NotifyEligibleUser[]> => {
+        const params: Record<string, string> = {};
+        if (lastNameFilter?.trim()) {
+            params.lastNameFilter = lastNameFilter.trim();
+        }
+        const response = await apiClient.get<{
+            success: boolean;
+            message: string;
+            data: NotifyEligibleUser[];
+        }>("/users/notify-eligible", { params });
+        return response.data.data;
+    },
+
+    /**
+     * Send profile notification emails to the selected users.
+     * @param payload - Request containing the list of usernames to notify
+     * @returns Promise with the notification result (sent/skipped counts)
+     */
+    sendUserNotifications: async (
+        payload: NotifyRequest,
+    ): Promise<NotifyResult> => {
+        const response = await apiClient.post<{
+            success: boolean;
+            message: string;
+            data: NotifyResult;
+        }>("/users/notify", payload);
+        return response.data.data;
     },
 };

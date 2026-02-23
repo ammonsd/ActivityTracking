@@ -1,6 +1,10 @@
 /**
  * Description: Main App component with routing and layout
  *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added /notify-users route for Notify Users admin page
+ * Reason: Expose Notify Users feature in React Admin Dashboard
+ *
  * Author: Dean Ammons
  * Date: January 2026
  */
@@ -15,6 +19,7 @@ import { UserManagement } from "./pages/UserManagement";
 import { DropdownManagement } from "./pages/DropdownManagement";
 import { RolesManagement } from "./pages/RolesManagement";
 import { GuestActivity } from "./pages/GuestActivity";
+import { NotifyUsers } from "./pages/NotifyUsers";
 
 function App() {
     const { checkAuth } = useAuthStore();
@@ -80,6 +85,17 @@ function App() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <GuestActivity />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/notify-users"
+                    element={
+                        <ProtectedRoute requiredRole="ADMIN">
+                            <MainLayout>
+                                <NotifyUsers />
                             </MainLayout>
                         </ProtectedRoute>
                     }
