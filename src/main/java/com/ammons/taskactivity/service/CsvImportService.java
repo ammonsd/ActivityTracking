@@ -43,6 +43,13 @@ import java.util.function.BiFunction;
  * @author Dean Ammons
  * @version 1.0
  * @since January 2026
+ *
+ *        Modified by: Dean Ammons - February 2026 Change: Replaced line-by-line reading in
+ *        importCsvGeneric with readCsvRecord() to accumulate physical lines until all quote pairs
+ *        are balanced, producing one complete logical record. Reason: CSV fields with embedded
+ *        newlines (e.g., a details column with bullet-point text) were split into separate rows
+ *        because reader.readLine() returned each physical line independently, breaking the parser
+ *        for RFC-4180 multi-line quoted fields.
  */
 @Service
 public class CsvImportService {
@@ -153,24 +160,24 @@ public class CsvImportService {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
-            String line;
-            int lineNumber = 0;
+            String csvRecord;
+            int recordNumber = 0;
             String[] headers = null;
 
-            while ((line = reader.readLine()) != null) {
-                lineNumber++;
+            while ((csvRecord = readCsvRecord(reader)) != null) {
+                recordNumber++;
 
-                if (line.trim().isEmpty()) {
+                if (csvRecord.trim().isEmpty()) {
                     continue;
                 }
 
                 if (headers == null) {
-                    headers = parseCsvLine(line);
+                    headers = parseCsvLine(csvRecord);
                     continue;
                 }
 
-                processEntityImport(line, headers, lineNumber, entityName, entityParser, repository,
-                        result, skippedDuplicates);
+                processEntityImport(csvRecord, headers, recordNumber, entityName, entityParser,
+                        repository, result, skippedDuplicates);
             }
         }
 
@@ -323,6 +330,63 @@ public class CsvImportService {
         }
 
         return dropdownValue;
+    }
+
+    /**
+     * Reads a complete logical CSV record from the reader, accumulating physical lines until all
+     * double-quote pairs are balanced. This supports RFC-4180 multi-line quoted fields where a
+     * single cell value spans multiple physical lines (e.g., a details field with embedded
+     * newlines).
+     *
+     * @param reader the BufferedReader positioned at the start of a record
+     * @return the full record string (may contain embedded newlines), or null at end of stream
+     * @throws IOException if an I/O error occurs
+     */
+    private String readCsvRecord(BufferedReader reader) throws IOException {
+        StringBuilder csvRecord = new StringBuilder();
+        String line;
+        int quoteCount = 0;
+
+        while ((line = reader.readLine()) != null) {
+            if (!csvRecord.isEmpty()) {
+                csvRecord.append('\n');
+            }
+            csvRecord.append(line);
+            quoteCount += countUnescapedQuotes(line);
+
+            // Even quote count means all opened quote blocks are closed — record is complete
+            if (quoteCount % 2 == 0) {
+                return csvRecord.toString();
+            }
+        }
+
+        // End of stream; return any accumulated partial data
+        return csvRecord.isEmpty() ? null : csvRecord.toString();
+    }
+
+    /**
+     * Counts unescaped double-quote characters in a line. Escaped quotes ("") are treated as a
+     * single literal character and do not affect the open/close balance.
+     *
+     * @param line the line to scan
+     * @return the number of unescaped double-quote characters
+     */
+    private int countUnescapedQuotes(String line) {
+        int count = 0;
+        int i = 0;
+        while (i < line.length()) {
+            if (line.charAt(i) == '"') {
+                if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    i += 2; // skip escaped quote pair
+                } else {
+                    count++;
+                    i++;
+                }
+            } else {
+                i++;
+            }
+        }
+        return count;
     }
 
     /**
