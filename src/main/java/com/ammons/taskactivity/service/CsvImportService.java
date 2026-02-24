@@ -17,9 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -44,12 +49,15 @@ import java.util.function.BiFunction;
  * @version 1.0
  * @since January 2026
  *
- *        Modified by: Dean Ammons - February 2026 Change: Replaced line-by-line reading in
+ *        Modified by: Dean Ammons - February 2026 Change: (1) Replaced line-by-line reading in
  *        importCsvGeneric with readCsvRecord() to accumulate physical lines until all quote pairs
- *        are balanced, producing one complete logical record. Reason: CSV fields with embedded
- *        newlines (e.g., a details column with bullet-point text) were split into separate rows
- *        because reader.readLine() returned each physical line independently, breaking the parser
- *        for RFC-4180 multi-line quoted fields.
+ *        are balanced, producing one complete logical record. (2) Added charset auto-detection
+ *        (UTF-8 with Windows-1252 fallback) so that files containing Windows-1252 high-ASCII
+ *        characters such as the bullet (byte 0x95) import correctly instead of being replaced with
+ *        the Unicode replacement character. Reason: (1) CSV fields with embedded newlines (e.g., a
+ *        details column with bullet-point text) were split into separate rows because
+ *        reader.readLine() returned each physical line independently, breaking the parser for
+ *        RFC-4180 multi-line quoted fields.
  */
 @Service
 public class CsvImportService {
@@ -157,8 +165,12 @@ public class CsvImportService {
         CsvImportResult result = new CsvImportResult();
         AtomicInteger skippedDuplicates = new AtomicInteger(0);
 
+        byte[] fileBytes = file.getInputStream().readAllBytes();
+        Charset charset = detectCharset(fileBytes);
+        logger.debug("Detected charset for {} import: {}", entityName, charset.name());
+
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(new ByteArrayInputStream(fileBytes), charset))) {
 
             String csvRecord;
             int recordNumber = 0;
@@ -330,6 +342,27 @@ public class CsvImportService {
         }
 
         return dropdownValue;
+    }
+
+    /**
+     * Detects whether the given bytes are valid UTF-8. If not, falls back to Windows-1252, which
+     * covers legacy high-ASCII characters such as the bullet character (byte 0x95 / decimal 149)
+     * produced by applications like Microsoft Excel or Word.
+     *
+     * @param bytes raw file bytes
+     * @return UTF-8 if the bytes decode without error, otherwise Windows-1252
+     */
+    private Charset detectCharset(byte[] bytes) {
+        CharsetDecoder utf8Decoder =
+                StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try {
+            utf8Decoder.decode(ByteBuffer.wrap(bytes));
+            return StandardCharsets.UTF_8;
+        } catch (Exception e) {
+            logger.debug("File bytes are not valid UTF-8, using Windows-1252: {}", e.getMessage());
+            return Charset.forName("windows-1252");
+        }
     }
 
     /**
