@@ -57,11 +57,12 @@ You **must have a valid email address** configured in your profile to access exp
 
 ### Accessing the Application
 
-Open your web browser and navigate to:
+You can access the application using any of the following URLs. If you bookmark your preferred entry point, you will be taken directly to that page after logging in.
 
-```
-https://taskactivitytracker.com
-```
+| URL | Description |
+|-----|-------------|
+| https://taskactivitytracker.com/ | **Main Application** — Task list, timesheets, and all user-facing features |
+| https://taskactivitytracker.com/app/dashboard | **User Dashboard** — Overview panels and quick-access links |
 
 ---
 

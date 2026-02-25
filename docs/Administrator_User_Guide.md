@@ -52,18 +52,15 @@ This guide is for administrators of the Task Activity Management System. As an a
 
 ## Accessing the Application
 
-Open your web browser and navigate to:
+You can access the application using any of the following URLs. If you bookmark your preferred entry point, you will be taken directly to that page after logging in.
 
-```
-https://taskactivitytracker.com
-```
+| URL | Description |
+|-----|-------------|
+| https://taskactivitytracker.com/ | **Main Application** — Task list, timesheets, expenses, and all user-facing features |
+| https://taskactivitytracker.com/app/dashboard | **User Dashboard** — Overview panels and quick-access links |
+| https://taskactivitytracker.com/dashboard | **Admin Dashboard** — User Management, Role Management, and Dropdown Management |
 
-Log in with your administrator username and password.
-
-The application provides two interfaces that share the same data and authentication:
-
-- **Main Application** — Task list, timesheet, expenses, and all user-facing features
-- **Admin Dashboard** — Advanced administrative functions including User Management, Role Management, and Dropdown Management. Access it via the **🎯 Admin Dashboard** link in the sidebar menu.
+All three interfaces share the same data and authentication session. Log in with your administrator username and password.
 
 ## Navigation
 
