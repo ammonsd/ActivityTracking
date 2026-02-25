@@ -4,8 +4,10 @@
  * Handles billability evaluation, user summary aggregation, date range presets, and pre-report filtering.
  *
  * Modified by: Dean Ammons - July 2025
- * Change: Added filterAnalyticsTasks to exclude GUEST-role users and tasks with inactive clients/projects
- * Reason: GUEST accounts are for demos and should not skew analytics; inactive entries overwhelm Stale Projects
+ * Change: Added filterAnalyticsTasks to exclude GUEST-role users, tasks with inactive clients/projects,
+ *          and tasks whose client, project, or phase is marked "All Access" (allUsers=true)
+ * Reason: GUEST accounts are for demos; inactive entries and All Access items (PTO, Town Meetings, etc.)
+ *          should not skew billability or productivity analytics
  *
  * Author: Dean Ammons
  * Date: February 2026
@@ -62,6 +64,9 @@ function isDropdownBillable(
  * Rules applied:
  *  1. Exclude tasks logged by GUEST-role users (demo accounts; not real work).
  *  2. Exclude tasks whose client OR project is marked inactive in the dropdown table.
+ *  3. Exclude tasks whose client, project, OR phase is marked "All Access" (allUsers=true).
+ *     All Access items (e.g. PTO, Corporate overhead, Town Meetings, Sick Days) represent
+ *     internal/admin overhead that should not appear in billability or productivity reports.
  *
  * Safe defaults:
  *  - If guestUsernames is empty (not yet loaded), no users are excluded.
@@ -73,7 +78,7 @@ export function filterAnalyticsTasks(
     guestUsernames: Set<string>,
     dropdowns: DropdownValue[],
 ): TaskActivity[] {
-    // Build active-name sets from dropdown data
+    // Active-only sets: exclude inactive clients/projects
     const activeClients = new Set(
         dropdowns
             .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.isActive)
@@ -85,12 +90,33 @@ export function filterAnalyticsTasks(
             .map((d) => d.itemValue),
     );
 
+    // All Access sets: exclude overhead/admin items (PTO, Corporate, Town Meetings, etc.)
+    const allAccessClients = new Set(
+        dropdowns
+            .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.allUsers)
+            .map((d) => d.itemValue),
+    );
+    const allAccessProjects = new Set(
+        dropdowns
+            .filter((d) => d.category === "TASK" && d.subcategory === "PROJECT" && d.allUsers)
+            .map((d) => d.itemValue),
+    );
+    const allAccessPhases = new Set(
+        dropdowns
+            .filter((d) => d.category === "TASK" && d.subcategory === "PHASE" && d.allUsers)
+            .map((d) => d.itemValue),
+    );
+
     return tasks.filter(
         (t) =>
             !guestUsernames.has(t.username) &&
             // size === 0 means dropdown data not loaded yet → treat all as active
             (activeClients.size === 0 || activeClients.has(t.client)) &&
-            (activeProjects.size === 0 || activeProjects.has(t.project)),
+            (activeProjects.size === 0 || activeProjects.has(t.project)) &&
+            // Exclude All Access overhead on any dimension
+            !allAccessClients.has(t.client) &&
+            !allAccessProjects.has(t.project) &&
+            !allAccessPhases.has(t.phase),
     );
 }
 
