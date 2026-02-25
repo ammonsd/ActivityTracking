@@ -16,8 +16,11 @@
  *  10. Period Delta          — Comparison of current vs prior period (date range required)
  *
  * Modified by: Dean Ammons - February 2026
- * Change: Added Active Only / Include Inactive scope toggle for users, clients, and projects
- * Reason: Support historical analysis while keeping active-only as the default view
+ * Change: Added Active Only / Include Inactive scope toggle for users, clients, and projects;
+ *          fixed race condition where GUEST users appeared in reports when the users API resolved
+ *          after the dropdowns API (guestUsernames was empty on the first loadReports call)
+ * Reason: Support historical analysis while keeping active-only as the default view;
+ *          GUEST task data must always be excluded from analytics regardless of API response order
  *
  * Author: Dean Ammons
  * Date: February 2026
@@ -334,6 +337,22 @@ export const AdminAnalytics: React.FC = () => {
         loadReports();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showActiveOnly]);
+
+    // Race-condition guard: guestUsernames is populated asynchronously from fetchUsers().
+    // If dropdowns resolve first, the initial loadReports() call runs with an empty guestUsernames
+    // Set which lets GUEST tasks through the filter. Re-run loadReports() once the real set arrives.
+    const guestUsernamesInitRef = useRef(true);
+
+    useEffect(() => {
+        if (guestUsernamesInitRef.current) {
+            // Skip firing on the initial render (guestUsernames is still the empty default Set)
+            guestUsernamesInitRef.current = false;
+            return;
+        }
+        // Users API has returned — re-run with the correct guest exclusion set
+        loadReports();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [guestUsernames]);
 
     /** Recompute stale projects when slider changes (no network request). */
     const handleStaleDaysChange = useCallback(
