@@ -2,8 +2,8 @@
  * Description: Main App component with routing and layout
  *
  * Modified by: Dean Ammons - February 2026
- * Change: Added /notify-users route for Notify Users admin page
- * Reason: Expose Notify Users feature in React Admin Dashboard
+ * Change: Added /admin-analytics route for Analytics & Reports admin page
+ * Reason: Move admin-only User Analysis report from Angular User Dashboard to React Admin Dashboard
  *
  * Author: Dean Ammons
  * Date: January 2026
@@ -20,6 +20,7 @@ import { DropdownManagement } from "./pages/DropdownManagement";
 import { RolesManagement } from "./pages/RolesManagement";
 import { GuestActivity } from "./pages/GuestActivity";
 import { NotifyUsers } from "./pages/NotifyUsers";
+import { AdminAnalytics } from "./pages/AdminAnalytics";
 
 function App() {
     const { checkAuth } = useAuthStore();
@@ -96,6 +97,17 @@ function App() {
                         <ProtectedRoute requiredRole="ADMIN">
                             <MainLayout>
                                 <NotifyUsers />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin-analytics"
+                    element={
+                        <ProtectedRoute requiredRole="ADMIN">
+                            <MainLayout>
+                                <AdminAnalytics />
                             </MainLayout>
                         </ProtectedRoute>
                     }

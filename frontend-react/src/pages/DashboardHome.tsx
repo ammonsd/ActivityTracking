@@ -3,9 +3,8 @@
  * Shows phase status and provides navigation to all features.
  *
  * Modified by: Dean Ammons - February 2026
- * Change: Removed Task Activity Tracker and added Notify Users feature cards
- * Reason: Task Activity Tracker is a sidebar link to the Spring Boot UI, not a dashboard feature.
- *         Notify Users was added as a new admin feature card.
+ * Change: Added Analytics & Reports feature card
+ * Reason: Admin analytics (User Analysis) moved from Angular User Dashboard to React Admin Dashboard
  *
  * Author: Dean Ammons
  * Date: January 2026
@@ -25,6 +24,7 @@ import {
     Security as SecurityIcon,
     Timeline as TimelineIcon,
     Email as EmailIcon,
+    Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
@@ -100,6 +100,16 @@ export const DashboardHome: React.FC = () => {
             comingSoon: FEATURES.notifyUsers.comingSoon,
             enabled: FEATURES.notifyUsers.enabled,
             color: "#00897b",
+        },
+        {
+            title: "Analytics & Reports",
+            description: FEATURES.adminAnalytics.description,
+            icon: <AnalyticsIcon sx={{ fontSize: 48 }} />,
+            route: FEATURES.adminAnalytics.route,
+            requiresAdmin: FEATURES.adminAnalytics.requiresAdmin,
+            comingSoon: FEATURES.adminAnalytics.comingSoon,
+            enabled: FEATURES.adminAnalytics.enabled,
+            color: "#e53935",
         },
     ];
 
