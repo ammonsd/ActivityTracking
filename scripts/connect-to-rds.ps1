@@ -7,27 +7,61 @@
     Can run interactive psql session or execute specific queries.
     Requires Session Manager plugin to be installed.
 
+    By default, connects as the read-only user (taskactivity_readonly) which
+    is restricted to SELECT queries only. Use -Admin to connect as the postgres
+    master user with full read/write access.
+
 .PARAMETER SqlQuery
     SQL query to execute (optional). If omitted, starts interactive session.
 
 .PARAMETER OutputFormat
     Output format: csv, txt, or blank for console output (optional).
 
+.PARAMETER Admin
+    Connect as the postgres master user (full read/write access).
+    Default is the read-only user (SELECT only).
+
+.PARAMETER Password
+    Database password. If omitted, the password is prompted interactively regardless
+    of access mode. Useful for scripted/automated scenarios.
+
 .EXAMPLE
     .\connect-to-rds.ps1
-    Start interactive psql session.
+    Start interactive psql session as read-only user (prompted for password).
 
 .EXAMPLE
-    .\connect-to-rds.ps1 'SELECT * FROM dbo."TaskActivity"'
-    Run specific query to console.
+    .\connect-to-rds.ps1 -Password 'mypassword'
+    Start interactive psql session as read-only user (password supplied, no prompt).
 
 .EXAMPLE
-    .\connect-to-rds.ps1 'SELECT * FROM dbo."TaskActivity"' 'csv'
+    .\connect-to-rds.ps1 -Admin
+    Start interactive psql session as postgres master user (prompted for password).
+
+.EXAMPLE
+    .\connect-to-rds.ps1 -Admin -Password 'mypassword'
+    Start interactive psql session as postgres master user (password supplied, no prompt).
+
+.EXAMPLE
+    .\connect-to-rds.ps1 'SELECT * FROM public.users'
+    Run specific SELECT query as read-only user.
+
+.EXAMPLE
+    .\connect-to-rds.ps1 'SELECT * FROM public.users' 'csv'
     Run query and output as CSV.
+
+.EXAMPLE
+    .\connect-to-rds.ps1 -Admin 'UPDATE public.users SET enabled=true WHERE id=5'
+    Run an update as the admin (postgres) user.
 
 .NOTES
     Author: Dean Ammons
     Date: December 2025
+    Modified by: Dean Ammons - February 2026
+    Change: Added -Admin switch; default session uses read-only credentials
+    Reason: Non-admin users should be restricted to SELECT only at the database level
+    Modified by: Dean Ammons - February 2026
+    Change: No passwords stored in script; both modes prompt or accept -Password
+    Reason: Hardcoded credentials in source are a security risk regardless of access level
     Requires: Session Manager plugin
 #>
 
@@ -36,12 +70,46 @@ param(
     [string]$SqlQuery = "",
 
     [Parameter(Mandatory=$false)]
-    [string]$OutputFormat = ""
+    [string]$OutputFormat = "",
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Admin,
+
+    [Parameter(Mandatory=$false)]
+    [string]$Password = ""
 )
 
 
 if ($OutputFormat -ne 'csv' -and $OutputFormat -ne 'txt') {
     $OutputFormat = ''
+}
+
+# Resolve password — accept via -Password or prompt interactively
+if (-not [string]::IsNullOrEmpty($Password)) {
+    $DbPassword = $Password
+} else {
+    Write-Host ""
+    $promptUser = if ($Admin) { 'postgres (admin)' } else { 'taskactivity_readonly' }
+    Write-Host "Enter password for $promptUser" -ForegroundColor Yellow
+    $SecurePassword = Read-Host -Prompt 'Password' -AsSecureString
+    $DbPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+        [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
+    )
+    if ([string]::IsNullOrEmpty($DbPassword)) {
+        Write-Host 'ERROR: Password cannot be empty.' -ForegroundColor Red
+        exit 1
+    }
+}
+
+# Set credentials based on access mode
+if ($Admin) {
+    $DbUser      = 'postgres'
+    $AccessMode  = 'ADMIN (full read/write)'
+    $AccessColor = 'Red'
+} else {
+    $DbUser      = 'taskactivity_readonly'
+    $AccessMode  = 'READ-ONLY (SELECT only)'
+    $AccessColor = 'Green'
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -102,8 +170,8 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Host:     taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com" -ForegroundColor White
 Write-Host "Port:     5432" -ForegroundColor White
 Write-Host "Database: AmmoP1DB" -ForegroundColor White
-Write-Host "Username: postgres" -ForegroundColor White
-Write-Host "Password: TaskActivity2025!SecureDB" -ForegroundColor Yellow
+Write-Host "Username: $DbUser" -ForegroundColor White
+Write-Host "Access:   $AccessMode" -ForegroundColor $AccessColor
 Write-Host ""
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -147,29 +215,50 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
     # No SQL query provided - show interactive instructions
     Write-Host "Once connected, run this command to access the database:" -ForegroundColor Green
     Write-Host ""
-    Write-Host "PGPASSWORD='TaskActivity2025!SecureDB' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U postgres -d AmmoP1DB" -ForegroundColor White
+    Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB" -ForegroundColor White
     Write-Host ""
+    if (-not $Admin) {
+        Write-Host "Note: Connected as read-only user. Only SELECT queries are permitted." -ForegroundColor Yellow
+        Write-Host "      Use -Admin switch for write access." -ForegroundColor Yellow
+        Write-Host ""
+    }
     Write-Host "Common PostgreSQL commands:" -ForegroundColor Yellow
     Write-Host "  \dt          - List all tables" -ForegroundColor Gray
-    Write-Host "  \d tasks     - Describe tasks table" -ForegroundColor Gray
-    Write-Host "  SELECT * FROM tasks LIMIT 10;  - Query data" -ForegroundColor Gray
+    Write-Host "  \d tablename - Describe a table" -ForegroundColor Gray
+    Write-Host "  SELECT * FROM public.users LIMIT 10;  - Query data" -ForegroundColor Gray
     Write-Host "  \q           - Exit psql" -ForegroundColor Gray
 } else {
     # SQL query provided - show command with query
     # Escape double quotes for bash
     $escapedQuery = $SqlQuery -replace '"', '\"'
-    
+
+    # Guard: warn if a non-admin session is attempting a write operation
+    if (-not $Admin) {
+        $writeKeywords = @('INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE', 'GRANT', 'REVOKE')
+        $upperQuery = $SqlQuery.ToUpper().Trim()
+        foreach ($kw in $writeKeywords) {
+            if ($upperQuery.StartsWith($kw)) {
+                Write-Host "" 
+                Write-Host "WARNING: Query appears to be a write operation ($kw) but you are connected" -ForegroundColor Red
+                Write-Host "         as the read-only user. PostgreSQL will reject it." -ForegroundColor Red
+                Write-Host "         Re-run with -Admin if you intended a write operation." -ForegroundColor Red
+                Write-Host ""
+                break
+            }
+        }
+    }
+
     Write-Host "Once connected, run this command to execute your query:" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Copy/Past to opt# prompt" -ForegroundColor Yellow
+    Write-Host "Copy/Paste to opt# prompt" -ForegroundColor Yellow
     if ($OutputFormat -eq '') {
-    	Write-Host "PGPASSWORD='TaskActivity2025!SecureDB' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U postgres -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
+        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
     }
     if ($OutputFormat -eq 'txt') {
-    	Write-Host "PGPASSWORD='TaskActivity2025!SecureDB' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U postgres -d AmmoP1DB -c `"$escapedQuery`" > /tmp/results.txt"'; cat /tmp/results.txt' -ForegroundColor White
+        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`" > /tmp/results.txt"'; cat /tmp/results.txt' -ForegroundColor White
     }
     if ($OutputFormat -eq 'csv') {
-  	  Write-Host "PGPASSWORD='TaskActivity2025!SecureDB' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U postgres -d AmmoP1DB -c `"\copy ($escapedQuery) TO '/tmp/results.csv' CSV HEADER`""'; cat /tmp/results.csv' -ForegroundColor Cyan
+        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"\copy ($escapedQuery) TO '/tmp/results.csv' CSV HEADER`""'; cat /tmp/results.csv' -ForegroundColor Cyan
     }
     Write-Host ""
 }

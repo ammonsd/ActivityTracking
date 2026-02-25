@@ -35,14 +35,15 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [Account Lockout Policy](#account-lockout-policy)
    - [Session Security](#session-security)
 10. [Database Query Tool (SQL to CSV Export)](#database-query-tool-sql-to-csv-export)
-11. [Email Configuration Management](#email-configuration-management)
+11. [Direct Database Access (RDS via ECS)](#direct-database-access-rds-via-ecs)
+12. [Email Configuration Management](#email-configuration-management)
     - [Email Notification Types](#email-notification-types)
     - [Email Configuration Variables](#email-configuration-variables)
     - [Method 1: PowerShell Script](#method-1-update-via-powershell-script-recommended)
     - [Method 2: AWS Console](#method-2-update-via-aws-console)
     - [Testing Email Configuration](#testing-email-configuration)
     - [Troubleshooting Email Issues](#troubleshooting-email-issues)
-12. [System Monitoring and Health Checks](#system-monitoring-and-health-checks)
+13. [System Monitoring and Health Checks](#system-monitoring-and-health-checks)
     - [Health Check Endpoints](#health-check-endpoints)
     - [AWS CloudWatch Monitoring](#aws-cloudwatch-monitoring)
     - [Common Monitoring Tasks](#common-monitoring-tasks)
@@ -2062,6 +2063,78 @@ Test-Path .\.env
 # Local: http://localhost:8080 → local database
 # AWS: https://taskactivitytracker.com → RDS database
 ```
+
+---
+
+## Direct Database Access (RDS via ECS)
+
+The `scripts/connect-to-rds.ps1` script provides interactive or scripted `psql` access directly to the RDS PostgreSQL instance via AWS ECS `execute-command` (SSM). It supports two access modes controlled by a single switch.
+
+### Access Modes
+
+| Mode | Switch | Database User | Permissions |
+|------|--------|---------------|-------------|
+| Read-only (default) | *(none)* | `taskactivity_readonly` | SELECT only — enforced at PostgreSQL engine level |
+| Admin | `-Admin` | `postgres` | Full read/write access |
+
+The access level is enforced in the PostgreSQL engine itself — even if a write statement is typed manually in a read-only session, the database will reject it.
+
+### Usage
+
+```powershell
+# Interactive read-only session
+.\scripts\connect-to-rds.ps1
+
+# Interactive admin session (full read/write)
+.\scripts\connect-to-rds.ps1 -Admin
+
+# Run a specific SELECT query (read-only)
+.\scripts\connect-to-rds.ps1 'SELECT * FROM users'
+
+# Export query results as CSV (read-only)
+.\scripts\connect-to-rds.ps1 'SELECT id, username FROM users' csv
+
+# Run a write query as admin
+.\scripts\connect-to-rds.ps1 -Admin 'UPDATE users SET active = true WHERE id = 5'
+```
+
+### Prerequisites
+
+- AWS CLI installed and configured with a profile that has ECS `execute-command` permissions
+- ECS task running with SSM agent enabled (standard for this deployment)
+- `psql` client available inside the ECS container (pre-installed in the application image)
+
+### Connection Indicators
+
+The script displays a colored access-mode header before opening the session:
+
+- **Green** — Read-only mode (`taskactivity_readonly`)
+- **Red** — Admin mode (`postgres` master user)
+
+If a write keyword (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`) is detected in the `SqlQuery` parameter during a non-admin session, the script prints a warning before proceeding. The PostgreSQL engine will still reject the statement.
+
+### One-Time Setup (per RDS instance)
+
+The `taskactivity_readonly` role must be created once on the RDS instance. Use `sql/create-readonly-user.sql` with an admin session:
+
+```powershell
+# Step 1 — Connect as admin and run the setup script
+.\scripts\connect-to-rds.ps1 -Admin
+
+# Inside the psql session, run:
+\i /path/to/create-readonly-user.sql
+# or paste the contents of sql/create-readonly-user.sql directly
+```
+
+The script grants `SELECT` on all current tables and applies `ALTER DEFAULT PRIVILEGES` so future tables are automatically covered.
+
+**Tables covered (as of initial setup):**
+`dropdownvalues`, `expenses`, `password_history`, `permissions`, `revoked_tokens`, `role_permissions`, `roles`, `taskactivity`, `user_dropdown_access`, `users`
+
+### Security Notes
+
+- **No passwords are stored in the script.** Both read-only and admin modes require the password to be supplied via `-Password` or entered interactively at the prompt.
+- For audit purposes, all queries executed through ECS execute-command are logged in AWS CloudTrail.
 
 ---
 
