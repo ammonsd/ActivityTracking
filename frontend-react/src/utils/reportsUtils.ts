@@ -4,10 +4,10 @@
  * Handles billability evaluation, user summary aggregation, date range presets, and pre-report filtering.
  *
  * Modified by: Dean Ammons - July 2025
- * Change: Added filterAnalyticsTasks to exclude GUEST-role users, tasks with inactive clients/projects,
- *          and tasks whose client, project, or phase is marked "All Access" (allUsers=true)
- * Reason: GUEST accounts are for demos; inactive entries and All Access items (PTO, Town Meetings, etc.)
- *          should not skew billability or productivity analytics
+ * Change: Added filterAnalyticsTasks with showActiveOnly toggle to control inclusion of inactive
+ *          users, clients, and projects; GUEST and All Access exclusions are always applied
+ * Reason: GUEST and All Access items are never meaningful in analytics; inactive visibility
+ *          is user-controlled so historical reports remain accessible
  *
  * Author: Dean Ammons
  * Date: February 2026
@@ -61,36 +61,27 @@ function isDropdownBillable(
 /**
  * Filters a raw task list before it reaches any analytics compute function.
  *
- * Rules applied:
- *  1. Exclude tasks logged by GUEST-role users (demo accounts; not real work).
- *  2. Exclude tasks whose client OR project is marked inactive in the dropdown table.
- *  3. Exclude tasks whose client, project, OR phase is marked "All Access" (allUsers=true).
- *     All Access items (e.g. PTO, Corporate overhead, Town Meetings, Sick Days) represent
- *     internal/admin overhead that should not appear in billability or productivity reports.
+ * Always excluded (regardless of showActiveOnly):
+ *  - Tasks logged by GUEST-role users (demo accounts; not real work)
+ *  - Tasks whose client, project, or phase is marked "All Access" (allUsers=true),
+ *    e.g. PTO, Corporate overhead, Town Meetings, Sick Days
+ *
+ * Excluded only when showActiveOnly is true:
+ *  - Tasks from disabled (inactive) user accounts
+ *  - Tasks whose client or project is marked inactive in the dropdown table
  *
  * Safe defaults:
- *  - If guestUsernames is empty (not yet loaded), no users are excluded.
- *  - If dropdowns contain no CLIENT/PROJECT entries, no tasks are excluded on that axis.
- *    This prevents a blank dashboard when dropdown data is slow to arrive.
+ *  - If any Set is empty (data not yet loaded), that filter dimension is skipped.
+ *    This prevents a blank dashboard when data is slow to arrive.
  */
 export function filterAnalyticsTasks(
     tasks: TaskActivity[],
     guestUsernames: Set<string>,
+    inactiveUsernames: Set<string>,
     dropdowns: DropdownValue[],
+    showActiveOnly: boolean,
 ): TaskActivity[] {
-    // Active-only sets: exclude inactive clients/projects
-    const activeClients = new Set(
-        dropdowns
-            .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.isActive)
-            .map((d) => d.itemValue),
-    );
-    const activeProjects = new Set(
-        dropdowns
-            .filter((d) => d.category === "TASK" && d.subcategory === "PROJECT" && d.isActive)
-            .map((d) => d.itemValue),
-    );
-
-    // All Access sets: exclude overhead/admin items (PTO, Corporate, Town Meetings, etc.)
+    // All Access sets: always excluded — overhead/admin items are never meaningful in reports
     const allAccessClients = new Set(
         dropdowns
             .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.allUsers)
@@ -107,16 +98,55 @@ export function filterAnalyticsTasks(
             .map((d) => d.itemValue),
     );
 
+    // Active-only sets: used when showActiveOnly is true
+    const activeClients = showActiveOnly
+        ? new Set(
+              dropdowns
+                  .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.isActive)
+                  .map((d) => d.itemValue),
+          )
+        : null;
+    const activeProjects = showActiveOnly
+        ? new Set(
+              dropdowns
+                  .filter((d) => d.category === "TASK" && d.subcategory === "PROJECT" && d.isActive)
+                  .map((d) => d.itemValue),
+          )
+        : null;
+
     return tasks.filter(
         (t) =>
+            // Always: exclude GUEST accounts
             !guestUsernames.has(t.username) &&
-            // size === 0 means dropdown data not loaded yet → treat all as active
-            (activeClients.size === 0 || activeClients.has(t.client)) &&
-            (activeProjects.size === 0 || activeProjects.has(t.project)) &&
-            // Exclude All Access overhead on any dimension
+            // Always: exclude All Access overhead
             !allAccessClients.has(t.client) &&
             !allAccessProjects.has(t.project) &&
-            !allAccessPhases.has(t.phase),
+            !allAccessPhases.has(t.phase) &&
+            // Active-only scope: exclude disabled users and inactive clients/projects
+            (!showActiveOnly ||
+                (!inactiveUsernames.has(t.username) &&
+                    // size === 0 means dropdown data not loaded yet → treat all as active
+                    (activeClients!.size === 0 || activeClients!.has(t.client)) &&
+                    (activeProjects!.size === 0 || activeProjects!.has(t.project)))),
+    );
+}
+
+/**
+ * Narrows an already-scope-filtered task list to a specific set of users, clients, and/or projects.
+ * Empty array for any dimension means "no restriction on that dimension" (show all).
+ * Called client-side with no network access — used by the filter dropdowns on the analytics page.
+ */
+export function applySelectionFilter(
+    tasks: TaskActivity[],
+    users: string[],
+    clients: string[],
+    projects: string[],
+): TaskActivity[] {
+    return tasks.filter(
+        (t) =>
+            (users.length === 0 || users.includes(t.username)) &&
+            (clients.length === 0 || clients.includes(t.client)) &&
+            (projects.length === 0 || projects.includes(t.project)),
     );
 }
 

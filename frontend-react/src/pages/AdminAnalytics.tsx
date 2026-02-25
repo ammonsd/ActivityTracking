@@ -15,9 +15,9 @@
  *   9. Task Repetition      — Most frequently recurring task IDs
  *  10. Period Delta          — Comparison of current vs prior period (date range required)
  *
- * Modified by: Dean Ammons - July 2025
- * Change: Exclude GUEST-role users and inactive clients/projects from all analytics reports
- * Reason: GUEST accounts are for demos; inactive entries overwhelm the Stale Projects tab
+ * Modified by: Dean Ammons - February 2026
+ * Change: Added Active Only / Include Inactive scope toggle for users, clients, and projects
+ * Reason: Support historical analysis while keeping active-only as the default view
  *
  * Author: Dean Ammons
  * Date: February 2026
@@ -35,6 +35,7 @@ import PieChartIcon from "@mui/icons-material/PieChart";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import Autocomplete from "@mui/material/Autocomplete";
 import {
     Alert,
     Box,
@@ -49,7 +50,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { reportsApi } from "../api/reports.api";
 import { userManagementApi } from "../api/userManagement.api";
 import { HoursByUserChart } from "../components/adminAnalytics/HoursByUserChart";
@@ -79,6 +80,7 @@ import type {
 } from "../types/reports.types";
 import {
     DATE_RANGE_PRESETS,
+    applySelectionFilter,
     computeClientBillability,
     computeClientTimeline,
     computeDayOfWeekHours,
@@ -176,8 +178,22 @@ export const AdminAnalytics: React.FC = () => {
 
     // Support data
     const [dropdowns, setDropdowns] = useState<DropdownValue[]>([]);
-    // GUEST usernames fetched once on mount — tasks from these users are excluded from all reports
+    // GUEST usernames — always excluded from analytics (demo accounts)
     const [guestUsernames, setGuestUsernames] = useState<Set<string>>(new Set());
+    // Inactive (disabled) user accounts — excluded when showActiveOnly is true
+    const [inactiveUsernames, setInactiveUsernames] = useState<Set<string>>(new Set());
+    // When true, reports show active users/clients/projects only; false reveals historical/inactive data
+    const [showActiveOnly, setShowActiveOnly] = useState(true);
+    // Explicit multiselect filters — empty array means "all" for that dimension
+    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [selectedClients, setSelectedClients] = useState<string[]>([]);
+    const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+    // Scope-filtered prior period tasks stored so selection changes can recompute delta without re-fetching
+    const [rawPriorPeriod, setRawPriorPeriod] = useState<{
+        tasks: TaskActivity[];
+        currentLabel: string;
+        priorLabel: string;
+    } | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastLoaded, setLastLoaded] = useState<string | null>(null);
@@ -194,14 +210,63 @@ export const AdminAnalytics: React.FC = () => {
                 );
             });
 
-        // Fetch GUEST-role usernames so they can be excluded from all analytics reports
+        // Fetch all users to build GUEST exclusion and inactive-user sets for analytics filtering
         userManagementApi
-            .fetchUsers({ role: "GUEST" })
-            .then((users) => setGuestUsernames(new Set(users.map((u) => u.username))))
+            .fetchUsers()
+            .then((users) => {
+                setGuestUsernames(new Set(users.filter((u) => u.role === "GUEST").map((u) => u.username)));
+                setInactiveUsernames(new Set(users.filter((u) => !u.enabled).map((u) => u.username)));
+            })
             .catch(() => {
-                console.error("Could not load GUEST users for analytics filtering.");
+                console.error("Could not load users for analytics filtering.");
             });
     }, []);
+
+    // Derive filter options from scope-filtered rawTasks — only shows values present in the current data
+    const userOptions = useMemo(() => [...new Set(rawTasks.map((t) => t.username))].sort(), [rawTasks]);
+    const clientOptions = useMemo(() => [...new Set(rawTasks.map((t) => t.client))].sort(), [rawTasks]);
+    const projectOptions = useMemo(() => [...new Set(rawTasks.map((t) => t.project))].sort(), [rawTasks]);
+
+    // Compute all 10 derived report states from pre-filtered tasks — no network access
+    const recomputeAll = useCallback(
+        (
+            scopedTasks: TaskActivity[],
+            priorData: { tasks: TaskActivity[]; currentLabel: string; priorLabel: string } | null,
+            staleDaysOverride?: number,
+        ) => {
+            const days = staleDaysOverride ?? staleDays;
+            setUserSummaries(computeUserSummaries(scopedTasks, dropdowns));
+            setUserHours(computeUserHours(scopedTasks, dropdowns));
+            setPhaseDistribution(computePhaseDistribution(scopedTasks));
+            setStaleProjects(computeStaleProjects(scopedTasks, days));
+            setClientBillability(computeClientBillability(scopedTasks, dropdowns));
+            setClientTimeline(computeClientTimeline(scopedTasks));
+            setDayOfWeekHours(computeDayOfWeekHours(scopedTasks, startDate || undefined, endDate || undefined));
+            setTrackingCompliance(computeTrackingCompliance(scopedTasks, startDate, endDate));
+            setTaskRepetition(computeTaskRepetition(scopedTasks));
+            if (priorData) {
+                setPeriodDelta(computePeriodDelta(scopedTasks, priorData.tasks, priorData.currentLabel, priorData.priorLabel));
+            } else {
+                setPeriodDelta(null);
+            }
+        },
+        [dropdowns, staleDays, startDate, endDate],
+    );
+
+    // Recompute all reports when selection filters change — no re-fetch
+    const handleSelectionChange = useCallback(
+        (users: string[], clients: string[], projects: string[]) => {
+            setSelectedUsers(users);
+            setSelectedClients(clients);
+            setSelectedProjects(projects);
+            const scopedTasks = applySelectionFilter(rawTasks, users, clients, projects);
+            const priorData = rawPriorPeriod
+                ? { ...rawPriorPeriod, tasks: applySelectionFilter(rawPriorPeriod.tasks, users, clients, projects) }
+                : null;
+            recomputeAll(scopedTasks, priorData);
+        },
+        [rawTasks, rawPriorPeriod, recomputeAll],
+    );
 
     const loadReports = useCallback(async () => {
         setLoading(true);
@@ -212,52 +277,29 @@ export const AdminAnalytics: React.FC = () => {
                 endDate || undefined,
             );
 
-            // Exclude GUEST-role users and tasks with inactive clients/projects
-            const tasks = filterAnalyticsTasks(rawFetchedTasks, guestUsernames, dropdowns);
-
-            // Cache filtered tasks so stale threshold slider can recompute without re-fetching
+            // Scope filter: always removes GUEST + All Access; removes inactive when showActiveOnly
+            const tasks = filterAnalyticsTasks(rawFetchedTasks, guestUsernames, inactiveUsernames, dropdowns, showActiveOnly);
             setRawTasks(tasks);
 
-            // Original two reports
-            setUserSummaries(computeUserSummaries(tasks, dropdowns));
-            setUserHours(computeUserHours(tasks, dropdowns));
-
-            // New reports
-            setPhaseDistribution(computePhaseDistribution(tasks));
-            setStaleProjects(computeStaleProjects(tasks, staleDays));
-            setClientBillability(computeClientBillability(tasks, dropdowns));
-            setClientTimeline(computeClientTimeline(tasks));
-            setDayOfWeekHours(
-                computeDayOfWeekHours(
-                    tasks,
-                    startDate || undefined,
-                    endDate || undefined,
-                ),
-            );
-            setTrackingCompliance(
-                computeTrackingCompliance(tasks, startDate, endDate),
-            );
-            setTaskRepetition(computeTaskRepetition(tasks));
-
-            // Period Delta — requires prior period fetch; apply same filters to prior period
+            // Fetch and scope-filter prior period tasks for Period Delta
             const prior = getPriorPeriodDates(startDate, endDate);
+            let priorData: { tasks: TaskActivity[]; currentLabel: string; priorLabel: string } | null = null;
             if (prior) {
-                const rawPriorTasks = await reportsApi.fetchTaskActivities(
-                    prior.priorStart,
-                    prior.priorEnd,
-                );
-                const priorTasks = filterAnalyticsTasks(rawPriorTasks, guestUsernames, dropdowns);
-                setPeriodDelta(
-                    computePeriodDelta(
-                        tasks,
-                        priorTasks,
-                        prior.currentLabel,
-                        prior.label,
-                    ),
-                );
-            } else {
-                setPeriodDelta(null);
+                const rawPriorFetchedTasks = await reportsApi.fetchTaskActivities(prior.priorStart, prior.priorEnd);
+                priorData = {
+                    tasks: filterAnalyticsTasks(rawPriorFetchedTasks, guestUsernames, inactiveUsernames, dropdowns, showActiveOnly),
+                    currentLabel: prior.currentLabel,
+                    priorLabel: prior.label,
+                };
             }
+            setRawPriorPeriod(priorData);
+
+            // Apply current selection filter then compute all 10 reports
+            const scopedTasks = applySelectionFilter(tasks, selectedUsers, selectedClients, selectedProjects);
+            const scopedPriorData = priorData
+                ? { ...priorData, tasks: applySelectionFilter(priorData.tasks, selectedUsers, selectedClients, selectedProjects) }
+                : null;
+            recomputeAll(scopedTasks, scopedPriorData);
 
             setLastLoaded(new Date().toLocaleTimeString());
         } catch (err) {
@@ -266,7 +308,7 @@ export const AdminAnalytics: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [startDate, endDate, dropdowns, guestUsernames, staleDays]);
+    }, [startDate, endDate, dropdowns, guestUsernames, inactiveUsernames, showActiveOnly, selectedUsers, selectedClients, selectedProjects, recomputeAll]);
 
     // Auto-load when dropdowns are ready (or on initial mount with empty dropdowns)
     useEffect(() => {
@@ -280,13 +322,27 @@ export const AdminAnalytics: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [startDate, endDate]);
 
+    // Skip triggering an extra load on the initial mount (already handled by the dropdowns effect)
+    const showActiveOnlyInitRef = useRef(true);
+
+    // Re-run when the Active Only / Include Inactive scope toggle changes
+    useEffect(() => {
+        if (showActiveOnlyInitRef.current) {
+            showActiveOnlyInitRef.current = false;
+            return;
+        }
+        loadReports();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showActiveOnly]);
+
     /** Recompute stale projects when slider changes (no network request). */
     const handleStaleDaysChange = useCallback(
         (days: number) => {
             setStaleDays(days);
-            setStaleProjects(computeStaleProjects(rawTasks, days));
+            const scopedTasks = applySelectionFilter(rawTasks, selectedUsers, selectedClients, selectedProjects);
+            setStaleProjects(computeStaleProjects(scopedTasks, days));
         },
-        [rawTasks],
+        [rawTasks, selectedUsers, selectedClients, selectedProjects],
     );
 
     const handlePresetClick = (preset: DateRangePreset) => {
@@ -428,6 +484,91 @@ export const AdminAnalytics: React.FC = () => {
                         Clear
                     </Button>
                 </Box>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* Active Only / Include Inactive scope toggle */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                        Scope:
+                    </Typography>
+                    <ButtonGroup variant="outlined" size="small">
+                        <Button
+                            onClick={() => setShowActiveOnly(true)}
+                            variant={showActiveOnly ? "contained" : "outlined"}
+                        >
+                            Active Only
+                        </Button>
+                        <Button
+                            onClick={() => setShowActiveOnly(false)}
+                            variant={showActiveOnly ? "outlined" : "contained"}
+                        >
+                            Include Inactive
+                        </Button>
+                    </ButtonGroup>
+                    <Typography variant="caption" color="text.secondary">
+                        {showActiveOnly
+                            ? "Users, clients & projects: active only"
+                            : "Users, clients & projects: all (including inactive)"}
+                    </Typography>
+                </Box>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* User / Client / Project multiselect filters */}
+                <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
+                    Filters
+                </Typography>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    <Autocomplete
+                        multiple
+                        limitTags={2}
+                        options={userOptions}
+                        value={selectedUsers}
+                        onChange={(_, v) => handleSelectionChange(v, selectedClients, selectedProjects)}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Users" size="small" placeholder="All users" />
+                        )}
+                        sx={{ minWidth: 220, flex: 1 }}
+                        size="small"
+                    />
+                    <Autocomplete
+                        multiple
+                        limitTags={2}
+                        options={clientOptions}
+                        value={selectedClients}
+                        onChange={(_, v) => handleSelectionChange(selectedUsers, v, selectedProjects)}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Clients" size="small" placeholder="All clients" />
+                        )}
+                        sx={{ minWidth: 220, flex: 1 }}
+                        size="small"
+                    />
+                    <Autocomplete
+                        multiple
+                        limitTags={2}
+                        options={projectOptions}
+                        value={selectedProjects}
+                        onChange={(_, v) => handleSelectionChange(selectedUsers, selectedClients, v)}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Projects" size="small" placeholder="All projects" />
+                        )}
+                        sx={{ minWidth: 220, flex: 1 }}
+                        size="small"
+                    />
+                </Box>
+                {(selectedUsers.length > 0 || selectedClients.length > 0 || selectedProjects.length > 0) && (
+                    <Box sx={{ mt: 1 }}>
+                        <Button
+                            size="small"
+                            variant="text"
+                            color="inherit"
+                            onClick={() => handleSelectionChange([], [], [])}
+                        >
+                            Clear filters
+                        </Button>
+                    </Box>
+                )}
             </Paper>
 
             {/* Error state */}
