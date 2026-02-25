@@ -115,7 +115,7 @@ The Admin Dashboard provides the following management modules:
   - **User Dropdown Access Management**: Assign which Clients and Projects each user sees in their task and expense dropdowns (independently controlled per tab)
 - **Roles Management**: View, create, edit, and delete roles. Assign permissions to roles using an organized permission tree.
 - **Dropdown Management**: Manage all dropdown values (clients, projects, phases, expense types, payment methods) from a single screen. Add, edit, deactivate, or delete values.
-- **Analytics & Reports**: View comprehensive team performance analytics across 10 report tabs. Covers user performance rankings, billable vs. non-billable hours, project phase distribution, stale project detection, client billability, client timeline heatmap, day-of-week patterns, tracking compliance, task repetition, and period-over-period delta comparisons.
+- **Analytics & Reports**: View comprehensive team performance analytics across 10 report tabs. Covers user performance rankings, billable vs. non-billable hours, project phase distribution, stale project detection, client billability, client timeline heatmap, day-of-week patterns, tracking compliance, task repetition, and period-over-period delta comparisons. Includes a Scope toggle (Active Only / Include Inactive) and multiselect filters for Users, Clients, and Projects.
 - **Guest Activity Report**: View login history and metrics for guest accounts.
 - **System Settings**: Coming soon.
 
@@ -1318,9 +1318,13 @@ As an ADMIN user, you have access to comprehensive team analytics through the **
 **Via Dashboard Home:**
 - Click the red **Analytics & Reports** card on the Dashboard Home page
 
-### Date Range Filters
+### Report Controls
 
-All reports are scoped by the selected date range. Controls appear at the top of the page:
+All report controls appear in a single panel at the top of the page. Changes to date range, scope, or filters reload all 10 tabs simultaneously.
+
+#### Date Range
+
+All reports are scoped by the selected date range.
 
 **Preset Buttons:**
 - **Current Week** — Monday through today
@@ -1336,6 +1340,36 @@ All reports are scoped by the selected date range. Controls appear at the top of
 - Click **Clear** to reset to All Time
 
 > **Note:** Tabs 8 (Tracking Compliance) and 10 (Period Delta) require a specific date range to be selected. They display an informational message when All Time is active.
+
+#### Scope
+
+Controls whether reports include only active records or all records (including inactive ones). The toggle contains two buttons:
+
+| Button | Behaviour |
+|--------|-----------|
+| **Active Only** *(default)* | Reports include only enabled user accounts, active clients, and active projects |
+| **Include Inactive** | Reports include all historical data — disabled accounts, inactive clients, and inactive projects are shown |
+
+Use **Include Inactive** when you need to analyse historical work logged against clients or projects that have since been deactivated, or to view output from employees who have left.
+
+> **Always excluded regardless of scope:** GUEST demo accounts and any clients, projects, or phases marked "All Access" (e.g. PTO, Corporate overhead, Town Meetings, Sick Days) are never included in analytics reports.
+
+#### Filters
+
+Three multiselect dropdowns let you narrow all 10 reports to a specific subset of the loaded data without re-fetching:
+
+| Filter | Description |
+|--------|-------------|
+| **Users** | Restrict reports to one or more specific team members |
+| **Clients** | Restrict reports to one or more specific clients |
+| **Projects** | Restrict reports to one or more specific projects |
+
+- Each dropdown lists only values present in the currently loaded data set (respects the selected date range and scope)
+- Selecting nothing in a dropdown means "all" for that dimension
+- Multiple selections within a dropdown are combined with OR logic (e.g. selecting two users shows both)
+- Filters across dropdowns are combined with AND logic (e.g. User A AND Client X)
+- A **Clear filters** link appears below the dropdowns when any filter is active; click it to reset all three to "all" at once
+- Filter changes recompute all tabs instantly — no server round-trip
 
 ### Summary Statistics Bar
 
@@ -1542,6 +1576,8 @@ Users can filter their own weekly views by billability status:
 - **Review weekly**: Open Analytics & Reports at least once per week to stay informed about team activity
 - **Use presets for speed**: The "Current Week" and "This Month" presets load the most common views instantly
 - **Tune the stale threshold**: Set the Stale Projects slider to match your project cadence (e.g., 30 days for active sprints, 90 days for long-running engagements)
+- **Use Scope for historical analysis**: Switch to **Include Inactive** when you need to review work logged against deactivated clients, projects, or former employees
+- **Use Filters to focus**: Select one or more Users, Clients, or Projects to zero in on a specific area without changing the date range — all 10 tabs update instantly
 - **Combine tabs**: Use Tab 8 (Compliance) to find who isn't logging, then Tab 1 (User Summary) to assess the business impact
 - **Privacy considerations**: Use data responsibly and communicate analytics practices to team members
 - **Data-driven decisions**: Base resource allocation on actual hours worked, not estimates
