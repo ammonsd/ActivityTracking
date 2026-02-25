@@ -115,6 +115,7 @@ The Admin Dashboard provides the following management modules:
   - **User Dropdown Access Management**: Assign which Clients and Projects each user sees in their task and expense dropdowns (independently controlled per tab)
 - **Roles Management**: View, create, edit, and delete roles. Assign permissions to roles using an organized permission tree.
 - **Dropdown Management**: Manage all dropdown values (clients, projects, phases, expense types, payment methods) from a single screen. Add, edit, deactivate, or delete values.
+- **Analytics & Reports**: View comprehensive team performance analytics across 10 report tabs. Covers user performance rankings, billable vs. non-billable hours, project phase distribution, stale project detection, client billability, client timeline heatmap, day-of-week patterns, tracking compliance, task repetition, and period-over-period delta comparisons.
 - **Guest Activity Report**: View login history and metrics for guest accounts.
 - **System Settings**: Coming soon.
 
@@ -1306,34 +1307,193 @@ Since the login audit data is stored in-memory and resets when the application r
 
 ## User Analytics & Performance Monitoring
 
-As an ADMIN user, you have access to comprehensive user analytics through the **Reports** section's **User Analysis** tab.
+As an ADMIN user, you have access to comprehensive team analytics through the **Analytics & Reports** page in the **React Admin Dashboard**. This page provides 10 report tabs covering user performance, project health, client analysis, and time-tracking patterns.
 
-### Accessing User Analytics
+### Accessing Analytics & Reports
 
-1. Navigate to **Reports** from the main menu
-2. Click the **User Analysis** tab (only visible to ADMIN users)
-3. View team performance metrics and user comparisons
+**Via Sidebar:**
+1. Navigate to the React Admin Dashboard (`https://taskactivitytracker.com/dashboard`)
+2. Click **Analytics & Reports** in the left sidebar (chart icon, red)
 
-### User Performance Summary Table
+**Via Dashboard Home:**
+- Click the red **Analytics & Reports** card on the Dashboard Home page
 
-The User Performance Summary displays a comprehensive view of all users' activities:
+### Date Range Filters
 
-**Columns Displayed:**
-- **Rank**: Position based on total hours worked
-  - 🏆 Gold trophy for #1 performer
-  - 🥈 Silver medal for #2 performer
-  - 🥉 Bronze medal for #3 performer
-- **Username**: User's login identifier
-- **Total Hours**: Cumulative hours worked in the selected period
-- **Billable**: Hours worked on billable client projects (determined by dropdown flags)
-- **Non-Billable**: Hours logged to tasks with non-billable components (overhead, meetings, training, admin)
-- **Tasks**: Number of task activities submitted
-- **Avg Billable/Day**: Average billable hours per day (calculated only from days with billable work)
-- **Top Client**: Client with most hours for this user (excludes non-billable clients)
-- **Top Project**: Project with most hours for this user (excludes non-billable projects)
-- **Last Activity**: Date of most recent task submission
+All reports are scoped by the selected date range. Controls appear at the top of the page:
 
-**Billable vs. Non-Billable Tracking:**
+**Preset Buttons:**
+- **Current Week** — Monday through today
+- **This Month** — 1st of the current month through today
+- **Last Month** — full prior calendar month
+- **Last 3 Months** — rolling 90-day window
+- **This Year** — January 1st through today
+- **All Time** — entire database history (default)
+
+**Custom Range:**
+- Enter a start date and/or end date in the date fields
+- Click **Apply** to load data for that range
+- Click **Clear** to reset to All Time
+
+> **Note:** Tabs 8 (Tracking Compliance) and 10 (Period Delta) require a specific date range to be selected. They display an informational message when All Time is active.
+
+### Summary Statistics Bar
+
+After data loads, a statistics bar appears below the filters showing team-wide totals for the selected period:
+
+| Stat | Description |
+|------|-------------|
+| **Active Users** | Number of distinct users with recorded tasks |
+| **Total Hours** | Sum of all hours across all users |
+| **Total Billable** | Hours from fully-billable tasks (client + project + phase all billable) |
+| **Total Non-Billable** | Hours from any task with a non-billable component |
+| **Overall Billability %** | Billable ÷ Total Hours × 100 |
+
+### Report Tabs
+
+The page has 10 tabs displayed in a horizontally scrollable strip. Select any tab to view that report.
+
+---
+
+#### Tab 1: User Summary
+
+A ranked table showing all users' performance for the selected period.
+
+**Columns:**
+- **Rank** — Position by total hours (🏆 #1, 🥈 #2, 🥉 #3)
+- **Username** — User's login identifier
+- **Total Hours** — Cumulative hours in the period
+- **Billable** — Hours on fully-billable tasks
+- **Non-Billable** — Hours with any non-billable component
+- **Billability %** — Colored progress bar (green = high, amber = medium, red = low)
+- **Tasks** — Count of task activities submitted
+- **Avg Billable/Day** — Average billable hours per working day (only days with billable work counted)
+- **Top Client** — Client with the most hours (non-billable clients excluded)
+- **Top Project** — Project with the most hours (non-billable projects excluded)
+- **Last Activity** — Date of most recent task submission
+
+Click any column header to sort the table.
+
+---
+
+#### Tab 2: Hours by User
+
+A horizontal bar chart comparing total hours across team members.
+
+- **Segmented bars**: Green = billable hours, Orange = non-billable hours
+- **Percentage labels**: Each user's share of total team hours
+- **Sorted by total hours**: Highest contributor shown first
+- **Detail table**: Below the chart, exact hour values per user
+
+---
+
+#### Tab 3: Phase Distribution
+
+Breaks down hours logged per **project**, further subdivided by **project phase**.
+
+- Projects are ranked by total hours (highest first)
+- Each row shows the project name, total hours, and a set of colored phase chips
+- Each chip displays the phase name and its percentage of that project's hours
+- Useful for understanding where effort is concentrated within a project lifecycle
+
+---
+
+#### Tab 4: Stale Projects
+
+Identifies projects that have had no task activity since a configurable threshold.
+
+**Staleness Slider:**
+- Drag the slider to set the inactivity threshold (range: 7 to 180 days)
+- The table recomputes instantly without re-fetching data from the server
+- Default threshold: 90 days
+
+**Columns:**
+- **Project** — Project name
+- **Last Activity** — Date of most recent task logged to this project
+- **Days Since Activity** — Calendar days since last task
+- **Staleness** — Color-coded chip: 🟢 Active (under threshold), 🟡 Stale (1–2× threshold), 🔴 Very Stale (>2× threshold)
+
+Use this tab to identify projects that may need to be closed or followed up on.
+
+---
+
+#### Tab 5: Client Billability
+
+Compares billable vs. non-billable hours at the **client** level.
+
+- Each row represents one client
+- Colored progress bars show the billable percentage visually
+- Sorted by total hours (highest first)
+- Useful for understanding which clients drive the most billable revenue
+
+---
+
+#### Tab 6: Client Timeline
+
+A **monthly heatmap matrix** showing hours logged per client, broken down by calendar month.
+
+- **Rows**: Clients (sorted by total hours)
+- **Columns**: Calendar months within the selected date range
+- **Cell color intensity**: Darker blue = more hours in that month/client combination
+- **Sticky client column**: Client names stay visible when scrolling horizontally
+- Useful for spotting seasonal patterns and identifying client activity gaps
+
+---
+
+#### Tab 7: Day of Week
+
+Shows total and average hours broken down by day of the week (Monday through Sunday).
+
+- **Bar chart**: Horizontal bars for each weekday
+  - Blue bars: Monday–Friday (working days)
+  - Grey bars: Saturday–Sunday (weekend)
+- **Detail table**: Below the chart — total hours and average hours per occurrence for each day
+- Useful for identifying whether the team works predominantly on certain days or logs weekend hours
+
+---
+
+#### Tab 8: Tracking Compliance *(requires date range)*
+
+Measures how consistently each user logs time on **weekdays** (Monday–Friday) within the selected period.
+
+- **Compliance %**: Days with at least one task ÷ total weekdays in range × 100
+- **Sorted worst-first**: Users with lowest compliance appear at the top
+- Color-coded: Green = high compliance, Amber = moderate, Red = low
+
+> This tab requires a specific date range (not All Time). Select a preset or custom range to activate it.
+
+Use this tab to identify team members who may be forgetting to log their time.
+
+---
+
+#### Tab 9: Task Repetition
+
+Identifies the most frequently recurring task entries across the entire team.
+
+- Displays the **top 50 task IDs** by total occurrence count
+- Task IDs appear in monospace font for readability
+- Cross-user view: counts occurrences regardless of which user logged the task
+- Useful for identifying standard recurring tasks that might benefit from templates or automation
+
+---
+
+#### Tab 10: Period Delta *(requires date range)*
+
+Compares the **current selected period** against the **prior period** of identical duration.
+
+- **Prior period**: Automatically computed as the same number of days immediately before the selected start date (no manual input required)
+- **Two sub-tabs**: By User | By Client
+- **Columns**: Current Hours, Prior Hours, Change (hours), Change %
+- **Trend icons**: ▲ green (increase), ▼ red (decrease), — (no change)
+- Sorted by current-period hours descending
+
+> This tab requires a specific date range (not All Time). Select a preset or custom range to activate it.
+
+Use this tab to compare team or client output across consecutive periods (e.g., this month vs. last month).
+
+---
+
+### Billable vs. Non-Billable Tracking
 
 The system uses a flexible flag-based approach to distinguish billable from non-billable hours:
 
@@ -1346,66 +1506,53 @@ The system uses a flexible flag-based approach to distinguish billable from non-
 - **Top Client/Project**: These fields exclude non-billable clients and projects to show actual client work
 - **Configuration**: Administrators set billability flags when creating or editing dropdown values
 
-**Filtering by Billability:**
+**Filtering by Billability (weekly timesheet/expense sheet):**
 
-Users can filter their weekly timesheets and expense sheets by billability status:
+Users can filter their own weekly views by billability status:
 - **All**: Shows all tasks/expenses (default view)
 - **Billable**: Shows only entries where all components are billable
 - **Non-Billable**: Shows entries with any non-billable component
 
-**Features:**
-- Sortable columns: Click any column header to sort
-- Real-time data: Based on current database records
-- Trophy rankings: Visual recognition for top performers
-- Quick identification of active vs. inactive users
-
-### Hours by User Chart
-
-A bar chart visualization comparing total hours across all team members:
-
-- **Color-coded bars**: Each user has a distinct color
-- **Percentage labels**: Shows each user's share of total team hours
-- **Interactive tooltips**: Hover for exact hours and percentage
-- **Sorted by hours**: Bars ordered from highest to lowest
-
-### Using User Analytics for Management
+### Using Analytics for Management
 
 **Performance Reviews:**
-- Identify top performers with trophy rankings
-- Review average hours per day to assess workload
-- Check last activity date to identify inactive accounts
+- Use Tab 1 (User Summary) for trophy rankings and average hours per day
+- Check Last Activity date to identify inactive accounts
+- Use Tab 10 (Period Delta) to compare individual user output period-over-period
 
 **Resource Allocation:**
-- See which users are working on which clients/projects
-- Identify users with capacity for additional work
-- Ensure balanced workload distribution across the team
+- Tab 5 (Client Billability) shows which clients drive the most billable work
+- Tab 6 (Client Timeline) reveals seasonal patterns and client engagement gaps
+- Tab 3 (Phase Distribution) shows where effort is concentrated within projects
+
+**Project Health:**
+- Tab 4 (Stale Projects) flags projects with no recent activity — adjust the slider for your team's expected cadence
+- Tab 9 (Task Repetition) identifies recurring tasks that may benefit from streamlining
+
+**Team Behaviour Patterns:**
+- Tab 7 (Day of Week) shows whether weekend work is occurring
+- Tab 8 (Tracking Compliance) identifies users who are not logging time consistently
 
 **Client Management:**
-- Understand which team members are most familiar with specific clients
-- Plan resource allocation for client projects
-- Identify expertise distribution across the team
-
-**Activity Monitoring:**
-- Track team activity levels over time
-- Identify users who may need support or have capacity issues
-- Monitor engagement with the time tracking system
+- Tab 5 and Tab 6 together give a full picture of client activity over time
+- Tab 10 (Period Delta by Client) highlights which clients saw increased or decreased activity
 
 ### Best Practices
 
-- **Review weekly**: Check User Analysis tab at least once per week to stay informed about team activities
-- **Set expectations**: Use metrics to establish clear performance expectations
-- **Recognize achievement**: Use trophy rankings to acknowledge top performers
-- **Identify trends**: Look for patterns in activity levels and time distribution
-- **Data-driven decisions**: Base resource allocation on actual hours worked, not estimates
+- **Review weekly**: Open Analytics & Reports at least once per week to stay informed about team activity
+- **Use presets for speed**: The "Current Week" and "This Month" presets load the most common views instantly
+- **Tune the stale threshold**: Set the Stale Projects slider to match your project cadence (e.g., 30 days for active sprints, 90 days for long-running engagements)
+- **Combine tabs**: Use Tab 8 (Compliance) to find who isn't logging, then Tab 1 (User Summary) to assess the business impact
 - **Privacy considerations**: Use data responsibly and communicate analytics practices to team members
+- **Data-driven decisions**: Base resource allocation on actual hours worked, not estimates
 
 ### Important Notes
 
-- Only ADMIN users can access User Analysis features
-- All data respects user privacy and is for management purposes only
-- Charts reflect all task activities in the database across all users
-- Regular users can only see their own data in other report tabs
-- Data updates in real-time as users submit new tasks
+- Only ADMIN users can access the Analytics & Reports page
+- All data is computed client-side from task records — no separate analytics database required
+- Tabs 8 (Tracking Compliance) and 10 (Period Delta) require a date range to be selected; they display an informational message when All Time is active
+- The Stale Projects slider (Tab 4) recalculates the table instantly without a server round-trip
+- Data reflects all task activities in the database matching the selected date range across all users
 
 ---
 
@@ -2322,7 +2469,7 @@ aws cloudwatch put-metric-alarm \
 ### Application Performance Monitoring
 
 **Monitor Active Sessions:**
-- Check **User Analytics** dashboard (Admin only)
+- Check **Analytics & Reports** in the React Admin Dashboard (Admin only)
 - View concurrent user activity
 - Track login/logout patterns
 
