@@ -15,6 +15,10 @@
  *   9. Task Repetition      — Most frequently recurring task IDs
  *  10. Period Delta          — Comparison of current vs prior period (date range required)
  *
+ * Modified by: Dean Ammons - July 2025
+ * Change: Exclude GUEST-role users and inactive clients/projects from all analytics reports
+ * Reason: GUEST accounts are for demos; inactive entries overwhelm the Stale Projects tab
+ *
  * Author: Dean Ammons
  * Date: February 2026
  */
@@ -47,6 +51,7 @@ import {
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { reportsApi } from "../api/reports.api";
+import { userManagementApi } from "../api/userManagement.api";
 import { HoursByUserChart } from "../components/adminAnalytics/HoursByUserChart";
 import { UserSummaryTable } from "../components/adminAnalytics/UserSummaryTable";
 import ClientBillabilityTable from "../components/adminAnalytics/ClientBillabilityTable";
@@ -84,6 +89,7 @@ import {
     computeTrackingCompliance,
     computeUserHours,
     computeUserSummaries,
+    filterAnalyticsTasks,
     getDateRangeForPreset,
 } from "../utils/reportsUtils";
 
@@ -170,11 +176,13 @@ export const AdminAnalytics: React.FC = () => {
 
     // Support data
     const [dropdowns, setDropdowns] = useState<DropdownValue[]>([]);
+    // GUEST usernames fetched once on mount — tasks from these users are excluded from all reports
+    const [guestUsernames, setGuestUsernames] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastLoaded, setLastLoaded] = useState<string | null>(null);
 
-    // Load dropdowns once on mount (needed for billability evaluation)
+    // Load dropdowns and GUEST usernames once on mount
     useEffect(() => {
         reportsApi
             .fetchDropdownValues()
@@ -185,18 +193,29 @@ export const AdminAnalytics: React.FC = () => {
                     "Could not load dropdown values for billability checks.",
                 );
             });
+
+        // Fetch GUEST-role usernames so they can be excluded from all analytics reports
+        userManagementApi
+            .fetchUsers({ role: "GUEST" })
+            .then((users) => setGuestUsernames(new Set(users.map((u) => u.username))))
+            .catch(() => {
+                console.error("Could not load GUEST users for analytics filtering.");
+            });
     }, []);
 
     const loadReports = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const tasks = await reportsApi.fetchTaskActivities(
+            const rawFetchedTasks = await reportsApi.fetchTaskActivities(
                 startDate || undefined,
                 endDate || undefined,
             );
 
-            // Cache raw tasks so stale threshold slider can recompute without re-fetching
+            // Exclude GUEST-role users and tasks with inactive clients/projects
+            const tasks = filterAnalyticsTasks(rawFetchedTasks, guestUsernames, dropdowns);
+
+            // Cache filtered tasks so stale threshold slider can recompute without re-fetching
             setRawTasks(tasks);
 
             // Original two reports
@@ -220,13 +239,14 @@ export const AdminAnalytics: React.FC = () => {
             );
             setTaskRepetition(computeTaskRepetition(tasks));
 
-            // Period Delta — requires prior period fetch
+            // Period Delta — requires prior period fetch; apply same filters to prior period
             const prior = getPriorPeriodDates(startDate, endDate);
             if (prior) {
-                const priorTasks = await reportsApi.fetchTaskActivities(
+                const rawPriorTasks = await reportsApi.fetchTaskActivities(
                     prior.priorStart,
                     prior.priorEnd,
                 );
+                const priorTasks = filterAnalyticsTasks(rawPriorTasks, guestUsernames, dropdowns);
                 setPeriodDelta(
                     computePeriodDelta(
                         tasks,
@@ -246,7 +266,7 @@ export const AdminAnalytics: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [startDate, endDate, dropdowns, staleDays]);
+    }, [startDate, endDate, dropdowns, guestUsernames, staleDays]);
 
     // Auto-load when dropdowns are ready (or on initial mount with empty dropdowns)
     useEffect(() => {

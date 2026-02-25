@@ -1,7 +1,11 @@
 /**
  * Description: Utility functions for Admin Analytics & Reports computations.
  * Mirrors the Angular ReportsService calculation logic in pure TypeScript for the React admin dashboard.
- * Handles billability evaluation, user summary aggregation, and date range presets.
+ * Handles billability evaluation, user summary aggregation, date range presets, and pre-report filtering.
+ *
+ * Modified by: Dean Ammons - July 2025
+ * Change: Added filterAnalyticsTasks to exclude GUEST-role users and tasks with inactive clients/projects
+ * Reason: GUEST accounts are for demos and should not skew analytics; inactive entries overwhelm Stale Projects
  *
  * Author: Dean Ammons
  * Date: February 2026
@@ -46,6 +50,48 @@ function isDropdownBillable(
             d.itemValue === value,
     );
     return !(match?.nonBillable ?? false);
+}
+
+// ============================================================
+// PRE-REPORT FILTERING
+// ============================================================
+
+/**
+ * Filters a raw task list before it reaches any analytics compute function.
+ *
+ * Rules applied:
+ *  1. Exclude tasks logged by GUEST-role users (demo accounts; not real work).
+ *  2. Exclude tasks whose client OR project is marked inactive in the dropdown table.
+ *
+ * Safe defaults:
+ *  - If guestUsernames is empty (not yet loaded), no users are excluded.
+ *  - If dropdowns contain no CLIENT/PROJECT entries, no tasks are excluded on that axis.
+ *    This prevents a blank dashboard when dropdown data is slow to arrive.
+ */
+export function filterAnalyticsTasks(
+    tasks: TaskActivity[],
+    guestUsernames: Set<string>,
+    dropdowns: DropdownValue[],
+): TaskActivity[] {
+    // Build active-name sets from dropdown data
+    const activeClients = new Set(
+        dropdowns
+            .filter((d) => d.category === "TASK" && d.subcategory === "CLIENT" && d.isActive)
+            .map((d) => d.itemValue),
+    );
+    const activeProjects = new Set(
+        dropdowns
+            .filter((d) => d.category === "TASK" && d.subcategory === "PROJECT" && d.isActive)
+            .map((d) => d.itemValue),
+    );
+
+    return tasks.filter(
+        (t) =>
+            !guestUsernames.has(t.username) &&
+            // size === 0 means dropdown data not loaded yet → treat all as active
+            (activeClients.size === 0 || activeClients.has(t.client)) &&
+            (activeProjects.size === 0 || activeProjects.has(t.project)),
+    );
 }
 
 /**
