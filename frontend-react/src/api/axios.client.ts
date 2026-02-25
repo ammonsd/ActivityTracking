@@ -23,10 +23,10 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Unauthorized - redirect to login using relative path
-            // This works in all environments (dev with proxy, production)
+            // Unauthorized - redirect to login, passing the intended path so the
+            // backend can redirect the user back after successful authentication.
             window.location.href =
-                "/login?returnUrl=" +
+                "/login?redirect=" +
                 encodeURIComponent(
                     window.location.pathname + window.location.search,
                 );

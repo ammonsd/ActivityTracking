@@ -41,8 +41,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (!isAuthenticated) {
-        // Redirect to Spring Boot login - use relative URL to work in local and AWS
-        window.location.href = "/login";
+        // Redirect to Spring Boot login, passing the intended path so the backend
+        // can redirect the user back here after successful authentication.
+        const redirectPath =
+            globalThis.location.pathname + globalThis.location.search;
+        globalThis.location.href = `/login?redirect=${encodeURIComponent(redirectPath)}`;
         return null;
     }
 

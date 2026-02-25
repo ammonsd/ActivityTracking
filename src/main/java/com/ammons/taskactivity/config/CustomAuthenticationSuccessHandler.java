@@ -12,9 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 /**
@@ -22,14 +27,24 @@ import java.util.Optional;
  * updates for new or admin-created users.
  *
  * <p>
- * Post-login redirect is determined by the user's permissions:
+ * Post-login redirect priority (first match wins):
  * <ol>
- * <li>If user has {@code TASK_ACTIVITY:READ} → redirect to {@code /task-activity/list}</li>
- * <li>Else if user has {@code EXPENSE:READ} → redirect to {@code /expenses}</li>
- * <li>Otherwise → redirect to the React dashboard</li>
+ * <li>Force-password-update or expired-password → change-password page</li>
+ * <li>Session attribute {@code POST_LOGIN_REDIRECT} (set by LoginController when React redirects to
+ * login with a {@code ?redirect=} param, e.g. on 401 session expiry) → that path</li>
+ * <li>Spring Security {@code SavedRequest} for a {@code /dashboard} path (set when Spring Security
+ * itself intercepted a direct browser navigation to the React app) → that path</li>
+ * <li>Permission-based default: {@code TASK_ACTIVITY:READ} → {@code /task-activity/list},
+ * {@code EXPENSE:READ} → {@code /expenses}, otherwise → React dashboard</li>
  * </ol>
- * This avoids hardcoding role names and ensures any custom role gets the right landing page
- * automatically.
+ * The full saved-request mechanism (all paths) is intentionally NOT re-enabled to avoid redirecting
+ * users to admin pages they previously visited, which would cause Access Denied.
+ *
+ * Modified by: Dean Ammons - February 2026 Change: Added RequestCache check for /dashboard saved
+ * requests to fix direct-URL navigation Reason: When an unauthenticated user navigates directly to
+ * /dashboard, Spring Security intercepts the request and saves it in HttpSessionRequestCache before
+ * the React app loads — so the React ProtectedRoute never runs and POST_LOGIN_REDIRECT is never
+ * set.
  *
  * Modified by: Dean Ammons - February 2026 Change: Replaced saved-request / role-based redirect
  * with permission-based redirect Reason: Saved-request caused Access Denied when a user previously
@@ -46,6 +61,11 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
     private static final String FORCE_PASSWORD_UPDATE_URL = "/change-password?forced=true";
     private static final String PASSWORD_EXPIRED_URL = "/change-password?expired=true";
+
+    // RequestCache gives us access to the URL Spring Security saved before redirecting the
+    // unauthenticated user to /login (populated by ExceptionTranslationFilter on direct
+    // navigation).
+    private final RequestCache requestCache = new HttpSessionRequestCache();
 
     private final String reactDashboardUrl;
     private final UserRepository userRepository;
@@ -177,6 +197,45 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 }
             }
 
+            // --- Priority 2: React-initiated redirect (session expiry detected via 401) ---
+            // When the React SPA detects a 401 on an API call, it redirects to
+            // /login?redirect=<path>. LoginController validates and stores that path in the
+            // session.
+            // We read only the server-side session value (never the raw query param) to prevent
+            // open-redirect attacks.
+            jakarta.servlet.http.HttpSession session = request.getSession(false);
+            if (session != null) {
+                String savedRedirect = (String) session.getAttribute(
+                        com.ammons.taskactivity.controller.LoginController.POST_LOGIN_REDIRECT_ATTR);
+                if (savedRedirect != null && !savedRedirect.isBlank()) {
+                    session.removeAttribute(
+                            com.ammons.taskactivity.controller.LoginController.POST_LOGIN_REDIRECT_ATTR);
+                    log.info("User '{}' has a POST_LOGIN_REDIRECT to '{}', honouring it", username,
+                            savedRedirect);
+                    getRedirectStrategy().sendRedirect(request, response, savedRedirect);
+                    return;
+                }
+            }
+
+            // --- Priority 3: Spring Security SavedRequest for SPA paths ---
+            // When an unauthenticated user navigates directly to /dashboard (React) or /app
+            // (Angular), Spring Security's ExceptionTranslationFilter stores the request in
+            // HttpSessionRequestCache and redirects to /login — before any frontend JS loads.
+            // We only honour saved requests starting with /dashboard or /app to avoid restoring
+            // navigation to task or admin pages that could cause Access Denied.
+            SavedRequest savedRequest = requestCache.getRequest(request, response);
+            if (savedRequest != null) {
+                String savedPath = extractSavedSpaPath(savedRequest.getRedirectUrl());
+                if (savedPath != null) {
+                    requestCache.removeRequest(request, response);
+                    log.info("User '{}' has a Spring Security saved request to '{}', honouring it",
+                            username, savedPath);
+                    getRedirectStrategy().sendRedirect(request, response, savedPath);
+                    return;
+                }
+            }
+
+            // --- Priority 4: Permission-based default redirect ---
             // Redirect based on the user's permissions, not their role name.
             // This works for any custom role without requiring code changes.
             String targetUrl;
@@ -204,17 +263,43 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     }
 
     /**
+     * Extracts the path from a saved redirect URL if it is a frontend SPA path that should be
+     * honoured after login. Accepted prefixes:
+     * <ul>
+     * <li>{@code /dashboard} — React admin dashboard</li>
+     * <li>{@code /app} — Angular application</li>
+     * </ul>
+     * Returns {@code null} for any other path (e.g. task-activity, admin, API) so that the caller
+     * falls through to permission-based routing, avoiding Access Denied errors.
+     *
+     * @param redirectUrl the full URL stored by Spring Security's RequestCache
+     * @return the path portion if it is a recognised SPA prefix, otherwise {@code null}
+     */
+    private String extractSavedSpaPath(String redirectUrl) {
+        try {
+            String path = new URI(redirectUrl).getPath();
+            if (path != null && (path.startsWith("/dashboard") || path.startsWith("/app"))) {
+                return path;
+            }
+            return null;
+        } catch (URISyntaxException e) {
+            log.debug("Could not parse saved request URL: {}", redirectUrl);
+            return null;
+        }
+    }
+
+    /**
      * Extracts the client's IP address from the HTTP request.
-     * 
+     *
      * <p>
      * SECURITY: Uses CloudFlare's CF-Connecting-IP header which cannot be spoofed by clients.
      * CloudFlare sets this header with the actual client IP address. Falls back to getRemoteAddr()
      * if not behind CloudFlare.
-     * 
+     *
      * <p>
      * X-Forwarded-For and other proxy headers are NOT trusted as they can be easily spoofed by
      * attackers to bypass rate limiting and security controls.
-     * 
+     *
      * @param request the HTTP request
      * @return the client's IP address, or "unknown" if not determinable
      */
