@@ -85,16 +85,5 @@
       </ng-template>
     </mat-tab>
 
-    <!-- User Analysis Tab (ADMIN only) -->
-    <mat-tab label="User Analysis" *ngIf="isAdmin">
-      <ng-template matTabContent>
-        <div class="tab-content">
-          <div class="report-grid-vertical">
-            <app-user-summary [startDate]="startDate" [endDate]="endDate"></app-user-summary>
-            <app-hours-by-user [startDate]="startDate" [endDate]="endDate"></app-hours-by-user>
-          </div>
-        </div>
-      </ng-template>
-    </mat-tab>
   </mat-tab-group>
 </div>

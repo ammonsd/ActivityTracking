@@ -3,8 +3,8 @@
  * Controls which features are enabled vs. mocked with "Coming Soon" dialogs.
  *
  * Modified by: Dean Ammons - February 2026
- * Change: Added notifyUsers feature entry
- * Reason: Add Notify Users to React Admin Dashboard navigation
+ * Change: Added adminAnalytics feature entry for Analytics & Reports page
+ * Reason: Move admin-only User Analysis report from Angular User Dashboard to React Admin Dashboard
  *
  * Author: Dean Ammons
  * Date: January 2026
@@ -60,5 +60,13 @@ export const FEATURES: FeaturesConfiguration = {
         description: "Send profile notification emails to users",
         icon: "Email",
         route: "/notify-users",
+    },
+    adminAnalytics: {
+        enabled: true,
+        comingSoon: false,
+        requiresAdmin: true,
+        description: "User activity analysis, billability reports, and hours breakdown",
+        icon: "Analytics",
+        route: "/admin-analytics",
     },
 };

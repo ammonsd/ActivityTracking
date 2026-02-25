@@ -3,8 +3,8 @@
  * Shows all features with appropriate enabled/disabled states based on user role.
  *
  * Modified by: Dean Ammons - February 2026
- * Change: Added "Notify Users" menu item
- * Reason: Expose Notify Users admin feature in React Admin Dashboard navigation
+ * Change: Added "Analytics & Reports" menu item
+ * Reason: Admin analytics moved from Angular User Dashboard to React Admin Dashboard
  *
  * Author: Dean Ammons
  * Date: January 2026
@@ -32,6 +32,7 @@ import {
     Home as HomeIcon,
     Dashboard as DashboardIcon,
     Email as EmailIcon,
+    Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
@@ -106,6 +107,14 @@ export const Sidebar: React.FC = () => {
             requiresAdmin: FEATURES.notifyUsers.requiresAdmin,
             comingSoon: FEATURES.notifyUsers.comingSoon,
             enabled: FEATURES.notifyUsers.enabled,
+        },
+        {
+            name: "Analytics & Reports",
+            icon: <AnalyticsIcon />,
+            route: FEATURES.adminAnalytics.route,
+            requiresAdmin: FEATURES.adminAnalytics.requiresAdmin,
+            comingSoon: FEATURES.adminAnalytics.comingSoon,
+            enabled: FEATURES.adminAnalytics.enabled,
         },
         {
             name: "User Dashboard",

@@ -158,6 +158,7 @@ export class ReportsService {
   ): Observable<TaskActivity[]> {
     // Use getAllTasks which respects role-based filtering on the backend
     // Pass large page size to get all matching records
+    // Signature: getAllTasks(page, size, client, project, phase, taskId, startDate, endDate)
     return this.taskActivityService
       .getAllTasks(
         0,
@@ -165,6 +166,7 @@ export class ReportsService {
         undefined,
         undefined,
         undefined,
+        undefined, // taskId — must be explicitly skipped so startDate/endDate land on the correct slots
         startDate,
         endDate,
       )

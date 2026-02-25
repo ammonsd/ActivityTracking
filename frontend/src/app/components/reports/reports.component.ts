@@ -1,5 +1,11 @@
 /**
- * Description: Reports component - displays various analytics and reports for task activities
+ * Description: Reports component - displays various analytics and reports for task activities.
+ * Note: The admin-only "User Analysis" report has been moved to the React Admin Dashboard
+ * (Analytics & Reports page) to keep all admin-facing features in one place.
+ *
+ * Modified by: Dean Ammons - February 2026
+ * Change: Removed User Analysis tab (moved to React Admin Dashboard)
+ * Reason: Admin should not need to flip between dashboards for admin-specific functionality
  *
  * Author: Dean Ammons
  * Date: November 2025
@@ -24,9 +30,6 @@ import { PhaseDistributionComponent } from './phase-distribution/phase-distribut
 import { WeeklySummaryComponent } from './weekly-summary/weekly-summary.component';
 import { TopActivitiesComponent } from './top-activities/top-activities.component';
 import { MonthlyComparisonComponent } from './monthly-comparison/monthly-comparison.component';
-import { UserSummaryComponent } from './user-summary/user-summary.component';
-import { HoursByUserComponent } from './hours-by-user/hours-by-user.component';
-import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-reports',
@@ -50,22 +53,17 @@ import { AuthService } from '../../services/auth.service';
     WeeklySummaryComponent,
     TopActivitiesComponent,
     MonthlyComparisonComponent,
-    UserSummaryComponent,
-    HoursByUserComponent,
   ],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',
 })
 export class ReportsComponent implements OnInit {
-  isAdmin = false;
   startDate: Date | null = null;
   endDate: Date | null = null;
 
-  constructor(private readonly authService: AuthService) {}
+  constructor() {}
 
   ngOnInit(): void {
-    const role = this.authService.getCurrentRole();
-    this.isAdmin = role === 'ADMIN';
     this.setDateRange('currentMonth');
   }
 
