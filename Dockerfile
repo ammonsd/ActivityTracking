@@ -4,21 +4,41 @@ FROM maven:3.9.9-eclipse-temurin-21-jammy AS build
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (cached layer)
+# Install Node.js v20 LTS via NodeSource (separate cached layer)
+# Only re-runs when the Node.js version needs to change
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl gnupg && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+        gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | \
+        tee /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy pom.xml and download Maven dependencies (cached layer)
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code AND frontend directories for Angular and React builds
+# Copy npm config and package definition files for Docker layer caching.
+# These layers only rebuild when dependency files change, not on source code changes.
+# This is the key to avoiding re-downloading all npm packages on every build.
+COPY frontend/.npmrc frontend/package.json frontend/package-lock.json frontend/
+COPY frontend-react/.npmrc frontend-react/package.json frontend-react/package-lock.json frontend-react/
+
+# Pre-install npm dependencies using npm ci (Docker layer cached until package.json changes).
+# npm ci is deterministic, lock-file-based, and preferred for CI/CD.
+# When package.json is unchanged, Docker reuses this cached layer - no network required.
+RUN npm ci --prefix frontend
+RUN npm ci --prefix frontend-react
+
+# Copy source code AND frontend directories for Angular and React builds.
+# Docker COPY merges into existing directories, so node_modules installed above are preserved.
 COPY src /app/src
 COPY frontend /app/frontend
 COPY frontend-react /app/frontend-react
 
-# Debug: Show what files are in frontend/dist before Maven runs
-RUN ls -la /app/frontend/dist/app/browser/main-*.js || echo "No main-*.js files found"
-RUN ls -la /app/frontend-react/dist/index.html || echo "No React dist files found"
-
-# Build with frontend (Maven will build both Angular and React)
-# npm network resilience configured in pom.xml frontend-maven-plugin
+# Build with frontend (Maven will build both Angular and React).
+# npm install phases are fast since node_modules were pre-populated above.
 RUN mvn package -DskipTests -B
 
 # Production runtime image - using Eclipse Temurin JRE (more compatible than distroless)
