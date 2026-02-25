@@ -215,7 +215,7 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
     # No SQL query provided - show interactive instructions
     Write-Host "Once connected, run this command to access the database:" -ForegroundColor Green
     Write-Host ""
-    Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB" -ForegroundColor White
+    Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB" -ForegroundColor White
     Write-Host ""
     if (-not $Admin) {
         Write-Host "Note: Connected as read-only user. Only SELECT queries are permitted." -ForegroundColor Yellow
@@ -252,13 +252,13 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
     Write-Host ""
     Write-Host "Copy/Paste to opt# prompt" -ForegroundColor Yellow
     if ($OutputFormat -eq '') {
-        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
+        Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
     }
     if ($OutputFormat -eq 'txt') {
-        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`" > /tmp/results.txt"'; cat /tmp/results.txt' -ForegroundColor White
+        Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`" > /tmp/results.txt"'; cat /tmp/results.txt' -ForegroundColor White
     }
     if ($OutputFormat -eq 'csv') {
-        Write-Host "PGPASSWORD='$DbPassword' psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"\copy ($escapedQuery) TO '/tmp/results.csv' CSV HEADER`""'; cat /tmp/results.csv' -ForegroundColor Cyan
+        Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"\copy ($escapedQuery) TO '/tmp/results.csv' CSV HEADER`""'; cat /tmp/results.csv' -ForegroundColor Cyan
     }
     Write-Host ""
 }
