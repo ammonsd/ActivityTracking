@@ -36,6 +36,7 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [Session Security](#session-security)
 10. [Database Query Tool (SQL to CSV Export)](#database-query-tool-sql-to-csv-export)
 11. [Direct Database Access (RDS via ECS)](#direct-database-access-rds-via-ecs)
+    - [pgAdmin 4 — GUI Client via SSM Tunnel](#pgadmin-4--gui-database-client-via-ssm-tunnel)
 12. [Email Configuration Management](#email-configuration-management)
     - [Email Notification Types](#email-notification-types)
     - [Email Configuration Variables](#email-configuration-variables)
@@ -2135,6 +2136,73 @@ The script grants `SELECT` on all current tables and applies `ALTER DEFAULT PRIV
 
 - **No passwords are stored in the script.** Both read-only and admin modes require the password to be supplied via `-Password` or entered interactively at the prompt.
 - For audit purposes, all queries executed through ECS execute-command are logged in AWS CloudTrail.
+
+---
+
+### pgAdmin 4 — GUI Database Client via SSM Tunnel
+
+For developers who prefer a graphical interface (equivalent to SQL Server Management Studio), `scripts/Start-RdsTunnel.ps1` opens a secure port-forwarding tunnel from your local machine to RDS. pgAdmin 4 then connects to `localhost` as if the database were running locally — no VPN or public RDS exposure required.
+
+#### Prerequisites
+
+- pgAdmin 4 installed — [https://www.pgadmin.org/download/](https://www.pgadmin.org/download/)
+- AWS CLI v2 installed and configured
+- Session Manager plugin installed:
+  `https://s3.amazonaws.com/session-manager-downloads/plugin/latest/windows/SessionManagerPluginSetup.exe`
+- IAM user must have the `SSMSessionAccess` permissions in `TaskActivityDeveloperPolicy`
+  (actions: `ssm:StartSession`, `ssm:TerminateSession`, `ssm:ResumeSession`, `ssm:DescribeSessions`, `ssm:GetConnectionStatus`)
+- ECS service must be running (at least one task in RUNNING state)
+
+#### Step 1 — Start the tunnel
+
+Open a PowerShell window and run:
+
+```powershell
+.\scripts\Start-RdsTunnel.ps1
+```
+
+Keep this window open the entire time you are using pgAdmin. The script outputs the connection details and waits. Press **Ctrl+C** to close the tunnel when done.
+
+Optional parameters:
+
+```powershell
+# Use a different local port if 15432 is already taken
+.\scripts\Start-RdsTunnel.ps1 -LocalPort 5433
+
+# Display postgres master-user details in the on-screen instructions
+.\scripts\Start-RdsTunnel.ps1 -AdminUser
+```
+
+#### Step 2 — Register the server in pgAdmin 4
+
+In pgAdmin: **Object → Register → Server** (or right-click **Servers → Register → Server**)
+
+| Tab | Field | Value |
+|-----|-------|-------|
+| **General** | Name | `AWS RDS TaskActivity (via tunnel)` |
+| **Connection** | Host name/address | `127.0.0.1` |
+| **Connection** | Port | `15432` |
+| **Connection** | Maintenance database | `AmmoP1DB` |
+| **Connection** | Username | `taskactivity_readonly` |
+| **Connection** | Password | *(enter the taskactivity_readonly password)* |
+
+Click **Save**. pgAdmin will connect immediately if the tunnel is running.
+
+> **SSL tab**: Leave at the pgAdmin default (`Prefer`). The tunnel carries the connection securely via SSM — pgAdmin does not need an additional SSL configuration.
+
+#### Access modes
+
+| pgAdmin username | Access | Notes |
+|-----------------|--------|-------|
+| `taskactivity_readonly` | Read-only (SELECT only) | Recommended for ad-hoc queries and reporting |
+| `postgres` | Full read/write | Use only when data modifications are required |
+
+#### Tips
+
+- **Save the server definition once** — pgAdmin remembers it. Future sessions only require starting the tunnel and clicking Connect.
+- **If pgAdmin shows "connection refused"**, the tunnel is not running. Start it with `.\scripts\Start-RdsTunnel.ps1` first.
+- **If the tunnel reports "TargetNotConnected"**, the ECS task has restarted. Close the tunnel window and run the script again to pick up the new task.
+- The tunnel is stateless — it resolves the running ECS task ID fresh each time the script starts.
 
 ---
 

@@ -130,6 +130,22 @@
             "Resource": "arn:aws:ssm:us-east-1:378010131175:parameter/taskactivity/*"
         },
         {
+            "Sid": "SSMSessionAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:StartSession",
+                "ssm:TerminateSession",
+                "ssm:ResumeSession",
+                "ssm:DescribeSessions",
+                "ssm:GetConnectionStatus"
+            ],
+            "Resource": [
+                "arn:aws:ecs:us-east-1:378010131175:task/taskactivity-cluster/*",
+                "arn:aws:ssm:*::document/AWS-StartPortForwardingSessionToRemoteHost",
+                "arn:aws:ssm:us-east-1:378010131175:session/*"
+            ]
+        },
+        {
             "Sid": "Route53Access",
             "Effect": "Allow",
             "Action": [

@@ -104,11 +104,11 @@ if (-not [string]::IsNullOrEmpty($Password)) {
 # Set credentials based on access mode
 if ($Admin) {
     $DbUser      = 'postgres'
-    $AccessMode  = 'ADMIN (full read/write)'
-    $AccessColor = 'Red'
+    $AccessMode  = 'No restrictions (read/write)'
+    $AccessColor = 'Green'
 } else {
     $DbUser      = 'taskactivity_readonly'
-    $AccessMode  = 'READ-ONLY (SELECT only)'
+    $AccessMode  = 'Select only (read-only)'
     $AccessColor = 'Green'
 }
 
@@ -248,9 +248,7 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
         }
     }
 
-    Write-Host "Once connected, run this command to execute your query:" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Copy/Paste to opt# prompt" -ForegroundColor Yellow
+    Write-Host "Copy/Paste the complete PGPASSWORD string into the opt# prompt" -ForegroundColor Yellow
     if ($OutputFormat -eq '') {
         Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
     }
@@ -270,7 +268,7 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
 # Use a startup command that ensures psql is available before dropping into bash
 $startupCommand = "command -v psql > /dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq postgresql-client); exec /bin/bash"
 
-Write-Host "Initiating connection (will auto-install psql if missing)..." -ForegroundColor Yellow
+Write-Host "Initiating connection..." -ForegroundColor Yellow
 aws ecs execute-command `
     --cluster taskactivity-cluster `
     --task $TASK_ID `

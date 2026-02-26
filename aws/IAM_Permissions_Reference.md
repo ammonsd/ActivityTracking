@@ -169,7 +169,30 @@ The complete IAM policy is defined in `taskactivity-developer-policy.json`. This
 
 ---
 
-### 10. **Route53** - DNS Management
+### 10. **SSM Sessions** - Port Forwarding to RDS via ECS
+
+**Used by**: `Start-RdsTunnel.ps1`, `connect-to-rds.ps1`
+
+**Actions**:
+
+-   `ssm:StartSession` - Open an SSM session (required for port-forwarding and ECS Exec)
+-   `ssm:TerminateSession` - Close an active session
+-   `ssm:ResumeSession` - Resume an interrupted session
+-   `ssm:DescribeSessions` - List active sessions (debugging)
+-   `ssm:GetConnectionStatus` - Check whether the SSM agent in the container is ready
+
+**Resources scoped to**:
+-   `arn:aws:ecs:us-east-1:378010131175:task/taskactivity-cluster/*` - ECS tasks used as the relay
+-   `arn:aws:ssm:*::document/AWS-StartPortForwardingSessionToRemoteHost` - AWS-managed port-forward document
+-   `arn:aws:ssm:us-east-1:378010131175:session/*` - Sessions created by this user
+
+**Why needed**: `ssm:StartSession` is required for both `aws ssm start-session` (port forwarding
+used by `Start-RdsTunnel.ps1`) and `aws ecs execute-command` (shell access used by
+`connect-to-rds.ps1`). Without it, both scripts return `AccessDenied`.
+
+---
+
+### 11. **Route53** - DNS Management
 
 **Used by**: Future CloudFront/custom domain setup
 
@@ -184,7 +207,7 @@ The complete IAM policy is defined in `taskactivity-developer-policy.json`. This
 
 ---
 
-### 11. **SES (Simple Email Service)** - Email Notifications ⭐ NEW
+### 12. **SES (Simple Email Service)** - Email Notifications
 
 **Used by**: `configure-ses.ps1`
 
@@ -332,7 +355,7 @@ If you encounter permission errors, check the error message for the specific act
 
 ## Summary
 
-**Total Permissions**: 11 AWS service categories, 70+ individual actions
+**Total Permissions**: 12 AWS service categories, 75+ individual actions
 
 **Critical for deployment**:
 
