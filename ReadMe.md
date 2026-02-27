@@ -269,7 +269,9 @@ Interactive API documentation is available via Swagger UI when enabled:
 - 👨‍💻 [Developer Guide](docs/Developer_Guide.md) - Complete technical reference and development workflow
 - 📖 [User Guide](docs/User_Guide.md) - End-user documentation for daily task tracking and expense management
 - 🔐 [Administrator User Guide](docs/Administrator_User_Guide.md) - Admin features, user management, expense approvals, and 12-Factor App compliance
-- � [CSV Import User Guide](docs/CSV_Import_User_Guide.md) - Bulk data import via CSV files (NEW)
+- 🗄️ [pgAdmin 4 AWS Setup Guide](docs/pgAdmin4_AWS_Setup_Guide.md) - Connect pgAdmin 4 to the AWS RDS database via SSM tunnel (new developer setup)
+- ☁️ [AWS Administrator Guide](aws/AWS_Administrator_Guide.md) - Comprehensive standalone reference for all AWS administration tasks (IAM, RDS, ECS, S3, SES, CloudWatch, costs, troubleshooting)
+- 📥 [CSV Import User Guide](docs/CSV_Import_User_Guide.md) - Bulk data import via CSV files (NEW)
 - 🔒 [Security Measures and Best Practices](docs/Security_Measures_and_Best_Practices.md) - Comprehensive security documentation
 
 ### Docker & Containerization

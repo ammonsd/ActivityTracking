@@ -39,8 +39,8 @@
     Returns: -Password MyPass "SELECT ..." csv
 
 .EXAMPLE
-    .\build_rds_command.ps1 -SqlFile .\update.sql -Password "TaskActivity2025!SecureDB" -Admin
-    Returns: -Admin -Password TaskActivity2025!SecureDB "UPDATE users SET username = '''' WHERE username IS NULL"
+    .\build_rds_command.ps1 -SqlFile .\update.sql -Password "DBUserPassword" -Admin
+    Returns: -Admin -Password DBUserPassword "UPDATE users SET username = '''' WHERE username IS NULL"
 
 .EXAMPLE
     .\build_rds_command.ps1 -SqlFile .\update.sql -DBUser 'jsmith' -Password "MyPass"
