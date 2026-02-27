@@ -20,10 +20,19 @@
     Optional switch. When present, prepends -Admin to the credential portion of the
     returned command string.
 
+.PARAMETER DBUser
+    Optional. The database username to embed in the returned command string.
+    When populated, prepends -DBUser <value> before -Password in the output.
+    Not applicable when -Admin is specified.
+
 .PARAMETER OutputFormat
     Optional. Desired output format for the RDS command. Pass "Text" to use plain-text
     output. Any other value (or omitting the parameter) defaults to "csv". Automatically
     set to empty when DML or DDL keywords are detected in the SQL file.
+
+.EXAMPLE
+    .\build_rds_command.ps1 -SqlFile .\query.sql -DBUser 'jsmith' -Password "MyPass"
+    Returns: -DBUser jsmith -Password MyPass "SELECT ..." csv
 
 .EXAMPLE
     .\build_rds_command.ps1 -SqlFile .\query.sql -Password "MyPass"
@@ -34,7 +43,7 @@
     Returns: -Admin -Password TaskActivity2025!SecureDB "UPDATE users SET username = '''' WHERE username IS NULL"
 
 .EXAMPLE
-    .\build_rds_command.ps1 -SqlFile .\update.sql -Password "MyPass"
+    .\build_rds_command.ps1 -SqlFile .\update.sql -DBUser 'jsmith' -Password "MyPass"
     Returns a single space and writes an error because the SQL contains a write operation but -Admin was not specified.
 
 .NOTES
@@ -53,12 +62,17 @@ param (
     [switch]$Admin,
 
     [Parameter(Mandatory = $false)]
+    [string]$DBUser = "",
+
+    [Parameter(Mandatory = $false)]
     [string]$OutputFormat
 )
 
 # Build the password portion of the command string
 if ($Admin) {
     $PasswordString = "-Admin -Password $Password"
+} elseif (-not [string]::IsNullOrEmpty($DBUser)) {
+    $PasswordString = "-DBUser $DBUser -Password $Password"
 } else {
     $PasswordString = "-Password $Password"
 }
