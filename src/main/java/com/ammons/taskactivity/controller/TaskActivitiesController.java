@@ -3,6 +3,7 @@ package com.ammons.taskactivity.controller;
 import com.ammons.taskactivity.dto.ApiResponse;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.exception.TaskActivityNotFoundException;
 import com.ammons.taskactivity.security.RequirePermission;
 import com.ammons.taskactivity.service.TaskActivityService;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -33,7 +35,10 @@ import java.util.Optional;
 @RequestMapping("/api/task-activities") // Base URL for all endpoints in this controller
 public class TaskActivitiesController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TaskActivitiesController.class);
+        private static final Logger logger =
+                        LoggerFactory.getLogger(TaskActivitiesController.class);
+        private static final String ROLE_ADMIN = "ROLE_ADMIN";
+        private static final String TASK_NOT_FOUND_PREFIX = "Task activity not found with ID: ";
 
     // Constructor injection is preferred for mandatory dependencies over @Autowired
     // because it makes the dependencies explicit.
@@ -86,15 +91,13 @@ public class TaskActivitiesController {
 
         // Check if user has ADMIN role
         boolean isAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                        .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN));
 
         // Create pageable with sorting (newest first)
         Pageable pageable = PageRequest.of(page, size,
                         Sort.by(Sort.Direction.DESC, "taskDate")
                                         .and(Sort.by(Sort.Direction.ASC, "client"))
                                         .and(Sort.by(Sort.Direction.ASC, "project")));
-
-        // Parse dates if provided
         LocalDate start = null;
         LocalDate end = null;
         try {
@@ -152,7 +155,7 @@ public class TaskActivitiesController {
             return ResponseEntity.ok(response);
         } else {
             ApiResponse<TaskActivity> response =
-                    ApiResponse.error("Task activity not found with ID: " + id);
+                            ApiResponse.error(TASK_NOT_FOUND_PREFIX + id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
@@ -168,7 +171,7 @@ public class TaskActivitiesController {
 
             // Security check: verify task belongs to logged-in user before updating (unless admin)
             boolean isUserAdmin = authentication.getAuthorities().stream()
-                            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                            .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN));
 
             if (!isUserAdmin) {
                     String username = authentication.getName();
@@ -177,7 +180,7 @@ public class TaskActivitiesController {
 
                     if (existingTask.isEmpty()) {
                             ApiResponse<TaskActivity> response = ApiResponse
-                                            .error("Task activity not found with ID: " + id);
+                                            .error(TASK_NOT_FOUND_PREFIX + id);
                             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                     }
 
@@ -201,19 +204,33 @@ public class TaskActivitiesController {
 
     /**
      * Delete task activity
+     *
+     * Modified by: Dean Ammons - March 2026 Change: Enforced ownership validation before allowing
+     * task deletion from REST API. Reason: Prevent unauthorized deletion of other users' task
+     * activities.
      */
     @RequirePermission(resource = "TASK_ACTIVITY", action = "DELETE")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteTaskActivity(@PathVariable Long id,
             Authentication authentication) {
 
-        logger.info("Admin {} deleting task activity with ID: {}", authentication.getName(), id);
+            boolean isUserAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(auth -> auth.getAuthority().equals(ROLE_ADMIN));
 
-        taskActivityService.deleteTaskActivity(id);
-
-        ApiResponse<Void> response = ApiResponse.success("Task activity deleted successfully");
-
-        return ResponseEntity.ok(response);
+        try {
+                taskActivityService.deleteTaskActivity(id, authentication.getName(), isUserAdmin);
+            ApiResponse<Void> response = ApiResponse.success("Task activity deleted successfully");
+            return ResponseEntity.ok(response);
+    } catch (AccessDeniedException ex) {
+            logger.warn("User {} attempted to delete task {} without ownership",
+                            authentication.getName(), id);
+            ApiResponse<Void> response =
+                            ApiResponse.error("Access denied: You can only delete your own tasks");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    } catch (TaskActivityNotFoundException ex) {
+            ApiResponse<Void> response = ApiResponse.error(TASK_NOT_FOUND_PREFIX + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
     }
 
     /**

@@ -5,6 +5,7 @@ import com.ammons.taskactivity.dto.LoginResponse;
 import com.ammons.taskactivity.dto.RefreshTokenRequest;
 import com.ammons.taskactivity.security.JwtUtil;
 import com.ammons.taskactivity.service.TokenRevocationService;
+import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +36,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "JWT authentication endpoints for API access")
 public class ApiAuthController {
+
+        private static final Logger logger = LoggerFactory.getLogger(ApiAuthController.class);
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
@@ -88,6 +93,10 @@ public class ApiAuthController {
         }
     }
 
+    /**
+     * Modified by: Dean Ammons - March 2026 Change: Added revocation and password-change cutoff
+     * validation for refresh tokens. Reason: Prevent reuse of stolen or outdated refresh tokens.
+     */
     @PostMapping("/refresh")
     @Operation(summary = "Refresh access token",
             description = "Use a valid refresh token to obtain a new access token without re-authenticating. "
@@ -101,12 +110,32 @@ public class ApiAuthController {
     public ResponseEntity<Object> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         try {
             String refreshToken = request.getRefreshToken();
-            String username = jwtUtil.extractUsername(refreshToken);
+            Claims refreshClaims = jwtUtil.extractAllClaims(refreshToken);
+            String username = refreshClaims.getSubject();
 
             // SECURITY FIX: Validate that this is actually a refresh token
             if (!Boolean.TRUE.equals(jwtUtil.isRefreshToken(refreshToken))) {
+                    logger.warn("Rejected refresh attempt for user {} due to invalid token type",
+                                    username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body("Invalid token type - refresh token required");
+            }
+
+            // Reject revoked or cutoff tokens
+            String tokenJti = refreshClaims.getId();
+            if (tokenRevocationService.isTokenRevoked(tokenJti)) {
+                    logger.warn("Rejected refresh for user {} due to revoked refresh token JTI {}",
+                                    username, tokenJti);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                    .body("Invalid token type - refresh token required");
+                                    .body("Refresh token has been revoked. Please log in again.");
+            }
+
+            if (tokenRevocationService.isTokenIssuedBeforePasswordChangeRevocation(username,
+                            refreshClaims.getIssuedAt())) {
+                    logger.warn("Rejected refresh for user {} issued before password-change cutoff",
+                                    username);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                    .body("Refresh token is no longer valid. Please log in again.");
             }
 
             // Load user details
@@ -140,7 +169,13 @@ public class ApiAuthController {
                                     description = "Token revoked successfully"),
                                     @ApiResponse(responseCode = "401",
                                                     description = "Invalid or missing token")})
-    public ResponseEntity<Object> logout(@RequestHeader("Authorization") String authHeader) {
+    /**
+     * Modified by: Dean Ammons - March 2026 Change: Allow optional refresh-token revocation during
+     * logout. Reason: Ensure refresh tokens cannot be reused after logout.
+     */
+    public ResponseEntity<Object> logout(@RequestHeader("Authorization") String authHeader,
+                    @RequestHeader(value = "X-Refresh-Token",
+                                    required = false) String refreshTokenHeader) {
             try {
                     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -150,9 +185,20 @@ public class ApiAuthController {
                     String token = authHeader.substring(7);
                     boolean revoked = tokenRevocationService.revokeToken(token, "logout");
 
+                    boolean refreshRevoked = false;
+                    if (refreshTokenHeader != null && !refreshTokenHeader.isBlank()) {
+                            refreshRevoked = tokenRevocationService.revokeToken(
+                                            refreshTokenHeader.trim(), "logout_refresh");
+                            if (!refreshRevoked) {
+                                    logger.warn("Failed to revoke provided refresh token during logout");
+                            }
+                    }
+
                     if (revoked) {
-                            return ResponseEntity.ok(
-                                            "Token revoked successfully. You have been logged out.");
+                            String message = refreshRevoked
+                                            ? "Access and refresh tokens revoked. You have been logged out."
+                                            : "Token revoked successfully. You have been logged out.";
+                            return ResponseEntity.ok(message);
                     } else {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                             .body("Token could not be revoked");
