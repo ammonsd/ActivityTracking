@@ -20,6 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,11 @@ import java.util.Set;
 public class UserRestController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserRestController.class);
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String ROLE_GUEST = "ROLE_GUEST";
+    private static final String LOGIN_AUDIT_PERMISSION = "PERMISSION_LOGIN_AUDIT:READ";
+    private static final int MAX_LOGIN_AUDIT_LIMIT = 200;
+    private static final String USER_NOT_FOUND_MESSAGE = "User not found";
 
     private final UserService userService;
     private final TaskActivityService taskActivityService;
@@ -125,7 +131,7 @@ public class UserRestController {
 
         // Block GUEST users from accessing profile
         if (authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+                .anyMatch(auth -> auth.getAuthority().equals(ROLE_GUEST))) {
             logger.warn("GUEST user '{}' attempted to access profile", username);
             return ResponseEntity.status(403)
                     .body(ApiResponse.error("Guest users cannot access profile settings"));
@@ -156,7 +162,7 @@ public class UserRestController {
 
         // Block GUEST users from updating profile
         if (authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+                .anyMatch(auth -> auth.getAuthority().equals(ROLE_GUEST))) {
             logger.warn("GUEST user '{}' attempted to update profile", username);
             return ResponseEntity.status(403)
                     .body(ApiResponse.error("Guest users cannot modify profile settings"));
@@ -173,7 +179,7 @@ public class UserRestController {
                 User savedUser = userService.updateUser(existingUser);
                 return ResponseEntity
                         .ok(ApiResponse.success("Profile updated successfully", savedUser));
-            }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+            }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
         } catch (Exception e) {
             logger.error("Error updating profile for user {}: {}", username, e.getMessage(), e);
             return ResponseEntity.status(500)
@@ -301,7 +307,7 @@ public class UserRestController {
                 return ResponseEntity.status(500).<ApiResponse<UserDto>>body(
                         ApiResponse.error("Error updating user: " + e.getMessage()));
             }
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
@@ -324,23 +330,41 @@ public class UserRestController {
                 return ResponseEntity.status(500).<ApiResponse<Void>>body(
                         ApiResponse.error("Error deleting user: " + e.getMessage()));
             }
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
-     * Get login audit data for guest activity dashboard. Returns recent login activity for
-     * specified user (default: guest). Accessible to all authenticated users for dashboard demo
-     * purposes.
+     * Modified by: Dean Ammons - March 2026 Change: Restricted login audit visibility to admins or
+     * the requesting user. Reason: Prevent unauthorized access to other users' login history.
      */
     @GetMapping("/login-audit")
     public ResponseEntity<ApiResponse<List<com.ammons.taskactivity.dto.LoginAuditDto>>> getLoginAudit(
             @RequestParam(defaultValue = "guest") String username,
-            @RequestParam(defaultValue = "50") int limit) {
-        logger.debug("REST API: Getting login audit for user: {} (limit: {})", username, limit);
+            @RequestParam(defaultValue = "50") int limit, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Authentication is required"));
+        }
+
+        String requester = authentication.getName();
+        boolean canViewAll = hasAuthority(authentication, ROLE_ADMIN)
+                || hasAuthority(authentication, LOGIN_AUDIT_PERMISSION);
+
+        if (!canViewAll) {
+            if (!requester.equalsIgnoreCase(username)) {
+                logger.warn("User {} attempted to view login audit for {} without permission",
+                        requester, username);
+            }
+            username = requester;
+        }
+
+        int sanitizedLimit = Math.clamp(limit, 1, MAX_LOGIN_AUDIT_LIMIT);
+        logger.debug("REST API: Getting login audit for user: {} (limit: {}) requested by {}",
+                username, sanitizedLimit, requester);
 
         try {
             List<com.ammons.taskactivity.dto.LoginAuditDto> auditData =
-                    userService.getLoginAudit(username, limit);
+                    userService.getLoginAudit(username, sanitizedLimit);
             return ResponseEntity.ok(ApiResponse
                     .success("Retrieved " + auditData.size() + " login records", auditData));
         } catch (Exception e) {
@@ -369,7 +393,7 @@ public class UserRestController {
                     userDropdownAccessService.getAssignedDropdownValueIds(username));
             return ResponseEntity
                     .ok(ApiResponse.success("User access retrieved successfully", dto));
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
@@ -404,7 +428,7 @@ public class UserRestController {
             }
             return ResponseEntity
                     .ok(ApiResponse.<Void>success("Access updated successfully", null));
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
@@ -444,7 +468,7 @@ public class UserRestController {
                 return ResponseEntity.status(500).<ApiResponse<Void>>body(
                         ApiResponse.error("Error changing password: " + e.getMessage()));
             }
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
@@ -464,7 +488,7 @@ public class UserRestController {
 
         // Block GUEST users from changing password
         if (authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_GUEST"))) {
+                .anyMatch(auth -> auth.getAuthority().equals(ROLE_GUEST))) {
             logger.warn("GUEST user '{}' attempted to change password", username);
             return ResponseEntity.status(403)
                     .body(ApiResponse.error("Guest users cannot change passwords"));
@@ -488,7 +512,7 @@ public class UserRestController {
                 return ResponseEntity.status(500).<ApiResponse<Void>>body(
                         ApiResponse.error("Error changing password: " + e.getMessage()));
             }
-        }).orElse(ResponseEntity.status(404).body(ApiResponse.error("User not found")));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 
     /**
@@ -798,6 +822,14 @@ public class UserRestController {
         public boolean isMailEnabled() {
             return mailEnabled;
         }
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        if (authentication == null || authority == null || authority.isBlank()) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> authority.equals(auth.getAuthority()));
     }
 }
 

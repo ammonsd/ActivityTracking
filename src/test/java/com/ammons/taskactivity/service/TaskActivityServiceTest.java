@@ -2,6 +2,7 @@ package com.ammons.taskactivity.service;
 
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.exception.TaskActivityNotFoundException;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,6 +37,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TaskActivityService Tests")
 class TaskActivityServiceTest {
+
+    private static final String OWNER_USERNAME = "ownerUser";
+    private static final String DIFFERENT_USERNAME = "differentUser";
 
     @Mock
     private TaskActivityRepository taskActivityRepository;
@@ -60,6 +65,7 @@ class TaskActivityServiceTest {
         testEntity.setTaskId("TA-001");
         testEntity.setTaskName("Implement feature");
         testEntity.setDetails("Test task details");
+        testEntity.setUsername(OWNER_USERNAME);
 
         testDto = new TaskActivityDto();
         testDto.setTaskDate(testDate);
@@ -70,6 +76,7 @@ class TaskActivityServiceTest {
         testDto.setTaskId("TA-001");
         testDto.setTaskName("Implement feature");
         testDto.setDetails("Test task details");
+        testDto.setUsername(OWNER_USERNAME);
     }
 
     @Nested
@@ -326,37 +333,68 @@ class TaskActivityServiceTest {
         }
     }
 
+    /**
+     * Modified by: Dean Ammons - March 2026 Change: Added authorization coverage for
+     * deleteTaskActivity. Reason: Ensure ownership validation is enforced through unit tests.
+     */
     @Nested
     @DisplayName("Delete Task Activity Tests")
     class DeleteTaskActivityTests {
 
         @Test
-        @DisplayName("Should delete task activity successfully")
-        void shouldDeleteTaskActivitySuccessfully() {
+        @DisplayName("Should allow admins to delete any task activity")
+        void shouldDeleteTaskActivityAsAdmin() {
             // Given
-            when(taskActivityRepository.existsById(1L)).thenReturn(true);
+            when(taskActivityRepository.findById(1L)).thenReturn(Optional.of(testEntity));
 
             // When
-            taskActivityService.deleteTaskActivity(1L);
+            taskActivityService.deleteTaskActivity(1L, "admin", true);
 
             // Then
-            verify(taskActivityRepository).existsById(1L);
-            verify(taskActivityRepository).deleteById(1L);
+            verify(taskActivityRepository).delete(testEntity);
+        }
+
+        @Test
+        @DisplayName("Should allow users to delete their own task activity")
+        void shouldDeleteOwnTaskActivity() {
+            // Given
+            when(taskActivityRepository.findById(1L)).thenReturn(Optional.of(testEntity));
+
+            // When
+            taskActivityService.deleteTaskActivity(1L, OWNER_USERNAME, false);
+
+            // Then
+            verify(taskActivityRepository).delete(testEntity);
+        }
+
+        @Test
+        @DisplayName("Should prevent users from deleting another user's task activity")
+        void shouldPreventDeletingAnotherUsersTaskActivity() {
+            // Given
+            when(taskActivityRepository.findById(1L)).thenReturn(Optional.of(testEntity));
+
+            // When/Then
+            assertThatThrownBy(
+                    () -> taskActivityService.deleteTaskActivity(1L, DIFFERENT_USERNAME, false))
+                            .isInstanceOf(AccessDeniedException.class)
+                            .hasMessage("Access denied: You can only delete your own tasks");
+
+            verify(taskActivityRepository, never()).delete(any(TaskActivity.class));
         }
 
         @Test
         @DisplayName("Should throw exception when deleting non-existent task activity")
         void shouldThrowExceptionWhenDeletingNonExistentTaskActivity() {
             // Given
-            when(taskActivityRepository.existsById(999L)).thenReturn(false);
+            when(taskActivityRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When/Then
-            assertThatThrownBy(() -> taskActivityService.deleteTaskActivity(999L))
-                    .isInstanceOf(RuntimeException.class)
+            assertThatThrownBy(
+                    () -> taskActivityService.deleteTaskActivity(999L, OWNER_USERNAME, true))
+                            .isInstanceOf(TaskActivityNotFoundException.class)
                     .hasMessage("Task activity not found with ID: 999");
 
-            verify(taskActivityRepository).existsById(999L);
-            verify(taskActivityRepository, never()).deleteById(999L);
+                verify(taskActivityRepository, never()).delete(any(TaskActivity.class));
         }
     }
 

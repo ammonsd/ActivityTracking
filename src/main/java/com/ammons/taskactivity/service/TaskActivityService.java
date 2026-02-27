@@ -4,6 +4,7 @@ import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
 import com.ammons.taskactivity.exception.TaskActivityNotFoundException;
 import com.ammons.taskactivity.repository.TaskActivityRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -64,12 +65,27 @@ public class TaskActivityService {
         throw new TaskActivityNotFoundException(id);
     }
 
-    public void deleteTaskActivity(Long id) {
-        if (taskActivityRepository.existsById(id)) {
-            taskActivityRepository.deleteById(id);
-        } else {
-            throw new TaskActivityNotFoundException(id);
+    /**
+     * Modified by: Dean Ammons - March 2026 Change: Enforced ownership validation before deleting
+     * task activities. Reason: Prevent users from deleting records they do not own.
+     */
+    public void deleteTaskActivity(Long id, String requestingUsername, boolean isAdmin) {
+        TaskActivity taskActivity = taskActivityRepository.findById(id)
+                .orElseThrow(() -> new TaskActivityNotFoundException(id));
+
+        if (!isAdmin) {
+            if (requestingUsername == null || requestingUsername.isBlank()) {
+                throw new AccessDeniedException(
+                        "Unable to verify task ownership for deletion request");
+            }
+
+            if (!taskActivity.getUsername().equals(requestingUsername)) {
+                throw new AccessDeniedException(
+                        "Access denied: You can only delete your own tasks");
+            }
         }
+
+        taskActivityRepository.delete(taskActivity);
     }
 
     /**

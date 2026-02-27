@@ -7,9 +7,9 @@
     Can run interactive psql session or execute specific queries.
     Requires Session Manager plugin to be installed.
 
-    By default, connects as the read-only user (taskactivity_readonly) which
-    is restricted to SELECT queries only. Use -Admin to connect as the postgres
-    master user with full read/write access.
+    By default, connects using the database username supplied via -DBUser.
+    -DBUser is required when not using -Admin. Use -Admin to connect as the
+    postgres master user with full read/write access.
 
 .PARAMETER SqlQuery
     SQL query to execute (optional). If omitted, starts interactive session.
@@ -17,41 +17,42 @@
 .PARAMETER OutputFormat
     Output format: csv, txt, or blank for console output (optional).
 
+.PARAMETER DBUser
+    Database username to connect as (required when not using -Admin).
+    Each developer should supply their own DB username.
+    Not used when -Admin is specified.
+
 .PARAMETER Admin
     Connect as the postgres master user (full read/write access).
-    Default is the read-only user (SELECT only).
+    When specified, -DBUser is not required.
 
 .PARAMETER Password
     Database password. If omitted, the password is prompted interactively regardless
     of access mode. Useful for scripted/automated scenarios.
 
 .EXAMPLE
-    .\connect-to-rds.ps1
-    Start interactive psql session as read-only user (prompted for password).
+    .\connect-to-rds.ps1 -DBUser 'jsmith'
+    Start interactive psql session as developer user jsmith (prompted for password).
 
 .EXAMPLE
-    .\connect-to-rds.ps1 -Password 'mypassword'
-    Start interactive psql session as read-only user (password supplied, no prompt).
+    .\connect-to-rds.ps1 -DBUser 'jsmith' -Password 'mypassword'
+    Start interactive psql session as developer user jsmith (password supplied, no prompt).
+
+.EXAMPLE
+    .\connect-to-rds.ps1 -DBUser 'jsmith' 'SELECT * FROM public.users'
+    Run specific query as developer user jsmith.
+
+.EXAMPLE
+    .\connect-to-rds.ps1 -DBUser 'jsmith' 'SELECT * FROM public.users' 'csv'
+    Run query as developer user jsmith and output as CSV.
 
 .EXAMPLE
     .\connect-to-rds.ps1 -Admin
-    Start interactive psql session as postgres master user (prompted for password).
+    Start interactive psql session as taskactivity_readonly (admin read-only testing, prompted for password).
 
 .EXAMPLE
     .\connect-to-rds.ps1 -Admin -Password 'mypassword'
-    Start interactive psql session as postgres master user (password supplied, no prompt).
-
-.EXAMPLE
-    .\connect-to-rds.ps1 'SELECT * FROM public.users'
-    Run specific SELECT query as read-only user.
-
-.EXAMPLE
-    .\connect-to-rds.ps1 'SELECT * FROM public.users' 'csv'
-    Run query and output as CSV.
-
-.EXAMPLE
-    .\connect-to-rds.ps1 -Admin 'UPDATE public.users SET enabled=true WHERE id=5'
-    Run an update as the admin (postgres) user.
+    Start interactive psql session as taskactivity_readonly (password supplied, no prompt).
 
 .NOTES
     Author: Dean Ammons
@@ -62,6 +63,9 @@
     Modified by: Dean Ammons - February 2026
     Change: No passwords stored in script; both modes prompt or accept -Password
     Reason: Hardcoded credentials in source are a security risk regardless of access level
+    Modified by: Dean Ammons - February 2026
+    Change: Added -DBUser required parameter for non-Admin connections
+    Reason: Each developer has their own DB user; taskactivity_readonly reserved for admin read-only testing via -Admin
     Requires: Session Manager plugin
 #>
 
@@ -76,6 +80,9 @@ param(
     [switch]$Admin,
 
     [Parameter(Mandatory=$false)]
+    [string]$DBUser = "",
+
+    [Parameter(Mandatory=$false)]
     [string]$Password = ""
 )
 
@@ -84,12 +91,21 @@ if ($OutputFormat -ne 'csv' -and $OutputFormat -ne 'txt') {
     $OutputFormat = ''
 }
 
+# Validate -DBUser is supplied for non-Admin connections
+if (-not $Admin -and [string]::IsNullOrEmpty($DBUser)) {
+    Write-Host ""
+    Write-Host "ERROR: -DBUser is required when not using -Admin." -ForegroundColor Red
+    Write-Host "       Specify your assigned database username, e.g.: -DBUser 'jsmith'" -ForegroundColor Yellow
+    Write-Host ""
+    exit 1
+}
+
 # Resolve password — accept via -Password or prompt interactively
 if (-not [string]::IsNullOrEmpty($Password)) {
     $DbPassword = $Password
 } else {
     Write-Host ""
-    $promptUser = if ($Admin) { 'postgres (admin)' } else { 'taskactivity_readonly' }
+    $promptUser = if ($Admin) { 'postgres' } else { $DBUser }
     Write-Host "Enter password for $promptUser" -ForegroundColor Yellow
     $SecurePassword = Read-Host -Prompt 'Password' -AsSecureString
     $DbPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
@@ -104,11 +120,11 @@ if (-not [string]::IsNullOrEmpty($Password)) {
 # Set credentials based on access mode
 if ($Admin) {
     $DbUser      = 'postgres'
-    $AccessMode  = 'ADMIN (full read/write)'
-    $AccessColor = 'Red'
+    $AccessMode  = 'No restrictions (read/write)'
+    $AccessColor = 'Green'
 } else {
-    $DbUser      = 'taskactivity_readonly'
-    $AccessMode  = 'READ-ONLY (SELECT only)'
+    $DbUser      = $DBUser
+    $AccessMode  = 'Developer user'
     $AccessColor = 'Green'
 }
 
@@ -217,9 +233,8 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
     Write-Host ""
     Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB" -ForegroundColor White
     Write-Host ""
-    if (-not $Admin) {
-        Write-Host "Note: Connected as read-only user. Only SELECT queries are permitted." -ForegroundColor Yellow
-        Write-Host "      Use -Admin switch for write access." -ForegroundColor Yellow
+    if ($Admin) {
+        Write-Host "Note: Connected as postgres (admin). Full read/write access." -ForegroundColor Yellow
         Write-Host ""
     }
     Write-Host "Common PostgreSQL commands:" -ForegroundColor Yellow
@@ -240,17 +255,15 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
             if ($upperQuery.StartsWith($kw)) {
                 Write-Host "" 
                 Write-Host "WARNING: Query appears to be a write operation ($kw) but you are connected" -ForegroundColor Red
-                Write-Host "         as the read-only user. PostgreSQL will reject it." -ForegroundColor Red
-                Write-Host "         Re-run with -Admin if you intended a write operation." -ForegroundColor Red
+                Write-Host "         as '$DbUser'. Ensure this user has the required write permissions." -ForegroundColor Red
+                Write-Host "         Use -Admin for the taskactivity_readonly admin session." -ForegroundColor Red
                 Write-Host ""
                 break
             }
         }
     }
 
-    Write-Host "Once connected, run this command to execute your query:" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Copy/Paste to opt# prompt" -ForegroundColor Yellow
+    Write-Host "Copy/Paste the complete PGPASSWORD string into the opt# prompt" -ForegroundColor Yellow
     if ($OutputFormat -eq '') {
         Write-Host "PGPASSWORD='$DbPassword' PGSSLMODE=require psql -h taskactivity-db.cuhqge48qwm5.us-east-1.rds.amazonaws.com -p 5432 -U $DbUser -d AmmoP1DB -c `"$escapedQuery`"" -ForegroundColor Cyan
     }
@@ -270,7 +283,7 @@ if ([string]::IsNullOrEmpty($SqlQuery)) {
 # Use a startup command that ensures psql is available before dropping into bash
 $startupCommand = "command -v psql > /dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq postgresql-client); exec /bin/bash"
 
-Write-Host "Initiating connection (will auto-install psql if missing)..." -ForegroundColor Yellow
+Write-Host "Initiating connection..." -ForegroundColor Yellow
 aws ecs execute-command `
     --cluster taskactivity-cluster `
     --task $TASK_ID `

@@ -4,6 +4,7 @@ import com.ammons.taskactivity.config.DropdownConfig;
 import com.ammons.taskactivity.config.TaskListSortConfig;
 import com.ammons.taskactivity.dto.TaskActivityDto;
 import com.ammons.taskactivity.entity.TaskActivity;
+import com.ammons.taskactivity.exception.TaskActivityNotFoundException;
 import com.ammons.taskactivity.security.RequirePermission;
 import com.ammons.taskactivity.service.PermissionService;
 import com.ammons.taskactivity.service.TaskActivityService;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,6 +71,7 @@ public class TaskActivityWebController {
     private static final String CATEGORY_DISPLAY_NAME_ATTR = "categoryDisplayName";
     private static final String USERNAME_ATTR = "username";
     private static final String AUTHORITIES_ATTR = "authorities";
+    private static final String TASK_NOT_FOUND_PREFIX = "Task not found with ID: ";
 
     private final TaskActivityService taskActivityService;
     private final DropdownConfig dropdownConfig;
@@ -166,7 +169,7 @@ public class TaskActivityWebController {
                 return TASK_ACTIVITY_FORM_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                        "Task not found with ID: " + id);
+                        TASK_NOT_FOUND_PREFIX + id);
                 return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
                         endDate);
             }
@@ -371,7 +374,7 @@ public class TaskActivityWebController {
                 return TASK_DETAIL_VIEW;
             } else {
                 redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                        "Task not found with ID: " + id);
+                            TASK_NOT_FOUND_PREFIX + id);
                 return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
                         endDate);
             }
@@ -443,6 +446,11 @@ public class TaskActivityWebController {
         }
     }
 
+    /**
+     * Modified by: Dean Ammons - March 2026 Change: Use centralized ownership enforcement in
+     * TaskActivityService when deleting tasks. Reason: Ensure consistent authorization between web
+     * and REST experiences.
+     */
     @PostMapping("/delete/{id}")
     public String deleteTask(@PathVariable Long id, @RequestParam(required = false) String client,
             @RequestParam(required = false) String project,
@@ -455,26 +463,23 @@ public class TaskActivityWebController {
                     iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
-            // Security check: verify task belongs to logged-in user before deleting (unless admin)
             boolean isUserAdmin = isAdmin(authentication);
-            if (!isUserAdmin) {
-                String currentUsername = getUsername(authentication);
-                Optional<TaskActivity> existingTask = taskActivityService.getTaskActivityById(id);
-                if (existingTask.isPresent()
-                        && !existingTask.get().getUsername().equals(currentUsername)) {
-                    redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
-                            "Access denied: You can only delete your own tasks.");
-                    return buildFilteredRedirect(client, project, phase, taskId, username,
-                            startDate, endDate);
-                }
-            }
-
-            taskActivityService.deleteTaskActivity(id);
+            String currentUsername = getUsername(authentication);
+            taskActivityService.deleteTaskActivity(id, currentUsername, isUserAdmin);
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE_ATTR,
                     "Task activity deleted successfully!");
             return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
                     endDate);
 
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
+                    "Access denied: You can only delete your own tasks.");
+            return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                    endDate);
+        } catch (TaskActivityNotFoundException ex) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR, TASK_NOT_FOUND_PREFIX + id);
+            return buildFilteredRedirect(client, project, phase, taskId, username, startDate,
+                    endDate);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE_ATTR,
                     "Failed to delete task activity: " + e.getMessage());
