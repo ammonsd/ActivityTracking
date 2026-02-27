@@ -31,8 +31,9 @@ pipeline {
         // Using 0 notation for top of the hour
         // cron('0 8,12,17 * * *')
         // cron('H 16 * * *')
-        // Scheduled deployments will check if there are new commits since last deployment and only deploy if there are changes
-        cron('0 8,12,17 * * *')
+        // Scheduled deployments will check if there are new commits since last deployment and
+        // only deploy if there are changes
+        cron('0 18 * * *')
     }
     
     parameters {
