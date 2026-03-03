@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     userpassword VARCHAR(255) NOT NULL,
     role_id BIGINT REFERENCES roles(id),
     email VARCHAR(100),
+    week_start_day VARCHAR(10) NOT NULL DEFAULT 'MONDAY',
     enabled BOOLEAN NOT NULL DEFAULT true,
     forcepasswordupdate BOOLEAN NOT NULL DEFAULT true,
     expiration_date DATE NULL,
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Create unique index on username to prevent duplicate usernames
 -- This ensures data integrity and provides optimal query performance
 -- Note: CONCURRENTLY cannot be used in schema.sql as it runs in a transaction
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique
 ON public.users (username);
 
 --------------------------------
@@ -164,7 +165,7 @@ CREATE TABLE IF NOT EXISTS public.taskactivity (
     details VARCHAR(255),
     username VARCHAR(50) NOT NULL,
     CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, taskid, taskname, details, username),
-    CONSTRAINT fk_taskactivity_username 
+    CONSTRAINT fk_taskactivity_username
         FOREIGN KEY (username) REFERENCES public.users(username)
         ON DELETE RESTRICT
         ON UPDATE CASCADE
@@ -348,5 +349,6 @@ CREATE INDEX IF NOT EXISTS idx_uda_dropdown_value_id
     ON public.user_dropdown_access (dropdown_value_id);
 
 COMMENT ON TABLE public.user_dropdown_access IS 'Maps users to specific client/project dropdown values. Values with all_users=true on dropdownvalues do not require a row here.';
+COMMENT ON COLUMN public.users.week_start_day IS 'Preferred weekly timesheet start day. Allowed values: MONDAY (Mon-Sun), SATURDAY (Sat-Fri). Defaults to MONDAY.';
 COMMENT ON COLUMN public.user_dropdown_access.username IS 'The username granted access to this dropdown value.';
 COMMENT ON COLUMN public.user_dropdown_access.dropdown_value_id IS 'FK to dropdownvalues.id — the specific client or project value the user can see.';

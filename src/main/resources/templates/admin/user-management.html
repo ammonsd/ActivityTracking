@@ -320,10 +320,8 @@
                     <tbody>
                         <tr th:each="user : ${users}">
                             <td th:text="${user.username}">admin</td>
-                            <td th:text="${user.company ?: '-'}">Company Name</td>
-                            <td th:text="${user.email != null && !#strings.isEmpty(user.email) ? user.email : '-'}"
-                                th:style="${user.email == null || #strings.isEmpty(user.email) ? 'color: #dc3545; font-style: italic;' : ''}"
-                            >user@example.com</td>
+                            <td th:text="${user.company}">Company Name</td>
+                            <td th:text="${user.email}">user@example.com</td>
                             <td>
                                 <span
                                     th:class="${'role-badge ' + (user.role.name == 'ADMIN' ? 'role-admin' : (user.role.name == 'GUEST' ? 'role-guest' : (user.role.name == 'EXPENSE_ADMIN' ? 'role-EXPENSE_ADMIN' : 'role-user')))}"

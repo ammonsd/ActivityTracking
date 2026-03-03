@@ -8,6 +8,7 @@ import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.ReceiptStorageService;
 import com.ammons.taskactivity.service.BillabilityService;
+import com.ammons.taskactivity.service.WeeklyTimesheetService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -749,12 +750,18 @@ public class ExpenseViewController {
             Model model, Authentication authentication) {
         addUserInfo(model, authentication);
 
+        // Load the user's preferred week start day (MONDAY default)
+        String username = authentication.getName();
+        String weekStartDayStr = userService.getUserByUsername(username)
+                .map(u -> u.getWeekStartDay() != null ? u.getWeekStartDay() : "MONDAY")
+                .orElse("MONDAY");
+        java.time.temporal.TemporalAdjuster weekStartAdjuster = java.time.temporal.TemporalAdjusters
+                .previousOrSame(WeeklyTimesheetService.resolveWeekStartDay(weekStartDayStr));
+
         LocalDate targetDate = date != null ? date : LocalDate.now();
-        LocalDate startOfWeek =
-                targetDate.minusDays((long) targetDate.getDayOfWeek().getValue() - 1);
+        LocalDate startOfWeek = targetDate.with(weekStartAdjuster);
         LocalDate endOfWeek = startOfWeek.plusDays(6);
 
-        String username = authentication.getName();
         List<Expense> expenses =
                 expenseService.getExpensesInDateRangeForUser(username, startOfWeek, endOfWeek);
 
@@ -771,6 +778,7 @@ public class ExpenseViewController {
         model.addAttribute("endDate", endOfWeek);
         model.addAttribute("targetDate", targetDate);
         model.addAttribute("billability", billability);
+        model.addAttribute("weekStartDay", weekStartDayStr);
 
         return EXPENSE_SHEET_VIEW;
     }

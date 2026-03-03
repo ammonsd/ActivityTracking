@@ -15,9 +15,10 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
   - Daily/weekly/monthly time tracking visualizations
   - Phase distribution analysis
   - ADMIN-only user performance analytics
-- 📊 Weekly timesheet view (Monday-Sunday format)
+- 📊 Weekly timesheet view with **configurable start day** (Monday–Sunday or Saturday–Friday)
   - **Filter by billability**: View all tasks, only billable tasks, or only non-billable tasks
   - Billable hours calculated based on client/project/phase flags
+  - Start day is a per-user preference set in My Profile
 - 📥 Export filtered tasks and weekly timesheets to CSV format (includes Task ID and Task Name columns)
 - 📥 **Bulk CSV import** for TaskActivity records (ADMIN/MANAGER roles)
 - 🔍 Filter and search capabilities including Task ID partial-match filter
@@ -57,8 +58,9 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - 👤 **My Profile**: Self-service profile management for all users
   - **Angular UI**: Modern Material Design profile editor with integrated password change dialog
   - **Backend UI**: Thymeleaf-based profile editor with dedicated password change page
-  - Users can update their own first name, last name, company, and email
+  - Users can update their own first name, last name, company, email, and **weekly timesheet start day**
   - Email address required for expense management features
+  - **Weekly timesheet start day**: Choose Monday (Mon–Sun) or Saturday (Sat–Fri) to match your work week; applies to both the weekly timesheet and weekly expense sheet
   - **Password change in Angular**: Click "Update Password" button to open dialog with current password verification and real-time validation
   - **Password change in Backend**: Dedicated Change Password page with success/error notifications
   - Profile updates return to My Profile with confirmation message

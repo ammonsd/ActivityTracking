@@ -46,6 +46,8 @@ public class UserEditDto {
 
     private int failedLoginAttempts;
 
+    private String weekStartDay = "MONDAY";
+
     // Constructors
     public UserEditDto() {}
 
@@ -152,5 +154,13 @@ public class UserEditDto {
 
     public void setFailedLoginAttempts(int failedLoginAttempts) {
         this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public String getWeekStartDay() {
+        return weekStartDay;
+    }
+
+    public void setWeekStartDay(String weekStartDay) {
+        this.weekStartDay = (weekStartDay != null) ? weekStartDay : "MONDAY";
     }
 }

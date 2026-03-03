@@ -278,6 +278,22 @@
                         </div>
                     </div>
 
+                    <!-- Week Start Day Preference -->
+                    <div class="form-group">
+                        <label for="weekStartDay">Weekly Timesheet Start Day</label>
+                        <select
+                            id="weekStartDay"
+                            th:field="*{weekStartDay}"
+                            style="height: 40px; width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                        >
+                            <option value="MONDAY">Monday (Mon – Sun)</option>
+                            <option value="SATURDAY">Saturday (Sat – Fri)</option>
+                        </select>
+                        <div class="password-help" style="font-size: 11px; color: #999;">
+                            Choose the first day of your weekly timesheet and expense sheet
+                        </div>
+                    </div>
+
                     <div class="form-row" th:unless="${isOwnProfile}">
                         <!-- Role - ADMIN only -->
                         <div class="form-group">

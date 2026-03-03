@@ -204,7 +204,7 @@ Administrators can create, edit, and delete user accounts:
     - Assign role — the dropdown lists all roles currently defined in the system, including any custom roles created via Role Management
     - Enable/disable account
     - Optionally force password change on first login
-5. **Edit Users**: Modify first name, last name, company, role, or account status
+5. **Edit Users**: Modify first name, last name, company, role, account status, or weekly timesheet start day
     - **Note**: Usernames are immutable and cannot be changed after account creation
     - If a username needs to be changed, deactivate the current account and create a new user with the desired username
     - All other user details (first name, last name, company, role, enabled status) can be edited at any time
@@ -385,9 +385,10 @@ All users (except Guest users) can manage their own profile information without 
 **What Users Can Edit:**
 
 - First Name
-- Last Name  
+- Last Name
 - Company
 - Email Address
+- **Weekly Timesheet Start Day** — Choose `Monday (Mon–Sun)` or `Saturday (Sat–Fri)` to match the user's work week; applies to both the weekly timesheet and the weekly expense sheet
 
 **What Users Cannot Edit:**
 

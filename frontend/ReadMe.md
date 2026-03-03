@@ -107,7 +107,7 @@ frontend/
 - Paginated data table with sorting
 - Real-time data from API
 - Add, edit, clone, and delete actions
-- Weekly timesheet view (Monday-Sunday)
+- Weekly timesheet view (configurable start day: Monday–Sunday or Saturday–Friday)
 - CSV export capabilities
 
 ### Expense Management
@@ -441,7 +441,7 @@ This application already includes:
 ✅ **Multiple views** - Dashboard, lists, reports, profile
 ✅ **Receipt management** - Upload/download receipts directly in dialogs
 ✅ **Role-based access** - Different features for USER, ADMIN, GUEST roles
-✅ **Weekly timesheet view** - Monday-Sunday format with totals
+✅ **Weekly timesheet view** - Configurable start day (Monday–Sunday or Saturday–Friday) with totals
 ✅ **CSV export** - Export filtered data
 ✅ **Password management** - Self-service password change with validation
 

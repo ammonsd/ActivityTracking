@@ -175,6 +175,7 @@ public class UserRestController {
                 existingUser.setLastname(profileUpdate.getLastname());
                 existingUser.setCompany(profileUpdate.getCompany());
                 existingUser.setEmail(profileUpdate.getEmail());
+                existingUser.setWeekStartDay(profileUpdate.getWeekStartDay());
 
                 User savedUser = userService.updateUser(existingUser);
                 return ResponseEntity

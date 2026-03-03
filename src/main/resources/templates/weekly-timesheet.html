@@ -284,13 +284,18 @@
 
             <!-- Date Selector -->
             <div class="date-selector">
-                <label for="weekStartDate">Week Starting Monday:</label>
+                <label for="weekStartDate"
+                       th:text="'Week Starting ' + (${weekStartDay} == 'SATURDAY' ? 'Saturday' : 'Monday') + ':'">
+                    Week Starting Monday:
+                </label>
                 <input
                     type="date"
                     id="weekStartDate"
                     name="weekStartDate"
                     th:value="${weeklyData != null ? weeklyData.weekStartDate : ''}"
                 />
+                <!-- Hidden input carries server preference to JS -->
+                <input type="hidden" id="weekStartDaySetting" th:value="${weekStartDay != null ? weekStartDay : 'MONDAY'}" />
                 <div class="week-navigation">
                     <button type="button" class="week-nav-btn" id="prevWeek" title="Previous Week">‹</button>
                     <button type="button" class="week-nav-btn" id="nextWeek" title="Next Week">›</button>
@@ -433,8 +438,10 @@
             // Initialize date picker with current or URL date
             function initializeDatePicker() {
                 const dateInput = document.getElementById('weekStartDate');
-                const monday = DateUtils.getCurrentOrUrlMonday('date');
-                dateInput.value = DateUtils.formatDateForInput(monday);
+                const settingEl = document.getElementById('weekStartDaySetting');
+                const startDayValue = DateUtils.weekStartDayToJsValue(settingEl ? settingEl.value : 'MONDAY');
+                const weekStart = DateUtils.getCurrentOrUrlWeekStart('date', startDayValue);
+                dateInput.value = DateUtils.formatDateForInput(weekStart);
             }
 
             // Set up event listeners
@@ -442,6 +449,8 @@
                 initializeDatePicker();
 
                 const dateInput = document.getElementById('weekStartDate');
+                const settingEl = document.getElementById('weekStartDaySetting');
+                const startDayValue = DateUtils.weekStartDayToJsValue(settingEl ? settingEl.value : 'MONDAY');
                 const prevWeekBtn = document.getElementById('prevWeek');
                 const nextWeekBtn = document.getElementById('nextWeek');
                 const currentWeekBtn = document.getElementById('currentWeek');
@@ -451,16 +460,16 @@
                     if (!this.value) return; // Don't proceed if no value
 
                     const selectedDate = DateUtils.parseDate(this.value);
-                    const monday = DateUtils.getMondayOfWeek(selectedDate);
-                    const mondayStr = DateUtils.formatDateForInput(monday);
+                    const weekStart = DateUtils.getWeekStartDate(selectedDate, startDayValue);
+                    const weekStartStr = DateUtils.formatDateForInput(weekStart);
 
-                    // Update input to show the calculated Monday if different
-                    if (this.value !== mondayStr) {
-                        this.value = mondayStr;
+                    // Update input to show the calculated week start if different
+                    if (this.value !== weekStartStr) {
+                        this.value = weekStartStr;
                     }
 
                     // Update the URL to reload with new date
-                    DateUtils.updateUrl(mondayStr, '/task-activity/weekly-timesheet');
+                    DateUtils.updateUrl(weekStartStr, '/task-activity/weekly-timesheet');
                 });
 
                 // Handle previous week button

@@ -209,6 +209,8 @@ public class UserManagementController {
         userEditDto.setEmail(user.getEmail());
         userEditDto.setAccountLocked(user.isAccountLocked());
         userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
+        userEditDto.setWeekStartDay(
+                user.getWeekStartDay() != null ? user.getWeekStartDay() : "MONDAY");
 
         model.addAttribute("userEditDto", userEditDto);
         model.addAttribute(ROLES, roleRepository.findAll());
@@ -247,6 +249,7 @@ public class UserManagementController {
             user.setLastname(userEditDto.getLastname());
             user.setCompany(userEditDto.getCompany());
             user.setEmail(userEditDto.getEmail());
+            user.setWeekStartDay(userEditDto.getWeekStartDay());
 
             // Convert role String to Roles entity
             Roles role = roleRepository.findByName(userEditDto.getRole()).orElseThrow(

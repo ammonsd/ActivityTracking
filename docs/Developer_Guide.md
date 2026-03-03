@@ -2649,31 +2649,36 @@ Manages password field visibility for better user experience.
 
 #### 3. Date Utilities (`date-utils.js`)
 
-Provides date manipulation and formatting functions for week-based navigation.
+Provides date manipulation and formatting functions for week-based navigation. Supports configurable week start days (Monday or Saturday).
 
 **Functions:**
 
 - `getUrlParameter(name)` - Gets URL query parameter value
 - `updateUrl(date, endpoint)` - Updates URL with date parameter
-- `getMondayOfWeek(date)` - Calculates Monday of the week
+- `getWeekStartDate(date, startDayValue)` - Calculates the start of the week for any start day; `startDayValue` is a JS `getDay()` integer (0 = Sunday, 1 = Monday, 6 = Saturday)
+- `weekStartDayToJsValue(weekStartDayStr)` - Converts a server-side string (`"MONDAY"` / `"SATURDAY"`) to the corresponding JS `getDay()` integer
+- `getCurrentOrUrlWeekStart(paramName, startDayValue)` - Gets the current or URL-specified week start date for any start day
+- `getMondayOfWeek(date)` - Calculates Monday of the week *(backward-compatible wrapper for `getWeekStartDate(date, 1)`)*
 - `formatDateForInput(date)` - Formats date as YYYY-MM-DD
 - `addDays(date, days)` - Adds/subtracts days from a date
 - `parseDate(dateStr)` - Safely parses date string with timezone handling
-- `getCurrentOrUrlMonday(paramName)` - Gets current or URL-specified Monday
+- `getCurrentOrUrlMonday(paramName)` - Gets current or URL-specified Monday *(backward-compatible wrapper for `getCurrentOrUrlWeekStart(paramName, 1)`)*
 
 **Usage Example:**
 
 ```javascript
-// In HTML template
+// In HTML template — read user preference from hidden input injected by Thymeleaf
 <script src="/js/date-utils.js"></script>
 <script>
-    const monday = DateUtils.getMondayOfWeek(new Date());
-    const formatted = DateUtils.formatDateForInput(monday);
+    const startDayStr = document.getElementById('weekStartDaySetting').value; // 'MONDAY' or 'SATURDAY'
+    const startDayValue = DateUtils.weekStartDayToJsValue(startDayStr);        // 1 or 6
+    const weekStart = DateUtils.getCurrentOrUrlWeekStart('date', startDayValue);
+    const formatted = DateUtils.formatDateForInput(weekStart);
     DateUtils.updateUrl(formatted, '/task-activity/weekly-timesheet');
 </script>
 ```
 
-**Used in:** `weekly-timesheet.html`
+**Used in:** `weekly-timesheet.html`, `expense-sheet.html`
 
 #### 4. Form Utilities (`form-utils.js`)
 
@@ -5049,15 +5054,24 @@ GET /task-activity/weekly-timesheet
 
 **Query Parameters:**
 
-- `weekStartDate` (optional): ISO date for the Monday of the week to display
-- If not provided, defaults to current week
+- `weekStartDate` (optional): ISO date for the start of the week to display
+- If not provided, defaults to the current week's start date derived from the user's `weekStartDay` preference
+
+**Week Start Day User Preference:**
+
+Each user has a `weekStartDay` preference stored on their account (`MONDAY` or `SATURDAY`). The controller reads this setting and passes it to `WeeklyTimesheetService.resolveWeekStartDay(String)` to obtain the correct `DayOfWeek`. The resolved value is also forwarded to the Thymeleaf model as `weekStartDay` so the template can render the correct label and inject the preference into the client-side JS via a hidden input (`#weekStartDaySetting`).
+
+| Value | Week Range |
+|-------|------------|
+| `MONDAY` (default) | Monday–Sunday |
+| `SATURDAY` | Saturday–Friday |
 
 **Access Control:**
 
 - All users (including administrators): View only their own tasks
 - The weekly timesheet is a personal view for each user
 
-**Response:** Renders `weekly-timesheet.html` with tasks grouped by day
+**Response:** Renders `weekly-timesheet.html` with tasks grouped by day in the user's preferred week order
 
 #### Task List CSV Export Endpoint
 
