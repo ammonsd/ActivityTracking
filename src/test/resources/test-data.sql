@@ -71,13 +71,13 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 (4, 21), (4, 22);  -- Reports: VIEW, GENERATE
 
 -- Insert test users (password is 'password' for all)
-INSERT INTO users (username, userpassword, firstname, lastname, email, role_id, enabled, forcepasswordupdate, account_locked, failed_login_attempts, created_date) VALUES
-('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Admin', 'User', 'admin@example.com', 1, true, false, false, 0, CURRENT_TIMESTAMP),
-('user', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Regular', 'User', 'user@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP),
-('guest', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Guest', 'User', 'guest@example.com', 3, true, false, false, 0, CURRENT_TIMESTAMP),
-('expenseadmin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Expense', 'Admin', 'expenseadmin@example.com', 4, true, false, false, 0, CURRENT_TIMESTAMP),
-('testuser', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Test', 'User', 'testuser@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP),
-('otheruser', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Other', 'User', 'otheruser@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP);
+INSERT INTO users (username, userpassword, firstname, lastname, email, role_id, enabled, forcepasswordupdate, account_locked, failed_login_attempts, created_date, week_start_day) VALUES
+('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Admin', 'User', 'admin@example.com', 1, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY'),
+('user', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Regular', 'User', 'user@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY'),
+('guest', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Guest', 'User', 'guest@example.com', 3, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY'),
+('expenseadmin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Expense', 'Admin', 'expenseadmin@example.com', 4, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY'),
+('testuser', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Test', 'User', 'testuser@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY'),
+('otheruser', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Other', 'User', 'otheruser@example.com', 2, true, false, false, 0, CURRENT_TIMESTAMP, 'MONDAY');
 
 -- Insert dropdown values for testing
 INSERT INTO dropdownvalues (category, subcategory, itemvalue, displayorder, isactive, non_billable, all_users) VALUES
