@@ -11,11 +11,16 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 /**
- * WeeklyTimesheetService - Weekly timesheet (Monday-Sunday)
+ * WeeklyTimesheetService - Weekly timesheet supporting configurable week start day. Supports
+ * Monday-Sunday (default) and Saturday-Friday ranges.
  *
  * @author Dean Ammons
  * @version 1.0
  * @since October 2025
+ *
+ *        Modified by: Dean Ammons - March 2026 Change: Added support for configurable week start
+ *        day (MONDAY or SATURDAY) Reason: Some clients use Saturday-Friday as their standard
+ *        billing week
  */
 @Service
 @Transactional(readOnly = true)
@@ -30,65 +35,91 @@ public class WeeklyTimesheetService {
         this.taskActivityService = taskActivityService;
     }
 
+    /**
+     * Resolves a week-start-day string preference (e.g. "MONDAY", "SATURDAY") to a DayOfWeek.
+     * Returns MONDAY for any unrecognised value.
+     *
+     * @param weekStartDayStr the stored preference string
+     * @return the corresponding DayOfWeek, defaulting to MONDAY
+     */
+    public static DayOfWeek resolveWeekStartDay(String weekStartDayStr) {
+        if ("SATURDAY".equalsIgnoreCase(weekStartDayStr)) {
+            return DayOfWeek.SATURDAY;
+        }
+        return DayOfWeek.MONDAY;
+    }
+
     public WeeklyTimesheetData getCurrentWeekTimesheet() {
-        LocalDate today = LocalDate.now();
-        return getWeeklyTimesheet(today);
+        return getWeeklyTimesheet(LocalDate.now(), DayOfWeek.MONDAY);
     }
 
     /**
-     * Get data for the week containing requested date (for current user)
+     * Get data for the current week for the given user using their preferred start day.
+     */
+    public WeeklyTimesheetData getCurrentWeekTimesheet(String username, DayOfWeek weekStartDay) {
+        return getWeeklyTimesheet(LocalDate.now(), username, weekStartDay);
+    }
+
+    /**
+     * Get data for the week containing requested date (for current user), Monday start.
      */
     public WeeklyTimesheetData getCurrentWeekTimesheet(String username) {
-        LocalDate today = LocalDate.now();
-        return getWeeklyTimesheet(today, username);
+        return getCurrentWeekTimesheet(username, DayOfWeek.MONDAY);
     }
 
     /**
-     * Get data for the week containing requested date Default is current or previous Monday.
+     * Get data for the week containing requested date, using Monday as the start day.
      */
     public WeeklyTimesheetData getWeeklyTimesheet(LocalDate date) {
-        LocalDate mondayOfWeek = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate sundayOfWeek = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-
-        List<TaskActivity> weekTasks =
-                taskActivityService.getTaskActivitiesInDateRange(mondayOfWeek, sundayOfWeek);
-
-        return buildWeeklyTimesheetData(mondayOfWeek, sundayOfWeek, weekTasks);
+        return getWeeklyTimesheet(date, DayOfWeek.MONDAY);
     }
 
     /**
-     * Get data for the week containing requested date for specific user Default is current or
-     * previous Monday.
+     * Get data for the week containing the requested date using the specified start day.
+     */
+    public WeeklyTimesheetData getWeeklyTimesheet(LocalDate date, DayOfWeek weekStartDay) {
+        LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(weekStartDay));
+        LocalDate weekEnd = weekStart.plusDays(6);
+        List<TaskActivity> weekTasks =
+                taskActivityService.getTaskActivitiesInDateRange(weekStart, weekEnd);
+        return buildWeeklyTimesheetData(weekStart, weekEnd, weekTasks);
+    }
+
+    /**
+     * Get data for the week containing requested date for a specific user, Monday start.
      */
     public WeeklyTimesheetData getWeeklyTimesheet(LocalDate date, String username) {
-        LocalDate mondayOfWeek = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate sundayOfWeek = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-
-        List<TaskActivity> weekTasks = taskActivityService
-                .getTaskActivitiesInDateRangeForUser(username, mondayOfWeek, sundayOfWeek);
-
-        return buildWeeklyTimesheetData(mondayOfWeek, sundayOfWeek, weekTasks);
+        return getWeeklyTimesheet(date, username, DayOfWeek.MONDAY);
     }
 
     /**
-     * Build data structure
+     * Get data for the week containing the requested date for a specific user, using the specified
+     * start day.
      */
-    private WeeklyTimesheetData buildWeeklyTimesheetData(LocalDate mondayOfWeek,
-            LocalDate sundayOfWeek, List<TaskActivity> weekTasks) {
-        WeeklyTimesheetData weeklyData = new WeeklyTimesheetData();
-        weeklyData.setWeekStartDate(mondayOfWeek);
-        weeklyData.setWeekEndDate(sundayOfWeek);
+    public WeeklyTimesheetData getWeeklyTimesheet(LocalDate date, String username,
+            DayOfWeek weekStartDay) {
+        LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(weekStartDay));
+        LocalDate weekEnd = weekStart.plusDays(6);
+        List<TaskActivity> weekTasks = taskActivityService
+                .getTaskActivitiesInDateRangeForUser(username, weekStart, weekEnd);
+        return buildWeeklyTimesheetData(weekStart, weekEnd, weekTasks);
+    }
 
-        Map<DayOfWeek, List<TaskActivity>> tasksByDay = new LinkedHashMap<>();
-        Map<DayOfWeek, BigDecimal> totalsByDay = new LinkedHashMap<>();
+    /**
+     * Build the weekly timesheet data structure for any week start day. Days are ordered from
+     * weekStartDate through weekEndDate.
+     */
+    private WeeklyTimesheetData buildWeeklyTimesheetData(LocalDate weekStartDate,
+            LocalDate weekEndDate, List<TaskActivity> weekTasks) {
 
-        // Initialize empty lists and zero totals for each day
-        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
-            tasksByDay.put(dayOfWeek, new ArrayList<>());
-            totalsByDay.put(dayOfWeek, BigDecimal.ZERO);
+        // Group tasks and accumulate totals by day-of-week
+        Map<DayOfWeek, List<TaskActivity>> tasksByDay = new EnumMap<>(DayOfWeek.class);
+        Map<DayOfWeek, BigDecimal> totalsByDay = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek d : DayOfWeek.values()) {
+            tasksByDay.put(d, new ArrayList<>());
+            totalsByDay.put(d, BigDecimal.ZERO);
         }
 
-        // Group tasks by day of week
         BigDecimal weekTotal = BigDecimal.ZERO;
         for (TaskActivity task : weekTasks) {
             DayOfWeek dayOfWeek = task.getTaskDate().getDayOfWeek();
@@ -97,17 +128,23 @@ public class WeeklyTimesheetService {
             weekTotal = weekTotal.add(task.getHours());
         }
 
-        // Populate daily buckets
+        // Build ordered daily buckets matching the actual week order (supports any start day)
         Map<DayOfWeek, DailyTimesheetData> dailyData = new LinkedHashMap<>();
-        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+        LocalDate current = weekStartDate;
+        while (!current.isAfter(weekEndDate)) {
+            DayOfWeek dayOfWeek = current.getDayOfWeek();
             DailyTimesheetData dailyTimesheet = new DailyTimesheetData();
             dailyTimesheet.setDayOfWeek(dayOfWeek);
-            dailyTimesheet.setDate(mondayOfWeek.plusDays((long) dayOfWeek.getValue() - 1));
+            dailyTimesheet.setDate(current);
             dailyTimesheet.setTasks(tasksByDay.get(dayOfWeek));
             dailyTimesheet.setDayTotal(totalsByDay.get(dayOfWeek));
             dailyData.put(dayOfWeek, dailyTimesheet);
+            current = current.plusDays(1);
         }
 
+        WeeklyTimesheetData weeklyData = new WeeklyTimesheetData();
+        weeklyData.setWeekStartDate(weekStartDate);
+        weeklyData.setWeekEndDate(weekEndDate);
         weeklyData.setDailyData(dailyData);
         weeklyData.setWeekTotal(weekTotal);
 

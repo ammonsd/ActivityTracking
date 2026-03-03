@@ -769,10 +769,19 @@ public class TaskActivityWebController {
 
             // All users (including admins) see only their own tasks
             String username = getUsername(authentication);
+
+            // Load the user's preferred week start day (MONDAY default)
+            String weekStartDayStr = userService.getUserByUsername(username)
+                    .map(u -> u.getWeekStartDay() != null ? u.getWeekStartDay() : "MONDAY")
+                    .orElse("MONDAY");
+            java.time.DayOfWeek weekStartDay =
+                    WeeklyTimesheetService.resolveWeekStartDay(weekStartDayStr);
+
             if (date != null) {
-                weeklyData = weeklyTimesheetService.getWeeklyTimesheet(date, username);
+                weeklyData =
+                        weeklyTimesheetService.getWeeklyTimesheet(date, username, weekStartDay);
             } else {
-                weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet(username);
+                weeklyData = weeklyTimesheetService.getCurrentWeekTimesheet(username, weekStartDay);
             }
 
             // Apply billability filter if not "All"
@@ -782,6 +791,7 @@ public class TaskActivityWebController {
 
             model.addAttribute("weeklyData", weeklyData);
             model.addAttribute("billability", billability);
+            model.addAttribute("weekStartDay", weekStartDayStr);
             return WEEKLY_TIMESHEET_VIEW;
 
         } catch (Exception e) {

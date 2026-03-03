@@ -64,6 +64,9 @@ public class User {
     @Column(name = "account_locked", nullable = false)
     private boolean accountLocked = false;
 
+    @Column(name = "week_start_day", nullable = false, length = 10)
+    private String weekStartDay = "MONDAY";
+
     // Constructors
     public User() {
         this.createdDate = LocalDateTime.now(ZoneOffset.UTC);
@@ -197,6 +200,14 @@ public class User {
         this.email = email;
     }
 
+    public String getWeekStartDay() {
+        return weekStartDay;
+    }
+
+    public void setWeekStartDay(String weekStartDay) {
+        this.weekStartDay = (weekStartDay != null) ? weekStartDay : "MONDAY";
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -219,7 +230,7 @@ public class User {
                 + ", role=" + role + ", enabled=" + enabled + ", forcePasswordUpdate="
                 + forcePasswordUpdate + ", createdDate=" + createdDate + ", lastLogin=" + lastLogin
                 + ", failedLoginAttempts=" + failedLoginAttempts + ", accountLocked="
-                + accountLocked + '}';
+                + accountLocked + ", weekStartDay='" + weekStartDay + '\'' + '}';
         // Note: Password is intentionally excluded from toString for security
     }
 }

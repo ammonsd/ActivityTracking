@@ -3,6 +3,10 @@
  * Note: The admin-only "User Analysis" report has been moved to the React Admin Dashboard
  * (Analytics & Reports page) to keep all admin-facing features in one place.
  *
+ * Modified by: Dean Ammons - March 2026
+ * Change: "Current Week" date range now respects the user's weekStartDay preference
+ * (MONDAY = Mon-Sun, SATURDAY = Sat-Fri), matching the Spring Boot weekly timesheet range.
+ *
  * Modified by: Dean Ammons - February 2026
  * Change: Removed User Analysis tab (moved to React Admin Dashboard)
  * Reason: Admin should not need to flip between dashboards for admin-specific functionality
@@ -30,6 +34,7 @@ import { PhaseDistributionComponent } from './phase-distribution/phase-distribut
 import { WeeklySummaryComponent } from './weekly-summary/weekly-summary.component';
 import { TopActivitiesComponent } from './top-activities/top-activities.component';
 import { MonthlyComparisonComponent } from './monthly-comparison/monthly-comparison.component';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-reports',
@@ -61,9 +66,26 @@ export class ReportsComponent implements OnInit {
   startDate: Date | null = null;
   endDate: Date | null = null;
 
-  constructor() {}
+  /** Mirrors the user's weekStartDay preference: JS getDay() value (1 = Monday, 6 = Saturday). */
+  private weekStartDayValue = 1; // default: Monday
+
+  constructor(private readonly userService: UserService) {}
 
   ngOnInit(): void {
+    // Load the user's week-start preference before defaulting to currentMonth so that
+    // any subsequent click on "Current Week" uses the correct range immediately.
+    this.userService.getCurrentUserProfile().subscribe({
+      next: (response) => {
+        if (response?.data?.weekStartDay === 'SATURDAY') {
+          this.weekStartDayValue = 6;
+        } else {
+          this.weekStartDayValue = 1; // MONDAY or absent → Monday
+        }
+      },
+      error: () => {
+        this.weekStartDayValue = 1; // Fall back to Monday on any error
+      },
+    });
     this.setDateRange('currentMonth');
   }
 
@@ -72,15 +94,15 @@ export class ReportsComponent implements OnInit {
 
     switch (range) {
       case 'currentWeek': {
-        // Calculate Monday of current week (week starts on Monday)
-        const dayOfWeek = today.getDay();
-        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday (0), go back 6 days; otherwise go back to Monday
+        // Calculate the start of the current week using the user's weekStartDay preference.
+        // weekStartDayValue: 1 = Monday (Mon-Sun), 6 = Saturday (Sat-Fri).
+        const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+        const diff = (dayOfWeek - this.weekStartDayValue + 7) % 7;
         this.startDate = new Date(
           today.getFullYear(),
           today.getMonth(),
-          today.getDate() + diff,
+          today.getDate() - diff,
         );
-        // Calculate Sunday of current week
         this.endDate = new Date(
           this.startDate.getFullYear(),
           this.startDate.getMonth(),

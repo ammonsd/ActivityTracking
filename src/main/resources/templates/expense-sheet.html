@@ -295,13 +295,18 @@
 
             <!-- Date Selector -->
             <div class="date-selector">
-                <label for="weekStartDate">Week Starting Monday:</label>
+                <label for="weekStartDate"
+                       th:text="'Week Starting ' + (${weekStartDay} == 'SATURDAY' ? 'Saturday' : 'Monday') + ':'">
+                    Week Starting Monday:
+                </label>
                 <input
                     type="date"
                     id="weekStartDate"
                     name="weekStartDate"
                     th:value="${weeklyData != null ? weeklyData.weekStartDate : ''}"
                 />
+                <!-- Hidden input carries server preference to JS -->
+                <input type="hidden" id="weekStartDaySetting" th:value="${weekStartDay != null ? weekStartDay : 'MONDAY'}" />
                 <div class="week-navigation">
                     <button
                         type="button"
@@ -466,8 +471,10 @@
             // Initialize date picker
             function initializeDatePicker() {
                 const dateInput = document.getElementById("weekStartDate");
-                const monday = DateUtils.getCurrentOrUrlMonday("date");
-                dateInput.value = DateUtils.formatDateForInput(monday);
+                const settingEl = document.getElementById("weekStartDaySetting");
+                const startDayValue = DateUtils.weekStartDayToJsValue(settingEl ? settingEl.value : "MONDAY");
+                const weekStart = DateUtils.getCurrentOrUrlWeekStart("date", startDayValue);
+                dateInput.value = DateUtils.formatDateForInput(weekStart);
             }
 
             // Set up event listeners
@@ -475,6 +482,8 @@
                 initializeDatePicker();
 
                 const dateInput = document.getElementById("weekStartDate");
+                const settingEl = document.getElementById("weekStartDaySetting");
+                const startDayValue = DateUtils.weekStartDayToJsValue(settingEl ? settingEl.value : "MONDAY");
                 const prevWeekBtn = document.getElementById("prevWeek");
                 const nextWeekBtn = document.getElementById("nextWeek");
                 const currentWeekBtn = document.getElementById("currentWeek");
@@ -483,14 +492,14 @@
                     if (!this.value) return;
 
                     const selectedDate = DateUtils.parseDate(this.value);
-                    const monday = DateUtils.getMondayOfWeek(selectedDate);
-                    const mondayStr = DateUtils.formatDateForInput(monday);
+                    const weekStart = DateUtils.getWeekStartDate(selectedDate, startDayValue);
+                    const weekStartStr = DateUtils.formatDateForInput(weekStart);
 
-                    if (this.value !== mondayStr) {
-                        this.value = mondayStr;
+                    if (this.value !== weekStartStr) {
+                        this.value = weekStartStr;
                     }
 
-                    DateUtils.updateUrl(mondayStr, "/expenses/weekly-sheet");
+                    DateUtils.updateUrl(weekStartStr, "/expenses/weekly-sheet");
                 });
 
                 prevWeekBtn.addEventListener("click", function () {

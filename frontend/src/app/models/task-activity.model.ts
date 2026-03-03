@@ -31,6 +31,7 @@ export interface User {
   accountLocked?: boolean;
   failedLoginAttempts?: number;
   hasTasks?: boolean; // True if user has task activities (affects delete permission)
+  weekStartDay?: string; // 'MONDAY' (Mon-Sun) or 'SATURDAY' (Sat-Fri); defaults to 'MONDAY'
 }
 
 export interface DropdownValue {

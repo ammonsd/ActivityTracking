@@ -65,7 +65,8 @@ public class UserProfileController {
         userEditDto.setEmail(user.getEmail());
         userEditDto.setAccountLocked(user.isAccountLocked());
         userEditDto.setFailedLoginAttempts(user.getFailedLoginAttempts());
-
+        userEditDto.setWeekStartDay(
+                user.getWeekStartDay() != null ? user.getWeekStartDay() : "MONDAY");
         model.addAttribute("userEditDto", userEditDto);
         model.addAttribute(IS_OWN_PROFILE, true);
         addUserDisplayInfo(model, authentication);
@@ -105,6 +106,7 @@ public class UserProfileController {
             user.setLastname(userEditDto.getLastname());
             user.setCompany(userEditDto.getCompany());
             user.setEmail(userEditDto.getEmail());
+            user.setWeekStartDay(userEditDto.getWeekStartDay());
 
             User updatedUser = userService.updateUser(user);
             logger.info("User {} successfully updated their profile", updatedUser.getUsername());
