@@ -39,7 +39,6 @@ mkdir -p /etc/systemd/system/jenkins.service.d
 echo "Step 2: Creating override configuration..."
 cat > /etc/systemd/system/jenkins.service.d/override.conf << 'EOF'
 [Service]
-Restart=no
 Environment="JENKINS_PORT=8081"
 EOF
 
