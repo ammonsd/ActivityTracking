@@ -78,8 +78,16 @@
             }
             .task-details {
                 color: #495057;
-                max-width: 400px;
-                word-wrap: break-word;
+                max-width: 350px;
+                padding: 0;
+            }
+            /* Preserve line breaks from stored data; scroll horizontally for long lines */
+            .task-details-inner {
+                white-space: pre;
+                overflow-x: auto;
+                padding: 8px 12px;
+                max-width: 350px;
+                cursor: default;
             }
             .no-tasks-day {
                 text-align: center;
@@ -197,6 +205,10 @@
                     font-size: 12px;
                 }
                 .task-details {
+                    max-width: 200px;
+                    padding: 0;
+                }
+                .task-details-inner {
                     max-width: 200px;
                 }
             }
@@ -376,10 +388,12 @@
                                     <td
                                         th:text="${task.taskName}"
                                     ></td>
-                                    <td
-                                        class="task-details"
-                                        th:text="${task.details}"
-                                    ></td>
+                                    <td class="task-details">
+                                        <div
+                                            class="task-details-inner"
+                                            th:text="${task.details}"
+                                        ></div>
+                                    </td>
                                 </tr>
 
                                 <!-- Day Total -->
