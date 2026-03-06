@@ -19,7 +19,7 @@ VALUES ('DASHBOARD', 'VIEW', 'Access to Angular and React dashboard views')
 ON CONFLICT (resource, action) DO NOTHING;
 
 -- Step 2: Grant the permission to the ADMIN role
---         Uses subqueries to avoid hardcoded IDs
+--         Uses WHERE NOT EXISTS to avoid duplicate errors
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT
     r.id,
@@ -29,7 +29,10 @@ CROSS JOIN permissions p
 WHERE r.name = 'ADMIN'
   AND p.resource = 'DASHBOARD'
   AND p.action   = 'VIEW'
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+  AND NOT EXISTS (
+      SELECT 1 FROM role_permissions rp
+      WHERE rp.role_id = r.id AND rp.permission_id = p.id
+  );
 
 -- =============================================================================
 -- OPTIONAL: Grant to additional roles

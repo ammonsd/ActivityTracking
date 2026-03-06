@@ -701,8 +701,8 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
-                        <!-- React Admin Dashboard - shown to users with DASHBOARD:VIEW permission -->
-                        <li id="dashboard-link-react" th:if="${showDashboard}">
+                        <!-- React Admin Dashboard - requires DASHBOARD:VIEW permission AND ADMIN role -->
+                        <li id="dashboard-link-react" th:if="${showDashboard and #authorization.expression('hasRole(''ADMIN'')')}">
                             <a
                                 th:href="@{/dashboard}"
                                 title="React Admin Dashboard"
