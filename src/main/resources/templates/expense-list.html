@@ -693,7 +693,8 @@
                             </button>
                         </li>
                         <!-- Angular Dashboard - shown to users with DASHBOARD:VIEW permission -->
-                        <li id="dashboard-link-angular" th:if="${showDashboard}">
+                        <!-- Hidden by default; probe.js fetch reveals it only when JS assets are accessible -->
+                        <li id="dashboard-link-angular" th:if="${showDashboard}" style="display:none">
                             <a
                                 th:href="@{/app}"
                                 title="Angular Dashboard"
@@ -702,7 +703,7 @@
                             </a>
                         </li>
                         <!-- React Admin Dashboard - requires DASHBOARD:VIEW permission AND ADMIN role -->
-                        <li id="dashboard-link-react" th:if="${showDashboard and #authorization.expression('hasRole(''ADMIN'')')}">
+                        <li id="dashboard-link-react" th:if="${showDashboard and #authorization.expression('hasRole(''ADMIN'')')}" style="display:none">
                             <a
                                 th:href="@{/dashboard}"
                                 title="React Admin Dashboard"
@@ -1390,17 +1391,21 @@
                 var reactLink   = document.getElementById('dashboard-link-react');
                 if (!angularLink && !reactLink) return;
 
+                // Links are hidden by default (style="display:none" in HTML).
+                // Only reveal them when probe.js loads successfully (status 200).
+                // If Zscaler or any proxy blocks the file (403, redirect, network error),
+                // the links simply remain hidden.
                 fetch('/app/probe.js', { method: 'HEAD', cache: 'no-store' })
                     .then(function (r) {
-                        if (r.status === 403) {
-                            hideDashboardLinks();
+                        if (r.status === 200) {
+                            showDashboardLinks();
                         }
                     })
-                    .catch(function () { /* network error - give benefit of the doubt */ });
+                    .catch(function () { /* blocked or network error - links stay hidden */ });
 
-                function hideDashboardLinks() {
+                function showDashboardLinks() {
                     [angularLink, reactLink].forEach(function (li) {
-                        if (li) li.style.display = 'none';
+                        if (li) li.style.display = '';
                     });
                 }
             }());
