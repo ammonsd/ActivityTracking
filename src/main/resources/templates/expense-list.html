@@ -1392,12 +1392,14 @@
                 if (!angularLink && !reactLink) return;
 
                 // Links are hidden by default (style="display:none" in HTML).
-                // Only reveal them when probe.js loads successfully (status 200).
-                // If Zscaler or any proxy blocks the file (403, redirect, network error),
-                // the links simply remain hidden.
+                // Only reveal them when probe.js returns a genuine JS response.
+                // Zscaler may redirect blocked requests to an HTML block page (which
+                // arrives as status 200 with Content-Type: text/html) - checking the
+                // content-type ensures block pages don't accidentally show the links.
                 fetch('/app/probe.js', { method: 'HEAD', cache: 'no-store' })
                     .then(function (r) {
-                        if (r.status === 200) {
+                        var ct = r.headers.get('content-type') || '';
+                        if (r.status === 200 && ct.indexOf('javascript') !== -1) {
                             showDashboardLinks();
                         }
                     })
