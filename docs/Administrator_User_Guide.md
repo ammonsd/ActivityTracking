@@ -98,13 +98,23 @@ The **React Admin Dashboard** is a modern, single-page application built with Re
 ### Accessing the React Dashboard
 
 **Prerequisites:**
-- Must be logged in with **ADMIN** role
-- Non-ADMIN users cannot access the dashboard
+- Must be logged in with an account that has the **DASHBOARD:VIEW** permission assigned to its role
+- Users without this permission will not see the Dashboard or Admin Dashboard options in the sidebar
 
 **Access:**
 - Click **🎯 Admin Dashboard** from the sidebar menu in the main application
 - Or navigate directly to: `https://taskactivitytracker.com/dashboard`
 - Your login session carries over — no separate login is required
+
+### Dashboard Visibility and Corporate Network Access
+
+The Dashboard sidebar links are controlled by two independent factors:
+
+1. **Permission**: Your account's role must include the `DASHBOARD:VIEW` permission. If you do not see a Dashboard option in the sidebar, your account has not been granted this permission. Contact your system administrator to have it assigned.
+
+2. **Network/Device**: The dashboards are built with JavaScript frameworks (Angular and React). Some corporate network security tools (such as Zscaler) block JavaScript file downloads as a security policy. When this is detected, the Dashboard links are automatically hidden from the sidebar. This is expected behavior and does not indicate a problem with the application or your account. Accessing the application from a personal device or a network without JavaScript blocking will restore the sidebar options.
+
+> **Note:** If Dashboard links are not visible in the sidebar and you believe your account should have access, first confirm with IT whether JavaScript file downloads are restricted on your network. If they are, access the dashboards from a non-restricted network or device.
 
 ### Dashboard Features
 

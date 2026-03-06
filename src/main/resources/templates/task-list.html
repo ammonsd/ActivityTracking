@@ -748,18 +748,19 @@
                                 <span>Export CSV</span>
                             </button>
                         </li>
-                        <!-- Dashboard - Visible for all -->
-                        <li>
-                            <a 
+                        <!-- Angular Dashboard - shown to users with DASHBOARD:VIEW permission -->
+                        <!-- Hidden by default; probe.js fetch reveals it only when JS assets are accessible -->
+                        <li id="dashboard-link-angular" th:if="${showDashboard}" style="display:none">
+                            <a
                                 th:href="@{/app}"
-                                title="Angular Admin Dashboard"
+                                title="Angular Dashboard"
                             >
                                 <span>Dashboard</span>
                             </a>
                         </li>
-                        <!-- React Admin Dashboard - ADMIN only -->
-                        <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
-                            <a 
+                        <!-- React Admin Dashboard - requires DASHBOARD:VIEW permission AND ADMIN role -->
+                        <li id="dashboard-link-react" th:if="${showDashboard and #authorization.expression('hasRole(''ADMIN'')')}" style="display:none">
+                            <a
                                 th:href="@{/dashboard}"
                                 title="React Admin Dashboard"
                             >
@@ -1435,6 +1436,36 @@
                     sendBtn.textContent = "Send";
                 });
             }
+        </script>
+        <script>
+            // Probe whether frontend JS assets are accessible.
+            // Corporate proxies (e.g. Zscaler) may block .js downloads with a 403.
+            // If blocked, dashboard menu items are hidden entirely.
+            (function () {
+                var angularLink = document.getElementById('dashboard-link-angular');
+                var reactLink   = document.getElementById('dashboard-link-react');
+                if (!angularLink && !reactLink) return;
+
+                // Links are hidden by default (style="display:none" in HTML).
+                // Probe fetches /app/probe.js as a GET to confirm JS assets are reachable.
+                // Spring Boot omits Content-Type on HEAD requests for static resources,
+                // so GET is used here. Zscaler block pages always return text/html;
+                // the real probe.js never will - so any non-HTML 200 means assets are accessible.
+                fetch('/app/probe.js', { cache: 'no-store' })
+                    .then(function (r) {
+                        var ct = r.headers.get('content-type') || '';
+                        if (r.status === 200 && ct.indexOf('text/html') === -1) {
+                            showDashboardLinks();
+                        }
+                    })
+                    .catch(function () { /* blocked or network error - links stay hidden */ });
+
+                function showDashboardLinks() {
+                    [angularLink, reactLink].forEach(function (li) {
+                        if (li) li.style.display = '';
+                    });
+                }
+            }());
         </script>
     </body>
 </html>

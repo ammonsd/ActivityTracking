@@ -571,6 +571,10 @@ public class TaskActivityWebController {
             boolean hasExpenseAccess = permissionService.userHasPermission(username, "EXPENSE:READ");
             model.addAttribute("userHasExpenseAccess", hasExpenseAccess);
 
+            // Control dashboard link visibility per-user via DASHBOARD:VIEW permission
+            boolean showDashboard = permissionService.userHasPermission(username, "DASHBOARD:VIEW");
+            model.addAttribute("showDashboard", showDashboard);
+
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {
                 String firstname = user.getFirstname() != null ? user.getFirstname() : "";
