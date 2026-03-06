@@ -8,6 +8,7 @@ import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.ReceiptStorageService;
 import com.ammons.taskactivity.service.BillabilityService;
+import com.ammons.taskactivity.service.PermissionService;
 import com.ammons.taskactivity.service.WeeklyTimesheetService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -84,6 +85,7 @@ public class ExpenseViewController {
     private final UserService userService;
     private final ReceiptStorageService storageService;
     private final BillabilityService billabilityService;
+    private final PermissionService permissionService;
 
     @Value("${app.upload.max-file-size}")
     private long maxFileSize;
@@ -94,13 +96,15 @@ public class ExpenseViewController {
     public ExpenseViewController(ExpenseService expenseService,
             DropdownValueService dropdownValueService,
             UserDropdownAccessService userDropdownAccessService, UserService userService,
-            ReceiptStorageService storageService, BillabilityService billabilityService) {
+            ReceiptStorageService storageService, BillabilityService billabilityService,
+            PermissionService permissionService) {
         this.expenseService = expenseService;
         this.dropdownValueService = dropdownValueService;
         this.userDropdownAccessService = userDropdownAccessService;
         this.userService = userService;
         this.storageService = storageService;
         this.billabilityService = billabilityService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -1168,6 +1172,10 @@ public class ExpenseViewController {
             // Check if user has email for expense access
             boolean hasEmail = userService.userHasEmail(username);
             model.addAttribute("userHasEmail", hasEmail);
+
+            // Control dashboard link visibility per-user via DASHBOARD:VIEW permission
+            boolean showDashboard = permissionService.userHasPermission(username, "DASHBOARD:VIEW");
+            model.addAttribute("showDashboard", showDashboard);
 
             // Fetch user details to display full name
             userService.getUserByUsername(username).ifPresent(user -> {
