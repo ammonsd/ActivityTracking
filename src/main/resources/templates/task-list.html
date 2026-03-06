@@ -1447,14 +1447,14 @@
                 if (!angularLink && !reactLink) return;
 
                 // Links are hidden by default (style="display:none" in HTML).
-                // Only reveal them when probe.js returns a genuine JS response.
-                // Zscaler may redirect blocked requests to an HTML block page (which
-                // arrives as status 200 with Content-Type: text/html) - checking the
-                // content-type ensures block pages don't accidentally show the links.
-                fetch('/app/probe.js', { method: 'HEAD', cache: 'no-store' })
+                // Probe fetches /app/probe.js as a GET to confirm JS assets are reachable.
+                // Spring Boot omits Content-Type on HEAD requests for static resources,
+                // so GET is used here. Zscaler block pages always return text/html;
+                // the real probe.js never will - so any non-HTML 200 means assets are accessible.
+                fetch('/app/probe.js', { cache: 'no-store' })
                     .then(function (r) {
                         var ct = r.headers.get('content-type') || '';
-                        if (r.status === 200 && ct.indexOf('javascript') !== -1) {
+                        if (r.status === 200 && ct.indexOf('text/html') === -1) {
                             showDashboardLinks();
                         }
                     })
