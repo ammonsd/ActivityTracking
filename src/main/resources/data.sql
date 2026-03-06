@@ -158,6 +158,11 @@ INSERT INTO permissions (resource, action, description) VALUES
     ('JENKINS', 'NOTIFY', 'Send build notifications from Jenkins CI/CD pipeline')
 ON CONFLICT (resource, action) DO NOTHING;
 
+-- Define permissions for dashboard access
+INSERT INTO permissions (resource, action, description) VALUES
+    ('DASHBOARD', 'VIEW', 'Access the Angular and React dashboard views')
+ON CONFLICT (resource, action) DO NOTHING;
+
 -- Assign permissions to ADMIN role (has everything)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
