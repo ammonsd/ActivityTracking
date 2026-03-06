@@ -187,7 +187,22 @@ public class SecurityConfig {
                                                                 "/css/**", "/js/**", "/images/**",
                                                                 "/favicon.ico", "/app/*.js",
                                                                 "/app/*.css", "/app/*.woff2",
-                                                                "/app/*.ico", "/app/*.json")
+                                                                "/app/*.ico", "/app/*.json",
+                                                                // Angular subdirectory assets
+                                                                // (fonts → media/, copied assets →
+                                                                // assets/)
+                                                                // Required: corporate proxies strip
+                                                                // cookies from sub-resource
+                                                                // requests,
+                                                                // causing 403 if these paths
+                                                                // require authentication
+                                                                "/app/media/**", "/app/assets/**",
+                                                                // React (Vite) assets: ALL
+                                                                // JS/CSS/fonts are built to assets/
+                                                                // subdirectory
+                                                                // e.g.
+                                                                // /dashboard/assets/index-AbCd1234.js
+                                                                "/dashboard/assets/**")
                                                 .permitAll()
                                                 .requestMatchers(LOGIN_URL, LOGOUT_URL, "/error",
                                                                 "/access-denied",
