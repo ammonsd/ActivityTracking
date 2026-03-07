@@ -48,5 +48,16 @@ If you are unsure what access you have, or you need access changed, use the
 
 ---
 
+## Dashboard Access
+
+Some accounts include a **Dashboard** link in the sidebar that opens an interactive Angular dashboard. Whether you see this link depends on two things:
+
+1. **Permission** — your account's role must include the `DASHBOARD:VIEW` permission
+2. **Network** — some corporate networks block JavaScript file downloads (e.g. Zscaler), which will cause the link to be automatically hidden
+
+If you click a bookmarked dashboard link on a restricted network, the application will redirect you back to the Task Activity List automatically. See your role-specific guide for more detail.
+
+---
+
 > **Administrators:** See the [Administrator User Guide](Administrator_User_Guide.md) for
 > user management, role configuration, analytics, and system administration.

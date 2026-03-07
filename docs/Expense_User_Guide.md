@@ -237,8 +237,21 @@ The Expense List page includes a **floating sidebar menu** for quick access to f
 
 **Menu items:**
 
+- **Dashboard** — opens the Angular user dashboard (visible only if your account has dashboard access and your network allows it)
 - **Export CSV** — export your filtered expense list to CSV
 - **Contact System Admin** — send a message to the administrator without leaving the application
+
+### Dashboard Access
+
+The **Dashboard** link in the sidebar opens the interactive Angular dashboard. It may not always be visible — two conditions must both be met for it to appear:
+
+1. **Permission**: Your account's role must include the `DASHBOARD:VIEW` permission. If you need access, use **Contact System Admin** from the sidebar to request it.
+
+2. **Network**: The dashboard is a JavaScript application. Some corporate networks (using tools such as Zscaler) block JavaScript file downloads as a security policy. When this is detected, the Dashboard link is automatically hidden from the sidebar.
+
+**If you click a bookmarked dashboard URL on a restricted network**, the application will automatically redirect you to the Task Activity List instead of showing a blank or broken page.
+
+If you are on an unrestricted network (such as your home network or a personal device) and still cannot see the Dashboard link, contact your system administrator to verify your account permissions.
 
 ### Contacting the System Administrator
 

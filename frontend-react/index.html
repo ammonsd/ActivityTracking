@@ -5,18 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend-react</title>
-    <script type="module">
+    <script>
       /* If corporate proxy (Zscaler) blocks JS assets, redirect to Spring Boot UI.
-         Running inline so it executes before the React bundle attempts to load. */
-      try {
-        const r = await fetch('/app/probe.js', { cache: 'no-store' });
-        const ct = r.headers.get('content-type') || '';
-        if (r.status !== 200 || ct.includes('text/html')) {
-          globalThis.location.replace('/task-activity');
-        }
-      } catch {
-        globalThis.location.replace('/task-activity');
-      }
+         Plain <script> (not type="module") so Vite does not process or strip this
+         during the production build. Must run before the React bundle loads. */
+      (function() {
+        fetch('/app/probe.js', { cache: 'no-store' })
+          .then(function(r) {
+            var ct = r.headers.get('content-type') || '';
+            if (r.status !== 200 || ct.includes('text/html')) {
+              globalThis.location.replace('/task-activity');
+            }
+          })
+          .catch(function() { globalThis.location.replace('/task-activity'); });
+      }());
     </script>
   </head>
   <body>

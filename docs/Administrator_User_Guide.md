@@ -114,6 +114,8 @@ The Dashboard sidebar links are controlled by two independent factors:
 
 2. **Network/Device**: The dashboards are built with JavaScript frameworks (Angular and React). Some corporate network security tools (such as Zscaler) block JavaScript file downloads as a security policy. When this is detected, the Dashboard links are automatically hidden from the sidebar. This is expected behavior and does not indicate a problem with the application or your account. Accessing the application from a personal device or a network without JavaScript blocking will restore the sidebar options.
 
+3. **Automatic Redirect**: If a user navigates directly to a dashboard URL (`/app` or `/dashboard`) on a network where JavaScript is blocked, the application will automatically redirect them to the Task Activity List. This ensures users are never left on a blank or broken page.
+
 > **Note:** If Dashboard links are not visible in the sidebar and you believe your account should have access, first confirm with IT whether JavaScript file downloads are restricted on your network. If they are, access the dashboards from a non-restricted network or device.
 
 ### Dashboard Features
