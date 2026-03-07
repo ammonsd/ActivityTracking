@@ -83,6 +83,16 @@ See the "Processing Documentation for Development Sessions" section below for co
 
 **MANDATORY:** All Java code changes must be compiled and tested before considering the work complete.
 
+**ONLY apply this when `.java` files were actually modified.** Do NOT run Maven compile or tests when only the following file types changed:
+- HTML templates (`.html`)
+- Frontend source files (`.html`, `.ts`, `.tsx`, `.css`, `.scss`)
+- SQL scripts (`.sql`)
+- Markdown documentation (`.md`)
+- Configuration/properties files (`.properties`, `.yml`)
+- Static resources (`.js`, `.css`, images)
+
+Maven compilation does not validate any of those file types and running it wastes time.
+
 - After making Java code changes, always run: `.\mvnw.cmd clean test -DskipFrontend` or target specific test class
 - Verify compilation succeeds (BUILD SUCCESS)
 - Ensure all tests pass (0 failures, 0 errors)

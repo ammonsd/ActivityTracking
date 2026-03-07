@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <title>Task Activity Tracker - User Dashboard</title>
     <base href="/" />
+    <script type="module">
+      // If corporate proxy (Zscaler) blocks JS assets, redirect to Spring Boot UI.
+      // Running inline so it executes before the Angular bundle attempts to load.
+      try {
+        const r = await fetch('/app/probe.js', { cache: 'no-store' });
+        const ct = r.headers.get('content-type') || '';
+        if (r.status !== 200 || ct.includes('text/html')) {
+          globalThis.location.replace('/task-activity');
+        }
+      } catch {
+        globalThis.location.replace('/task-activity');
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://fonts.gstatic.com" />

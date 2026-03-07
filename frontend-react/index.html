@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend-react</title>
+    <script type="module">
+      /* If corporate proxy (Zscaler) blocks JS assets, redirect to Spring Boot UI.
+         Running inline so it executes before the React bundle attempts to load. */
+      try {
+        const r = await fetch('/app/probe.js', { cache: 'no-store' });
+        const ct = r.headers.get('content-type') || '';
+        if (r.status !== 200 || ct.includes('text/html')) {
+          globalThis.location.replace('/task-activity');
+        }
+      } catch {
+        globalThis.location.replace('/task-activity');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
