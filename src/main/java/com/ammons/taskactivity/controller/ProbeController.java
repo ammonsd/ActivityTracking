@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @version 1.0
  * @since March 2026
  *
- *        Modified by: Dean Ammons - March 2026 Change: Added Access-Control-Allow-Origin: *
- *        response header Reason: Portfolio page is hosted on S3 (cross-origin); without this header
- *        the browser blocks the probe fetch, incorrectly keeping dashboard links hidden on personal
- *        networks.
+ *        Modified by: Dean Ammons - March 2026 Change: CORS for /app/probe.js moved to
+ *        SecurityConfig.corsConfigurationSource() with an open wildcard rule registered before the
+ *        catch-all /**. The controller no longer needs to set Access-Control-Allow-Origin directly;
+ *        Spring Security's CORS filter handles it. Reason: SecurityConfig CORS filter runs before
+ *        controllers and overrides any headers set here. Registering a dedicated open
+ *        CorsConfiguration in SecurityConfig is the correct layer.
  */
 @Controller
 public class ProbeController {
@@ -31,14 +33,12 @@ public class ProbeController {
      * Content-Type: application/javascript so the client probe can distinguish a real JS response
      * from a Zscaler block page (which returns text/html).
      *
-     * Access-Control-Allow-Origin: * is required so that cross-origin pages (e.g. the portfolio
-     * page hosted on S3) can fetch this endpoint. Without it the browser enforces CORS and the
-     * fetch fails, incorrectly keeping dashboard links hidden on personal networks.
+     * CORS for this endpoint is configured in SecurityConfig.corsConfigurationSource() with an open
+     * wildcard rule so cross-origin pages (e.g. portfolio hosted on S3) can fetch it.
      */
     @GetMapping("/app/probe.js")
     public ResponseEntity<String> probe() {
         return ResponseEntity.ok().header("Content-Type", "application/javascript; charset=UTF-8")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(PROBE_CONTENT);
     }
 }

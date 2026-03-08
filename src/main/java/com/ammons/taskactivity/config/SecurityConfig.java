@@ -630,6 +630,17 @@ public class SecurityConfig {
                 configuration.setAllowCredentials(true);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+                // Open CORS for the probe endpoint so cross-origin pages (e.g. the portfolio
+                // page hosted on S3) can fetch it without credentials. This must be registered
+                // before the catch-all /** rule so it takes precedence for this path.
+                CorsConfiguration probeConfiguration = new CorsConfiguration();
+                probeConfiguration.setAllowedOriginPatterns(List.of("*"));
+                probeConfiguration.setAllowedMethods(List.of("GET", "OPTIONS"));
+                probeConfiguration.setAllowedHeaders(List.of("*"));
+                probeConfiguration.setAllowCredentials(false);
+                source.registerCorsConfiguration("/app/probe.js", probeConfiguration);
+
                 source.registerCorsConfiguration("/**", configuration);
                 return source;
         }
