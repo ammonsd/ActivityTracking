@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author Dean Ammons
  * @version 1.0
  * @since March 2026
+ *
+ *        Modified by: Dean Ammons - March 2026 Change: Added Access-Control-Allow-Origin: *
+ *        response header Reason: Portfolio page is hosted on S3 (cross-origin); without this header
+ *        the browser blocks the probe fetch, incorrectly keeping dashboard links hidden on personal
+ *        networks.
  */
 @Controller
 public class ProbeController {
@@ -25,10 +30,15 @@ public class ProbeController {
      * without authentication (covered by /app/*.js in SecurityConfig permitAll). Returns
      * Content-Type: application/javascript so the client probe can distinguish a real JS response
      * from a Zscaler block page (which returns text/html).
+     *
+     * Access-Control-Allow-Origin: * is required so that cross-origin pages (e.g. the portfolio
+     * page hosted on S3) can fetch this endpoint. Without it the browser enforces CORS and the
+     * fetch fails, incorrectly keeping dashboard links hidden on personal networks.
      */
     @GetMapping("/app/probe.js")
     public ResponseEntity<String> probe() {
         return ResponseEntity.ok().header("Content-Type", "application/javascript; charset=UTF-8")
+                .header("Access-Control-Allow-Origin", "*")
                 .body(PROBE_CONTENT);
     }
 }
