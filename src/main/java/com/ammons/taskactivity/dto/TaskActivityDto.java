@@ -45,7 +45,7 @@ public class TaskActivityDto {
     @Size(max = 120, message = "Task name cannot exceed 120 characters")
     private String taskName;
 
-    @Size(max = 255, message = "Details cannot exceed 255 characters")
+    @Size(max = 2000, message = "Details cannot exceed 2000 characters")
     private String details;
 
     // Username - read-only field, populated automatically from logged-in user

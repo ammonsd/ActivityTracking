@@ -55,8 +55,8 @@ public class TaskActivity {
     @Column(name = "taskname", nullable = true, length = 120)
     private String taskName;
 
-    @Size(max = 255, message = "Details cannot exceed 255 characters")
-    @Column(name = "details", nullable = true, length = 255)
+    @Size(max = 2000, message = "Details cannot exceed 2000 characters")
+    @Column(name = "details", nullable = true, length = 2000)
     private String details;
 
     @NotBlank(message = "Username is required")

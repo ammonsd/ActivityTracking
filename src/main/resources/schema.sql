@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS public.taskactivity (
     taskhours NUMERIC(4, 2) NOT NULL,
     taskid VARCHAR(10),
     taskname VARCHAR(120),
-    details VARCHAR(255),
+    details VARCHAR(2000),
     username VARCHAR(50) NOT NULL,
     CONSTRAINT uq_taskactivity UNIQUE (taskdate, client, project, phase, taskid, taskname, details, username),
     CONSTRAINT fk_taskactivity_username
