@@ -690,6 +690,8 @@ The **Clone** feature allows you to quickly duplicate an existing task with toda
 - Consider marking tasks as inactive instead if historical data is important
 - Administrators can delete any user's tasks; users can only delete their own
 
+> **Corporate Network Note:** The delete function may silently fail when accessed from a corporate network. Many enterprise web proxies whitelist only `GET`, `POST`, and `PUT` and block the HTTP `DELETE` method as a security policy. This is a network-level restriction — the application and user permissions are functioning correctly. Users on the corporate network should switch to a personal/home network or a VPN that bypasses the proxy in order to delete tasks. All other operations (create, edit, clone) are unaffected.
+
 #### Actions Column (Angular Dashboard)
 
 The Actions column in the Angular dashboard provides three action buttons for each task row:
@@ -2772,6 +2774,20 @@ SELECT pg_size_pretty(pg_database_size('AmmoP1DB'));
 **Issue: Emails Not Being Sent**
 
 See [Troubleshooting Email Issues](#troubleshooting-email-issues) section above.
+
+**Issue: Delete Task Button Does Nothing on Corporate Network**
+
+**Symptoms:** Clicking the delete icon and confirming the dialog appears to have no effect; the task remains in the list with no error message, or a brief "Failed to delete" snackbar may appear.
+
+**Root Cause:** Most corporate web proxies whitelist only `GET`, `POST`, and `PUT` HTTP methods and silently block `DELETE` requests at the network layer. The application and user permissions are working correctly — the HTTP request never reaches the server.
+
+**Confirmation:** Open browser DevTools (F12) → Network tab → attempt a delete. If the `DELETE` request shows status `0`, no response, or a `405 Method Not Allowed`, the corporate proxy is the cause. Note that `PUT` (used for edits) works because it is more commonly permitted by proxy administrators.
+
+**Workaround:** Users needing to delete tasks from a corporate network environment should:
+1. Connect to a personal/home network, or
+2. Use a VPN profile that bypasses the proxy
+
+All other task operations (create, edit, clone) are unaffected and work normally on the corporate network.
 
 ### Deployment and Rollback Procedures
 
