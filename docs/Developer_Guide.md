@@ -139,14 +139,14 @@ All UIs connect to the same Spring Boot backend REST API and share authenticatio
 5. **Templates:**
    - `reset-password.html` - Email entry form
    - `change-password.html` - Enhanced with conditional logic for token-based reset
-   - `login.html` - Added "Reset Password" link and success messages
+   - `login.html` - Added "Reset Password" and "Request Account Setup" links and success messages
 
 **Security Configuration:**
 
 ```java
 // SecurityConfig.java
 http.authorizeHttpRequests(auth -> auth
-    .requestMatchers("/reset-password", "/change-password").permitAll()
+    .requestMatchers("/reset-password", "/change-password", "/request-account").permitAll()
     // ... other matchers
 );
 ```
@@ -253,6 +253,95 @@ Log messages to monitor:
 - `Valid password reset token found for email: {email}`
 - `Password reset token consumed for email: {email}`
 - `Cleaned up {count} expired password reset token(s)`
+
+---
+
+### Account Setup Request Feature
+
+**Overview**: A public, unauthenticated form that allows prospective users to submit an account setup request. No credentials are required and no data is persisted to the database. The request details are emailed to the configured administrator address.
+
+**Components:**
+
+1. **AccountSetupRequestController** (`com.ammons.taskactivity.controller.AccountSetupRequestController`)
+   - `GET /request-account` — Serves the Thymeleaf form page
+   - `POST /request-account` — Validates input, calls `EmailService`, redirects with a status query parameter (`?success` or `?error=<reason>`)
+   - Input validation: regex email check; allow-list enforcement for `trackingType` (`TASK`, `EXPENSE`, `BOTH`)
+   - Redirects (no session state modified)
+
+2. **EmailService** (`com.ammons.taskactivity.service.EmailService`)
+   - `sendAccountSetupRequest(firstName, lastName, email, company, trackingType)` — Assembles a plain-text notification and sends it to every address in `app.mail.admin-email`
+   - Supports both SMTP and AWS SES delivery
+   - Non-blocking: email failure is logged but does not surface an error to the end user
+
+3. **Template:**
+   - `request-account.html` — Thymeleaf form styled to match the login page; renders inline success/error feedback via URL parameter inspection
+
+**Security Configuration:**
+
+```java
+// SecurityConfig.java — /request-account is grouped with other public unauthenticated pages
+.requestMatchers(LOGIN_URL, LOGOUT_URL, "/error", "/access-denied",
+                 "/clear-access-denied-session", "/rate-limit",
+                 "/reset-password", "/request-account")
+.permitAll()
+```
+
+**Email Notification Content:**
+
+```text
+Subject: Account Setup Request: {First Name} {Last Name}
+
+NEW ACCOUNT SETUP REQUEST - {appName}
+
+Request Details:
+----------------------------------------
+First Name:         {firstName}
+Last Name:          {lastName}
+Email:              {email}
+Company:            {company or "(not provided)"}
+Requested Access:   {Task Tracking | Expense Tracking | Task Tracking & Expense Tracking}
+Submitted:          {timestamp}
+----------------------------------------
+
+This request was submitted via the Account Setup Request form in {appName}.
+No account has been created. Please review and create the account if appropriate.
+```
+
+**Security Notes:**
+
+- Email addresses are validated with a regex allow-pattern before being included in the email body to prevent header injection.
+- `trackingType` is validated against a hard-coded `Set<String>` allow-list (`TASK`, `EXPENSE`, `BOTH`); any other value results in a `?error=invalid_type` redirect without calling `EmailService`.
+- No session is read or modified; no database queries are executed.
+- The page is intentionally exempt from CSRF token validation (consistent with other unauthenticated form pages such as `/login` and `/reset-password`).
+
+**Testing:**
+
+```java
+// Verify the form renders unauthenticated
+mockMvc.perform(get("/request-account"))
+    .andExpect(status().isOk())
+    .andExpect(view().name("request-account"));
+
+// Verify successful submission redirects with ?success
+mockMvc.perform(post("/request-account")
+        .param("firstName", "Jane")
+        .param("lastName", "Doe")
+        .param("email", "jane.doe@example.com")
+        .param("company", "Acme Corp")
+        .param("trackingType", "BOTH"))
+    .andExpect(status().is3xxRedirection())
+    .andExpect(redirectedUrl("/request-account?success"));
+
+// Verify invalid email is rejected
+mockMvc.perform(post("/request-account")
+        .param("firstName", "Jane")
+        .param("lastName", "Doe")
+        .param("email", "not-an-email")
+        .param("trackingType", "TASK"))
+    .andExpect(redirectedUrl("/request-account?error=invalid_email"));
+```
+
+---
 
 ### Node.js Integration (Frontend Build)
 

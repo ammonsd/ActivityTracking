@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Request Account - Task Activity Management System</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/favicon-32x32.png}"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            th:href="@{/favicon-16x16.png}"
+        />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            th:href="@{/apple-touch-icon.png}"
+        />
+        <link rel="manifest" th:href="@{/site.webmanifest}" />
+
+        <link rel="stylesheet" th:href="@{/css/login.css}" />
+        <style>
+            .login-form {
+                max-width: 480px;
+            }
+
+            .form-group .radio-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 0.25rem;
+            }
+
+            .form-group .radio-option {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: normal;
+                color: #555;
+                cursor: pointer;
+            }
+
+            .form-group .radio-option input[type="radio"] {
+                width: auto;
+                margin: 0;
+                cursor: pointer;
+            }
+
+            .optional-label {
+                font-size: 0.8rem;
+                color: #999;
+                font-weight: normal;
+                margin-left: 0.25rem;
+            }
+
+            .back-link {
+                display: block;
+                text-align: center;
+                margin-top: 15px;
+                color: #007bff;
+                text-decoration: none;
+                font-size: 0.9rem;
+            }
+
+            .back-link:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="login-form">
+                <h2>Task Activity Management System</h2>
+                <h3
+                    style="
+                        text-align: center;
+                        color: #666;
+                        margin-bottom: 1.5rem;
+                    "
+                >
+                    Request Account Setup
+                </h3>
+
+                <!-- Success message -->
+                <div th:if="${param.success}" class="success-message">
+                    Your request has been submitted successfully. The
+                    administrator will contact you after setting up your
+                    account.
+                </div>
+
+                <!-- Error messages -->
+                <div
+                    th:if="${param.error != null and param.error.toString() == 'missing'}"
+                    class="error-message"
+                >
+                    Please fill in all required fields.
+                </div>
+                <div
+                    th:if="${param.error != null and param.error.toString() == 'invalid_email'}"
+                    class="error-message"
+                >
+                    Please enter a valid email address.
+                </div>
+                <div
+                    th:if="${param.error != null and param.error.toString() == 'invalid_type'}"
+                    class="error-message"
+                >
+                    Please select a valid tracking type.
+                </div>
+                <div
+                    th:if="${param.error != null and param.error.toString() == 'send_failed'}"
+                    class="error-message"
+                >
+                    Unable to submit your request at this time. Please try again
+                    later.
+                </div>
+
+                <form th:action="@{/request-account}" method="post">
+                    <div class="form-group">
+                        <label for="firstName"
+                            >First Name:
+                            <span style="color: #dc3545">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            maxlength="100"
+                            required
+                            autofocus
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName"
+                            >Last Name:
+                            <span style="color: #dc3545">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            maxlength="100"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email"
+                            >Email Address:
+                            <span style="color: #dc3545">*</span></label
+                        >
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            maxlength="255"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company">
+                            Company:
+                            <span class="optional-label">(optional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="company"
+                            name="company"
+                            maxlength="150"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <fieldset style="border: none; margin: 0; padding: 0">
+                            <legend
+                                style="
+                                    display: block;
+                                    margin-bottom: 0.5rem;
+                                    font-weight: bold;
+                                    color: #555;
+                                    font-size: 1rem;
+                                "
+                            >
+                                Tracking Type Needed:
+                                <span style="color: #dc3545">*</span>
+                            </legend>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input
+                                        type="radio"
+                                        name="trackingType"
+                                        value="TASK"
+                                        required
+                                    />
+                                    Task Tracking
+                                </label>
+                                <label class="radio-option">
+                                    <input
+                                        type="radio"
+                                        name="trackingType"
+                                        value="EXPENSE"
+                                    />
+                                    Expense Tracking
+                                </label>
+                                <label class="radio-option">
+                                    <input
+                                        type="radio"
+                                        name="trackingType"
+                                        value="BOTH"
+                                    />
+                                    Both Task &amp; Expense Tracking
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn-login"
+                        style="margin-top: 1rem"
+                    >
+                        Submit Request
+                    </button>
+
+                    <a href="/login" class="back-link"> Back to Login </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer
+            class="footer"
+            style="
+                background-color: #343a40 !important;
+                color: rgba(255, 255, 255, 0.7) !important;
+                text-align: center !important;
+                padding: 1rem !important;
+                font-size: 0.9rem !important;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                z-index: 9999 !important;
+                display: block !important;
+            "
+        >
+            <p style="margin: 0">
+                &copy; 2025-<span id="year"></span> | Task Activity Management
+                System | Dean Ammons
+            </p>
+        </footer>
+        <script>
+            document.getElementById("year").textContent =
+                new Date().getFullYear();
+        </script>
+    </body>
+</html>

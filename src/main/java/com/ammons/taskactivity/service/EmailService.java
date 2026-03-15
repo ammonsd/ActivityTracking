@@ -1460,5 +1460,95 @@ public class EmailService {
 
         return body.toString();
     }
+
+    /**
+     * Sends an account setup request notification to the system administrator. Called from the
+     * public account request form; no authentication or database write is involved.
+     *
+     * @param firstName the applicant's first name
+     * @param lastName the applicant's last name
+     * @param email the applicant's email address
+     * @param company the applicant's company name (may be blank)
+     * @param trackingType the requested access type: TASK, EXPENSE, or BOTH
+     */
+    public void sendAccountSetupRequest(String firstName, String lastName, String email,
+            String company, String trackingType) {
+        if (!mailEnabled) {
+            logger.info(
+                    "Email notifications are disabled. Would have sent account setup request from: {}",
+                    email);
+            return;
+        }
+
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            logger.warn("No admin email configured — skipping account setup request from: {}",
+                    email);
+            return;
+        }
+
+        String subject = "Account Setup Request: " + firstName + " " + lastName;
+        String body = buildAccountSetupRequestEmailBody(firstName, lastName, email, company,
+                trackingType);
+
+        String[] adminEmails = adminEmail.split(",");
+        for (String addr : adminEmails) {
+            String trimmedAddr = addr.trim();
+            if (trimmedAddr.isEmpty()) {
+                continue;
+            }
+            try {
+                if (useAwsSdk && sesClient != null) {
+                    sendEmailViaAwsSdk(trimmedAddr, subject, body);
+                } else {
+                    sendEmailViaSmtp(subject, body, trimmedAddr);
+                }
+                logger.info("Account setup request notification sent to {} for applicant: {} {}",
+                        trimmedAddr, firstName, lastName);
+            } catch (Exception e) {
+                logger.error("Failed to send account setup request notification to {}: {}",
+                        trimmedAddr, e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Builds the plain-text email body for an account setup request notification.
+     *
+     * @param firstName the applicant's first name
+     * @param lastName the applicant's last name
+     * @param email the applicant's email address
+     * @param company the applicant's company name (may be blank)
+     * @param trackingType the requested access type: TASK, EXPENSE, or BOTH
+     * @return formatted email body text
+     */
+    private String buildAccountSetupRequestEmailBody(String firstName, String lastName,
+            String email, String company, String trackingType) {
+        String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+        String trackingLabel = switch (trackingType.toUpperCase()) {
+            case "TASK" -> "Task Tracking";
+            case "EXPENSE" -> "Expense Tracking";
+            case "BOTH" -> "Task Tracking & Expense Tracking";
+            default -> trackingType;
+        };
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("NEW ACCOUNT SETUP REQUEST - %s%n%n", appName));
+        body.append("Request Details:\n");
+        body.append("----------------------------------------\n");
+        body.append(String.format("First Name:         %s%n", firstName));
+        body.append(String.format("Last Name:          %s%n", lastName));
+        body.append(String.format("Email:              %s%n", email));
+        body.append(String.format("Company:            %s%n",
+                (company == null || company.isBlank()) ? "(not provided)" : company));
+        body.append(String.format("Requested Access:   %s%n", trackingLabel));
+        body.append(String.format("Submitted:          %s%n", timestamp));
+        body.append("----------------------------------------\n\n");
+        body.append(String.format(
+                "This request was submitted via the Account Setup Request form in %s.%n", appName));
+        body.append(
+                "No account has been created. Please review and create the account if appropriate.\n");
+
+        return body.toString();
+    }
 }
 

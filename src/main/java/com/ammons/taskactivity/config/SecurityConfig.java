@@ -208,7 +208,8 @@ public class SecurityConfig {
                                                                 "/access-denied",
                                                                 "/clear-access-denied-session",
                                                                 "/rate-limit",
-                                                                "/reset-password")
+                                                                "/reset-password",
+                                                                "/request-account")
                                                 .permitAll()
                                                 // Allow unauthenticated access to password reset
                                                 // with token

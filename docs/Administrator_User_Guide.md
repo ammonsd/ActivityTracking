@@ -21,6 +21,7 @@ This guide is for administrators of the Task Activity Management System. As an a
    - [Changing User Passwords](#changing-user-passwords)
    - [Managing User Dropdown Access](#managing-user-dropdown-access)
    - [Sending Profile Notification Emails](#sending-profile-notification-emails)
+   - [Account Setup Request Form](#account-setup-request-form)
 5. [Expense Management Administration](#expense-management-administration)
    - [Managing User Expenses](#managing-user-expenses)
    - [Expense Approval Process](#expense-approval-process)
@@ -965,6 +966,56 @@ Administrators can send a personalized profile detail email to one or more activ
 
 ---
 
+### Account Setup Request Form
+
+**Available since**: March 2026
+
+The **Account Setup Request** form allows prospective users to request a new account without requiring them to log in or have any existing credentials. This is a fully public page — no authentication is needed to reach it.
+
+#### How It Works
+
+1. A prospective user navigates to the login page and clicks **"Request Account Setup"** (shown below the Reset Password link).
+2. They fill in their details and submit the form.
+3. The system emails the details directly to the configured administrator email (`app.mail.admin-email`).
+4. **No account is created automatically** — this is an informational notification only. You review the request and create the account manually when ready.
+
+#### Information Collected
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| First Name | ✅ Yes | |
+| Last Name | ✅ Yes | |
+| Email Address | ✅ Yes | Basic format validated before submission |
+| Company | ❌ No | Displayed as "(not provided)" in the email if left blank |
+| Tracking Type | ✅ Yes | One of: **Task Tracking**, **Expense Tracking**, or **Both Task & Expense Tracking** |
+
+#### Email Notification
+
+When a request is submitted, you receive an email with subject **"Account Setup Request: [First Name] [Last Name]"** containing all the details listed above plus the submission timestamp.
+
+If email is disabled (`MAIL_ENABLED=false`), the form still submits successfully but the notification is only logged — no email is sent.
+
+#### Creating the Account
+
+After receiving the request email:
+
+1. Navigate to **Manage Users** → **Add User**.
+2. Create the account using the applicant's name, email, and company.
+3. Assign the appropriate role based on the requested tracking type:
+   - **Task Tracking only** → `USER` or `GUEST`
+   - **Expense Tracking only** → `USER` with `EXPENSE_ADMIN` if they need approval authority
+   - **Both** → `USER` (standard role with task and expense access)
+4. Set a temporary password and check **Force Password Update on Next Login**.
+5. Use **Notify Users** to send them their credentials via email, or communicate the password through your preferred channel.
+
+#### Security Notes
+
+- The form is publicly accessible (no login required) but **no data is stored in the database**.
+- The request email is sent server-side; the applicant's browser never sees the admin email address.
+- Input validation prevents email header injection and limits the tracking type to a known allow-list.
+
+---
+
 ## Expense Management Administration
 
 ### Managing User Expenses
@@ -1619,6 +1670,10 @@ Quick reference for the most frequent support requests administrators receive.
 ### "I forgot my password" — Self-Service Reset
 
 **Solution**: Direct the user to the **"Reset Password"** link on the login page. They need a valid email address on their profile. If they have no email, or are a Guest user, you must reset it manually: **Manage Users** → **Change Password**.
+
+### "I don't have an account yet" — Account Setup Request
+
+**Solution**: Direct the prospective user to the **"Request Account Setup"** link on the login page (no credentials required). They fill in their name, email, company, and what type of tracking they need. You will receive an email notification and can then create the account manually via **Manage Users → Add User**.
 
 ### "I can't see my clients or projects in the dropdown"
 
