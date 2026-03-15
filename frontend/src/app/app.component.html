@@ -68,12 +68,32 @@
         <mat-icon matListItemIcon>apps</mat-icon>
         <span matListItemTitle>Task Activity Tracker</span>
       </a>
+      <!-- Task User Guide: hidden only for USER_EXPENSES role (Modified by: Dean Ammons - March 2026) -->
+      <a
+        *ngIf="currentRole !== 'USER_EXPENSES'"
+        mat-list-item
+        href="https://taskactivitytracker.com/docs/Task_User_Guide.html"
+        target="_blank"
+        rel="noopener noreferrer">
+        <mat-icon matListItemIcon>menu_book</mat-icon>
+        <span matListItemTitle>Task User Guide</span>
+      </a>
       <a 
         *ngIf="canAccessExpenses || currentRole === 'GUEST'"
         mat-list-item 
         (click)="navigateExternal($event, '/expenses/list')">
         <mat-icon matListItemIcon>attach_money</mat-icon>
         <span matListItemTitle>Expense Tracker</span>
+      </a>
+      <!-- Expense User Guide: hidden for USER_TASKS and GUEST roles (Modified by: Dean Ammons - March 2026) -->
+      <a
+        *ngIf="currentRole !== 'USER_TASKS' && currentRole !== 'GUEST'"
+        mat-list-item
+        href="https://taskactivitytracker.com/docs/Expense_User_Guide.html"
+        target="_blank"
+        rel="noopener noreferrer">
+        <mat-icon matListItemIcon>menu_book</mat-icon>
+        <span matListItemTitle>Expense User Guide</span>
       </a>
     </mat-nav-list>
   </mat-drawer>
