@@ -155,7 +155,8 @@ class DropdownValueServiceTest {
             expectedValue.setDisplayOrder(maxOrder + 1);
             expectedValue.setIsActive(true);
 
-            when(dropdownValueRepository.findMaxDisplayOrderByCategory(category))
+            when(dropdownValueRepository.findMaxDisplayOrderByCategoryAndSubcategory(category,
+                            subcategory))
                     .thenReturn(maxOrder);
             when(dropdownValueRepository.save(any(DropdownValue.class))).thenReturn(expectedValue);
 
@@ -174,7 +175,8 @@ class DropdownValueServiceTest {
             verify(dropdownValueRepository)
                     .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
                             value);
-            verify(dropdownValueRepository).findMaxDisplayOrderByCategory(category);
+            verify(dropdownValueRepository).findMaxDisplayOrderByCategoryAndSubcategory(category,
+                            subcategory);
             verify(dropdownValueRepository).save(any(DropdownValue.class));
         }
 
@@ -216,7 +218,8 @@ class DropdownValueServiceTest {
                     .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
                             value))
                     .thenReturn(false);
-            when(dropdownValueRepository.findMaxDisplayOrderByCategory(category)).thenReturn(null);
+            when(dropdownValueRepository.findMaxDisplayOrderByCategoryAndSubcategory(category,
+                            subcategory)).thenReturn(null);
 
             // When/Then
             assertThatThrownBy(
@@ -226,7 +229,8 @@ class DropdownValueServiceTest {
             verify(dropdownValueRepository)
                     .existsByCategoryAndSubcategoryAndItemValueIgnoreCase(category, subcategory,
                             value);
-            verify(dropdownValueRepository).findMaxDisplayOrderByCategory(category);
+            verify(dropdownValueRepository).findMaxDisplayOrderByCategoryAndSubcategory(category,
+                            subcategory);
         }
     }
     @Nested

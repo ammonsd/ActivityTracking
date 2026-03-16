@@ -114,7 +114,8 @@ public class DropdownValueService {
         }
 
         Integer maxOrder =
-                dropdownValueRepository.findMaxDisplayOrderByCategory(category.toUpperCase());
+                dropdownValueRepository.findMaxDisplayOrderByCategoryAndSubcategory(
+                        category.toUpperCase(), subcategory.toUpperCase());
 
         // Create and configure new entity
         DropdownValue dropdownValue = new DropdownValue();
