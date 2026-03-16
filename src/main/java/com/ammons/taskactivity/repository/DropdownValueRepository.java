@@ -53,10 +53,10 @@ public interface DropdownValueRepository extends JpaRepository<DropdownValue, Lo
                     String subcategory, String itemValue);
 
     /**
-     * Finds the highest display order for a category. Used to next display order number for a new
-     * value
+     * Finds the highest display order among active entries for a category. Used to determine the
+     * next display order number for a new value, ignoring inactive entries.
      */
-    @Query("SELECT COALESCE(MAX(dropdownValue.displayOrder), 0) FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category")
+    @Query("SELECT COALESCE(MAX(dropdownValue.displayOrder), 0) FROM DropdownValue dropdownValue WHERE dropdownValue.category = :category AND dropdownValue.isActive = true")
     public Integer findMaxDisplayOrderByCategory(@Param("category") String category);
 
     /**
