@@ -230,19 +230,19 @@ if ($Forecast -and -not $LastMonth) {
             Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
             Write-Host "$currency `$$linearProjectionTotal" -ForegroundColor $SuccessColor
             
-            Write-Host "`n--- AWS Cost Explorer Forecast ---" -ForegroundColor $InfoColor
-            Write-Host "Projected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
-            Write-Host "$currency `$$awsForecastCost" -ForegroundColor $WarningColor
-            Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
-            Write-Host "$currency `$$awsProjectedTotal" -ForegroundColor $WarningColor
+            # Write-Host "`n--- AWS Cost Explorer Forecast ---" -ForegroundColor $InfoColor
+            # Write-Host "Projected Rest of Month: " -NoNewline -ForegroundColor $InfoColor
+            # Write-Host "$currency `$$awsForecastCost" -ForegroundColor $WarningColor
+            # Write-Host "Projected Month Total:   " -NoNewline -ForegroundColor $InfoColor
+            # Write-Host "$currency `$$awsProjectedTotal" -ForegroundColor $WarningColor
             
-            # Show difference if significant
-            $difference = [math]::Abs($linearProjectionTotal - $awsProjectedTotal)
-            $percentDiff = [math]::Round(($difference / $linearProjectionTotal) * 100, 1)
-            if ($percentDiff -gt 10) {
-                Write-Host "`nNote: Projections differ by $([math]::Round($difference, 2)) ($percentDiff%)" -ForegroundColor $WarningColor
-                Write-Host "AWS forecast may account for usage patterns not reflected in simple average." -ForegroundColor $WarningColor
-            }
+            # # Show difference if significant
+            # $difference = [math]::Abs($linearProjectionTotal - $awsProjectedTotal)
+            # $percentDiff = [math]::Round(($difference / $linearProjectionTotal) * 100, 1)
+            # if ($percentDiff -gt 10) {
+            #     Write-Host "`nNote: Projections differ by $([math]::Round($difference, 2)) ($percentDiff%)" -ForegroundColor $WarningColor
+            #     Write-Host "AWS forecast may account for usage patterns not reflected in simple average." -ForegroundColor $WarningColor
+            # }
         }
         catch {
             Write-Host "`nWARNING: Unable to fetch AWS forecast data" -ForegroundColor $WarningColor
