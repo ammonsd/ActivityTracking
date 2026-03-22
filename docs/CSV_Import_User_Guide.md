@@ -1,24 +1,62 @@
+<!--
+    Description: Full reference guide for CSV import of task, expense, and dropdown data.
+
+    Author: Dean Ammons
+    Date: March 2026
+-->
+
 # CSV Import User Guide
 
 ## Overview
 
-The CSV Import feature allows you to bulk load TaskActivity, Expense, and DropdownValue records into the database using CSV (Comma-Separated Values) files. This is much more efficient than manual entry, especially for large datasets or when migrating from other systems.
+The CSV import feature is intended for bulk data loading. It allows authorized
+users to import task activity records, expense records, and dropdown values
+using CSV files instead of manual entry through the web interface.
 
-**Author:** Dean Ammons  
-**Date:** January 2026
+This is most useful when:
 
----
+- Migrating data from spreadsheets or another system
+- Loading historical records in batches
+- Importing recurring structured datasets
+- Updating large dropdown datasets more efficiently
 
-## Features
+For a shorter onboarding version, start with [CSV Import Getting
+Started](CSV_Import_Getting_Started.md). Use this guide when you need the full
+reference for formats, endpoints, responses, and troubleshooting.
 
--   ✅ Bulk import of TaskActivity, Expense, and DropdownValue records
--   ✅ Automatic validation of all records before import
--   ✅ Individual record processing with duplicate detection
--   ✅ Flexible date format support (for TaskActivity and Expense)
--   ✅ Detailed error reporting for failed records
--   ✅ **Duplicate handling: Re-importing the same data file will skip existing records without errors**
--   ✅ RESTful API endpoints for programmatic access
--   ✅ Role-based access control (ADMIN and MANAGER only)
+## What the Feature Supports
+
+- Bulk import of TaskActivity, Expense, and DropdownValue records
+- Validation of uploaded rows before save
+- Duplicate detection and safe re-import behavior
+- Flexible date parsing for task and expense imports
+- Detailed error reporting for failed rows
+- Programmatic import through REST API endpoints
+- Role-based access control for authorized users
+
+## Before You Import
+
+Make sure the following prerequisites are met:
+
+- You have an account with the required permissions, typically **ADMIN** or **MANAGER**.
+- The application is running and reachable.
+- Your source file is a valid CSV file.
+- The header row matches the expected format.
+- Your usernames and referenced values already exist where required.
+
+## Recommended Workflow
+
+For most users, the safest import workflow is:
+
+1. Start with the template that matches your import type.
+2. Prepare a small sample file first.
+3. Import the sample and review the response.
+4. Correct any validation issues.
+5. Run the full import after the sample succeeds.
+
+The PowerShell script documented in [CSV Import Getting
+Started](CSV_Import_Getting_Started.md) is the easiest way to begin. The API
+examples below are better suited for scripting or automation.
 
 ---
 
@@ -75,9 +113,9 @@ This behavior allows you to:
 
 ---
 
-## Quick Start
+## Quick Start Examples
 
-### Method 1: Using cURL (Command Line)
+### Method 1: Using cURL
 
 **Import TaskActivity records:**
 
@@ -169,7 +207,8 @@ The CSV parser is flexible with column names and accepts common variations:
 -   **Database column names** (recommended): `taskdate`, `taskhours`, `expense_date`, `expense_type`, `payment_method`, `reference_number`, `expense_status`
 -   **Alternative formats**: `taskDate`, `task_date`, `hours`, `expenseDate`, `expense-date` (all case-insensitive)
 
-**Recommendation**: Use the actual database column names (lowercase with underscores where applicable) for consistency with the database schema.
+**Recommendation:** Use the actual database column names in lowercase, with
+underscores where applicable, to keep files consistent with the database schema.
 
 ### TaskActivity CSV Format
 
@@ -202,7 +241,8 @@ taskdate,client,project,phase,taskhours,taskid,taskname,details,username
 01/16/2026,Acme Corp,Website Redesign,Design,4.00,,,Created mockups for dashboard,john.doe
 ```
 
-See [taskactivity-import-template.csv](taskactivity-import-template.csv) for a complete example.
+See [docs/taskactivity-import-template.csv](docs/taskactivity-import-template.csv)
+for a complete example.
 
 ---
 
@@ -239,7 +279,8 @@ john.doe,Acme Corp,Website Redesign,2026-01-15,Travel,Flight to client site,450.
 jane.smith,Tech Solutions,Mobile App,2026-01-15,Meals,Client dinner meeting,125.50,USD,Personal Card,The Steakhouse,INV-001,Draft
 ```
 
-See [expense-import-template.csv](expense-import-template.csv) for a complete example.
+See [docs/expense-import-template.csv](docs/expense-import-template.csv) for a
+complete example.
 
 ---
 
@@ -254,7 +295,8 @@ The import service supports multiple date formats for flexibility:
 | Short US   | 1/15/2026   | Month/Day/Year without leading zeros |
 | Date-Month | 15-Jan-2026 | Day-Month abbreviation-Year          |
 
-**Recommendation:** Use ISO 8601 format (YYYY-MM-DD) for consistency and to avoid ambiguity.
+**Recommendation:** Use ISO 8601 format (`YYYY-MM-DD`) for consistency and to
+avoid ambiguity.
 
 ---
 
@@ -387,6 +429,9 @@ Returns template structure, example data, and field specifications.
 -   Import continues even if some records fail
 -   Response includes detailed error list for failed records
 
+This behavior makes it practical to fix only the failed rows and rerun the
+import without rebuilding the entire file.
+
 ---
 
 ## Best Practices
@@ -442,7 +487,7 @@ spring.servlet.multipart.max-request-size=10MB
 ### Import Fails with "Unauthorized"
 
 **Cause:** Missing or invalid JWT token  
-**Solution:** Ensure you include valid authentication token in Authorization header
+**Solution:** Ensure you include a valid authentication token in the Authorization header
 
 ```bash
 curl -X POST http://localhost:8080/api/import/taskactivities \
@@ -518,14 +563,14 @@ Get-ChildItem -Path $DataDirectory -Filter "*.csv" | ForEach-Object {
 
 ---
 
-## Getting Help
+## Related Documentation and Help
 
 ### Template Files
 
 Download example CSV templates:
 
--   [taskactivity-import-template.csv](taskactivity-import-template.csv)
--   [expense-import-template.csv](expense-import-template.csv)
+-   [docs/taskactivity-import-template.csv](docs/taskactivity-import-template.csv)
+-   [docs/expense-import-template.csv](docs/expense-import-template.csv)
 
 ### API Documentation
 
@@ -537,21 +582,11 @@ http://localhost:8080/swagger-ui.html
 
 ### Additional Resources
 
--   [User Guide](User_Guide.md) - General application usage
--   [Administrator User Guide](Administrator_User_Guide.md) - Admin features
--   [Developer Guide](Developer_Guide.md) - Technical implementation details
-
----
-
-## Changelog
-
-**Version 1.0 - January 2026**
-
--   Initial release of CSV import functionality
--   Support for TaskActivity and Expense entities
--   Batch processing with validation
--   Multiple date format support
--   RESTful API with authentication
+-   [docs/CSV_Import_Getting_Started.md](docs/CSV_Import_Getting_Started.md) - Quick-start onboarding for CSV import
+-   [docs/CSV_Import_Quick_Reference.md](docs/CSV_Import_Quick_Reference.md) - Command and format summary
+-   [docs/User_Guide.md](docs/User_Guide.md) - General application usage
+-   [docs/Administrator_User_Guide.md](docs/Administrator_User_Guide.md) - Admin features
+-   [docs/Developer_Guide.md](docs/Developer_Guide.md) - Technical implementation details
 
 ---
 

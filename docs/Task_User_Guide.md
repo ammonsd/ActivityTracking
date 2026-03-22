@@ -2,14 +2,16 @@
   Description: Task Activity Management System — user guide for task tracking features.
 
   Author: Dean Ammons
-  Date: February 2026
+    Date: March 2026
 -->
 
 # Task Activity Management System — Task User Guide
 
 ## Welcome
 
-Welcome to the Task Activity Management System! This guide covers everything you need to track time spent on tasks and projects, view your weekly timesheet, analyze your time allocation, and manage your account.
+This guide explains how to log task work, review your weekly timesheet, export
+task data, and manage the account settings that affect your day-to-day use of
+the system.
 
 > **Separate guide available:** If you also have access to expense management features, see the [Expense User Guide](Expense_User_Guide.md).
 
@@ -19,6 +21,20 @@ Welcome to the Task Activity Management System! This guide covers everything you
 - **Weekly Timesheet**: View a consolidated week-by-week view of your logged hours
 - **Reporting & Analytics**: Interactive charts and dashboards for analyzing your time
 - **CSV Export**: Export task lists and timesheets for use in spreadsheets or reporting tools
+
+## Quick Start for New Users
+
+If you are using task tracking for the first time, this is the shortest path to
+getting started:
+
+1. Log in with the credentials provided to you.
+2. Update your password if the system requires it.
+3. Confirm your profile details are correct.
+4. Create your first task entry.
+5. Review the _Weekly Timesheet_ at the end of the week.
+
+Once you are comfortable with that flow, use the rest of this guide as a more
+complete reference.
 
 ---
 

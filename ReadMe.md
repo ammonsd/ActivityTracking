@@ -1,6 +1,34 @@
 # Task Activity Tracking Management
 
-A comprehensive web application built with Spring Boot, Angular, and PostgreSQL for tracking billable hours and managing business expenses. Designed for consultants, contractors, and teams who need professional time tracking with integrated expense management and receipt storage.
+Task Activity Tracking Management is a web application for recording work,
+managing business expenses, attaching receipts, and reviewing weekly activity in
+one system.
+
+It is designed for consultants, contractors, and teams that need a practical
+alternative to maintaining separate spreadsheets, expense reports, and receipt
+folders.
+
+## Documentation Entry Points
+
+Use the guide that matches what you need:
+
+- **New users:** `docs/User_Guide.md`
+- **Task tracking users:** `docs/Task_User_Guide.md`
+- **Expense users:** `docs/Expense_User_Guide.md`
+- **Administrators:** `docs/Administrator_User_Guide.md`
+- **Developers:** `docs/Developer_Guide.md`
+- **CSV import users:** `docs/CSV_Import_Getting_Started.md`
+
+## What the Application Covers
+
+The application combines several related workflows:
+
+- Daily task and time tracking
+- Weekly timesheet review
+- Business expense entry and approval tracking
+- Receipt management
+- Analytics and reporting
+- Administrative user, role, and dropdown management
 
 ## Features
 
@@ -102,6 +130,9 @@ A comprehensive web application built with Spring Boot, Angular, and PostgreSQL 
 - **Deployment:** Docker, AWS ECS (optional)
 
 ## Quick Start
+
+If you want the fastest route to a running local environment, start here. For
+role-specific usage guidance after startup, use the documentation links above.
 
 ### Prerequisites
 

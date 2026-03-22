@@ -1,13 +1,27 @@
+<!--
+  Description: Command-focused quick reference for CSV import operations.
+
+  Author: Dean Ammons
+  Date: March 2026
+-->
+
 # CSV Import Quick Reference
 
-**Quick commands for bulk importing data into your AWS database.**
+This page is a command and format summary for users who already understand the
+CSV import workflow and need a fast reference while working.
 
----
+For step-by-step setup, see [CSV Import Getting
+Started](CSV_Import_Getting_Started.md). For complete format and API details,
+see [CSV Import User Guide](CSV_Import_User_Guide.md).
 
 ## Prerequisites
 
-1. Get your JWT token (login via API or copy from browser dev tools)
-2. Prepare your CSV file (see templates in `docs/` folder)
+Before using the commands below:
+
+1. Make sure the application is running.
+2. Use an account with the required import permissions, typically **ADMIN** or **MANAGER**.
+3. Prepare a CSV file that matches the expected template.
+4. Obtain a valid JWT token if you are not using the helper script.
 
 ---
 
@@ -103,6 +117,11 @@ TASK,PHASE,Requirements,1,true
 **Optional fields:** displayorder (default: 0), isactive (default: true)  
 **Note:** Category is automatically converted to uppercase
 
+## Preferred Date Format
+
+Use `YYYY-MM-DD` whenever possible. The import supports other date formats, but
+ISO format is the safest and least ambiguous choice.
+
 ---
 
 ## Response Format
@@ -141,34 +160,23 @@ TASK,PHASE,Requirements,1,true
 
 | Problem           | Solution                                                                                            |
 | ----------------- | --------------------------------------------------------------------------------------------------- |
-| "Unauthorized"    | Include valid JWT token in Authorization header                                                     |
-| "Access Denied"   | User must have ADMIN or MANAGER role                                                                |
-| Date parse errors | Use supported formats: `YYYY-MM-DD`, `MM/DD/YYYY`, `M/D/YYYY`, or `DD-MMM-YYYY` (e.g., 11-Jun-2018) |
-| Validation errors | Check required fields and value constraints                                                         |
-| "Duplicate key"   | ✅ **Not an issue!** Duplicates are automatically skipped (see note below)                          |
+| "Unauthorized"    | Include a valid JWT token in the Authorization header                                               |
+| "Access Denied"   | Use an account with ADMIN or MANAGER permissions                                                    |
+| Date parse errors | Prefer `YYYY-MM-DD`; other supported formats are described in the full guide                        |
+| Validation errors | Check required fields, value constraints, and referenced data                                       |
+| "Duplicate key"   | Duplicates are automatically skipped, so re-running the same file is safe                           |
 
-### 📌 Note: Duplicate Records Are Automatically Skipped
+## Duplicate Handling
 
--   Re-importing the same CSV file will skip existing records without errors
--   Success count shows only **newly inserted** records
--   Duplicate detection based on unique constraints (taskdate + client + project + phase + details + username for TaskActivity)
--   Safe to re-run imports without worrying about duplicate key violations
-
----
-
-## Full Documentation
-
-For complete documentation including:
-
--   Detailed CSV format specifications
--   All supported date formats
--   Field validation rules
--   Advanced usage examples
--   Troubleshooting guide
-
-See: [CSV Import User Guide](CSV_Import_User_Guide.md)
+- Re-importing the same CSV file skips existing records without errors.
+- Success count shows only newly inserted records.
+- Duplicate detection is based on entity-specific uniqueness rules.
+- It is safe to rerun imports after fixing unrelated failures.
 
 ---
 
-**Created:** January 2026  
-**Author:** Dean Ammons
+## Related Documentation
+
+- [CSV Import Getting Started](CSV_Import_Getting_Started.md)
+- [CSV Import User Guide](CSV_Import_User_Guide.md)
+- [Administrator User Guide](Administrator_User_Guide.md)

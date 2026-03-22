@@ -1,8 +1,39 @@
+<!--
+  Description: Technical onboarding and reference guide for developers working on the application.
+
+  Author: Dean Ammons
+  Date: March 2026
+-->
+
 # Task Activity Management System - Developer Guide
 
 ## Overview
 
-The Task Activity Management System is a Spring Boot web application designed to help individuals and teams track time spent on various tasks. This guide provides technical documentation for developers working on the system.
+This guide is for developers who build, debug, extend, and maintain the Task
+Activity Management System.
+
+It covers the technical structure of the application, the main frameworks in
+use, and the operational details needed for local development and ongoing
+implementation work.
+
+## Start Here for Developers
+
+If you are new to the codebase, focus on these sections first:
+
+1. **Overview** to understand what the application does.
+2. **Technology Stack** to understand the backend, frontend, and database choices.
+3. **Quick Start** to get the application running locally.
+4. **Configuration** to understand required environment variables and storage setup.
+5. **API Documentation** to understand the exposed endpoints and authentication model.
+
+After that, use the remaining sections as reference material for deeper
+implementation details, feature-specific architecture, and troubleshooting.
+
+## At a Glance
+
+The Task Activity Management System is a Spring Boot application for time
+tracking, expense management, receipt handling, analytics, and administrative
+workflow support.
 
 **Technology Stack:**
 

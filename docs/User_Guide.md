@@ -3,13 +3,22 @@
   split into two role-specific guides. See links below.
 
   Author: Dean Ammons
-  Date: February 2026
+  Date: March 2026
 -->
 
 # Task Activity Management System — User Guide
 
-> **This guide has been split into two role-specific documents** to reflect that users may have
-> access to task tracking, expense management, or both independently.
+This page helps new users find the right guide quickly.
+
+Some users only track time. Some only manage expenses. Others do both. The two
+main guides below are separated so each user can go directly to the instructions
+that match their actual access.
+
+## Start Here
+
+- Read the **Task User Guide** if you log work hours, manage tasks, or use the weekly timesheet.
+- Read the **Expense User Guide** if you create expenses, attach receipts, or submit reimbursement requests.
+- Read **both guides** if your account includes both task tracking and expense management.
 
 ## Choose Your Guide
 
@@ -45,6 +54,16 @@ For users who submit and manage business expenses. Covers:
 
 If you are unsure what access you have, or you need access changed, use the
 **Contact System Admin** option from the sidebar menu in the application.
+
+## What Most New Users Need First
+
+Most new users do not need to read every section immediately. Start with the
+guide that matches your access, then focus on:
+
+1. Logging in and changing your password if prompted.
+2. Confirming your profile details are correct.
+3. Completing your first task entry or expense entry.
+4. Reviewing the weekly summary view for your activity.
 
 ---
 

@@ -1,71 +1,88 @@
-# Getting Started with CSV Import - Quick Guide
+<!--
+  Description: Quick-start guide for bulk CSV import of task and expense data.
 
-**For: Dean Ammons**  
-**Date: January 12, 2026**
+  Author: Dean Ammons
+  Date: March 2026
+-->
 
----
+# Getting Started with CSV Import
 
-## You Now Have Three Ways to Import CSV Data
+## What This Guide Is For
 
-### 1. PowerShell Script (EASIEST!) 🎯
+CSV import is intended for users who need to load larger sets of task or expense
+records without entering them one at a time through the application.
+
+Typical use cases include:
+
+- Migrating existing spreadsheet data into the system
+- Loading monthly or historical task records
+- Importing batches of expense data from another source
+- Correcting or reloading structured data after cleanup
+
+## Before You Start
+
+Make sure all of the following are true before importing:
+
+- The application is running and reachable
+- You have an account with the required permissions, typically **ADMIN** or **MANAGER**
+- Your file is saved in CSV format
+- Your column headers match the expected template
+- Dates use a supported format, with `YYYY-MM-DD` preferred
+
+## Recommended Method
+
+The recommended approach is the PowerShell script because it handles
+authentication, file upload, and import type detection for you.
 
 ```powershell
-# Navigate to your project
 cd C:\Users\deana\GitHub\ActivityTracking
-
-# Import a CSV file - script will auto-detect type and handle authentication
 .\scripts\Import-CsvData.ps1 -FilePath "mydata.csv" -Username "admin"
-
-# That's it! The script handles everything:
-# - Prompts for password
-# - Gets JWT token automatically
-# - Detects if it's TaskActivity or Expense based on filename
-# - Shows detailed progress
-# - Reports success/errors
 ```
 
-### 2. Direct PowerShell Commands
+The script will:
+
+- Prompt for your password
+- Authenticate automatically
+- Detect whether the file is for task activity or expenses
+- Show progress and import results
+
+## Other Import Methods
+
+If you need more direct control, you can also import with API calls.
+
+### PowerShell API Example
 
 ```powershell
-# Get your token first
-$creds = @{ username = "admin"; password = "admin123" } | ConvertTo-Json
+$creds = @{ username = "admin"; password = "your-password" } | ConvertTo-Json
 $token = (Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" `
     -Method Post -ContentType "application/json" -Body $creds).token
 
-# Import TaskActivity
-$headers = @{ "Authorization" = "Bearer $token" }
+$headers = @{ Authorization = "Bearer $token" }
+
 Invoke-RestMethod -Uri "http://localhost:8080/api/import/taskactivities" `
     -Method Post -Headers $headers -Form @{ file = Get-Item "taskactivity-data.csv" }
-
-# Import Expense
-Invoke-RestMethod -Uri "http://localhost:8080/api/import/expenses" `
-    -Method Post -Headers $headers -Form @{ file = Get-Item "expense-data.csv" }
 ```
 
-### 3. cURL (if you prefer)
+### cURL Example
 
 ```bash
-# Get token
 TOKEN=$(curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' | jq -r '.token')
+  -d '{"username":"admin","password":"your-password"}' | jq -r '.token')
 
-# Import
 curl -X POST http://localhost:8080/api/import/taskactivities \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@taskactivity-data.csv"
 ```
 
----
+## Supported CSV Types
 
-## CSV File Format
-
-### TaskActivity CSV
+### Task Activity CSV
 
 ```csv
 taskdate,client,project,phase,taskhours,taskid,taskname,details,username
 2026-01-15,Acme Corp,Website,Development,8.00,TA-001,Implement login,Coding work,john.doe
-01/16/2026,Tech Solutions,Mobile,Testing,7.00,,,Testing,jane.smith
+2026-01-16,Tech Solutions,Mobile,Testing,7.00,,,Testing,jane.smith
 ```
 
 ### Expense CSV
@@ -75,38 +92,38 @@ username,client,project,expense_date,expense_type,description,amount,currency,pa
 john.doe,Acme Corp,Website,2026-01-15,Travel,Flight,450.00,USD,Corporate Card,United,ABC123,Submitted
 ```
 
----
+## Templates
 
-## Example Templates Available
+Use the provided templates as your starting point:
 
-I created example templates you can copy and modify:
+- `docs/taskactivity-import-template.csv`
+- `docs/expense-import-template.csv`
 
--   **TaskActivity:** `docs/taskactivity-import-template.csv`
--   **Expense:** `docs/expense-import-template.csv`
-
-Just copy these, replace the data, and import!
-
----
+Copy the template that matches your import type, replace the sample data, and
+save the file as CSV before importing.
 
 ## What Happens During Import
 
-1. ✅ File is validated (must be CSV)
-2. ✅ Each record is parsed and validated
-3. ✅ Valid records are saved in batches of 100
-4. ✅ Invalid records are reported with line numbers and reasons
-5. ✅ You get a summary: X succeeded, Y failed
+When an import runs, the system:
 
----
+1. Validates that the uploaded file is a CSV file.
+2. Parses each row and checks required fields.
+3. Validates values such as dates, amounts, and supported reference data.
+4. Saves valid rows in batches.
+5. Returns a summary showing successes and failures.
+
+If any rows fail, the response identifies the affected lines so you can correct
+them and re-import.
 
 ## Common Scenarios
 
-### Scenario 1: Import from Excel
+### Import Data from Excel
 
-1. Save your Excel file as CSV (File → Save As → CSV)
-2. Run: `.\scripts\Import-CsvData.ps1 -FilePath "data.csv" -Username "admin"`
-3. Done!
+1. Open the spreadsheet in Excel.
+2. Save it as a CSV file.
+3. Run the import script against the saved CSV file.
 
-### Scenario 2: Import Multiple Files
+### Import Multiple Files
 
 ```powershell
 Get-ChildItem -Path "C:\imports" -Filter "*.csv" | ForEach-Object {
@@ -114,66 +131,42 @@ Get-ChildItem -Path "C:\imports" -Filter "*.csv" | ForEach-Object {
 }
 ```
 
-### Scenario 3: Monthly Expense Reports
+### Import an Expense Batch Explicitly
 
 ```powershell
-# Save your expense report as CSV, then:
 .\scripts\Import-CsvData.ps1 -FilePath "expenses_january.csv" -Type Expense -Username "admin"
 ```
 
----
-
 ## Troubleshooting
 
-### "Unauthorized" Error
+### Unauthorized
 
-**Problem:** Missing or invalid token  
-**Solution:** Make sure the application is running and credentials are correct
+Make sure the application is running and that your credentials are valid.
 
-### "Access Denied"
+### Access Denied
 
-**Problem:** User lacks permissions  
-**Solution:** Use admin or manager account
+Your account likely does not have the required import permissions. Use an
+authorized account or contact an administrator.
 
 ### Date Parse Errors
 
-**Problem:** Unsupported date format  
-**Solution:** Use format: YYYY-MM-DD (e.g., 2026-01-15)
+Use `YYYY-MM-DD` whenever possible. For example: `2026-01-15`.
 
 ### Validation Errors
 
-**Problem:** Missing required fields or invalid values  
-**Solution:** Check error message for specific line and field, fix CSV and re-import
+Review the reported line number and field, correct the CSV data, and re-import
+only the failed records if needed.
 
----
+## Good Practices
 
-## Need Help?
+- Test with a small file first before importing a large batch.
+- Keep a copy of the original source file before cleanup or transformation.
+- Use the provided templates instead of building the file format from scratch.
+- Quote fields that contain commas.
+- Prefer the PowerShell script unless you need API-level control.
 
-📖 **Full Guide:** [docs/CSV_Import_User_Guide.md](docs/CSV_Import_User_Guide.md)  
-📋 **Quick Reference:** [docs/CSV_Import_Quick_Reference.md](docs/CSV_Import_Quick_Reference.md)  
-📄 **Implementation Summary:** [CSV_Import_Implementation_Summary.md](CSV_Import_Implementation_Summary.md)
+## Related Documentation
 
----
-
-## Pro Tips
-
-💡 **Test First:** Import a small file (5-10 records) to verify format before bulk import  
-💡 **Check Errors:** If you get errors, fix those records and re-import just them  
-💡 **Use ISO Dates:** Format YYYY-MM-DD (2026-01-15) works best  
-💡 **Quote Special Fields:** If field contains commas, wrap in quotes: `"Smith, John"`  
-💡 **Save Token:** If doing multiple imports, save the token in a variable  
-💡 **Use Script:** The PowerShell script (`Import-CsvData.ps1`) is the easiest method
-
----
-
-## That's It!
-
-You now have a powerful, easy way to bulk import data. No more tedious copy/paste!
-
-**Most Common Command You'll Use:**
-
-```powershell
-.\scripts\Import-CsvData.ps1 -FilePath "mydata.csv" -Username "admin"
-```
-
-Happy importing! 🚀
+- [docs/CSV_Import_User_Guide.md](docs/CSV_Import_User_Guide.md)
+- [docs/CSV_Import_Quick_Reference.md](docs/CSV_Import_Quick_Reference.md)
+- [docs/CSV_Import_Implementation_Summary.md](docs/CSV_Import_Implementation_Summary.md)

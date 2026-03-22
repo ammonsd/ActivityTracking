@@ -2,14 +2,15 @@
   Description: Task Activity Management System — user guide for expense management features.
 
   Author: Dean Ammons
-  Date: February 2026
+    Date: March 2026
 -->
 
 # Task Activity Management System — Expense User Guide
 
 ## Welcome
 
-Welcome to the Expense Management section of the Task Activity Management System! This guide covers everything you need to record business expenses, upload receipts, submit expenses for approval, and track reimbursement status.
+This guide explains how to record business expenses, attach receipts, submit
+items for approval, and track reimbursement status from draft through payment.
 
 > **Separate guide available:** If you also have access to task tracking features, see the [Task User Guide](Task_User_Guide.md).
 
@@ -19,6 +20,20 @@ Welcome to the Expense Management section of the Task Activity Management System
 - **Approval Workflows**: Submit expenses for review and track their approval status
 - **Weekly Expense Sheet**: View a consolidated week-by-week view of your expenses
 - **CSV Export**: Export expense lists for use in spreadsheets or accounting tools
+
+## Quick Start for New Users
+
+If you are using expense management for the first time, follow this sequence:
+
+1. Log in with your assigned credentials.
+2. Update your password if prompted.
+3. Open your profile and make sure your email address is present.
+4. Create your first expense entry.
+5. Attach the supporting receipt.
+6. Submit the expense when it is ready for review.
+7. Check status updates until it is approved, rejected, or reimbursed.
+
+The rest of this guide explains each part of that process in more detail.
 
 ---
 
@@ -45,13 +60,17 @@ The system uses a role-based access control model. The roles relevant to expense
 - ✅ Mark expenses as reimbursed
 - ✅ View and record approval notes
 
-**Email Requirement**
+### Required Before You Begin
 
-You **must have a valid email address** configured in your profile to access expense features:
+You must have a valid email address in your profile before expense features are
+available.
 
-- Without an email, the **"Add New Expense"** button is hidden and expense pages are inaccessible
-- Email is required so you receive approval/rejection/reimbursement notifications
-- To enable expense access, add your email in your profile (see [Managing Your Profile](#managing-your-profile))
+- Without an email, the **"Add New Expense"** button is hidden.
+- Expense pages are not accessible.
+- Approval, rejection, and reimbursement notifications cannot be delivered.
+
+To enable expense access, add your email in your profile. See [Managing Your
+Profile](#managing-your-profile).
 
 > **Note:** Use the **Contact System Admin** option in the sidebar menu if you need different access permissions or are missing an expected client or project in your expense dropdowns.
 

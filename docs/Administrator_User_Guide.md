@@ -2,7 +2,29 @@
 
 ## Welcome
 
-This guide is for administrators of the Task Activity Management System. As an administrator, you have access to additional features for managing users, viewing all tasks, and configuring system settings.
+This guide is for administrators who manage users, permissions, configuration,
+and operational workflows in the Task Activity Management System.
+
+It is comprehensive by design, but new administrators usually do not need every
+section on day one.
+
+Use the opening sections as onboarding material, then return to the later
+sections as reference material when you need deeper operational detail.
+
+## Start Here for New Administrators
+
+If you are new to the system, focus on these sections first:
+
+1. **Accessing the Application** to confirm which interface you should use.
+2. **React Admin Dashboard** to understand where most administration happens.
+3. **Managing Users** to create accounts and maintain access.
+4. **Managing Roles and Permissions** to control what users can do.
+5. **Managing Dropdowns** to keep clients, projects, phases, expense types, and payment methods accurate.
+6. **Expense Approval Process** if you approve or oversee reimbursements.
+
+Once those basics are in place, use the remaining sections as reference material
+for analytics, troubleshooting, email configuration, and environment-level
+operations.
 
 ## Table of Contents
 
