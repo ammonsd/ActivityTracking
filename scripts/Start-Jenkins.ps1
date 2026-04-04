@@ -107,6 +107,57 @@ function Wait-JenkinsReady {
     return $ready
 }
 
+# Modified by: Dean Ammons - April 2026: Clarify runtime URLs for Jenkins and app access
+function Test-HttpUrl {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Url,
+
+        [int]$TimeoutSeconds = 2
+    )
+
+    try {
+        $response = Invoke-WebRequest -Uri $Url -TimeoutSec $TimeoutSeconds -UseBasicParsing -MaximumRedirection 0 -ErrorAction Stop
+        return $response.StatusCode -ge 200 -and $response.StatusCode -lt 400
+    }
+    catch {
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+            return $statusCode -ge 200 -and $statusCode -lt 400
+        }
+
+        return $false
+    }
+}
+
+function Get-AppAccessInfo {
+    param(
+        [string]$WslIpAddress
+    )
+
+    $windowsUrl = 'http://localhost:8080/task-activity'
+    $wslUrl = if ($WslIpAddress) { "http://${WslIpAddress}:8080/task-activity" } else { $null }
+
+    if (Test-HttpUrl -Url $windowsUrl) {
+        return [pscustomobject]@{
+            Url = $windowsUrl
+            Detail = 'Spring Boot is reachable from Windows on port 8080.'
+        }
+    }
+
+    if ($wslUrl -and (Test-HttpUrl -Url $wslUrl)) {
+        return [pscustomobject]@{
+            Url = $wslUrl
+            Detail = 'Application is reachable on the current WSL IP when running in WSL or Docker.'
+        }
+    }
+
+    return [pscustomobject]@{
+        Url = if ($wslUrl) { $wslUrl } else { $windowsUrl }
+        Detail = 'Application is not currently reachable on port 8080. Start Spring Boot on Windows or run the container in WSL.'
+    }
+}
+
 # Function to get most recent Docker image
 function Get-LatestDockerImage {
     try {
@@ -131,10 +182,15 @@ if ($isRunning) {
 if ($Status) {
     Write-Host "`nJenkins Connection Information:" -ForegroundColor Cyan
     $wslIp = Get-WslIpAddress
+    Write-Host "  Jenkins Login URL: http://localhost:8081/login" -ForegroundColor White
     if ($wslIp) {
-        Write-Host "  Jenkins URL: http://${wslIp}:8081" -ForegroundColor White
-        Write-Host "  WSL IP Address: $wslIp" -ForegroundColor Gray
+        Write-Host "  Jenkins WSL URL:   http://${wslIp}:8081/login" -ForegroundColor Gray
+        Write-Host "  WSL IP Address:    $wslIp" -ForegroundColor Gray
     }
+
+    $appAccessInfo = Get-AppAccessInfo -WslIpAddress $wslIp
+    Write-Host "  App Access URL:    $($appAccessInfo.Url)" -ForegroundColor White
+    Write-Host "                     $($appAccessInfo.Detail)" -ForegroundColor Gray
     
     Write-Host "`nDocker Information:" -ForegroundColor Cyan
     $latestImage = Get-LatestDockerImage
@@ -191,10 +247,15 @@ if ($jenkinsReady) {
 # Display connection information
 Write-Host ""
 Write-Host "=== Jenkins Connection Information ===" -ForegroundColor Cyan
-Write-Host "Jenkins URL:     http://${wslIp}:8081" -ForegroundColor White
+Write-Host "Jenkins URL:     http://localhost:8081/login" -ForegroundColor White
+if ($wslIp) {
+    Write-Host "Jenkins WSL URL: http://${wslIp}:8081/login" -ForegroundColor Gray
+}
 Write-Host "WSL IP Address:  $wslIp" -ForegroundColor Gray
-Write-Host "App Access URL:  http://${wslIp}:8080/task-activity" -ForegroundColor White
-Write-Host "                 (when container is running)" -ForegroundColor Gray
+
+$appAccessInfo = Get-AppAccessInfo -WslIpAddress $wslIp
+Write-Host "App Access URL:  $($appAccessInfo.Url)" -ForegroundColor White
+Write-Host "                 $($appAccessInfo.Detail)" -ForegroundColor Gray
 
 # Display Docker information
 Write-Host ""
