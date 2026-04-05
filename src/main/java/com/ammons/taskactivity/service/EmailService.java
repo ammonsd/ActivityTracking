@@ -1578,7 +1578,7 @@ public class EmailService {
         return String.format("""
                 Hello %s,
 
-                Your %s account has been created by administrator '%s'.
+                Your %s account has been created by an administrator.
 
                 Account Details:
                 ----------------------------------------
@@ -1598,7 +1598,7 @@ public class EmailService {
                 ---
                 This is an automated notification from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, fullName, appName, adminUsername, username, forgotPasswordUrl, appName);
+                """, fullName, appName, username, forgotPasswordUrl, appName);
     }
 
     public void sendAccountSetupRequest(String firstName, String lastName, String email,
