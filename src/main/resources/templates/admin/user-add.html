@@ -246,6 +246,7 @@
                             Required — used for password reset and notifications
                         </div>
                     </div>
+                    <div>
                         <div class="form-group">
                             <label for="password"
                                 >Password <span class="required">*</span></label
@@ -336,7 +337,7 @@
                         <label for="role"
                             >Role <span class="required">*</span></label
                         >
-                        <select id="role" th:field="*{role}" required>
+                        <select id="role" th:field="*{roleId}" required>
                             <option value="">-- Select Role --</option>
                             <option
                                 th:each="role : ${roles}"
@@ -346,8 +347,8 @@
                         </select>
                         <div
                             class="error"
-                            th:if="${#fields.hasErrors('role')}"
-                            th:errors="*{role}"
+                            th:if="${#fields.hasErrors('roleId')}"
+                            th:errors="*{roleId}"
                         ></div>
                     </div>
 

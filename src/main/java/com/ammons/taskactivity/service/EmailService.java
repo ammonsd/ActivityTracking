@@ -86,6 +86,9 @@ public class EmailService {
     @Value("${app.name:Task Activity Management System}")
     private String appName;
 
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -1476,6 +1479,128 @@ public class EmailService {
      * @param company the applicant's company name (may be blank)
      * @param trackingType the requested access type: TASK, EXPENSE, or BOTH
      */
+    /**
+     * Sends a welcome email to a newly created user, notifying them that their account has been set
+     * up and directing them to use Forgot Password to set their own credentials.
+     *
+     * @param newUser the newly created User entity
+     * @param adminUsername the username of the admin who created the account
+     */
+    public void sendNewUserWelcomeEmail(User newUser, String adminUsername) {
+        if (!mailEnabled) {
+            logger.info("Email notifications disabled - skipping welcome email for new user: {}",
+                    newUser.getUsername());
+            return;
+        }
+
+        String userEmail = newUser.getEmail();
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            logger.warn("Cannot send welcome email - new user {} has no email address",
+                    newUser.getUsername());
+            return;
+        }
+
+        String subject = "Welcome to " + appName + " - Your Account Is Ready";
+        String body = buildNewUserWelcomeEmailBody(newUser.getUsername(), newUser.getFirstname(),
+                newUser.getLastname(), adminUsername);
+
+        // CC the configured admin email so the admin has a record of the notification
+        String cc = (adminEmail != null && !adminEmail.trim().isEmpty()) ? adminEmail.trim() : null;
+
+        try {
+            sendEmailWithCc(userEmail, cc, subject, body);
+            logger.info("Welcome email sent to {} (cc: {}) for new user: {}", userEmail,
+                    cc != null ? cc : "none", newUser.getUsername());
+        } catch (Exception e) {
+            logger.error("Failed to send welcome email to {} for new user {}: {}", userEmail,
+                    newUser.getUsername(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sends an email to a single To address with an optional CC address, using either AWS SES or
+     * SMTP depending on configuration.
+     *
+     * @param to primary recipient email address
+     * @param cc CC recipient email address, or null to omit
+     * @param subject email subject
+     * @param body plain-text email body
+     */
+    private void sendEmailWithCc(String to, String cc, String subject, String body) {
+        if (useAwsSdk && sesClient != null) {
+            try {
+                Destination.Builder destBuilder = Destination.builder().toAddresses(to);
+                if (cc != null) {
+                    destBuilder.ccAddresses(cc);
+                }
+                SendEmailRequest request = SendEmailRequest.builder()
+                        .destination(destBuilder.build())
+                        .message(Message.builder()
+                                .subject(Content.builder().data(subject).charset("UTF-8").build())
+                                .body(Body.builder()
+                                        .text(Content.builder().data(body).charset("UTF-8").build())
+                                        .build())
+                                .build())
+                        .source(fromAddress).build();
+                SendEmailResponse response = sesClient.sendEmail(request);
+                logger.info("Email sent via AWS SES. MessageId: {}", response.messageId());
+            } catch (Exception e) {
+                logger.error("Failed to send email via AWS SES to: {}", to, e);
+            }
+        } else {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(fromAddress);
+                message.setTo(to);
+                if (cc != null) {
+                    message.setCc(cc);
+                }
+                message.setSubject(subject);
+                message.setText(body);
+                mailSender.send(message);
+                logger.info("Email sent via SMTP to: {}", to);
+            } catch (MailException e) {
+                logger.error("Failed to send email via SMTP to: {}", to, e);
+            }
+        }
+    }
+
+    /**
+     * Builds the plain-text email body for new user welcome notifications.
+     */
+    private String buildNewUserWelcomeEmailBody(String username, String firstName, String lastName,
+            String adminUsername) {
+        String fullName = (firstName != null && !firstName.trim().isEmpty())
+                ? firstName + (lastName != null ? " " + lastName : "")
+                : username;
+        String forgotPasswordUrl = appBaseUrl + "/login";
+
+        return String.format("""
+                Hello %s,
+
+                Your %s account has been created by administrator '%s'.
+
+                Account Details:
+                ----------------------------------------
+                Username:  %s
+                ----------------------------------------
+
+                To get started, please set your password:
+                1. Go to: %s
+                2. Click the 'Forgot Password' link
+                3. Enter your email address to receive a password reset link
+                4. Follow the link in the reset email to create your password
+
+                Once your password is set, log in with your username above.
+
+                If you have any questions, please contact your system administrator.
+
+                ---
+                This is an automated notification from %s.
+                Do not reply to this email. This email is sent from an unattended mailbox.
+                """, fullName, appName, adminUsername, username, forgotPasswordUrl, appName);
+    }
+
     public void sendAccountSetupRequest(String firstName, String lastName, String email,
             String company, String trackingType) {
         if (!mailEnabled) {

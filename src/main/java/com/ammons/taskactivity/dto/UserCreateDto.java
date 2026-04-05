@@ -1,6 +1,5 @@
 package com.ammons.taskactivity.dto;
 
-import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -43,18 +42,18 @@ public class UserCreateDto {
     private String confirmPassword;
 
     @NotNull(message = "Role is required")
-    private Roles role;
+    private Long roleId;
 
     private boolean forcePasswordUpdate = true;
 
     // Constructors
     public UserCreateDto() {}
 
-    public UserCreateDto(String username, String password, String confirmPassword, Roles role) {
+    public UserCreateDto(String username, String password, String confirmPassword, Long roleId) {
         this.username = username;
         this.password = password;
         this.confirmPassword = confirmPassword;
-        this.role = role;
+        this.roleId = roleId;
     }
 
     // Getters and Setters
@@ -114,12 +113,12 @@ public class UserCreateDto {
         this.confirmPassword = confirmPassword;
     }
 
-    public Roles getRole() {
-        return role;
+    public Long getRoleId() {
+        return roleId;
     }
 
-    public void setRole(Roles role) {
-        this.role = role;
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
     }
 
     public boolean isForcePasswordUpdate() {

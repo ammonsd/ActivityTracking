@@ -21,6 +21,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     public boolean existsByUsername(String username);
 
+    public boolean existsByEmail(String email);
+
+    /**
+     * Checks if any user other than the one with the given id already holds this email address.
+     * Used to validate uniqueness during user edits.
+     */
+    public boolean existsByEmailAndIdNot(String email, Long id);
+
     /**
      * Returns active users who have a non-blank email address, optionally filtered by last name
      * prefix (case-insensitive). Used by the admin notification feature to build the recipient

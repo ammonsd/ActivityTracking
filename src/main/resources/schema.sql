@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     company  VARCHAR(100),
     userpassword VARCHAR(255) NOT NULL,
     role_id BIGINT REFERENCES roles(id),
-    email VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
     week_start_day VARCHAR(10) NOT NULL DEFAULT 'MONDAY',
     enabled BOOLEAN NOT NULL DEFAULT true,
     forcepasswordupdate BOOLEAN NOT NULL DEFAULT true,

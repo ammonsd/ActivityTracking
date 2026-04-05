@@ -196,6 +196,13 @@ public class UserService {
             throw new IllegalArgumentException("Username already exists");
         }
 
+        // Check if email is already in use
+        if (StringUtils.hasText(email) && userRepository.existsByEmail(email)) {
+            logger.warn("Attempt to create user with already-registered email: {}", email);
+            throw new IllegalArgumentException(
+                    "Email address is already in use by another account");
+        }
+
         User user = new User(username, passwordEncoder.encode(password), role);
         user.setFirstname(firstname);
         user.setLastname(lastname);
@@ -231,6 +238,15 @@ public class UserService {
             logger.warn("Attempt to update non-existent user with ID: {}", user.getId());
             return new IllegalArgumentException("User not found for update");
         });
+
+        // Check if the new email is already used by a different user
+        if (StringUtils.hasText(user.getEmail())
+                && userRepository.existsByEmailAndIdNot(user.getEmail(), user.getId())) {
+            logger.warn("Attempt to update user {} with already-registered email: {}",
+                    user.getUsername(), user.getEmail());
+            throw new IllegalArgumentException(
+                    "Email address is already in use by another account");
+        }
 
         // Preserve the existing password if the incoming user has null password
         // This allows updates without requiring password to be sent (security best practice)

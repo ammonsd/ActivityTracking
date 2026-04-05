@@ -7,6 +7,7 @@ import com.ammons.taskactivity.entity.Roles;
 import com.ammons.taskactivity.entity.User;
 import com.ammons.taskactivity.repository.RoleRepository;
 import com.ammons.taskactivity.service.DropdownValueService;
+import com.ammons.taskactivity.service.EmailService;
 import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
@@ -65,18 +66,20 @@ public class UserManagementController {
     private final PasswordExpirationNotificationService passwordExpirationNotificationService;
     private final UserDropdownAccessService userDropdownAccessService;
     private final DropdownValueService dropdownValueService;
+    private final EmailService emailService;
 
     public UserManagementController(UserService userService,
             TaskActivityService taskActivityService, RoleRepository roleRepository,
             PasswordExpirationNotificationService passwordExpirationNotificationService,
             UserDropdownAccessService userDropdownAccessService,
-            DropdownValueService dropdownValueService) {
+            DropdownValueService dropdownValueService, EmailService emailService) {
         this.userService = userService;
         this.taskActivityService = taskActivityService;
         this.roleRepository = roleRepository;
         this.passwordExpirationNotificationService = passwordExpirationNotificationService;
         this.userDropdownAccessService = userDropdownAccessService;
         this.dropdownValueService = dropdownValueService;
+        this.emailService = emailService;
     }
 
     /**
@@ -171,13 +174,21 @@ public class UserManagementController {
         }
 
         try {
+            Roles selectedRole = roleRepository.findById(userCreateDto.getRoleId())
+                    .orElseThrow(() -> new IllegalArgumentException("Selected role not found"));
             User newUser = userService.createUser(userCreateDto.getUsername(),
                     userCreateDto.getFirstname(), userCreateDto.getLastname(),
                     userCreateDto.getCompany(), userCreateDto.getEmail(),
-                    userCreateDto.getPassword(), userCreateDto.getRole(),
+                    userCreateDto.getPassword(), selectedRole,
                     userCreateDto.isForcePasswordUpdate());
             logger.info("Admin {} successfully created user: {}", authentication.getName(),
                     newUser.getUsername());
+            try {
+                emailService.sendNewUserWelcomeEmail(newUser, authentication.getName());
+            } catch (Exception e) {
+                logger.warn("Failed to send welcome email for new user {}: {}",
+                        newUser.getUsername(), e.getMessage());
+            }
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
                     USER_PREFIX + newUser.getUsername() + "' created successfully");
             return REDIRECT_MANAGE_USERS;
