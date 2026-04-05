@@ -5,7 +5,11 @@ import java.math.BigDecimal;
 /**
  * Constants for validation rules across the application. Centralizes all validation-related magic
  * numbers and strings.
- * 
+ *
+ * Modified by: Dean Ammons - April 2026 Change: Removed TEMP_PASSWORD static constant Reason:
+ * Static hardcoded temporary password was a security risk; replaced with per-action random password
+ * generation in UserManagementController
+ *
  * @author Dean Ammons
  * @version 1.0
  * @since December 2025
@@ -73,8 +77,4 @@ public final class ValidationConstants {
                                     + " passwords";
     public static final String LASTNAME_NULL_OR_EMPTY_MSG = "Last name cannot be null or empty";
     public static final String ROLE_NULL_MSG = "Role cannot be null";
-
-    // Default temporary password assigned by admins when creating or resetting accounts.
-    // Excluded from password history to allow repeated reuse without blocking the admin workflow.
-    public static final String TEMP_PASSWORD = "P@ssword!123";
 }

@@ -2405,8 +2405,7 @@ The application defines custom configuration properties that extend beyond Sprin
     {
       "name": "app.admin.initial-password",
       "type": "java.lang.String",
-      "description": "Initial password for admin user",
-      "defaultValue": "Admin123!"
+      "description": "Initial password for admin user (REQUIRED — no default; application fails to start if not set)"
     },
     {
       "name": "cors.allowed-origins",
@@ -2587,29 +2586,31 @@ The default admin user is created automatically during application startup with 
 
 **Property:**
 
-```properties
-# Admin User Configuration
-app.admin.initial-password=Admin123!
+> ⚠️ **REQUIRED — No Default:** The `APP_ADMIN_INITIAL_PASSWORD` environment variable must be set. The application will fail to start if it is missing or blank.
+
+```bash
+# Minimum requirements: 12+ chars, uppercase, lowercase, number, special character
+export APP_ADMIN_INITIAL_PASSWORD="YourSecurePassword123!"
 ```
 
 **Environment Variable Override:**
 
 ```bash
 # Docker
-docker run -e APP_ADMIN_INITIAL_PASSWORD=securePassword123! taskactivity:latest
+docker run -e APP_ADMIN_INITIAL_PASSWORD=YourSecurePassword123! taskactivity:latest
 
 # Docker Compose
-export APP_ADMIN_INITIAL_PASSWORD=securePassword123!
+export APP_ADMIN_INITIAL_PASSWORD=YourSecurePassword123!
 docker-compose up
 
 # Local Development
-export APP_ADMIN_INITIAL_PASSWORD=securePassword123!
+export APP_ADMIN_INITIAL_PASSWORD=YourSecurePassword123!
 ./mvnw spring-boot:run
 ```
 
 **Security Recommendations:**
 
-1. **Change the default password immediately** after first login in production environments
+1. **Never hardcode the password** in `application.properties` or any committed file — always use the environment variable
 2. **Use environment variables** instead of hardcoding passwords in properties files
 3. **Use strong passwords** that meet the application's password validation requirements:
    - Minimum 10 characters

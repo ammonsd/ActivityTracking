@@ -536,29 +536,30 @@ This reduces the window of exposure if a token is compromised.
 
 ---
 
-#### Issue 14: `DataInitializer` Default Password Fallback
+#### Issue 14: `DataInitializer` Default Password Fallback ✅ REMEDIATED
 
-**Severity:** 🟢 LOW
-**Location:** `src/main/java/com/ammons/taskactivity/config/DataInitializer.java` (line 48)
+**Severity:** 🟢 LOW → ✅ RESOLVED (April 2026)
+**Location:** `src/main/java/com/ammons/taskactivity/config/DataInitializer.java`
 **Category:** Weak Default
 
 **Description:**
-The `DataInitializer` has a default password fallback of `admin123`:
+The `DataInitializer` had a default password fallback of `admin123` in the `@Value` annotation.
+
+**Remediation Applied (April 2026):**
+The fallback was removed and a fail-fast startup validation was added. The application now fails to start if `APP_ADMIN_INITIAL_PASSWORD` is not set:
 
 ```java
-@Value("${app.admin.initial-password:admin123}")
+@Value("${app.admin.initial-password:}")
 private String adminPassword;
+
+// Startup validation — application refuses to start if not configured
+if (adminPassword == null || adminPassword.isBlank()) {
+    throw new IllegalStateException(
+        "APP_ADMIN_INITIAL_PASSWORD environment variable must be set.");
+}
 ```
 
-While the main `application.properties` requires `APP_ADMIN_INITIAL_PASSWORD` (no default), the `@Value` annotation includes a fallback that could be used if the profile-specific properties don't override it.
-
-**Suggested Fix:**
-Remove the fallback value to force explicit configuration:
-
-```java
-@Value("${app.admin.initial-password}")
-private String adminPassword;
-```
+No further action required.
 
 ---
 

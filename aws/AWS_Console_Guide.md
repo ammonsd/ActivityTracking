@@ -240,7 +240,7 @@ You should see at least 2 images:
 #### What to Check:
 
 -   Should contain:
-    -   `password`: Admin123!
+    -   `password`: `<your-configured-admin-password>` (set via `APP_ADMIN_INITIAL_PASSWORD` environment variable)
 
 ### Security:
 

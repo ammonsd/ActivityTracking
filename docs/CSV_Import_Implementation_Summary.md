@@ -130,7 +130,7 @@ Get-ChildItem -Path "C:\imports" -Filter "*.csv" | .\scripts\Import-CsvData.ps1 
 # Get JWT token first
 TOKEN=$(curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' | jq -r '.token')
+  -d '{"username":"admin","password":"<your-admin-password>"}' | jq -r '.token')
 
 # Import TaskActivity
 curl -X POST http://localhost:8080/api/import/taskactivities \

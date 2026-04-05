@@ -235,7 +235,8 @@ Administrators can create, edit, and delete user accounts:
     - Enter first name (optional)
     - Enter last name (required)
     - Enter company (optional, maximum 100 characters)
-    - Set initial password — the password fields are **pre-filled with the default temporary password** (`P@ssword!123`) as a convenience; overwrite it if you want a different initial password
+    - Enter email address (required) — used for password reset notifications; the new user will use the **Forgot Password** link on the login screen to set their own password
+    - Set initial password — the password fields are **pre-filled with a randomly generated temporary password** as a convenience; this password is not shared with the user
     - Assign role — the dropdown lists all roles currently defined in the system, including any custom roles created via Role Management
     - Enable/disable account
     - Optionally force password change on first login
@@ -732,7 +733,7 @@ All action buttons use Angular Material icon buttons with tooltips for better us
 1. **Access User Management**: Navigate to **"Manage Users"**
 2. **Find User**: Locate the user in the list
 3. **Click "Change Password"**: Opens password change form
-4. **Enter New Password**: The password fields are **pre-filled with the default temporary password** (`P@ssword!123`) when changing another user's account; overwrite to set a custom password
+4. **Enter New Password**: The password fields are **pre-filled with a randomly generated temporary password** when changing another user's account; overwrite to set a custom password
    - When changing your own password, fields are blank (no pre-fill for self-service)
 5. **Show Passwords (Optional)**: Use eye icons or checkbox to view passwords
 6. **Optional**: Check "Force password update on next login"
@@ -979,12 +980,12 @@ Administrators can send a personalized profile detail email to one or more activ
 |----------|----------|
 | User has no email address | Excluded from the list entirely — not shown |
 | User account is disabled | Excluded from the list entirely |
-| "Force Password Update" is **checked** on the user | Password section appears in the email body |
+| "Force Password Update" is **checked** on the user | Email body instructs the user to use **Forgot Password** on the login screen to set their own password |
 | "Force Password Update" is **not checked** | Password section is omitted from the email body |
 | Email delivery fails for one user | That user is counted as "skipped"; remaining sends continue |
 | `MAIL_ENABLED=false` | No emails are sent; a warning is logged |
 
-**Tip**: To send a welcome email with a temporary password to a newly created user, ensure "Force Password Update on Next Login" is checked on their account before using Notify Users. The email will then include their temporary credentials.
+**Tip**: To send a welcome email to a newly created user, ensure "Force Password Update on Next Login" is checked on their account before using Notify Users. The email will instruct the user to visit the login screen and use **Forgot Password** to create their own password. No temporary credentials are included in the email.
 
 ---
 
@@ -1027,8 +1028,8 @@ After receiving the request email:
    - **Task Tracking only** → `USER` or `GUEST`
    - **Expense Tracking only** → `USER` with `EXPENSE_ADMIN` if they need approval authority
    - **Both** → `USER` (standard role with task and expense access)
-4. Set a temporary password and check **Force Password Update on Next Login**.
-5. Use **Notify Users** to send them their credentials via email, or communicate the password through your preferred channel.
+4. Check **Force Password Update on Next Login**.
+5. Use **Notify Users** to send them a welcome email. The email will direct them to the login screen to use **Forgot Password** and create their own password. No temporary password is included in the email.
 
 #### Security Notes
 
@@ -1981,7 +1982,7 @@ API_URL=http://localhost:8080
 
 # Admin credentials for local API authentication
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=Admin123!
+ADMIN_PASSWORD=<your-admin-password>
 
 # Database Configuration for local Spring Boot
 DB_HOST=localhost

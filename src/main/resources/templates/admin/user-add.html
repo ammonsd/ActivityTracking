@@ -232,8 +232,9 @@
                             type="email"
                             id="email"
                             th:field="*{email}"
-                            placeholder="Enter email address (optional)"
+                            placeholder="Enter email address"
                             maxlength="100"
+                            required
                             style="height: 40px; width: 100%;"
                         />
                         <div
@@ -242,12 +243,9 @@
                             th:errors="*{email}"
                         ></div>
                         <div class="password-help" style="font-size: 11px; color: #999;">
-                            Required for expense management features
+                            Required — used for password reset and notifications
                         </div>
                     </div>
-
-                    <div class="form-row">
-                        <!-- Password -->
                         <div class="form-group">
                             <label for="password"
                                 >Password <span class="required">*</span></label

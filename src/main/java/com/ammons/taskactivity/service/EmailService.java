@@ -43,6 +43,11 @@ import java.util.List;
  * @author Dean Ammons
  * @version 2.0
  * @since December 2025
+ *
+ *        Modified by: Dean Ammons - April 2026 Change: Removed hardcoded "P@ssword!123" from
+ *        profile summary email body Reason: Transmitting credentials in plaintext email is a
+ *        security risk; email now indicates a temporary password was set without revealing the
+ *        actual value
  */
 @Service
 public class EmailService {
@@ -485,8 +490,8 @@ public class EmailService {
             body.append(String.format("Role:         %s%n", roleDisplay));
         }
         if (user.isForcePasswordUpdate()) {
-            body.append(String.format("Password:     %s (Change required on next login)%n",
-                    "P@ssword!123"));
+            body.append("To log in, use \"Forgot Password\" on the login screen"
+                    + " to create your password.\n");
         }
 
         boolean hasAssignments = !taskClients.isEmpty() || !taskProjects.isEmpty()

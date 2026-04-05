@@ -23,6 +23,11 @@ import java.util.Optional;
 /**
  * UserService
  *
+ * Modified by: Dean Ammons - April 2026 Change: Removed TEMP_PASSWORD bypass from password history
+ * checks in changePassword methods Reason: Static TEMP_PASSWORD constant was removed as a security
+ * fix; randomly generated temp passwords make the bypass unnecessary and removing it strengthens
+ * history enforcement
+ *
  * @author Dean Ammons
  * @version 1.0
  * @since January 2026
@@ -290,8 +295,8 @@ public class UserService {
         // Password strength validation (including username check)
         passwordValidationService.validatePasswordStrength(newPassword, username);
 
-        // Password history validation — skip for temp password so admins can reuse it freely
-        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
+        // Password history validation
+        if (historyEnabled) {
             passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
         }
 
@@ -307,8 +312,8 @@ public class UserService {
         userRepository.save(user);
         logger.info("Password successfully updated for user: {}", username);
 
-        // Save password to history if enabled; temp password is excluded so it can be reused
-        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
+        // Save password to history if enabled
+        if (historyEnabled) {
             PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
             passwordHistoryRepository.save(history);
             logger.debug("Saved password to history for user: {}", username);
@@ -356,8 +361,8 @@ public class UserService {
             throw new IllegalArgumentException(ValidationConstants.PASSWORD_REUSE_SESSION_MSG);
         }
 
-        // Password history validation — skip for temp password so admins can reuse it freely
-        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
+        // Password history validation
+        if (historyEnabled) {
             passwordValidationService.validatePasswordNotInHistory(user.getId(), newPassword);
         }
 
@@ -387,8 +392,8 @@ public class UserService {
         logger.info("Password successfully changed for user: {} (id={}), forceUpdate now: {}",
                 username, savedUser.getId(), savedUser.isForcePasswordUpdate());
 
-        // Save password to history if enabled; temp password is excluded so it can be reused
-        if (historyEnabled && !ValidationConstants.TEMP_PASSWORD.equals(newPassword)) {
+        // Save password to history if enabled
+        if (historyEnabled) {
             PasswordHistory history = new PasswordHistory(user.getId(), encodedPassword);
             passwordHistoryRepository.save(history);
             logger.debug("Saved password to history for user: {}", username);

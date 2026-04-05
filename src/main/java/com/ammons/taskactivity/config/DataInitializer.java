@@ -30,6 +30,10 @@ import java.util.Optional;
  * @author Dean Ammons
  * @version 1.0
  * @since December 2025
+ *
+ *        Modified by: Dean Ammons - April 2026 Change: Removed admin123 fallback from @Value
+ *        annotation; added startup validation Reason: Prevent silent creation of a weak admin
+ *        credential when APP_ADMIN_INITIAL_PASSWORD is not configured in AWS or Docker environments
  */
 @Component
 @Profile({"local", "docker", "aws"})
@@ -38,7 +42,7 @@ public class DataInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
     private static final String ADMIN_USERNAME = "admin";
 
-    @Value("${app.admin.initial-password:admin123}")
+    @Value("${app.admin.initial-password:}")
     private String adminPassword;
 
     private final UserRepository userRepository;
@@ -54,6 +58,12 @@ public class DataInitializer {
 
     @PostConstruct
     public void initializeData() {
+        if (adminPassword == null || adminPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "APP_ADMIN_INITIAL_PASSWORD environment variable is required but was not set. "
+                            + "Set this variable before starting the application.");
+        }
+
         Optional<User> existingAdmin = userRepository.findByUsername(ADMIN_USERNAME);
 
         if (!existingAdmin.isPresent()) {

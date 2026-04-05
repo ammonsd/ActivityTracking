@@ -30,6 +30,7 @@ public class UserCreateDto {
     @Size(max = 100, message = "Company cannot exceed 100 characters")
     private String company;
 
+    @NotBlank(message = "Email address is required")
     @Email(message = "Please provide a valid email address")
     @Size(max = 100, message = "Email cannot exceed 100 characters")
     private String email;

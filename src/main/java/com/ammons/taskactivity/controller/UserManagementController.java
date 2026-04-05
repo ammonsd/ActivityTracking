@@ -11,7 +11,6 @@ import com.ammons.taskactivity.service.UserDropdownAccessService;
 import com.ammons.taskactivity.service.UserService;
 import com.ammons.taskactivity.service.TaskActivityService;
 import com.ammons.taskactivity.service.PasswordExpirationNotificationService;
-import com.ammons.taskactivity.validation.ValidationConstants;
 import jakarta.validation.Valid;
 import com.ammons.taskactivity.security.RequirePermission;
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -31,6 +31,10 @@ import java.util.Set;
 
 /**
  * UserManagementController
+ *
+ * Modified by: Dean Ammons - April 2026 Change: Replaced static TEMP_PASSWORD constant with
+ * generateTempPassword() using SecureRandom Reason: Predictable static temp password was a security
+ * risk; each admin action now produces a unique cryptographically random credential
  *
  * @author Dean Ammons
  * @version 1.0
@@ -41,6 +45,7 @@ import java.util.Set;
 public class UserManagementController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserManagementController.class);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String USERNAME = "username";
     private static final String ROLES = "roles";
     private static final String ADMIN_USER_ADD = "admin/user-add";
@@ -128,8 +133,9 @@ public class UserManagementController {
         logger.info("Admin {} accessing add user form", authentication.getName());
 
         UserCreateDto userCreateDto = new UserCreateDto();
-        userCreateDto.setPassword(ValidationConstants.TEMP_PASSWORD);
-        userCreateDto.setConfirmPassword(ValidationConstants.TEMP_PASSWORD);
+        String tempPassword = generateTempPassword();
+        userCreateDto.setPassword(tempPassword);
+        userCreateDto.setConfirmPassword(tempPassword);
         model.addAttribute("userCreateDto", userCreateDto);
         model.addAttribute(ROLES, roleRepository.findAll());
         addUserDisplayInfo(model, authentication);
@@ -459,8 +465,9 @@ public class UserManagementController {
         // Pre-fill the temporary password and check Force Password when changing another user's
         // password
         if (!user.getUsername().equals(authentication.getName())) {
-            passwordChangeDto.setNewPassword(ValidationConstants.TEMP_PASSWORD);
-            passwordChangeDto.setConfirmNewPassword(ValidationConstants.TEMP_PASSWORD);
+            String tempPassword = generateTempPassword();
+            passwordChangeDto.setNewPassword(tempPassword);
+            passwordChangeDto.setConfirmNewPassword(tempPassword);
             passwordChangeDto.setForcePasswordUpdate(true);
         }
 
@@ -552,6 +559,36 @@ public class UserManagementController {
                 model.addAttribute("userDisplayName", displayName);
             });
         }
+    }
+
+    /**
+     * Generates a cryptographically random temporary password that satisfies the application's
+     * complexity requirements: uppercase, lowercase, digit, and special character.
+     */
+    private static String generateTempPassword() {
+        String upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        String lower = "abcdefghjkmnpqrstuvwxyz";
+        String digits = "23456789";
+        String special = "+&%$#@!~*";
+        String all = upper + lower + digits + special;
+
+        char[] password = new char[16];
+        // Guarantee at least one character from each required group
+        password[0] = upper.charAt(SECURE_RANDOM.nextInt(upper.length()));
+        password[1] = lower.charAt(SECURE_RANDOM.nextInt(lower.length()));
+        password[2] = digits.charAt(SECURE_RANDOM.nextInt(digits.length()));
+        password[3] = special.charAt(SECURE_RANDOM.nextInt(special.length()));
+        for (int i = 4; i < password.length; i++) {
+            password[i] = all.charAt(SECURE_RANDOM.nextInt(all.length()));
+        }
+        // Shuffle so the guaranteed characters are not always at fixed positions
+        for (int i = password.length - 1; i > 0; i--) {
+            int j = SECURE_RANDOM.nextInt(i + 1);
+            char tmp = password[i];
+            password[i] = password[j];
+            password[j] = tmp;
+        }
+        return new String(password);
     }
 
     /**
