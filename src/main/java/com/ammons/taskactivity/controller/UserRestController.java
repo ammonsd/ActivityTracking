@@ -295,7 +295,11 @@ public class UserRestController {
                 existingUser.setLastname(user.getLastname());
                 existingUser.setCompany(user.getCompany());
                 existingUser.setEmail(user.getEmail());
-                existingUser.setRole(user.getRole());
+                // Only update role if explicitly provided; prevents nulling out role_id on partial
+                // updates
+                if (user.getRole() != null) {
+                    existingUser.setRole(user.getRole());
+                }
                 existingUser.setEnabled(user.isEnabled());
                 existingUser.setAccountLocked(user.isAccountLocked());
                 existingUser.setForcePasswordUpdate(user.isForcePasswordUpdate());
