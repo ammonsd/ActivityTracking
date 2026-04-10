@@ -306,6 +306,30 @@
                   even though the <form> tag does not wrap them — this avoids nested-form
                   issues with the inline toggle mini-forms.
                 -->
+
+                <!-- New-user setup banner -->
+                <div
+                    th:if="${newUser}"
+                    class="alert alert-info"
+                    style="margin-bottom:1rem;padding:.75rem 1rem;border-left:4px solid #0d6efd;background:#e8f0fe;border-radius:4px;"
+                >
+                    <strong>New User Setup:</strong>
+                    Configure access on both the <strong>Task</strong> and
+                    <strong>Expense</strong> tabs using <em>Save Access</em>, then
+                    click <em>Send Welcome Email</em> once both tabs are saved.
+                    <div style="margin-top:0.6rem;">
+                        <form
+                            style="display:inline;"
+                            th:action="@{/task-activity/manage-users/welcome-email/{un}(un=${targetUsername})}"
+                            method="post"
+                        >
+                            <button type="submit" class="btn btn-success" style="font-size:0.9rem;padding:4px 14px;">
+                                ✉ Send Welcome Email
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <form
                     id="accessForm"
                     th:action="@{/task-activity/manage-users/access/{un}(un=${targetUsername})}"
@@ -316,6 +340,11 @@
                         id="viewInput"
                         name="view"
                         th:value="${currentView}"
+                    />
+                    <input
+                        type="hidden"
+                        name="newUser"
+                        th:value="${newUser}"
                     />
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success">

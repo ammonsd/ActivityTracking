@@ -451,6 +451,7 @@ public class EmailService {
     }
 
     private static final String SEPARATOR_LINE = "\n----------------------------------------\n";
+    private static final String BULLET_ITEM = "    * ";
 
     /**
      * Builds the plain-text email body for a user profile notification.
@@ -1481,12 +1482,25 @@ public class EmailService {
      */
     /**
      * Sends a welcome email to a newly created user, notifying them that their account has been set
-     * up and directing them to use Forgot Password to set their own credentials.
+     * up and directing them to use Forgot Password to set their own credentials. This overload
+     * includes the user's assigned clients and projects in the email body, filtered by role.
+     *
+     * Modified by: Dean Ammons - April 2026 Change: Added overloaded method accepting access lists
+     * so welcome email can include role-appropriate Client/Project assignments set during User
+     * Access Management. Reason: Email was previously sent before access was configured; now sent
+     * after access is saved, with relevant assignments included based on the user's role.
      *
      * @param newUser the newly created User entity
      * @param adminUsername the username of the admin who created the account
+     * @param taskClients explicitly assigned TASK client names (empty list if not applicable)
+     * @param taskProjects explicitly assigned TASK project names (empty list if not applicable)
+     * @param expenseClients explicitly assigned EXPENSE client names (empty list if not applicable)
+     * @param expenseProjects explicitly assigned EXPENSE project names (empty list if not
+     *        applicable)
      */
-    public void sendNewUserWelcomeEmail(User newUser, String adminUsername) {
+    public void sendNewUserWelcomeEmail(User newUser, String adminUsername,
+            List<String> taskClients, List<String> taskProjects, List<String> expenseClients,
+            List<String> expenseProjects) {
         if (!mailEnabled) {
             logger.info("Email notifications disabled - skipping welcome email for new user: {}",
                     newUser.getUsername());
@@ -1502,7 +1516,8 @@ public class EmailService {
 
         String subject = "Welcome to " + appName + " - Your Account Is Ready";
         String body = buildNewUserWelcomeEmailBody(newUser.getUsername(), newUser.getFirstname(),
-                newUser.getLastname(), adminUsername);
+                newUser.getLastname(), adminUsername, taskClients, taskProjects, expenseClients,
+                expenseProjects);
 
         // CC the configured admin email so the admin has a record of the notification
         String cc = (adminEmail != null && !adminEmail.trim().isEmpty()) ? adminEmail.trim() : null;
@@ -1515,6 +1530,17 @@ public class EmailService {
             logger.error("Failed to send welcome email to {} for new user {}: {}", userEmail,
                     newUser.getUsername(), e.getMessage(), e);
         }
+    }
+
+    /**
+     * Sends a welcome email to a newly created user without access assignment details. Delegates to
+     * the overloaded version with empty access lists.
+     *
+     * @param newUser the newly created User entity
+     * @param adminUsername the username of the admin who created the account
+     */
+    public void sendNewUserWelcomeEmail(User newUser, String adminUsername) {
+        sendNewUserWelcomeEmail(newUser, adminUsername, List.of(), List.of(), List.of(), List.of());
     }
 
     /**
@@ -1569,13 +1595,15 @@ public class EmailService {
      * Builds the plain-text email body for new user welcome notifications.
      */
     private String buildNewUserWelcomeEmailBody(String username, String firstName, String lastName,
-            String adminUsername) {
+            String adminUsername, List<String> taskClients, List<String> taskProjects,
+            List<String> expenseClients, List<String> expenseProjects) {
         String fullName = (firstName != null && !firstName.trim().isEmpty())
                 ? firstName + (lastName != null ? " " + lastName : "")
                 : username;
         String forgotPasswordUrl = appBaseUrl + "/login";
 
-        return String.format("""
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("""
                 Hello %s,
 
                 Your %s account has been created by an administrator.
@@ -1585,6 +1613,42 @@ public class EmailService {
                 Username:  %s
                 ----------------------------------------
 
+                """, fullName, appName, username));
+
+        boolean hasTaskAccess = !taskClients.isEmpty() || !taskProjects.isEmpty();
+        boolean hasExpenseAccess = !expenseClients.isEmpty() || !expenseProjects.isEmpty();
+
+        if (hasTaskAccess || hasExpenseAccess) {
+            body.append("Your account has been configured with access to the following:\n\n");
+
+            if (hasTaskAccess) {
+                body.append("Task Tracking Access:\n");
+                if (!taskClients.isEmpty()) {
+                    body.append("  Clients:\n");
+                    taskClients.forEach(c -> body.append(BULLET_ITEM).append(c).append("\n"));
+                }
+                if (!taskProjects.isEmpty()) {
+                    body.append("  Projects:\n");
+                    taskProjects.forEach(p -> body.append(BULLET_ITEM).append(p).append("\n"));
+                }
+                body.append("\n");
+            }
+
+            if (hasExpenseAccess) {
+                body.append("Expense Tracking Access:\n");
+                if (!expenseClients.isEmpty()) {
+                    body.append("  Clients:\n");
+                    expenseClients.forEach(c -> body.append(BULLET_ITEM).append(c).append("\n"));
+                }
+                if (!expenseProjects.isEmpty()) {
+                    body.append("  Projects:\n");
+                    expenseProjects.forEach(p -> body.append(BULLET_ITEM).append(p).append("\n"));
+                }
+                body.append("\n");
+            }
+        }
+
+        body.append(String.format("""
                 To get started, please set your password:
                 1. Go to: %s
                 2. Click the 'Forgot Password' link
@@ -1598,7 +1662,9 @@ public class EmailService {
                 ---
                 This is an automated notification from %s.
                 Do not reply to this email. This email is sent from an unattended mailbox.
-                """, fullName, appName, username, forgotPasswordUrl, appName);
+                """, forgotPasswordUrl, appName));
+
+        return body.toString();
     }
 
     public void sendAccountSetupRequest(String firstName, String lastName, String email,

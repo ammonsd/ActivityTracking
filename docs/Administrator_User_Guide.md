@@ -884,7 +884,14 @@ Both the Spring Boot UI and the React Admin Dashboard provide access management.
    - Use the **"Select All"** / **"Clear All"** links at the top of each section for convenience
 7. **Click "💾 Save Access"**: Assignments for the **active tab only** are saved; the other tab's assignments are untouched
 8. **Switch Tabs**: Repeat steps 4–7 for the other tab if needed
-9. **Confirmation**: You are redirected back to User Management with a success message
+9. **Confirmation**: You are redirected back to the access page with a success message
+
+> **New User Setup (Spring Boot UI):** When the access page is opened for a newly created user, a blue banner at the top guides you through configuration:
+> 1. Configure and save the **Task** tab
+> 2. Switch to the **Expense** tab, configure, and save
+> 3. Click **✉ Send Welcome Email** in the banner — this sends the welcome email only after you have finished configuring both tabs
+>
+> The "Save Access" button saves whichever tab is active. The "Send Welcome Email" button is separate and can be clicked once you are satisfied with both tabs.
 
 #### Using the React Admin Dashboard
 
@@ -898,7 +905,6 @@ Both the Spring Boot UI and the React Admin Dashboard provide access management.
 5. **Choose the Tab**: Click **Task** or **Expense** in the toggle control at the top of the dialog
    - **Task** — governs Clients and Projects visible when the user logs task time
    - **Expense** — governs Clients and Projects visible when the user records an expense
-   - A caption below the toggle reminds you that saving only updates the active tab
 6. **Review and Update Checkboxes**:
    - **Left column** — Clients for the selected tab
    - **Right column** — Projects for the selected tab
@@ -908,6 +914,13 @@ Both the Spring Boot UI and the React Admin Dashboard provide access management.
 8. **Click "Save"**: Saves assignments for the **active tab only**; the other tab is not affected
    - The dialog closes automatically on success
 9. **Switch Tabs**: Reopen the dialog and switch to the other tab to manage that set of assignments
+
+> **New User Setup (React Admin Dashboard):** When the access dialog is opened in new-user mode, a blue banner replaces the normal "Save" button with a single **"Save & Send Welcome Email"** button. Clicking it:
+> 1. Saves **both** the Task and Expense tab assignments in one step (no need to save each tab separately)
+> 2. Sends the welcome email immediately after
+> 3. Closes the dialog
+>
+> Configure your selections on both tabs first — switching tabs does not save anything — then click **"Save & Send Welcome Email"** once when done.
 
 #### Marking a Dropdown Value as "All Users"
 
@@ -985,7 +998,7 @@ Administrators can send a personalized profile detail email to one or more activ
 | Email delivery fails for one user | That user is counted as "skipped"; remaining sends continue |
 | `MAIL_ENABLED=false` | No emails are sent; a warning is logged |
 
-**Tip**: To send a welcome email to a newly created user, ensure "Force Password Update on Next Login" is checked on their account before using Notify Users. The email will instruct the user to visit the login screen and use **Forgot Password** to create their own password. No temporary credentials are included in the email.
+**Tip**: The **Notify Users** feature sends a general profile email and is most useful for bulk notifications or re-sending access summaries to existing users. For **newly created users**, prefer the dedicated welcome email flow on the Access page (see [Managing User Dropdown Access](#managing-user-dropdown-access)) — it includes the user's actual access assignments listed as bullet points and sends only after access has been fully configured.
 
 ---
 
@@ -1029,7 +1042,8 @@ After receiving the request email:
    - **Expense Tracking only** → `USER` with `EXPENSE_ADMIN` if they need approval authority
    - **Both** → `USER` (standard role with task and expense access)
 4. Check **Force Password Update on Next Login**.
-5. Use **Notify Users** to send them a welcome email. The email will direct them to the login screen to use **Forgot Password** and create their own password. No temporary password is included in the email.
+5. Configure dropdown access via the **Access** page (Spring Boot UI) or **Manage Access** dialog (React Admin Dashboard) — see [Managing User Dropdown Access](#managing-user-dropdown-access).
+6. Once access is configured, click **✉ Send Welcome Email** (Spring Boot UI banner) or **Save & Send Welcome Email** (React Admin Dashboard) to send the user a personalized welcome email listing their access assignments and login instructions. No temporary password is included in the email.
 
 #### Security Notes
 

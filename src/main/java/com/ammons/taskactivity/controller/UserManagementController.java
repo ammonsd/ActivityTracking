@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * UserManagementController
@@ -183,15 +184,13 @@ public class UserManagementController {
                     userCreateDto.isForcePasswordUpdate());
             logger.info("Admin {} successfully created user: {}", authentication.getName(),
                     newUser.getUsername());
-            try {
-                emailService.sendNewUserWelcomeEmail(newUser, authentication.getName());
-            } catch (Exception e) {
-                logger.warn("Failed to send welcome email for new user {}: {}",
-                        newUser.getUsername(), e.getMessage());
-            }
+            // Welcome email is deferred until after User Access Management is configured.
+            // Redirect admin directly to the access management page for this new user.
             redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
-                    USER_PREFIX + newUser.getUsername() + "' created successfully");
-            return REDIRECT_MANAGE_USERS;
+                    USER_PREFIX + newUser.getUsername()
+                            + "' created. Please configure access below.");
+            return "redirect:/task-activity/manage-users/access/" + newUser.getUsername()
+                    + "?newUser=true";
         } catch (IllegalArgumentException e) {
             logger.warn("Failed to create user: {}", e.getMessage());
             bindingResult.rejectValue(USERNAME, "error.username", e.getMessage());
@@ -349,10 +348,11 @@ public class UserManagementController {
     @GetMapping("/access/{username}")
     @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     public String showAccessForm(@PathVariable String username,
-            @RequestParam(value = "view", defaultValue = "TASK") String view, Model model,
+            @RequestParam(value = "view", defaultValue = "TASK") String view,
+            @RequestParam(value = "newUser", defaultValue = "false") boolean newUser, Model model,
             Authentication authentication, RedirectAttributes redirectAttributes) {
-        logger.info("Admin {} accessing dropdown access form for user: {} (view={})",
-                authentication.getName(), username, view);
+        logger.info("Admin {} accessing dropdown access form for user: {} (view={}, newUser={})",
+                authentication.getName(), username, view, newUser);
 
         if (userService.getUserByUsername(username).isEmpty()) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE, USER_NOT_FOUND);
@@ -368,6 +368,7 @@ public class UserManagementController {
         model.addAttribute("allExpenseProjects", dropdownValueService.getActiveExpenseProjects());
         model.addAttribute("assignedIds", assignedIds);
         model.addAttribute("currentView", view);
+        model.addAttribute("newUser", newUser);
         addUserDisplayInfo(model, authentication);
 
         return ADMIN_USER_ACCESS;
@@ -389,16 +390,18 @@ public class UserManagementController {
     @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
     public String saveAccessAssignments(@PathVariable String username,
             @RequestParam(value = "view", defaultValue = "TASK") String view,
+            @RequestParam(value = "newUser", defaultValue = "false") boolean newUser,
             @RequestParam(value = "clientIds", required = false) List<Long> clientIds,
             @RequestParam(value = "projectIds", required = false) List<Long> projectIds,
             @RequestParam(value = "expenseClientIds", required = false) List<Long> expenseClientIds,
             @RequestParam(value = "expenseProjectIds",
                     required = false) List<Long> expenseProjectIds,
             Authentication authentication, RedirectAttributes redirectAttributes) {
-        logger.info("Admin {} saving dropdown access for user: {} (view={})",
-                authentication.getName(), username, view);
+        logger.info("Admin {} saving dropdown access for user: {} (view={}, newUser={})",
+                authentication.getName(), username, view, newUser);
 
-        if (userService.getUserByUsername(username).isEmpty()) {
+        Optional<User> userOptional = userService.getUserByUsername(username);
+        if (userOptional.isEmpty()) {
             redirectAttributes.addFlashAttribute(ERROR_MESSAGE, USER_NOT_FOUND);
             return REDIRECT_MANAGE_USERS;
         }
@@ -422,8 +425,77 @@ public class UserManagementController {
                     projectIds != null ? projectIds.size() : 0);
         }
 
+        // If this is a new user, redirect back to the access page so the admin can configure
+        // the other tab and then send the welcome email manually.
+        if (newUser) {
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE, USER_PREFIX + username
+                    + "' access saved. Configure the other tab, then send the welcome email.");
+            return "redirect:/task-activity/manage-users/access/" + username + "?view="
+                    + ("EXPENSE".equals(view) ? "TASK" : "EXPENSE") + "&newUser=true";
+        }
+
         redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
                 USER_PREFIX + username + "' access assignments updated successfully");
+        return REDIRECT_MANAGE_USERS;
+    }
+
+    /**
+     * Sends the welcome email for a newly created user after both Task and Expense access have been
+     * configured. Called from the new-user setup banner in the Thymeleaf access page.
+     *
+     * @param username the username of the newly created user
+     * @param authentication the authenticated admin performing the operation
+     */
+    @PostMapping("/welcome-email/{username}")
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    public String sendWelcomeEmailForNewUser(@PathVariable String username,
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+        logger.info("Admin {} sending welcome email for new user: {}", authentication.getName(),
+                username);
+
+        Optional<User> userOptional = userService.getUserByUsername(username);
+        if (userOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE, USER_NOT_FOUND);
+            return REDIRECT_MANAGE_USERS;
+        }
+
+        User user = userOptional.get();
+        String roleName = user.getRole() != null ? user.getRole().getName() : "";
+        boolean includeTask = !roleName.contains("EXPENSES");
+        boolean includeExpense = !roleName.contains("TASKS");
+        List<String> taskClients = List.of();
+        List<String> taskProjects = List.of();
+        List<String> expClients = List.of();
+        List<String> expProjects = List.of();
+        if (includeTask) {
+            List<String> explicitClients =
+                    userDropdownAccessService.getExplicitTaskClientNames(username);
+            List<String> allUsersClients = userDropdownAccessService.getAllUsersTaskClientNames();
+            taskClients = Stream.concat(explicitClients.stream(), allUsersClients.stream())
+                    .distinct().toList();
+            taskProjects = userDropdownAccessService.getExplicitTaskProjectNames(username);
+        }
+        if (includeExpense) {
+            List<String> explicitClients =
+                    userDropdownAccessService.getExplicitExpenseClientNames(username);
+            List<String> allUsersClients =
+                    userDropdownAccessService.getAllUsersExpenseClientNames();
+            expClients = Stream.concat(explicitClients.stream(), allUsersClients.stream())
+                    .distinct().toList();
+            expProjects = userDropdownAccessService.getExplicitExpenseProjectNames(username);
+        }
+        try {
+            emailService.sendNewUserWelcomeEmail(user, authentication.getName(), taskClients,
+                    taskProjects, expClients, expProjects);
+            logger.info("Welcome email sent for new user {} after access configuration", username);
+            redirectAttributes.addFlashAttribute(SUCCESS_MESSAGE,
+                    USER_PREFIX + username + "' welcome email sent successfully");
+        } catch (Exception e) {
+            logger.warn("Failed to send welcome email for new user {}: {}", username,
+                    e.getMessage());
+            redirectAttributes.addFlashAttribute(ERROR_MESSAGE,
+                    "Access saved but welcome email failed: " + e.getMessage());
+        }
         return REDIRECT_MANAGE_USERS;
     }
 

@@ -162,6 +162,23 @@ export const userManagementApi = {
     },
 
     /**
+     * Send the welcome email for a newly created user after their access has been configured.
+     * The backend fetches the user's role-appropriate access assignments and includes them in
+     * the email body.
+     *
+     * Modified by: Dean Ammons - April 2026
+     * Change: Added API call to trigger welcome email post-access-configuration.
+     * Reason: Welcome email is now deferred until after access management is complete.
+     *
+     * @param username - The username of the newly created user to email
+     */
+    sendWelcomeEmail: async (username: string): Promise<void> => {
+        await apiClient.post(
+            `/users/${encodeURIComponent(username)}/welcome-email`,
+        );
+    },
+
+    /**
      * Fetch active users who have an email address, eligible for profile notification.
      * @param lastNameFilter - Optional last-name prefix to filter results
      * @returns Promise with list of eligible users

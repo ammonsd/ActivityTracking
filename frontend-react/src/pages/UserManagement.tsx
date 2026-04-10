@@ -74,6 +74,8 @@ export const UserManagement: React.FC = () => {
     const [accessDialogOpen, setAccessDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [accessUser, setAccessUser] = useState<User | null>(null);
+    /** Tracks a just-created user so the access dialog opens in new-user mode */
+    const [newlyCreatedUser, setNewlyCreatedUser] = useState<User | null>(null);
 
     // Fetch current user, roles, and users on component mount
     useEffect(() => {
@@ -215,15 +217,20 @@ export const UserManagement: React.FC = () => {
 
     const handleFormSave = async (userData: any) => {
         if (selectedUser === null) {
-            // Add mode - creating new user
-            await userManagementApi.createUser(userData);
+            // Add mode - creating new user; open access dialog instead of returning to list
+            const createdUser = await userManagementApi.createUser(userData);
+            setFormDialogOpen(false);
+            setSelectedUser(null);
+            setNewlyCreatedUser(createdUser);
+            setAccessUser(createdUser);
+            setAccessDialogOpen(true);
         } else {
             // Edit mode - updating existing user
             await userManagementApi.updateUser(selectedUser.id, userData);
+            setFormDialogOpen(false);
+            setSelectedUser(null);
+            handleRefresh();
         }
-        setFormDialogOpen(false);
-        setSelectedUser(null);
-        handleRefresh();
     };
 
     const handlePasswordChange = async (
@@ -668,9 +675,12 @@ export const UserManagement: React.FC = () => {
                 onClose={() => {
                     setAccessDialogOpen(false);
                     setAccessUser(null);
+                    setNewlyCreatedUser(null);
+                    handleRefresh();
                 }}
                 user={accessUser}
+                isNewUser={newlyCreatedUser !== null}
             />
         </Box>
     );
-};
+};;

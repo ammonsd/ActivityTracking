@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * REST API Controller for User Management Used by Angular and React frontends
@@ -433,6 +434,64 @@ public class UserRestController {
             }
             return ResponseEntity
                     .ok(ApiResponse.<Void>success("Access updated successfully", null));
+        }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
+    }
+
+    /**
+     * Sends a welcome email to a newly created user including their role-appropriate access
+     * assignments. Called after User Access Management has been configured for a new user.
+     *
+     * Modified by: Dean Ammons - April 2026 Change: Added endpoint to trigger the welcome email
+     * after access is configured. Reason: Email was sent prematurely before access was assigned;
+     * deferred to post-access-save.
+     *
+     * @param username the username of the newly created user
+     * @param authentication the authenticated admin performing the operation
+     * @return ResponseEntity with success or error message
+     */
+    @RequirePermission(resource = "USER_MANAGEMENT", action = "UPDATE")
+    @PostMapping("/{username}/welcome-email")
+    public ResponseEntity<ApiResponse<Void>> sendWelcomeEmail(@PathVariable String username,
+            Authentication authentication) {
+        logger.debug("REST API: Sending welcome email for newly created user {}", username);
+        return userService.getUserByUsername(username).map(user -> {
+            String roleName = user.getRole() != null ? user.getRole().getName() : "";
+
+            List<String> taskClients = List.of();
+            List<String> taskProjects = List.of();
+            List<String> expenseClients = List.of();
+            List<String> expenseProjects = List.of();
+
+            boolean includeTask = !roleName.contains("EXPENSES");
+            boolean includeExpense = !roleName.contains("TASKS");
+
+            if (includeTask) {
+                // Combine explicit + allUsers clients (deduped, order preserved); projects are
+                // explicit-only
+                List<String> explicit =
+                        userDropdownAccessService.getExplicitTaskClientNames(username);
+                List<String> allUsersList = userDropdownAccessService.getAllUsersTaskClientNames();
+                taskClients =
+                        Stream.concat(explicit.stream(), allUsersList.stream()).distinct().toList();
+                taskProjects = userDropdownAccessService.getExplicitTaskProjectNames(username);
+            }
+            if (includeExpense) {
+                // Combine explicit + allUsers clients (deduped, order preserved); projects are
+                // explicit-only
+                List<String> explicit =
+                        userDropdownAccessService.getExplicitExpenseClientNames(username);
+                List<String> allUsersList =
+                        userDropdownAccessService.getAllUsersExpenseClientNames();
+                expenseClients =
+                        Stream.concat(explicit.stream(), allUsersList.stream()).distinct().toList();
+                expenseProjects =
+                        userDropdownAccessService.getExplicitExpenseProjectNames(username);
+            }
+
+            emailService.sendNewUserWelcomeEmail(user, authentication.getName(), taskClients,
+                    taskProjects, expenseClients, expenseProjects);
+            return ResponseEntity
+                    .ok(ApiResponse.<Void>success("Welcome email sent successfully", null));
         }).orElse(ResponseEntity.status(404).body(ApiResponse.error(USER_NOT_FOUND_MESSAGE)));
     }
 

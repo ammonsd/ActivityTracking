@@ -177,6 +177,47 @@ public class UserDropdownAccessService {
     }
 
     /**
+     * Returns the item values of active TASK/CLIENT entries flagged allUsers=true. These clients
+     * are visible to every user without an explicit assignment row and should be included in the
+     * new-user welcome email so the user knows which clients are universally accessible.
+     *
+     * Modified by: Dean Ammons - April 2026 Change: Added to support including allUsers clients in
+     * the welcome email body. Reason: Previously only explicit assignments were shown; allUsers
+     * clients were omitted.
+     *
+     * @return list of allUsers TASK/CLIENT item values
+     */
+    @Transactional(readOnly = true)
+    public List<String> getAllUsersTaskClientNames() {
+        return dropdownValueRepository
+                .findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                        DropdownValueService.CATEGORY_TASK, DropdownValueService.SUBCATEGORY_CLIENT)
+                .stream().filter(dv -> Boolean.TRUE.equals(dv.getAllUsers()))
+                .map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
+     * Returns the item values of active EXPENSE/CLIENT entries flagged allUsers=true. These clients
+     * are visible to every user without an explicit assignment row and should be included in the
+     * new-user welcome email so the user knows which clients are universally accessible.
+     *
+     * Modified by: Dean Ammons - April 2026 Change: Added to support including allUsers clients in
+     * the welcome email body. Reason: Previously only explicit assignments were shown; allUsers
+     * clients were omitted.
+     *
+     * @return list of allUsers EXPENSE/CLIENT item values
+     */
+    @Transactional(readOnly = true)
+    public List<String> getAllUsersExpenseClientNames() {
+        return dropdownValueRepository
+                .findActiveByCategoryAndSubcategoryOrderByDisplayOrder(
+                        DropdownValueService.CATEGORY_EXPENSE,
+                        DropdownValueService.SUBCATEGORY_CLIENT)
+                .stream().filter(dv -> Boolean.TRUE.equals(dv.getAllUsers()))
+                .map(DropdownValue::getItemValue).toList();
+    }
+
+    /**
      * Returns the set of dropdown value IDs explicitly assigned to a username. Used by the admin
      * assignment UI to pre-populate checkboxes.
      *

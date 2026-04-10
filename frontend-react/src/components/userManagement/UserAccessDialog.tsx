@@ -2,9 +2,16 @@
  * Description: Dialog for managing a user's dropdown access assignments. Allows admins to
  * assign specific TASK and EXPENSE clients and projects to a user, and to toggle the
  * "All Users" flag which makes a dropdown value visible to everyone without explicit assignment.
+ * When opened in new-user mode (isNewUser=true), the dialog stays open between tab saves so
+ * the admin can configure both TASK and EXPENSE access before sending the welcome email.
  *
  * Author: Dean Ammons
  * Date: February 2026
+ *
+ * Modified by: Dean Ammons - April 2026
+ * Change: Replaced two-button new-user flow (Save Tab + Save & Send Welcome Email) with a single
+ *         "Save & Send Welcome Email" button that saves both TASK and EXPENSE assignments at once.
+ * Reason: Previous flow allowed email to fire before Expense access was configured.
  */
 
 import React, { useState, useEffect } from "react";
@@ -42,6 +49,8 @@ interface UserAccessDialogProps {
     open: boolean;
     onClose: () => void;
     user: User | null;
+    /** When true the dialog stays open after "Save Tab" and shows a "Save & Send Welcome Email" button */
+    isNewUser?: boolean;
 }
 
 type ViewTab = "TASK" | "EXPENSE";
@@ -50,6 +59,7 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
     open,
     onClose,
     user,
+    isNewUser = false,
 }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -167,29 +177,61 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
         });
     };
 
+    const buildPayload = (): UserAccessUpdateRequest => ({
+        view,
+        clientIds: view === "TASK" ? Array.from(selectedClientIds) : [],
+        projectIds: view === "TASK" ? Array.from(selectedProjectIds) : [],
+        expenseClientIds:
+            view === "EXPENSE" ? Array.from(selectedExpenseClientIds) : [],
+        expenseProjectIds:
+            view === "EXPENSE" ? Array.from(selectedExpenseProjectIds) : [],
+    });
+
+    /** Save current tab and close dialog (existing-user flow). */
     const handleSave = async () => {
         if (!user) return;
         setSaving(true);
         setError(null);
         try {
-            const payload: UserAccessUpdateRequest = {
-                view,
-                clientIds: view === "TASK" ? Array.from(selectedClientIds) : [],
-                projectIds:
-                    view === "TASK" ? Array.from(selectedProjectIds) : [],
-                expenseClientIds:
-                    view === "EXPENSE"
-                        ? Array.from(selectedExpenseClientIds)
-                        : [],
-                expenseProjectIds:
-                    view === "EXPENSE"
-                        ? Array.from(selectedExpenseProjectIds)
-                        : [],
-            };
-            await userManagementApi.saveUserAccess(user.username, payload);
+            await userManagementApi.saveUserAccess(user.username, buildPayload());
             onClose();
         } catch {
             setError("Failed to save access assignments. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    /**
+     * Save BOTH task and expense assignments then send welcome email and close (new-user flow).
+     * Saves all assignments regardless of which tab is currently visible, so the admin does not
+     * need to save each tab separately before sending the email.
+     */
+    const handleSaveAndSendEmail = async () => {
+        if (!user) return;
+        setSaving(true);
+        setError(null);
+        try {
+            // Save task assignments
+            await userManagementApi.saveUserAccess(user.username, {
+                view: "TASK",
+                clientIds: Array.from(selectedClientIds),
+                projectIds: Array.from(selectedProjectIds),
+                expenseClientIds: [],
+                expenseProjectIds: [],
+            });
+            // Save expense assignments
+            await userManagementApi.saveUserAccess(user.username, {
+                view: "EXPENSE",
+                clientIds: [],
+                projectIds: [],
+                expenseClientIds: Array.from(selectedExpenseClientIds),
+                expenseProjectIds: Array.from(selectedExpenseProjectIds),
+            });
+            await userManagementApi.sendWelcomeEmail(user.username);
+            onClose();
+        } catch {
+            setError("Failed to save access or send welcome email. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -330,7 +372,9 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
-                <Typography variant="h6">Manage Dropdown Access</Typography>
+                <Typography variant="h6">
+                    {isNewUser ? "Configure Access for New User" : "Manage Dropdown Access"}
+                </Typography>
                 {user && (
                     <Typography variant="subtitle2" color="text.secondary">
                         User: <strong>{user.username}</strong>
@@ -347,6 +391,14 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
                     </Box>
                 ) : (
                     <>
+                        {isNewUser && (
+                            <Alert severity="info" sx={{ mb: 2 }}>
+                                Configure access on the <strong>Task</strong> and{" "}
+                                <strong>Expense</strong> tabs, then click{" "}
+                                <em>Save &amp; Send Welcome Email</em> — both tabs are saved
+                                together in one step.
+                            </Alert>
+                        )}
                         {error && (
                             <Alert
                                 severity="error"
@@ -384,9 +436,8 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
                                 {view === "TASK"
                                     ? "Assign Task clients and projects"
                                     : "Assign Expense clients and projects"}
-                                {
-                                    " — Saving only updates this tab's assignments."
-                                }
+                                {!isNewUser &&
+                                    " — Saving only updates this tab's assignments."}
                             </Typography>
                         </Box>
 
@@ -443,13 +494,25 @@ export const UserAccessDialog: React.FC<UserAccessDialogProps> = ({
                 <Button onClick={onClose} color="inherit" disabled={saving}>
                     Cancel
                 </Button>
-                <Button
-                    onClick={handleSave}
-                    variant="contained"
-                    disabled={saving || loading}
-                >
-                    {saving ? "Saving…" : "Save"}
-                </Button>
+                {!isNewUser && (
+                    <Button
+                        onClick={handleSave}
+                        variant="contained"
+                        disabled={saving || loading}
+                    >
+                        {saving ? "Saving\u2026" : "Save"}
+                    </Button>
+                )}
+                {isNewUser && (
+                    <Button
+                        onClick={handleSaveAndSendEmail}
+                        variant="contained"
+                        color="success"
+                        disabled={saving || loading}
+                    >
+                        {saving ? "Saving…" : "Save & Send Welcome Email"}
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );
