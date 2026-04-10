@@ -104,7 +104,7 @@ $processedLines = foreach ($line in ($content -split '\r?\n')) {
     $line = $line -replace '\t', ' '
 
     # Replace single quote with two single quotes
-    $line = $line -replace "'", "''"
+    # $line = $line -replace "'", "''"
 
     # Trim surrounding whitespace; skip empty lines
     $line = $line.Trim()
