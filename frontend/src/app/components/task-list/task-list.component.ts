@@ -673,6 +673,11 @@ import { CsvExportDialogComponent } from '../csv-export-dialog/csv-export-dialog
       .sidebar-content mat-icon {
         color: #3f51b5;
       }
+
+      /* Ensure Task ID column has enough room for 20-char values */
+      .mat-column-taskId {
+        min-width: 150px;
+      }
     `,
   ],
 })

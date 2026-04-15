@@ -39,7 +39,7 @@ public class TaskActivityDto {
     @DecimalMax(value = "24.00", message = "Hours cannot exceed 24")
     private BigDecimal hours;
 
-    @Size(max = 10, message = "Task ID cannot exceed 10 characters")
+    @Size(max = 20, message = "Task ID cannot exceed 20 characters")
     private String taskId;
 
     @Size(max = 120, message = "Task name cannot exceed 120 characters")

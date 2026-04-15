@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS public.taskactivity (
     project VARCHAR(255) NOT NULL,
     phase VARCHAR(255) NOT NULL,
     taskhours NUMERIC(4, 2) NOT NULL,
-    taskid VARCHAR(10),
+    taskid VARCHAR(20),
     taskname VARCHAR(120),
     details VARCHAR(2000),
     username VARCHAR(50) NOT NULL,
