@@ -98,7 +98,7 @@ export class TaskEditDialogComponent implements OnInit {
       ],
       taskId: [
         data.task.taskId || '',
-        [Validators.maxLength(10), Validators.pattern(/^\S*$/)],
+        [Validators.maxLength(20), Validators.pattern(/^\S*$/)],
       ],
       taskName: [data.task.taskName || '', [Validators.maxLength(120)]],
       details: [data.task.details || ''], // Optional field, no validators

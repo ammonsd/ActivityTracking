@@ -46,7 +46,7 @@ public class TaskActivity {
     @Column(name = "taskhours", nullable = false, precision = 4, scale = 2)
     private BigDecimal hours;
 
-    @Size(max = 10, message = "Task ID cannot exceed 10 characters")
+    @Size(max = 20, message = "Task ID cannot exceed 20 characters")
     @Pattern(regexp = "^\\S*$", message = "Task ID cannot contain spaces")
     @Column(name = "taskid", nullable = true, length = 20)
     private String taskId;

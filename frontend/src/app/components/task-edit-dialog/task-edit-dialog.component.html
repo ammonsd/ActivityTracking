@@ -100,9 +100,9 @@
     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
       <mat-form-field appearance="outline">
         <mat-label>Task ID</mat-label>
-        <input matInput formControlName="taskId" maxlength="10" placeholder="e.g. TA-001" [errorStateMatcher]="taskIdMatcher" />
+        <input matInput formControlName="taskId" maxlength="20" placeholder="e.g. TA-001" [errorStateMatcher]="taskIdMatcher" />
         <mat-error *ngIf="taskForm.get('taskId')?.hasError('maxlength')">
-          Maximum 10 characters
+          Maximum 20 characters
         </mat-error>
         <mat-error class="no-wrap" *ngIf="taskForm.get('taskId')?.hasError('pattern')">
           Task ID cannot contain spaces
