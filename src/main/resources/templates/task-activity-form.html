@@ -136,7 +136,16 @@
                     th:href="@{/task-activity/weekly-timesheet}" 
                     class="btn btn-info" 
                     style="margin-right: 10px;">Weekly Timesheet</a>
-                <a th:href="@{/task-activity/list}" class="btn btn-secondary">Task Activity List</a>
+                <a 
+                    th:href="@{/task-activity/list(
+                        client=${selectedClient},
+                        project=${selectedProject},
+                        phase=${selectedPhase},
+                        taskId=${selectedTaskId},
+                        username=${selectedUsername},
+                        startDate=${startDate},
+                        endDate=${endDate}
+                    )}" class="btn btn-secondary">Task Activity List</a>
             </div>
         </div>
         
@@ -263,6 +272,15 @@
                     <div class="error" th:if="${#fields.hasErrors('details')}" th:errors="*{details}"></div>
                 </div>
                 
+                <!-- Hidden filter fields to preserve filter state when returning to the list -->
+                <input type="hidden" name="filterClient" th:value="${selectedClient}" />
+                <input type="hidden" name="filterProject" th:value="${selectedProject}" />
+                <input type="hidden" name="filterPhase" th:value="${selectedPhase}" />
+                <input type="hidden" name="filterTaskId" th:value="${selectedTaskId}" />
+                <input type="hidden" name="filterUsername" th:value="${selectedUsername}" />
+                <input type="hidden" name="filterStartDate" th:value="${startDate}" />
+                <input type="hidden" name="filterEndDate" th:value="${endDate}" />
+
                 <button type="submit" class="submit-btn">Add Task Activity</button>
             </form>
         </div>

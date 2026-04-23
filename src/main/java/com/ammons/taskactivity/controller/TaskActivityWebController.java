@@ -112,10 +112,20 @@ public class TaskActivityWebController {
     }
 
     @GetMapping("/add")
-    public String showForm(Model model, Authentication authentication) {
+    public String showForm(Model model, Authentication authentication,
+            @RequestParam(required = false) String client,
+            @RequestParam(required = false) String project,
+            @RequestParam(required = false) String phase,
+            @RequestParam(required = false) String taskId,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         addUserInfo(model, authentication);
         model.addAttribute(TASK_ACTIVITY_DTO_ATTR, new TaskActivityDto());
         addDropdownOptions(model, authentication);
+        addFilterAttributes(model, client, project, phase, taskId, username, startDate, endDate);
         return TASK_ACTIVITY_FORM_VIEW;
     }
 
@@ -196,7 +206,15 @@ public class TaskActivityWebController {
     @PostMapping("/submit")
     public String submitForm(@Valid @ModelAttribute TaskActivityDto taskActivityDto,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+            Authentication authentication, @RequestParam(required = false) String filterClient,
+            @RequestParam(required = false) String filterProject,
+            @RequestParam(required = false) String filterPhase,
+            @RequestParam(required = false) String filterTaskId,
+            @RequestParam(required = false) String filterUsername,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate filterStartDate,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE) LocalDate filterEndDate) {
 
         // Access the logged-in user
         String username = authentication.getName();
@@ -204,6 +222,8 @@ public class TaskActivityWebController {
 
         if (bindingResult.hasErrors()) {
             addDropdownOptions(model, authentication);
+            addFilterAttributes(model, filterClient, filterProject, filterPhase, filterTaskId,
+                    filterUsername, filterStartDate, filterEndDate);
             return TASK_ACTIVITY_FORM_VIEW;
         }
 
@@ -217,6 +237,8 @@ public class TaskActivityWebController {
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             model.addAttribute(SUCCESS_MESSAGE_ATTR, "Task activity saved successfully!");
             addDropdownOptions(model, authentication);
+            addFilterAttributes(model, filterClient, filterProject, filterPhase, filterTaskId,
+                    filterUsername, filterStartDate, filterEndDate);
             return TASK_ACTIVITY_FORM_VIEW;
 
         } catch (DataIntegrityViolationException e) {
@@ -226,6 +248,8 @@ public class TaskActivityWebController {
                     "A task with the same date, client, project, phase, Task ID, Task Name, and details already exists.");
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             addDropdownOptions(model, authentication);
+            addFilterAttributes(model, filterClient, filterProject, filterPhase, filterTaskId,
+                    filterUsername, filterStartDate, filterEndDate);
             return TASK_ACTIVITY_FORM_VIEW;
 
         } catch (Exception e) {
@@ -234,6 +258,8 @@ public class TaskActivityWebController {
                     "Failed to save task activity: " + e.getMessage());
             model.addAttribute(TASK_ACTIVITY_DTO_ATTR, taskActivityDto);
             addDropdownOptions(model, authentication);
+            addFilterAttributes(model, filterClient, filterProject, filterPhase, filterTaskId,
+                    filterUsername, filterStartDate, filterEndDate);
             return TASK_ACTIVITY_FORM_VIEW;
         }
     }

@@ -672,7 +672,15 @@
                         >Expenses</a
                     >
                     <!-- Add New Task - All authenticated users -->
-                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
+                    <a th:href="@{/task-activity/add(
+                        client=${selectedClient},
+                        project=${selectedProject},
+                        phase=${selectedPhase},
+                        taskId=${selectedTaskId},
+                        username=${selectedUsername},
+                        startDate=${startDate},
+                        endDate=${endDate}
+                    )}" class="btn btn-primary"
                         >Add New Task</a
                     >
                     <!-- Right Sidebar Toggle Button -->
@@ -1097,7 +1105,15 @@
 
                 <div th:if="${#lists.isEmpty(tasks)}" class="no-tasks">
                     <p>No tasks found matching the current filters.</p>
-                    <a th:href="@{/task-activity/add}" class="btn btn-primary"
+                    <a th:href="@{/task-activity/add(
+                        client=${selectedClient},
+                        project=${selectedProject},
+                        phase=${selectedPhase},
+                        taskId=${selectedTaskId},
+                        username=${selectedUsername},
+                        startDate=${startDate},
+                        endDate=${endDate}
+                    )}" class="btn btn-primary"
                         >Add Your First Task</a
                     >
                 </div>
