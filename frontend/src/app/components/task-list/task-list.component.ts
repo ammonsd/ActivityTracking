@@ -3,6 +3,10 @@
  *
  * Author: Dean Ammons
  * Date: December 2025
+ *
+ * Modified by: Dean Ammons - April 2026
+ * Change: Updated Task ID filter maxlength from 10 to 20
+ * Reason: taskid column was expanded to 20 characters; filter input must match to avoid truncating valid IDs
  */
 
 import { Component, OnInit } from '@angular/core';
@@ -147,7 +151,7 @@ import { CsvExportDialogComponent } from '../csv-export-dialog/csv-export-dialog
                   [(ngModel)]="selectedTaskId"
                   (keyup.enter)="applyFilters()"
                   (blur)="applyFilters()"
-                  maxlength="10"
+                  maxlength="20"
                   placeholder="e.g. TA-001"
                 />
               </mat-form-field>
