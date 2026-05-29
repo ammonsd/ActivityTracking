@@ -297,7 +297,7 @@
             <!-- Date Selector -->
             <div class="date-selector">
                 <label for="weekStartDate"
-                       th:text="'Week Starting ' + (${weekStartDay} == 'SATURDAY' ? 'Saturday' : 'Monday') + ':'">
+                       th:text="'Week Starting ' + (${weekStartDay} == 'SATURDAY' ? 'Saturday' : (${weekStartDay} == 'SUNDAY' ? 'Sunday' : 'Monday')) + ':'">
                     Week Starting Monday:
                 </label>
                 <input

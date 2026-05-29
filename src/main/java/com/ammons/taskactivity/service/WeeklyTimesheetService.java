@@ -12,7 +12,7 @@ import java.util.*;
 
 /**
  * WeeklyTimesheetService - Weekly timesheet supporting configurable week start day. Supports
- * Monday-Sunday (default) and Saturday-Friday ranges.
+ * Monday-Sunday (default), Saturday-Friday, and Sunday-Saturday ranges.
  *
  * @author Dean Ammons
  * @version 1.0
@@ -21,6 +21,9 @@ import java.util.*;
  *        Modified by: Dean Ammons - March 2026 Change: Added support for configurable week start
  *        day (MONDAY or SATURDAY) Reason: Some clients use Saturday-Friday as their standard
  *        billing week
+ *
+ *        Modified by: Dean Ammons - May 2026 Change: Added support for SUNDAY week start
+ *        (Sunday-Saturday) Reason: Client reporting period runs Sunday through Saturday
  */
 @Service
 @Transactional(readOnly = true)
@@ -45,6 +48,9 @@ public class WeeklyTimesheetService {
     public static DayOfWeek resolveWeekStartDay(String weekStartDayStr) {
         if ("SATURDAY".equalsIgnoreCase(weekStartDayStr)) {
             return DayOfWeek.SATURDAY;
+        }
+        if ("SUNDAY".equalsIgnoreCase(weekStartDayStr)) {
+            return DayOfWeek.SUNDAY;
         }
         return DayOfWeek.MONDAY;
     }

@@ -68,12 +68,15 @@ const DateUtils = {
     /**
      * Converts a server-side week start day string (MONDAY/SATURDAY) to a JS day-of-week number.
      *
-     * @param {string} weekStartDayStr - "MONDAY" or "SATURDAY"
-     * @returns {number} JS day-of-week value (1 for Monday, 6 for Saturday)
+     * @param {string} weekStartDayStr - "MONDAY", "SATURDAY", or "SUNDAY"
+     * @returns {number} JS day-of-week value (1 for Monday, 6 for Saturday, 0 for Sunday)
      */
     weekStartDayToJsValue: function (weekStartDayStr) {
         if (weekStartDayStr === "SATURDAY") {
             return 6;
+        }
+        if (weekStartDayStr === "SUNDAY") {
+            return 0;
         }
         return 1; // Default to Monday
     },
